@@ -20,6 +20,9 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+#Standard Imports.
+import RPi.GPIO
+
 class Motor: #TODO Check types of arguments before setting to avoid weird errors later. Alternatively, use Python 3's type specifiers (breaks python 2 support).
     # ---------- CONSTRUCTORS ----------
     def __init__(Name): 
@@ -31,11 +34,11 @@ class Motor: #TODO Check types of arguments before setting to avoid weird errors
         """
 
         #Set some semi-private variables.
-        __MotorName = Name              #Used to keep track of which motor we're controlling. Cannot be re-set after initialisation.
-        __State = False                 #Motor is initialised to be off.
-        __IsVariableSpeed = False       #Assume we don't have PWM by default.
-        __ControlPin = -1               #Needs to be set.
-        __PWMPin = -1                   #Needs to be set.
+        self.__MotorName = Name              #Used to keep track of which motor we're controlling. Cannot be re-set after initialisation.
+        self.__State = False                 #Motor is initialised to be off.
+        self.__IsVariableSpeed = False       #Assume we don't have PWM by default.
+        self.__ControlPin = -1               #Needs to be set.
+        self.__PWMPin = -1                   #Needs to be set.
 
 
     # ---------- INFO SETTER FUNCTIONS ----------
@@ -47,10 +50,10 @@ class Motor: #TODO Check types of arguments before setting to avoid weird errors
             <Motor-Object>.SetPWMAvailable(bool PWMAvailable, int PWMPin)
         """
 
-        __IsVariableSpeed = PWMAvailable
-        __PWMPin = PWMPin
+        self.__IsVariableSpeed = PWMAvailable
+        self.__PWMPin = PWMPin
 
-    def SetControlPin(ControlPin): #TODO Check if this Pin is already in use. If so throw an error.
+    def SetControlPin(ControlPin): #TODO Check if this Pin is already in use. If so throw an error. Also check if this pin is a valid output pin.
         """
         Sets the control pin for the motor.
         Usage:
@@ -58,7 +61,10 @@ class Motor: #TODO Check types of arguments before setting to avoid weird errors
             <Motor-Object>.SetControlPin(int ControlPin)
         """
 
-        __ControlPin = ControlPin
+        #TODO: Can we un-setup an old pin?
+        self.__ControlPin = ControlPin
+
+        GPIO.setup(self.__ControlPin, GPIO.OUT)
 
     # ---------- INFO GETTER FUNCTIONS ----------
     def GetName():
@@ -69,6 +75,59 @@ class Motor: #TODO Check types of arguments before setting to avoid weird errors
             str <Motor-Object>.GetName()
         """
 
-        return __MotorName
+        return self.__MotorName
 
-    def SupporPWM(
+    def SupportsPWM():
+        """
+        Returns True if PWM is supported for this motor. Else False.
+        Usage:
+
+            bool <Motor-Object>.SupportsPWM()
+        """
+
+        return self.__IsVariableSpeed
+
+    def GetControlPin():
+        """
+        Returns the integer that represents the control pin for this motor.
+        Usage:
+
+            int <Motor-Object>.GetControlPin()
+        """
+
+        return self.__ControlPin
+
+    # ---------- CONTROL FUNCTIONS ----------
+    def TurnOn():
+        """
+        Turn the motor on. Returns True if successful, false if not.
+        Usage:
+
+            bool <Motor-Object>.TurnOn()
+        """
+
+        #Return false if control pin isn't set.
+        if self.__ControlPin == -1:
+            return False
+
+        #Turn the pin on.
+        GPIO.write(__ControlPin, True)
+
+        return True
+
+    def TurnOff():
+        """
+        Turn the motor off. Returns True if successful, false if not.
+        Usage:
+
+            bool <Motor-Object>.TurnOff()
+        """
+
+        #Return false if control pin isn't set.
+        if self.__ControlPin == -1:
+            return False
+
+        #Turn the pin off.
+        GPIO.write(__ControlPin, False)
+
+        return True
