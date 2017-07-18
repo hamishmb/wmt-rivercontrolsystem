@@ -23,9 +23,12 @@ from __future__ import unicode_literals
 #Standard Imports.
 import RPi.GPIO as GPIO
 
+#TODO Change pins to BCM so we can change this.
+GPIO.setmode(GPIO.BOARD)
+
 class Motor: #TODO Check types of arguments before setting to avoid weird errors later. Alternatively, use Python 3's type specifiers (breaks python 2 support).
     # ---------- CONSTRUCTORS ----------
-    def __init__(Name): 
+    def __init__(self, Name): 
         """
         This is the constructor.
         Usage:
@@ -41,7 +44,7 @@ class Motor: #TODO Check types of arguments before setting to avoid weird errors
         self.__PWMPin = -1                   #Needs to be set.
 
     # ---------- INFO SETTER FUNCTIONS ----------
-    def SetPWMAvailable(PWMAvailable, PWMPin): #TODO Hardware check to determine if PWM is avaiable.
+    def SetPWMAvailable(self, PWMAvailable, PWMPin): #TODO Hardware check to determine if PWM is avaiable.
         """
         Enables/Disables PWM support.
         Usage:
@@ -52,7 +55,7 @@ class Motor: #TODO Check types of arguments before setting to avoid weird errors
         self.__IsVariableSpeed = PWMAvailable
         self.__PWMPin = PWMPin
 
-    def SetControlPin(ControlPin): #TODO Check if this Pin is already in use. If so throw an error. Also check if this pin is a valid output pin.
+    def SetControlPin(self, ControlPin): #TODO Check if this Pin is already in use. If so throw an error. Also check if this pin is a valid output pin.
         """
         Sets the control pin for the motor.
         Usage:
@@ -66,7 +69,7 @@ class Motor: #TODO Check types of arguments before setting to avoid weird errors
         GPIO.setup(self.__ControlPin, GPIO.OUT)
 
     # ---------- INFO GETTER FUNCTIONS ----------
-    def GetName():
+    def GetName(self):
         """
         Returns the name of the motor this object is representing.
         Usage:
@@ -76,7 +79,7 @@ class Motor: #TODO Check types of arguments before setting to avoid weird errors
 
         return self.__MotorName
 
-    def SupportsPWM():
+    def SupportsPWM(self):
         """
         Returns True if PWM is supported for this motor. Else False.
         Usage:
@@ -86,7 +89,7 @@ class Motor: #TODO Check types of arguments before setting to avoid weird errors
 
         return self.__IsVariableSpeed
 
-    def GetControlPin():
+    def GetControlPin(self):
         """
         Returns the integer that represents the control pin for this motor.
         Usage:
@@ -97,7 +100,7 @@ class Motor: #TODO Check types of arguments before setting to avoid weird errors
         return self.__ControlPin
 
     # ---------- CONTROL FUNCTIONS ----------
-    def TurnOn():
+    def TurnOn(self):
         """
         Turn the motor on. Returns True if successful, false if not.
         Usage:
@@ -110,11 +113,11 @@ class Motor: #TODO Check types of arguments before setting to avoid weird errors
             return False
 
         #Turn the pin on.
-        GPIO.write(__ControlPin, True)
+        GPIO.write(self.__ControlPin, True)
 
         return True
 
-    def TurnOff():
+    def TurnOff(self):
         """
         Turn the motor off. Returns True if successful, false if not.
         Usage:
@@ -127,7 +130,7 @@ class Motor: #TODO Check types of arguments before setting to avoid weird errors
             return False
 
         #Turn the pin off.
-        GPIO.write(__ControlPin, False)
+        GPIO.write(self.__ControlPin, False)
 
         return True
 
@@ -135,7 +138,7 @@ class Motor: #TODO Check types of arguments before setting to avoid weird errors
 
 class ResistanceProbe: #TODO Handle improper setup better.
     # ---------- CONSTRUCTORS ----------
-    def __init__(ProbeName):
+    def __init__(self, ProbeName):
         """
         This is the constructor.
         Usage:
@@ -150,7 +153,7 @@ class ResistanceProbe: #TODO Handle improper setup better.
         self.__RPins = []                    #Needs to be set.
 
     # ---------- INFO SETTER FUNCTIONS ----------
-    def SetActiveState(State):
+    def SetActiveState(self, State):
         """
         Sets the active state for the pins. True for active high, False for active low.
         Usage:
@@ -160,7 +163,7 @@ class ResistanceProbe: #TODO Handle improper setup better.
 
         self.__ActiveState = State
 
-    def SetPins(Pins):
+    def SetPins(self, Pins):
         """
         Sets the pins this probe will use, from low to high.
         Usage:
@@ -173,19 +176,19 @@ class ResistanceProbe: #TODO Handle improper setup better.
 
         #Setup the pins.
         #10 Inputs. 0 is for the lowest depth, 9 the highest.
-        GPIO.setup(self.Pins[0], GPIO.IN)
-        GPIO.setup(self.Pins[1], GPIO.IN)
-        GPIO.setup(self.Pins[2], GPIO.IN)
-        GPIO.setup(self.Pins[3], GPIO.IN)
-        GPIO.setup(self.Pins[4], GPIO.IN)
-        GPIO.setup(self.Pins[5], GPIO.IN)
-        GPIO.setup(self.Pins[6], GPIO.IN)
-        GPIO.setup(self.Pins[7], GPIO.IN)
-        GPIO.setup(self.Pins[8], GPIO.IN)
-        GPIO.setup(self.Pins[9], GPIO.IN)
+        GPIO.setup(self.__Pins[0], GPIO.IN)
+        GPIO.setup(self.__Pins[1], GPIO.IN)
+        GPIO.setup(self.__Pins[2], GPIO.IN)
+        GPIO.setup(self.__Pins[3], GPIO.IN)
+        GPIO.setup(self.__Pins[4], GPIO.IN)
+        GPIO.setup(self.__Pins[5], GPIO.IN)
+        GPIO.setup(self.__Pins[6], GPIO.IN)
+        GPIO.setup(self.__Pins[7], GPIO.IN)
+        GPIO.setup(self.__Pins[8], GPIO.IN)
+        GPIO.setup(self.__Pins[9], GPIO.IN)
 
     # ---------- INFO GETTER FUNCTIONS ----------
-    def GetName():
+    def GetName(self):
         """
         Returns the name of this probe.
         Usage:
@@ -195,7 +198,7 @@ class ResistanceProbe: #TODO Handle improper setup better.
 
         return self.__ProbeName
 
-    def GetActiveState():
+    def GetActiveState(self):
         """
         Returns the active state for the pins.
         Usage:
@@ -205,7 +208,7 @@ class ResistanceProbe: #TODO Handle improper setup better.
 
         return self.__ActiveState
 
-    def GetPins():
+    def GetPins(self):
         """
         Returns the pins this probe is using, from high to low.
         Usage:
@@ -216,7 +219,7 @@ class ResistanceProbe: #TODO Handle improper setup better.
         return self.__Pins
 
     # ---------- CONTROL FUNCTIONS ---------- 
-    def GetLevel():
+    def GetLevel(self):
         """
         Gets the level of the water in the probe.
         Usage:
@@ -235,11 +238,11 @@ class ResistanceProbe: #TODO Handle improper setup better.
             #Log the states of all the pins.
             StateText = ""
 
-            for Pin in Pins:
+            for Pin in self.__Pins:
                 StateText += unicode(GPIO.input(Pin))
 
             #Check for faults.
-            self.CheckForFaults()
+            self.CheckForFaults(Pin)
 
             #Return the level, assume pin 0 is at 0mm. Also return FaultText
             return Index*100, StateText
@@ -247,7 +250,7 @@ class ResistanceProbe: #TODO Handle improper setup better.
         #No pins were high.
         return -1, "1111111111"
 
-    def CheckForFaults(HighestActivePin): #TODO setup and use a logger for this.
+    def CheckForFaults(self, HighestActivePin): #TODO setup and use a logger for this.
         """Checks for faults in the sensor. Isn't capable of finding all faults without another sensor to compare against.
         Usage:
 
