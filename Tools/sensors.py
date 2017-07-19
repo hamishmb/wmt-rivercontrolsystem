@@ -257,13 +257,19 @@ class ResistanceProbe: #TODO Handle improper setup better.
             bool <ResistanceProbe-Object>.CheckForFaults(int HighestActivePin)
         """
 
+        print("Highest active Pin index: "+str(HighestActivePin))
+        
         Faulty = False
+
+        print("Checking that "+str(StateText[:HighestActivePin]) +" only contains inactive pins.")
 
         #All pins before this one should be inactive.
         for Pin in StateText[:HighestActivePin]:
             if Pin == self.__ActiveState:
                 print("FAULT on pin at index "+str(Pin)+"!")
                 Faulty = True
+
+        print("Checking that "+str(StateText[HighestActivePin:]) +" only contains active pins.")
 
         #All pins after this one should be active.
         for Pin in StateText[HighestActivePin+1:]:
