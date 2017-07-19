@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Control Tools for the River System Control and Monitoring Software Version 1.0
+# Sensor classes for the River System Control and Monitoring Software Version 1.0
 # Copyright (C) 2017 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
@@ -272,3 +272,61 @@ class ResistanceProbe: #TODO Handle improper setup better.
                 Faulty = True
 
         return Faulty
+
+class HallEffectDevice: #TODO Handle improper setup better.
+    # ---------- CONSTRUCTORS ----------
+    def __init__(self, DeviceName):
+        """
+        This is the constructor.
+        Usage:
+
+            <Variable-Name> = HallEffectDevice(string DeviceName)
+        """
+
+        #Set some semi-private variables.
+        self.__DeviceName = DeviceName         #Used to keep track of which probe we're controlling. Cannot be re-set after initialisation.
+        self.__Pin = -1                        #Needs to be set.
+
+    # ---------- INFO SETTER FUNCTIONS ----------
+    def SetPin(self, Pin):
+        """
+        Sets the input pin for this hall effect device.
+        Usage:
+
+            <HallEffectDevice-Object>.SetPin(int Pin)
+        """
+
+        self.__Pin = Pin
+
+    # ---------- INFO GETTER FUNCTIONS ----------
+    def GetName(self):
+        """
+        Returns the name of this probe.
+        Usage:
+
+            string <HallEffectDevice-Object>.GetName()
+        """
+
+        return self.__DeviceName
+
+    def GetPin(self):
+        """
+        Returns the pin this probe is using.
+        Usage:
+
+            int <HallEffectDevice-Object>.GetPin()
+        """
+
+        return self.__Pin
+
+    # ---------- CONTROL FUNCTIONS ---------- 
+    def Read(self):
+        """
+        Returns the state of the input pin.
+        Usage:
+
+            bool <HallEffectDevice-Object>.Read()
+        """
+
+        return GPIO.input(__Pin)
+    

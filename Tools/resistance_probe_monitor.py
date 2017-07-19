@@ -49,7 +49,7 @@ class Monitor(threading.Thread):
 
             NumberOfReadingsTaken += 1
 
-            #Take readings every 5 minutes.
+            #Take readings every however often it is.
             time.sleep(self.ReadingInterval)
 
 def usage():
@@ -65,9 +65,10 @@ def usage():
 def RunStandalone():
     #Allows the progam to run standalone as well as being a module.
     #Do required imports.
-    from . import objects
+    from . import sensors
+    from . import core as CoreTools
 
-    import objects.ResistanceProbe as ResistanceProbe
+    import sensors.ResistanceProbe as ResistanceProbe
 
     FileName = "Unknown"
 
@@ -99,42 +100,8 @@ def RunStandalone():
         else:
             assert False, "unhandled option"
 
-    print("System Time: ", str(datetime.datetime.now()))
-
-    print("Welcome. This program will quit automatically if you specified a number of readings, otherwise quit with CTRL-C when you wish.\n")
-
-    #Get filename, if one wasn't specified.
-    if FileName == "Unknown":
-        print("Please enter a filename to save the readings to.")
-        print("The file will be appended to.")
-        print("Make sure it's somewhere where there's plenty of disk space. Suggested: readings.txt")
-
-        sys.stdout.write("Enter filename and press ENTER: ")
-
-        FileName = raw_input()
-
-        print("\n\nSelected File: "+FileName)
-        print("Press CTRL-C if you are not happy with this choice.\n")
-
-        print("Press ENTER to continue...")
-
-        raw_input() #Wait until user presses enter.
-
-    try:
-        #Use buffer size of 0 to disable Python's file buffer.
-        print("Opening file...")
-        RecordingsFile = open(FileName, "a", 0)
-
-    except:
-        #Bad practice :P
-        print("Error opening file. Do you have permission to write there?")
-        print("Exiting...")
-        sys.exit()
-
-    else:
-        RecordingsFile.write("Start Time: "+str(datetime.datetime.now())+"\n\n")
-        RecordingsFile.write("Starting to take readings...\n")
-        print("Successfully opened file. Continuing..")
+    #Greet and get filename.
+    RecordingsFile = CoreTools.GreetAndGetFilename("Resistance Probe Monitor")
 
     print("Starting to take readings. Please stand by...")
 
