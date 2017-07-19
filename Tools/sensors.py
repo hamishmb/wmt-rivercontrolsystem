@@ -263,8 +263,6 @@ class ResistanceProbe: #TODO Handle improper setup better.
 
         print("Checking that "+str(StateText[:HighestActivePin]) +" only contains active pins.")
 
-        print(bool(Pin), self.__ActiveState)
-
         #All pins before this one should be active.
         for Pin in StateText[:HighestActivePin]:
             print(bool(Pin), self.__ActiveState)
