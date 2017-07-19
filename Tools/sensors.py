@@ -348,7 +348,7 @@ class HallEffectDevice: #TODO Handle improper setup better.
         GPIO.remove_event_detect(self.__Pin)
 
         #Use integer divison '//' because it's fast.
-        RevsPer5Sec = Detections // 5 #Because we're measuring over 5 seconds, take the mean average over 5 seconds.
+        RevsPer5Sec = self.__Detections // 5 #Because we're measuring over 5 seconds, take the mean average over 5 seconds.
 
         #Then multiply by 12 to get RPM.
         RPM = RevsPer5Sec * 12
