@@ -20,6 +20,9 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import datetime
+import sys
+
 def GreetAndGetFilename(ModuleName):
     """
     Greets user and gets a file name for readings.
