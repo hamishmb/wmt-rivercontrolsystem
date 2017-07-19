@@ -242,7 +242,7 @@ class ResistanceProbe: #TODO Handle improper setup better.
                 StateText += unicode(GPIO.input(Pin))
 
             #Check for faults.
-            self.CheckForFaults(Pin)
+            self.CheckForFaults(Index, StateText)
 
             #Return the level, assume pin 0 is at 0mm. Also return FaultText
             return Index*100, StateText
@@ -260,14 +260,14 @@ class ResistanceProbe: #TODO Handle improper setup better.
         Faulty = False
 
         #All pins before this one should be inactive.
-        for Pin in self.__Pins[:HighestActivePin]:
-            if GPIO.input(Pin) == self.__ActiveState:
+        for Pin in StateText[:HighestActivePin]:
+            if Pin == self.__ActiveState:
                 print("FAULT on pin "+str(Pin)+"!")
                 Faulty = True
 
         #All pins after this one should be active.
-        for Pin in self.__Pins[HighestActivePin:]:
-            if GPIO.input(Pin) != self.__ActiveState:
+        for Pin in StateText[HighestActivePin:]:
+            if Pin != self.__ActiveState:
                 print("FAULT on pin "+str(Pin)+"!")
                 Faulty = True
 
