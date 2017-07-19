@@ -48,35 +48,8 @@ def RunStandalone():
 
     from Tools.sensors import ResistanceProbe
 
-    FileName = "Unknown"
-
-    #Check all cmdline options are valid.
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], "hf:n:", ["help", "file=", "num="])
-
-    except getopt.GetoptError as err:
-        #Invalid option. Show the help message and then exit.
-        #Show the error.
-        print(unicode(err))
-        usage()
-        sys.exit(2)
-
-    #Do setup. o=option, a=argument.
-    NumberOfReadingsToTake = 0 #Take readings indefinitely by default.
-
-    for o, a in opts:
-        if o in ["-n", "--num"]:
-            NumberOfReadingsToTake = int(a)
-
-        elif o in ["-f", "--file"]:
-            FileName = a
-
-        elif o in ["-h", "--help"]:
-            usage()
-            sys.exit()
-    
-        else:
-            assert False, "unhandled option"
+    #Handle cmdline options.
+    FileName, NumberOfReadingsToTake = CoreTools.HandleCmdlineOptions(usage)
 
     #Greet and get filename.
     RecordingsFile = CoreTools.GreetAndGetFilename("Resistance Probe Monitor", FileName)
@@ -93,7 +66,7 @@ def RunStandalone():
     #Holds the number of readings we've taken.
     NumberOfReadingsTaken = 0
 
-    #Don't use the thread here: it doesn't write to a file.
+    #Don't use the thread here: it doesn't write to a file. TODO use a queue with the thread so we can use ithere and receive messages to write them to a file, reducing duplications.
     try:
         while (NumberOfReadingsToTake == 0 or (NumberOfReadingsTaken < NumberOfReadingsToTake)):
             Level, StateText = Probe.GetLevel()

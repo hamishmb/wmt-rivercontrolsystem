@@ -256,22 +256,15 @@ class ResistanceProbe: #TODO Handle improper setup better.
 
             bool <ResistanceProbe-Object>.CheckForFaults(int HighestActivePin)
         """
-
-        print("Highest active Pin index: "+str(HighestActivePin))
-        
+        #Must convert string to int first, because any string except "" evals to boolean True. 
+       
         Faulty = False
-
-        print("Checking that "+str(StateText[:HighestActivePin]) +" only contains active pins.")
 
         #All pins before this one should be active.
         for Pin in StateText[:HighestActivePin]:
-            print(Pin, bool(int(Pin)), self.__ActiveState)
-
             if bool(int(Pin)) != self.__ActiveState:
                 print("FAULT DETECTED")
                 Faulty = True
-
-        print("Checking that "+str(StateText[HighestActivePin:]) +" only contains inactive pins.")
 
         #All pins after this one should be inactive.
         for Pin in StateText[HighestActivePin+1:]:
@@ -294,6 +287,7 @@ class HallEffectDevice: #TODO Handle improper setup better.
         #Set some semi-private variables.
         self.__DeviceName = DeviceName         #Used to keep track of which probe we're controlling. Cannot be re-set after initialisation.
         self.__Pin = -1                        #Needs to be set.
+        self.__Detections = 0                  #Internal use only.
 
     # ---------- INFO SETTER FUNCTIONS ----------
     def SetPin(self, Pin):
@@ -328,13 +322,29 @@ class HallEffectDevice: #TODO Handle improper setup better.
         return self.__Pin
 
     # ---------- CONTROL FUNCTIONS ---------- 
-    def Read(self):
+    def GetRPM(self):
         """
-        Returns the state of the input pin.
+        Returns the rate at with the hall effect device is rotating. Takes readings for 5 seconds and then averages the result.
         Usage:
 
-            bool <HallEffectDevice-Object>.Read()
+            int <HallEffectDevice-Object>.GetPin()
         """
+        self.__Detections = 0
 
-        return GPIO.input(__Pin)
+        #Automatically call our function when a falling edge is detected.
+        GPIO.add_event_detect(self.__Pin, GPIO.FALLING, callback=self.IncrementDetections)
+
+        time.sleep(5)
+
+        #Stop calling our function.
+        GPIO.remove_event_detect(self.__Pin)
+
+        #Use integer divison '//' because it's fast.
+        RevsPer5Sec = Detections // 5 #Because we're measuring over 5 seconds, take the mean average over 5 seconds.
+
+        #Then multiply by 12 to get RPM.
+        RPM = RevsPer5Sec * 12
+
+        return RPM
+
     

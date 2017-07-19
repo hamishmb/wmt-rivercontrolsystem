@@ -38,9 +38,12 @@ def usage():
 def RunStandalone():
     #Allows the progam to run standalone as well as being a module.
     #Do required imports.
-    from . import sensors
+    import Tools
 
-    import sensors.HallEffectDevice as HallEffectDevice
+    from Tools import sensors
+    from Tools import core as CoreTools
+
+    from Tools.sensors import HallEffectDevice
 
     #Check all cmdline options are valid and do setup.
     try:
@@ -63,74 +66,23 @@ def RunStandalone():
         print("Invalid option. Exiting...")
         sys.exit()
 
-    print("System Time: ", str(datetime.datetime.now()))
-
-    print("Welcome. This program will quit automatically if you specified a number of readings, otherwise quit with CTRL-C when you wish.\n")
-
-    #Get filename.
-    print("Please enter a filename to save the readings to.")
-    print("Any existing file contents will be *OVERWRITTEN*.")
-    print("Make sure it's somewhere where there's plenty of disk space. Suggested: readings.txt")
-    sys.stdout.write("Enter filename and press ENTER: ")
-    FileName = raw_input()
-
-    print("\n\nSelected File: "+FileName)
-    print("Press CTRL-C if you are not happy with this choice.\n")
-
-    print("Press ENTER to continue...")
-    raw_input() #Wait until user presses enter.
-
-    try:
-        print("Opening file...")
-        RecordingsFile = open(FileName, "w")
-
-    except:
-        #Bad practice :P
-        print("Error opening file. Do you have permission to write there?")
-        print("Exiting...")
-        sys.exit()
-
-    else:
-        RecordingsFile.write("Start Time: "+str(datetime.datetime.now())+"\n\n")
-        RecordingsFile.write("Starting to take readings...\n")
-        print("Successfully opened file. Continuing..")
+    #Greet and get filename.
+    RecordingsFile = CoreTools.GreetAndGetFilename("Hall Effect Device Monitor", FileName)
 
     print("Starting to take readings. Please stand by...")
 
     #Create the probe object.
-    Probe = ResistanceProbe("Probey")
+    Probe = HallEffectDevice("Probey")
 
     #Set the probe up.
-    Probe.SetActiveState(False)     #Active low.
-    Probe.SetPins((10, 11, 12, 13, 15, 16, 18, 19, 21, 22))
+    Probe.SetPin(10)
 
     #Holds the number of readings we've taken.
     NumberOfReadingsTaken = 0
-
-    #Holds number of times we detect a falling edge in 5 seconds (for accuracy).
-    Detections = 0
-
-    #Holds the number of readings we've taken.
-    NumberOfReadingsTaken = 0
-
-    def Falling_Edge_Detected(channel):
-        """Called when a falling edge is detected. Adds 1 to the number of falling edges detected"""
-        global Detections
-        Detections += 1
-
-    #Automatically call our function when a falling edge is detected.
-    GPIO.add_event_detect(10, GPIO.FALLING, callback=Falling_Edge_Detected)
 
     try:
         while (NumberOfReadingsToTake == 0 or NumberOfReadingsTaken < NumberOfReadingsToTake):
-            Detections = 0
-            time.sleep(5)
-
-            #Use integer divison '//' because it's fast.
-            RevsPer5Sec = Detections // 5 #Because we're measuring over 5 seconds, take the mean average over 5 seconds.
-
-            #Then multiply by 12 to get RPM.
-            RPM = RevsPer5Sec * 12
+            RPM = Probe.GetRPM()
 
             print("Time: ", str(datetime.datetime.now()), ": "+str(RPM))
             RecordingsFile.write("Time: "+str(datetime.datetime.now())+" RPM: "+str(RPM)+"\n")
@@ -144,9 +96,6 @@ def RunStandalone():
     finally:
         #Always clean up properly.
         print("Cleaning up...")
-
-        #Stop calling our function.
-        GPIO.remove_event_detect(10)
 
         RecordingsFile.close()
 

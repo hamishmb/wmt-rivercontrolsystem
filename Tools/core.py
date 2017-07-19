@@ -23,6 +23,46 @@ from __future__ import unicode_literals
 import datetime
 import sys
 
+def HandleCmdlineOptions(UsageFunc):
+    """
+    Handles commandline options for the standalone monitor programs
+    Usage:
+
+        tuple HandleCmdlineOptions(function UsageFunc)
+    """
+
+    FileName = "Unknown"
+
+    #Check all cmdline options are valid.
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "hf:n:", ["help", "file=", "num="])
+
+    except getopt.GetoptError as err:
+        #Invalid option. Show the help message and then exit.
+        #Show the error.
+        print(unicode(err))
+        UsageFunc()
+        sys.exit(2)
+
+    #Do setup. o=option, a=argument.
+    NumberOfReadingsToTake = 0 #Take readings indefinitely by default.
+
+    for o, a in opts:
+        if o in ["-n", "--num"]:
+            NumberOfReadingsToTake = int(a)
+
+        elif o in ["-f", "--file"]:
+            FileName = a
+
+        elif o in ["-h", "--help"]:
+            usage()
+            sys.exit()
+    
+        else:
+            assert False, "unhandled option"
+
+    return FileName, NumberOfReadingsToTake
+
 def GreetAndGetFilename(ModuleName, FileName):
     """
     Greets user and gets a file name for readings.
