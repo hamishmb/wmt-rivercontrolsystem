@@ -23,6 +23,8 @@ from __future__ import unicode_literals
 #Standard Imports.
 import RPi.GPIO as GPIO
 
+import time
+
 #TODO Change pins to BCM so we can change this.
 GPIO.setmode(GPIO.BOARD)
 
