@@ -265,18 +265,18 @@ class ResistanceProbe: #TODO Handle improper setup better.
 
         #All pins before this one should be active.
         for Pin in StateText[:HighestActivePin]:
-            print(Pin, bool(Pin), self.__ActiveState)
+            print(Pin, bool(int(Pin)), self.__ActiveState)
 
-            if bool(Pin) != self.__ActiveState:
-                print("FAULT on pin at index "+str(StateText.index(Pin))+"!")
+            if bool(int(Pin)) != self.__ActiveState:
+                print("FAULT DETECTED")
                 Faulty = True
 
         print("Checking that "+str(StateText[HighestActivePin:]) +" only contains inactive pins.")
 
         #All pins after this one should be inactive.
         for Pin in StateText[HighestActivePin+1:]:
-            if bool(Pin) == self.__ActiveState:
-                print("FAULT on pin at index "+str(StateText.index(Pin))+"!")
+            if bool(int(Pin)) == self.__ActiveState:
+                print("FAULT DETECTED")
                 Faulty = True
 
         return Faulty
