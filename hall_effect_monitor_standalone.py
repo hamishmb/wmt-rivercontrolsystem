@@ -73,6 +73,9 @@ def RunStandalone():
 
             NumberOfReadingsTaken += 1
 
+            #Wait five minutes between readings.
+            time.sleep(300)
+
     except BaseException as E:
         #Ignore all errors. Generally bad practice :P
         print("\nCaught Exception: ", E)
