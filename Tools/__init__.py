@@ -18,5 +18,4 @@ from __future__ import absolute_import
 
 from . import core
 from . import sensors
-from . import resistance_probe_monitor
-from . import hall_effect_monitor
+from . import monitortools
