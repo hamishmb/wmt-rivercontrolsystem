@@ -48,7 +48,7 @@ def RunStandalone():
 
     print(dir(sensors))
 
-    from sensors import ResistanceProbe
+    from Tools.sensors import ResistanceProbe
 
     FileName = "Unknown"
 
