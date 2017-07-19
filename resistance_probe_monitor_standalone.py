@@ -79,7 +79,7 @@ def RunStandalone():
             assert False, "unhandled option"
 
     #Greet and get filename.
-    RecordingsFile = CoreTools.GreetAndGetFilename("Resistance Probe Monitor")
+    RecordingsFile = CoreTools.GreetAndGetFilename("Resistance Probe Monitor", FileName)
 
     print("Starting to take readings. Please stand by...")
 

@@ -23,7 +23,7 @@ from __future__ import unicode_literals
 import datetime
 import sys
 
-def GreetAndGetFilename(ModuleName):
+def GreetAndGetFilename(ModuleName, FileName):
     """
     Greets user and gets a file name for readings.
     Usage:
