@@ -28,10 +28,12 @@ import getopt #Proper option handler.
 import threading
 
 def usage():
+    #Only used when running standalone.
     print("\nUsage: hall_effect_monitor.py [OPTION]\n\n")
     print("Options:\n")
-    print("       -h, --help:    Show this help message")
-    print("       <integer>      Specify number of readings to take before exiting. Without this option, readings will be taken until the program is terminated")
+    print("       -h, --help:               Show this help message")
+    print("       -f, --file:               Specify file to write the recordings to. Default: interactive.")
+    print("       -n <int>, --num=<int>     Specify number of readings to take before exiting. Without this option, readings will be taken until the program is terminated")
     print("hall_effect_monitor.py is released under the GNU GPL Version 3")
     print("Copyright (C) Wimborne Model Town 2017")
 
@@ -45,26 +47,8 @@ def RunStandalone():
 
     from Tools.sensors import HallEffectDevice
 
-    #Check all cmdline options are valid and do setup.
-    try:
-        if len(sys.argv) == 1:
-            #No extra options specified. Nothing to do.
-            NumberOfReadingsToTake = 0 #Take readings indefinitely.
-
-        elif sys.argv[1] in ("-h", "--help"):
-            usage()
-            sys.exit()
-
-        elif sys.argv[1].isdigit():
-            NumberOfReadingsToTake = int(sys.argv[1])
-
-        else:
-            raise RuntimeError
-
-    except RuntimeError:
-        usage()
-        print("Invalid option. Exiting...")
-        sys.exit()
+    #Handle cmdline options.
+    FileName, NumberOfReadingsToTake = CoreTools.HandleCmdlineOptions(usage)
 
     #Greet and get filename.
     RecordingsFile = CoreTools.GreetAndGetFilename("Hall Effect Device Monitor", FileName)
@@ -138,3 +122,6 @@ def RunStandalone():
 
         #Reset GPIO pins.
         GPIO.cleanup()
+
+if __name__ == "__main__":
+    RunStandalone()
