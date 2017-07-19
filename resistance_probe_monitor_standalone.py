@@ -109,7 +109,7 @@ def RunStandalone():
             NumberOfReadingsTaken += 1
 
             #Take readings every 5 minutes.
-            time.sleep(300)
+            time.sleep(5)
 
     except BaseException as E:
         #Ignore all errors. Generally bad practice :P

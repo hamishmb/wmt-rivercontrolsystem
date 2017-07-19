@@ -250,7 +250,7 @@ class ResistanceProbe: #TODO Handle improper setup better.
         #No pins were high.
         return -1, "1111111111"
 
-    def CheckForFaults(self, HighestActivePin): #TODO setup and use a logger for this.
+    def CheckForFaults(self, HighestActivePin): #TODO setup and use a logger for this. TODO Actually do something with the data instead of just printing it and then throwing it away.
         """Checks for faults in the sensor. Isn't capable of finding all faults without another sensor to compare against.
         Usage:
 
