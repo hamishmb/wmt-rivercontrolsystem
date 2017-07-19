@@ -304,6 +304,7 @@ class HallEffectDevice: #TODO Handle improper setup better.
         """
 
         self.__Pin = Pin
+        GPIO.setup(self.__Pin, GPIO.IN)
 
     # ---------- INFO GETTER FUNCTIONS ----------
     def GetName(self):
