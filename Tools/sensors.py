@@ -290,7 +290,7 @@ class HallEffectDevice: #TODO Handle improper setup better.
         self.__Detections = 0                  #Internal use only.
 
     # ---------- PRIVATE FUNCTIONS ----------
-    def IncrementDetections(channel):
+    def IncrementDetections(self, channel):
         """Called when a falling edge is detected. Adds 1 to the number of falling edges detected"""
         self.__Detections += 1
 
