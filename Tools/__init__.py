@@ -16,5 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import absolute_import
 
-from . import objects
+from . import core
+from . import sensors
 from . import resistance_probe_monitor
+from . import hall_effect_monitor
