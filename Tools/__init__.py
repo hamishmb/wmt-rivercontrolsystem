@@ -16,6 +16,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import absolute_import
 
-from . import core
-from . import sensors
+from . import coretools
+from . import sensorobjects
 from . import monitortools
