@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Tools Package for the River System Control and Monitoring Software Version 1.0
 # This file is part of the River System Control and Monitoring Software.

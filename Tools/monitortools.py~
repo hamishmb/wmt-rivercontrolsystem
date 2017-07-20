@@ -28,7 +28,7 @@ import getopt #Proper option handler.
 import os
 import threading
 
-# ---------- MONITOR THREAD FOR RESISTANCE PROBE
+# ---------- MONITOR THREAD FOR RESISTANCE PROBES ---------- 
 class ResistanceProbeMonitor(threading.Thread):
     def __init__(self, Probe, NumberOfReadingsToTake, ReadingInterval):
         """Initialise and start the thread"""
@@ -53,6 +53,7 @@ class ResistanceProbeMonitor(threading.Thread):
             #Take readings every however often it is.
             time.sleep(self.ReadingInterval)
 
+# ---------- MONITOR THREAD FOR HALL EFFECT DEVICES ----------
 class HallEffectMonitor(threading.Thread):
     def __init__(self, Probe, NumberOfReadingsToTake, ReadingInterval):
         """Initialise and start the thread"""

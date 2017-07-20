@@ -14,12 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#Do future imports to support running on python 2 as well. Python 3 is the default. Use unicode strings rather than ASCII strings, as they fix potential problems.
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
 #Standard Imports.
 import RPi.GPIO as GPIO
 
@@ -30,7 +24,7 @@ GPIO.setmode(GPIO.BOARD)
 
 #TODO Make a base class that we can derive other classes from to save memory and simplify.
 
-class Motor: #TODO Check types of arguments before setting to avoid weird errors later. Alternatively, use Python 3's type specifiers (breaks python 2 support).
+class Motor: #TODO Check types of arguments before setting to avoid weird errors later. Alternatively, use Python 3's type specifiers (this is python 3 only anyway).
     # ---------- CONSTRUCTORS ----------
     def __init__(self, Name): 
         """
