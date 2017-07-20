@@ -317,7 +317,7 @@ class ResistanceProbe: #TODO Handle improper setup better.
             StateText = ""
 
             for Pin in self.__Pins:
-                StateText += unicode(GPIO.input(Pin))
+                StateText += str(GPIO.input(Pin))
 
             #Check for faults.
             self.CheckForFaults(Index, StateText)

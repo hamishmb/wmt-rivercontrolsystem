@@ -41,7 +41,7 @@ def HandleCmdlineOptions(UsageFunc):
     except getopt.GetoptError as err:
         #Invalid option. Show the help message and then exit.
         #Show the error.
-        print(unicode(err))
+        print(str(err))
         UsageFunc()
         sys.exit(2)
 
