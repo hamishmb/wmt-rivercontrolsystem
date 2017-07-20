@@ -98,7 +98,7 @@ def GreetAndGetFilename(ModuleName, FileName):
         print("Opening file...")
         RecordingsFile = open(FileName, "a", 0)
 
-    except:
+    except ValueError:
         #Bad practice :P
         print("Error opening file. Do you have permission to write there?")
         print("Exiting...")
