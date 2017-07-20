@@ -138,6 +138,82 @@ class Motor: #TODO Check types of arguments before setting to avoid weird errors
 
 # -------------------- SENSOR PROBES --------------------
 
+class CapacitiveProbe: #TODO Handle improper setup better.
+    # ---------- CONSTRUCTORS ----------
+    def __init__(self, ProbeName):
+        """
+        This is the constructor.
+        Usage:
+
+            <Variable-Name> = CapacitiveProbe(string ProbeName)
+        """
+
+        #Set some semi-private variables.
+        self.__ProbeName = ProbeName         #Used to keep track of which probe we're controlling. Cannot be re-set after initialisation.
+        self.__Pin = -1                      #Needs to be set.
+        self.__Detections = 0                #Internal use only.
+
+    # ---------- PRIVATE FUNCTIONS ----------
+    def IncrementDetections(self, channel):
+        """Called when a falling edge is detected. Adds 1 to the number of falling edges detected"""
+        self.__Detections += 1
+
+    # ---------- INFO SETTER FUNCTIONS ----------
+    def SetPin(self, Pin):
+        """
+        Sets the input pin for this hall effect device.
+        Usage:
+
+            <CapacitiveProbe-Object>.SetPin(int Pin)
+        """
+
+        self.__Pin = Pin
+        GPIO.setup(self.__Pin, GPIO.IN)
+
+    # ---------- INFO GETTER FUNCTIONS ----------
+    def GetName(self):
+        """
+        Returns the name of this probe.
+        Usage:
+
+            string <CapacitiveProbe-Object>.GetName()
+        """
+
+        return self.__ProbeName
+
+    def GetPin(self):
+        """
+        Returns the pin this probe is using.
+        Usage:
+
+            int <CapacitiveProbe-Object>.GetPin()
+        """
+
+        return self.__Pin
+
+    # ---------- CONTROL FUNCTIONS ----------
+    def GetLevel(self):
+        """
+        Returns the level of water. Takes readings for 5 seconds and then averages the result.
+        Usage:
+
+            int <CapacitiveProbe-Object>.GetLevel()
+        """
+        self.__Detections = 0
+
+        #Automatically call our function when a falling edge is detected.
+        GPIO.add_event_detect(self.__Pin, GPIO.FALLING, callback=self.IncrementDetections)
+
+        time.sleep(5)
+
+        #Stop calling our function.
+        GPIO.remove_event_detect(self.__Pin)
+
+        #Use integer divison '//' because it's fast.
+        Freq = self.__Detections // 5 #Because we're measuring over 5 seconds, take the mean average over 5 seconds.
+
+        return Freq
+
 class ResistanceProbe: #TODO Handle improper setup better.
     # ---------- CONSTRUCTORS ----------
     def __init__(self, ProbeName):
@@ -220,7 +296,7 @@ class ResistanceProbe: #TODO Handle improper setup better.
 
         return self.__Pins
 
-    # ---------- CONTROL FUNCTIONS ---------- 
+    # ---------- CONTROL FUNCTIONS ----------
     def GetLevel(self):
         """
         Gets the level of the water in the probe.
@@ -335,7 +411,7 @@ class HallEffectDevice: #TODO Handle improper setup better.
         Returns the rate at with the hall effect device is rotating. Takes readings for 5 seconds and then averages the result.
         Usage:
 
-            int <HallEffectDevice-Object>.GetPin()
+            int <HallEffectDevice-Object>.GetRPM()
         """
         self.__Detections = 0
 
@@ -353,6 +429,4 @@ class HallEffectDevice: #TODO Handle improper setup better.
         #Then multiply by 12 to get RPM.
         RPM = RevsPer5Sec * 12
 
-        return RPM
-
-    
+        return RPM    
