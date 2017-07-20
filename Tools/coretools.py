@@ -108,5 +108,5 @@ def GreetAndGetFilename(ModuleName, FileName):
         RecordingsFile.write("Starting to take readings...\n")
         print("Successfully opened file. Continuing..")
 
-    return RecordingsFile
+    return FileName, RecordingsFile
 

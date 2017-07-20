@@ -51,7 +51,7 @@ def RunStandalone():
     FileName, NumberOfReadingsToTake = CoreTools.HandleCmdlineOptions(usage)
 
     #Greet and get filename.
-    RecordingsFile = CoreTools.GreetAndGetFilename("Hall Effect Device Monitor", FileName)
+    FileName, RecordingsFile = CoreTools.GreetAndGetFilename("Hall Effect Device Monitor", FileName)
 
     print("Starting to take readings. Please stand by...")
 

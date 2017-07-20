@@ -28,6 +28,8 @@ import time
 #TODO Change pins to BCM so we can change this.
 GPIO.setmode(GPIO.BOARD)
 
+#TODO Make a base class that we can derive other classes from to save memory and simplify.
+
 class Motor: #TODO Check types of arguments before setting to avoid weird errors later. Alternatively, use Python 3's type specifiers (breaks python 2 support).
     # ---------- CONSTRUCTORS ----------
     def __init__(self, Name): 

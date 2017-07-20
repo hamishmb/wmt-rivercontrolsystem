@@ -52,7 +52,7 @@ def RunStandalone():
     FileName, NumberOfReadingsToTake = CoreTools.HandleCmdlineOptions(usage)
 
     #Greet and get filename.
-    RecordingsFile = CoreTools.GreetAndGetFilename("Resistance Probe Monitor", FileName)
+    FileName, RecordingsFile = CoreTools.GreetAndGetFilename("Resistance Probe Monitor", FileName)
 
     print("Starting to take readings. Please stand by...")
 
