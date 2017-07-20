@@ -84,14 +84,14 @@ def GreetAndGetFilename(ModuleName, FileName):
 
         sys.stdout.write("Enter filename and press ENTER: ")
 
-        FileName = raw_input()
+        FileName = input()
 
         print("\n\nSelected File: "+FileName)
         print("Press CTRL-C if you are not happy with this choice.\n")
 
         print("Press ENTER to continue...")
 
-        raw_input() #Wait until user presses enter.
+        input() #Wait until user presses enter.
 
     try:
         #Use buffer size of 0 to disable Python's file buffer.
