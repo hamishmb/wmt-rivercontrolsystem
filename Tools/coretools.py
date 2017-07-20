@@ -93,13 +93,11 @@ def GreetAndGetFilename(ModuleName, FileName):
 
         input() #Wait until user presses enter.
 
-    #Use buffer size of 0 to disable Python's file buffer.
-    print("Opening file...")
-    RecordingsFile = open(FileName, "a", 0)
+    try:
+        print("Opening file...")
+        RecordingsFile = open(FileName, "a",)
 
-    try: pass
-
-    except ValueError:
+    except:
         #Bad practice :P
         print("Error opening file. Do you have permission to write there?")
         print("Exiting...")
