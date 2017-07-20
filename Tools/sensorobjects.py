@@ -111,7 +111,7 @@ class Motor: #TODO Check types of arguments before setting to avoid weird errors
             return False
 
         #Turn the pin on.
-        GPIO.write(self.__ControlPin, True)
+        GPIO.output(self.__ControlPin, True)
 
         return True
 
@@ -128,7 +128,7 @@ class Motor: #TODO Check types of arguments before setting to avoid weird errors
             return False
 
         #Turn the pin off.
-        GPIO.write(self.__ControlPin, False)
+        GPIO.output(self.__ControlPin, False)
 
         return True
 
