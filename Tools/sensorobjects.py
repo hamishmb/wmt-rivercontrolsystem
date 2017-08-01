@@ -19,8 +19,8 @@ import RPi.GPIO as GPIO
 
 import time
 
-#TODO Change pins to BCM so we can change this.
-GPIO.setmode(GPIO.BOARD)
+#TODO Check that the change to BCN hasn't screwed anything up.
+GPIO.setmode(GPIO.BCM)
 
 #TODO Make a base class that we can derive other classes from to save memory and simplify.
 

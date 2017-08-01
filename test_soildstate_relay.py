@@ -39,7 +39,7 @@ def RunStandalone():
     TestMotor = Motor("Motorey")
 
     #Set the motor up.
-    TestMotor.SetControlPin(10)
+    TestMotor.SetControlPin(15)
 
     #Don't use the thread here: it doesn't write to a file. TODO use a queue with the thread so we can use it here and receive messages to write them to a file, reducing duplications.
     try:

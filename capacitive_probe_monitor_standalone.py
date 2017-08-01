@@ -53,7 +53,7 @@ def RunStandalone():
     Probe = CapacitiveProbe("Probey")
 
     #Set the probe up.
-    Probe.SetPin(10)
+    Probe.SetPin(15)
 
     #Holds the number of readings we've taken.
     NumberOfReadingsTaken = 0
