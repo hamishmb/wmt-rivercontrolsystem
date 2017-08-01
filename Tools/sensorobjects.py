@@ -22,9 +22,90 @@ import time
 #TODO Check that the change to BCN hasn't screwed anything up.
 GPIO.setmode(GPIO.BCM)
 
-#TODO Make a base class that we can derive other classes from to save memory and simplify.
+class BaseDeviceClass:
+    # ---------- CONSTRUCTOR ----------
+    def __init__ (self, Name):
+        """
+        This is the constructor.
+        It is not intended to be used except as part of the initialistion for a derived class.
+        """
 
-class Motor: #TODO Check types of arguments before setting to avoid weird errors later. Alternatively, use Python 3's type specifiers (this is python 3 only anyway).
+        #Set some semi-private variables.
+        self._Name = Name                   #Just a label.
+        self._ControlPin = -1               #Needs to be set/deleted.
+        self._Pins = []                     #Needs to be set/deleted.
+        self._RPins = []                    #Needs to be set/deleted.
+
+    # ---------- INFO SETTER FUNCTIONS ---------- NOTE: If we aren't going to use some of these/they aren't applicable in some derived classes, they can be removed from the derived classes (at least sort of).
+    def SetPin(self, Pin): #TODO Check if this Pin is already in use. If so throw an error. Also check if this pin is a valid output pin.
+        """
+        Sets the pin for the device.
+        Usage:
+
+            <Device-Object>.SetPin(int Pin)
+        """
+
+        #TODO: Can we un-setup an old pin?
+        self._Pin = Pin
+
+        GPIO.setup(self._Pin, GPIO.OUT)
+
+    def SetPins(self, Pins):
+        """
+        Sets the pins this device will use (from low to high if a resistance probe).
+        Usage:
+
+            <Device-Object>.SetPins(tuple Pins)
+        """
+
+        self._Pins = Pins
+        self._RPins = Pins[::-1]
+
+        #Setup the pins. TODO Make more flexible (we may want more/fewer than 10 pins).
+        #10 Inputs. 0 is for the lowest depth, 9 the highest.
+        GPIO.setup(self._Pins[0], GPIO.IN)
+        GPIO.setup(self._Pins[1], GPIO.IN)
+        GPIO.setup(self._Pins[2], GPIO.IN)
+        GPIO.setup(self._Pins[3], GPIO.IN)
+        GPIO.setup(self._Pins[4], GPIO.IN)
+        GPIO.setup(self._Pins[5], GPIO.IN)
+        GPIO.setup(self._Pins[6], GPIO.IN)
+        GPIO.setup(self._Pins[7], GPIO.IN)
+        GPIO.setup(self._Pins[8], GPIO.IN)
+        GPIO.setup(self._Pins[9], GPIO.IN)
+
+    # ---------- INFO GETTER FUNCTIONS ---------- NOTE: If we aren't going to use some of these/they aren't applicable in some derived classes, they can be removed from the derived classes (at least sort of).
+    def GetName(self):
+        """
+        Returns the name of the device this object is representing.
+        Usage:
+
+            str <Device-Object>.GetName()
+        """
+
+        return self._Name
+
+    def GetPin(self):
+        """
+        Returns the pin for this device.
+        Usage:
+
+            int <Device-Object>.GetControlPin()
+        """
+
+        return self._Pin
+
+    def GetPins(self):
+        """
+        Returns the pins for this device (from low to high if a resistance probe).
+        Usage:
+
+            tuple <Device-Object>.GetPins()
+        """
+
+        return self._Pins
+
+class Motor(BaseDeviceClass): #TODO Check types of arguments before setting to avoid weird errors later. Alternatively, use Python 3's type specifiers (this is python 3 only anyway).
     # ---------- CONSTRUCTORS ----------
     def __init__(self, Name): 
         """
@@ -34,12 +115,19 @@ class Motor: #TODO Check types of arguments before setting to avoid weird errors
             <Variable-Name> = Motor(str Name)
         """
 
+        #Call the base class constructor.
+        BaseDeviceClass.__init__(self, Name)
+
+        #Delete some unwanted variables and methods.
+        del self._Pins
+        del self._RPins
+        del self.SetPins
+        del self.GetPins
+
         #Set some semi-private variables.
-        self.__MotorName = Name              #Used to keep track of which motor we're controlling. Cannot be re-set after initialisation.
-        self.__State = False                 #Motor is initialised to be off.
-        self.__IsVariableSpeed = False       #Assume we don't have PWM by default.
-        self.__ControlPin = -1               #Needs to be set.
-        self.__PWMPin = -1                   #Needs to be set.
+        self._State = False                 #Motor is initialised to be off.
+        self._IsVariableSpeed = False       #Assume we don't have PWM by default.
+        self._PWMPin = -1                   #Needs to be set.
 
     # ---------- INFO SETTER FUNCTIONS ----------
     def SetPWMAvailable(self, PWMAvailable, PWMPin): #TODO Hardware check to determine if PWM is avaiable.
@@ -50,33 +138,10 @@ class Motor: #TODO Check types of arguments before setting to avoid weird errors
             <Motor-Object>.SetPWMAvailable(bool PWMAvailable, int PWMPin)
         """
 
-        self.__IsVariableSpeed = PWMAvailable
-        self.__PWMPin = PWMPin
-
-    def SetControlPin(self, ControlPin): #TODO Check if this Pin is already in use. If so throw an error. Also check if this pin is a valid output pin.
-        """
-        Sets the control pin for the motor.
-        Usage:
-
-            <Motor-Object>.SetControlPin(int ControlPin)
-        """
-
-        #TODO: Can we un-setup an old pin?
-        self.__ControlPin = ControlPin
-
-        GPIO.setup(self.__ControlPin, GPIO.OUT)
+        self._IsVariableSpeed = PWMAvailable
+        self._PWMPin = PWMPin
 
     # ---------- INFO GETTER FUNCTIONS ----------
-    def GetName(self):
-        """
-        Returns the name of the motor this object is representing.
-        Usage:
-
-            str <Motor-Object>.GetName()
-        """
-
-        return self.__MotorName
-
     def SupportsPWM(self):
         """
         Returns True if PWM is supported for this motor. Else False.
@@ -85,17 +150,7 @@ class Motor: #TODO Check types of arguments before setting to avoid weird errors
             bool <Motor-Object>.SupportsPWM()
         """
 
-        return self.__IsVariableSpeed
-
-    def GetControlPin(self):
-        """
-        Returns the integer that represents the control pin for this motor.
-        Usage:
-
-            int <Motor-Object>.GetControlPin()
-        """
-
-        return self.__ControlPin
+        return self._IsVariableSpeed
 
     # ---------- CONTROL FUNCTIONS ----------
     def TurnOn(self):
@@ -107,11 +162,11 @@ class Motor: #TODO Check types of arguments before setting to avoid weird errors
         """
 
         #Return false if control pin isn't set.
-        if self.__ControlPin == -1:
+        if self._Pin == -1:
             return False
 
         #Turn the pin on.
-        GPIO.output(self.__ControlPin, True)
+        GPIO.output(self._Pin, True)
 
         return True
 
@@ -124,68 +179,41 @@ class Motor: #TODO Check types of arguments before setting to avoid weird errors
         """
 
         #Return false if control pin isn't set.
-        if self.__ControlPin == -1:
+        if self._Pin == -1:
             return False
 
         #Turn the pin off.
-        GPIO.output(self.__ControlPin, False)
+        GPIO.output(self._Pin, False)
 
         return True
 
 # -------------------- SENSOR PROBES --------------------
 
-class CapacitiveProbe: #TODO Handle improper setup better.
+class CapacitiveProbe(BaseDeviceClass): #TODO Handle improper setup better.
     # ---------- CONSTRUCTORS ----------
-    def __init__(self, ProbeName):
+    def __init__(self, Name):
         """
         This is the constructor.
         Usage:
 
             <Variable-Name> = CapacitiveProbe(string ProbeName)
         """
+        #Call the base class constructor.
+        BaseDeviceClass.__init__(self, Name)
+
+        #Delete some unwanted variables and methods.
+        del self._Pins
+        del self._RPins
+        del self.SetPins
+        del self.GetPins
 
         #Set some semi-private variables.
-        self.__ProbeName = ProbeName         #Used to keep track of which probe we're controlling. Cannot be re-set after initialisation.
-        self.__Pin = -1                      #Needs to be set.
-        self.__Detections = 0                #Internal use only.
+        self._Detections = 0                #Internal use only.
 
     # ---------- PRIVATE FUNCTIONS ----------
     def IncrementDetections(self, channel):
         """Called when a falling edge is detected. Adds 1 to the number of falling edges detected"""
-        self.__Detections += 1
-
-    # ---------- INFO SETTER FUNCTIONS ----------
-    def SetPin(self, Pin):
-        """
-        Sets the input pin for this hall effect device.
-        Usage:
-
-            <CapacitiveProbe-Object>.SetPin(int Pin)
-        """
-
-        self.__Pin = Pin
-        GPIO.setup(self.__Pin, GPIO.IN)
-
-    # ---------- INFO GETTER FUNCTIONS ----------
-    def GetName(self):
-        """
-        Returns the name of this probe.
-        Usage:
-
-            string <CapacitiveProbe-Object>.GetName()
-        """
-
-        return self.__ProbeName
-
-    def GetPin(self):
-        """
-        Returns the pin this probe is using.
-        Usage:
-
-            int <CapacitiveProbe-Object>.GetPin()
-        """
-
-        return self.__Pin
+        self._Detections += 1
 
     # ---------- CONTROL FUNCTIONS ----------
     def GetLevel(self):
@@ -195,36 +223,40 @@ class CapacitiveProbe: #TODO Handle improper setup better.
 
             int <CapacitiveProbe-Object>.GetLevel()
         """
-        self.__Detections = 0
+        self._Detections = 0
 
         #Automatically call our function when a falling edge is detected.
-        GPIO.add_event_detect(self.__Pin, GPIO.FALLING, callback=self.IncrementDetections)
+        GPIO.add_event_detect(self._Pin, GPIO.FALLING, callback=self.IncrementDetections)
 
         time.sleep(5)
 
         #Stop calling our function.
-        GPIO.remove_event_detect(self.__Pin)
+        GPIO.remove_event_detect(self._Pin)
 
         #Use integer divison '//' because it's fast.
-        Freq = self.__Detections // 5 #Because we're measuring over 5 seconds, take the mean average over 5 seconds.
+        Freq = self._Detections // 5 #Because we're measuring over 5 seconds, take the mean average over 5 seconds.
 
         return Freq
 
-class ResistanceProbe: #TODO Handle improper setup better.
+class ResistanceProbe(BaseDeviceClass): #TODO Handle improper setup better.
     # ---------- CONSTRUCTORS ----------
-    def __init__(self, ProbeName):
+    def __init__(self, Name):
         """
         This is the constructor.
         Usage:
 
             <Variable-Name> = ResistanceProbe(string ProbeName)
         """
+        #Call the base class constructor.
+        BaseDeviceClass.__init__(self, Name)
+
+        #Delete some unwanted variables and methods.
+        del self._Pin
+        del self.SetPin
+        del self.GetPin
 
         #Set some semi-private variables.
-        self.__ProbeName = ProbeName         #Used to keep track of which probe we're controlling. Cannot be re-set after initialisation.
-        self.__ActiveState = False           #Active low by default.
-        self.__Pins = []                     #Needs to be set.
-        self.__RPins = []                    #Needs to be set.
+        self._ActiveState = False           #Active low by default.
 
     # ---------- INFO SETTER FUNCTIONS ----------
     def SetActiveState(self, State):
@@ -235,43 +267,9 @@ class ResistanceProbe: #TODO Handle improper setup better.
             <ResistanceProbe-Object>.SetActiveState(bool State)
         """
 
-        self.__ActiveState = State
-
-    def SetPins(self, Pins):
-        """
-        Sets the pins this probe will use, from low to high.
-        Usage:
-
-            <ResistanceProbe-Object>.SetPins(tuple Pins)
-        """
-
-        self.__Pins = Pins
-        self.__RPins = Pins[::-1]
-
-        #Setup the pins.
-        #10 Inputs. 0 is for the lowest depth, 9 the highest.
-        GPIO.setup(self.__Pins[0], GPIO.IN)
-        GPIO.setup(self.__Pins[1], GPIO.IN)
-        GPIO.setup(self.__Pins[2], GPIO.IN)
-        GPIO.setup(self.__Pins[3], GPIO.IN)
-        GPIO.setup(self.__Pins[4], GPIO.IN)
-        GPIO.setup(self.__Pins[5], GPIO.IN)
-        GPIO.setup(self.__Pins[6], GPIO.IN)
-        GPIO.setup(self.__Pins[7], GPIO.IN)
-        GPIO.setup(self.__Pins[8], GPIO.IN)
-        GPIO.setup(self.__Pins[9], GPIO.IN)
+        self._ActiveState = State
 
     # ---------- INFO GETTER FUNCTIONS ----------
-    def GetName(self):
-        """
-        Returns the name of this probe.
-        Usage:
-
-            string <ResistanceProbe-Object>.GetName()
-        """
-
-        return self.__ProbeName
-
     def GetActiveState(self):
         """
         Returns the active state for the pins.
@@ -280,17 +278,7 @@ class ResistanceProbe: #TODO Handle improper setup better.
             bool <ResistanceProbe-Object>.GetActiveState()
         """
 
-        return self.__ActiveState
-
-    def GetPins(self):
-        """
-        Returns the pins this probe is using, from high to low.
-        Usage:
-
-            tuple <ResistanceProbe-Object>.GetPins()
-        """
-
-        return self.__Pins
+        return self._ActiveState
 
     # ---------- CONTROL FUNCTIONS ----------
     def GetLevel(self):
@@ -301,18 +289,18 @@ class ResistanceProbe: #TODO Handle improper setup better.
             (int, string) <ResistanceProbe-Object>.GetLevel()
         """
 
-        for Pin in self.__RPins:
+        for Pin in self._RPins:
             #Ignore pins until we find one that is in the active state.
-            if GPIO.input(Pin) != self.__ActiveState:
+            if GPIO.input(Pin) != self._ActiveState:
                 continue
 
             #This pin must be active.
-            Index = self.__Pins.index(Pin)
+            Index = self._Pins.index(Pin)
 
             #Log the states of all the pins.
             StateText = ""
 
-            for Pin in self.__Pins:
+            for Pin in self._Pins:
                 StateText += str(GPIO.input(Pin))
 
             #Check for faults.
@@ -336,21 +324,21 @@ class ResistanceProbe: #TODO Handle improper setup better.
 
         #All pins before this one should be active.
         for Pin in StateText[:HighestActivePin]:
-            if bool(int(Pin)) != self.__ActiveState:
+            if bool(int(Pin)) != self._ActiveState:
                 print("FAULT DETECTED")
                 Faulty = True
 
         #All pins after this one should be inactive.
         for Pin in StateText[HighestActivePin+1:]:
-            if bool(int(Pin)) == self.__ActiveState:
+            if bool(int(Pin)) == self._ActiveState:
                 print("FAULT DETECTED")
                 Faulty = True
 
         return Faulty
 
-class HallEffectDevice: #TODO Handle improper setup better.
+class HallEffectDevice(BaseDeviceClass): #TODO Handle improper setup better.
     # ---------- CONSTRUCTORS ----------
-    def __init__(self, DeviceName):
+    def __init__(self, Name):
         """
         This is the constructor.
         Usage:
@@ -358,48 +346,22 @@ class HallEffectDevice: #TODO Handle improper setup better.
             <Variable-Name> = HallEffectDevice(string DeviceName)
         """
 
+        #Call the base class costructor.
+        BaseDeviceClass.__init__(self, Name)
+
+        #Delete some unwanted variables and methods.
+        del self._Pins
+        del self._RPins
+        del self.SetPins
+        del self.GetPins
+
         #Set some semi-private variables.
-        self.__DeviceName = DeviceName         #Used to keep track of which probe we're controlling. Cannot be re-set after initialisation.
-        self.__Pin = -1                        #Needs to be set.
-        self.__Detections = 0                  #Internal use only.
+        self._Detections = 0                  #Internal use only.
 
     # ---------- PRIVATE FUNCTIONS ----------
     def IncrementDetections(self, channel):
         """Called when a falling edge is detected. Adds 1 to the number of falling edges detected"""
-        self.__Detections += 1
-
-    # ---------- INFO SETTER FUNCTIONS ----------
-    def SetPin(self, Pin):
-        """
-        Sets the input pin for this hall effect device.
-        Usage:
-
-            <HallEffectDevice-Object>.SetPin(int Pin)
-        """
-
-        self.__Pin = Pin
-        GPIO.setup(self.__Pin, GPIO.IN)
-
-    # ---------- INFO GETTER FUNCTIONS ----------
-    def GetName(self):
-        """
-        Returns the name of this probe.
-        Usage:
-
-            string <HallEffectDevice-Object>.GetName()
-        """
-
-        return self.__DeviceName
-
-    def GetPin(self):
-        """
-        Returns the pin this probe is using.
-        Usage:
-
-            int <HallEffectDevice-Object>.GetPin()
-        """
-
-        return self.__Pin
+        self._Detections += 1
 
     # ---------- CONTROL FUNCTIONS ---------- 
     def GetRPM(self):
@@ -409,18 +371,18 @@ class HallEffectDevice: #TODO Handle improper setup better.
 
             int <HallEffectDevice-Object>.GetRPM()
         """
-        self.__Detections = 0
+        self._Detections = 0
 
         #Automatically call our function when a falling edge is detected.
-        GPIO.add_event_detect(self.__Pin, GPIO.FALLING, callback=self.IncrementDetections)
+        GPIO.add_event_detect(self._Pin, GPIO.FALLING, callback=self.IncrementDetections)
 
         time.sleep(5)
 
         #Stop calling our function.
-        GPIO.remove_event_detect(self.__Pin)
+        GPIO.remove_event_detect(self._Pin)
 
         #Use integer divison '//' because it's fast.
-        RevsPer5Sec = self.__Detections // 5 #Because we're measuring over 5 seconds, take the mean average over 5 seconds.
+        RevsPer5Sec = self._Detections // 5 #Because we're measuring over 5 seconds, take the mean average over 5 seconds.
 
         #Then multiply by 12 to get RPM.
         RPM = RevsPer5Sec * 12
