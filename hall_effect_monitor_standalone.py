@@ -61,7 +61,7 @@ def RunStandalone():
     NumberOfReadingsTaken = 0
 
     #Start the monitor thread.
-    MonitorThread = HallEffectMonitor(Probe, NumberOfReadingsToTake, ReadingInterval=300)
+    MonitorThread = HallEffectMonitor(Probe, NumberOfReadingsToTake, ReadingInterval=5)
 
     #Keep tabs on its progress so we can write new readings to the file.
     while MonitorThread.IsRunning():
@@ -74,7 +74,7 @@ def RunStandalone():
             RecordingsFile.write(Reading)
 
         #Wait until it's time to check for another reading.
-        time.sleep(300)
+        time.sleep(5)
 
     #Always clean up properly.
     print("Cleaning up...")
