@@ -108,16 +108,21 @@ class Motor(BaseDeviceClass):
         #Call the base class constructor.
         BaseDeviceClass.__init__(self, Name)
 
-        #Delete some unwanted variables and methods.
+        #Delete some unwanted variables.
         del self._Pins
         del self._RPins
-        del self.SetPins
-        del self.GetPins
 
         #Set some semi-private variables.
         self._State = False                 #Motor is initialised to be off.
         self._IsVariableSpeed = False       #Assume we don't have PWM by default.
         self._PWMPin = -1                   #Needs to be set.
+
+    # ---------- OVERRIDE IRRELEVANT FUNCTIONS ----------
+    def SetPins(self, Pins):
+        raise NotImplementedError
+
+    def GetPins(self):
+        raise NotImplementedError
 
     # ---------- INFO SETTER FUNCTIONS ----------
     def SetPWMAvailable(self, PWMAvailable, PWMPin): #TODO Hardware check to determine if PWM is avaiable.
@@ -194,11 +199,16 @@ class CapacitiveProbe(BaseDeviceClass):
         #Delete some unwanted variables and methods.
         del self._Pins
         del self._RPins
-        del self.SetPins
-        del self.GetPins
 
         #Set some semi-private variables.
         self._Detections = 0                #Internal use only.
+
+    # ---------- OVERRIDE IRRELEVANT FUNCTIONS ----------
+    def SetPins(self, Pins):
+        raise NotImplementedError
+
+    def GetPins(self):
+        raise NotImplementedError
 
     # ---------- PRIVATE FUNCTIONS ----------
     def IncrementDetections(self, channel):
@@ -242,11 +252,16 @@ class ResistanceProbe(BaseDeviceClass):
 
         #Delete some unwanted variables and methods.
         del self._Pin
-        del self.SetPin
-        del self.GetPin
 
         #Set some semi-private variables.
         self._ActiveState = False           #Active low by default.
+
+    # ---------- OVERRIDE IRRELEVANT FUNCTIONS ----------
+    def SetPin(self, Pins):
+        raise NotImplementedError
+
+    def GetPin(self):
+        raise NotImplementedError
 
     # ---------- INFO SETTER FUNCTIONS ----------
     def SetActiveState(self, State):
@@ -342,11 +357,16 @@ class HallEffectDevice(BaseDeviceClass):
         #Delete some unwanted variables and methods.
         del self._Pins
         del self._RPins
-        del self.SetPins
-        del self.GetPins
 
         #Set some semi-private variables.
         self._Detections = 0                  #Internal use only.
+
+    # ---------- OVERRIDE IRRELEVANT FUNCTIONS ----------
+    def SetPins(self, Pins):
+        raise NotImplementedError
+
+    def GetPins(self):
+        raise NotImplementedError
 
     # ---------- PRIVATE FUNCTIONS ----------
     def IncrementDetections(self, channel):
