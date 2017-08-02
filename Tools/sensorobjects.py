@@ -184,6 +184,37 @@ class Motor(BaseDeviceClass):
 
 # -------------------- SENSOR PROBES --------------------
 
+class FloatSwitch(BaseDeviceClass):
+    # ---------- CONSTRUCTORS ----------
+    def __init__(self, Name):
+        """
+        This is the constructor.
+        Usage:
+
+            <Variable-Name> = FloatSwitch(string Name)
+        """
+        #Call the base class constructor.
+        BaseDeviceClass.__init__(self, Name)
+
+        #Delete some unwanted variables.
+        del self._Pins
+        del self._RPins
+
+    # ---------- OVERRIDE IRRELEVANT FUNCTIONS ---------
+    def SetPins(self, Pins):
+        raise NotImplementedError
+
+    def GetPins(self):
+        raise NotImplementedError
+
+    def GetState(self):
+        """
+        Returns the state of the switch. True = on, False = off.
+        Usage:
+            bool <FloatSwitch-Object>.GetState()
+        """
+        return GPIO.input(self._Pin)
+
 class CapacitiveProbe(BaseDeviceClass):
     # ---------- CONSTRUCTORS ----------
     def __init__(self, Name):
@@ -196,7 +227,7 @@ class CapacitiveProbe(BaseDeviceClass):
         #Call the base class constructor.
         BaseDeviceClass.__init__(self, Name)
 
-        #Delete some unwanted variables and methods.
+        #Delete some unwanted variables.
         del self._Pins
         del self._RPins
 
@@ -250,7 +281,7 @@ class ResistanceProbe(BaseDeviceClass):
         #Call the base class constructor.
         BaseDeviceClass.__init__(self, Name)
 
-        #Delete some unwanted variables and methods.
+        #Delete some unwanted variables.
         del self._Pin
 
         #Set some semi-private variables.
@@ -354,7 +385,7 @@ class HallEffectDevice(BaseDeviceClass):
         #Call the base class costructor.
         BaseDeviceClass.__init__(self, Name)
 
-        #Delete some unwanted variables and methods.
+        #Delete some unwanted variables.
         del self._Pins
         del self._RPins
 
