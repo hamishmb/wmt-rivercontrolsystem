@@ -46,7 +46,7 @@ class ResistanceProbeMonitor(threading.Thread):
                 Level, StateText = self.Probe.GetLevel()
 
                 print("Time: ", str(datetime.datetime.now()), "Level: "+str(Level), "mm. Pin states: "+StateText)
-                self.Queue.append("Time: ", str(datetime.datetime.now()), "Level: "+str(Level), "mm. Pin states: "+StateText)
+                self.Queue.append("Time: "+str(datetime.datetime.now()), "Level: "+str(Level), "mm. Pin states: "+StateText)
 
                 NumberOfReadingsTaken += 1
 
@@ -103,17 +103,23 @@ class HallEffectMonitor(threading.Thread):
         """Main part of the thread"""
         NumberOfReadingsTaken = 0
 
+        try:
+            while (self.NumberOfReadingsToTake == 0 or (NumberOfReadingsTaken < self.NumberOfReadingsToTake)):
+                RPM = self.Probe.GetRPM()
 
-        while (self.NumberOfReadingsToTake == 0 or (NumberOfReadingsTaken < self.NumberOfReadingsToTake)):
-            RPM = self.Probe.GetRPM()
+                #Add the reading to the queue.
+                self.Queue.append("Time: "+str(datetime.datetime.now())+" RPM: "+str(RPM))
 
-            #Add the reading to the queue.
-            self.Queue.append("Time: ", str(datetime.datetime.now()), "RPM: "+str(RPM))
+                NumberOfReadingsTaken += 1
 
-            NumberOfReadingsTaken += 1
+                #Take readings every however often it is.
+                time.sleep(self.ReadingInterval)
 
-            #Take readings every however often it is.
-            time.sleep(self.ReadingInterval)
+        except BaseException as E:
+            #Ignore all errors. Generally bad practice :P
+            print("\nCaught Exception: ", E)
+
+        self.Running = False
 
     def IsRunning(self):
         """

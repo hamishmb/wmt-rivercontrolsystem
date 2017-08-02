@@ -45,8 +45,7 @@ class ResistanceProbeMonitor(threading.Thread):
             while (self.NumberOfReadingsToTake == 0 or (NumberOfReadingsTaken < self.NumberOfReadingsToTake)):
                 Level, StateText = self.Probe.GetLevel()
 
-                print("Time: ", str(datetime.datetime.now()), "Level: "+str(Level), "mm. Pin states: "+StateText)
-                self.Queue.append("Time: ", str(datetime.datetime.now()), "Level: "+str(Level), "mm. Pin states: "+StateText)
+                self.Queue.append("Time: "+str(datetime.datetime.now())+" Level: "+str(Level)+"mm. Pin states: "+StateText)
 
                 NumberOfReadingsTaken += 1
 
@@ -108,7 +107,7 @@ class HallEffectMonitor(threading.Thread):
                 RPM = self.Probe.GetRPM()
 
                 #Add the reading to the queue.
-                self.Queue.append("Time: ", str(datetime.datetime.now()), "RPM: "+str(RPM))
+                self.Queue.append("Time: "+str(datetime.datetime.now())+" RPM: "+str(RPM))
 
                 NumberOfReadingsTaken += 1
 

@@ -66,7 +66,7 @@ def RunStandalone():
     #Keep tabs on its progress so we can write new readings to the file.
     while MonitorThread.IsRunning():
         #Check for new readings.
-        while MonitorThread.HasReadings():
+        while MonitorThread.HasData():
             Reading = MonitorThread.GetReading()
 
             #Write any new readings to the file and to stdout.
