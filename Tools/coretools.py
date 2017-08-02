@@ -68,7 +68,7 @@ def GreetAndGetFilename(ModuleName, FileName):
 
     print("System Time: ", str(datetime.datetime.now()))
     print(ModuleName+" is running standalone.")
-    print("Welcome. This program will quit automatically if you specified a number of readings, otherwise quit with CTRL-C when you wish.\n")
+    print("Welcome. This program will quit automatically if you specified a number of readings, otherwise quit by pressing CTRL-C twice when you wish.\n")
 
     #Get filename, if one wasn't specified.
     if FileName == "Unknown":
