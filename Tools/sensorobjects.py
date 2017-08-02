@@ -37,7 +37,7 @@ class BaseDeviceClass: #NOTE: Should this be in coretools?
         self._RPins = []                    #Needs to be set/deleted.
 
     # ---------- INFO SETTER FUNCTIONS ---------- NOTE: If we aren't going to use some of these/they aren't applicable in some derived classes, they can be removed from the derived classes (at least sort of).
-    def SetPin(self, Pin): #FIXME: Check if this Pin is already in use. If so throw an error. Also check if this pin is a valid output pin.
+    def SetPin(self, Pin): #FIXME: Check if this Pin is already in use. If so throw an error. Also check if this pin is a valid input pin.
         """
         Sets the pin for the device.
         Usage:
@@ -46,7 +46,7 @@ class BaseDeviceClass: #NOTE: Should this be in coretools?
         """
         self._Pin = Pin
 
-        GPIO.setup(self._Pin, GPIO.OUT)
+        GPIO.setup(self._Pin, GPIO.IN)
 
     def SetPins(self, Pins):
         """
