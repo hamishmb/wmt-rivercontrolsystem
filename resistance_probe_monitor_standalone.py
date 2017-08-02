@@ -38,9 +38,11 @@ def RunStandalone():
     import Tools
 
     from Tools import sensorobjects
+    from Tools import monitortools
     from Tools import coretools as CoreTools
 
     from Tools.sensorobjects import ResistanceProbe
+    from Tools.monitortools import ResistanceProbeMonitor
 
     #Handle cmdline options.
     FileName, NumberOfReadingsToTake = CoreTools.HandleCmdlineOptions(usage)
@@ -60,36 +62,33 @@ def RunStandalone():
     #Holds the number of readings we've taken.
     NumberOfReadingsTaken = 0
 
-    #Don't use the thread here: it doesn't write to a file. TODO use a queue with the thread so we can use ithere and receive messages to write them to a file, reducing duplications.
-    try:
-        while (NumberOfReadingsToTake == 0 or (NumberOfReadingsTaken < NumberOfReadingsToTake)):
-            Level, StateText = Probe.GetLevel()
+    #Reading interval.
+    ReadingInterval = 300
 
-            print("Time: ", str(datetime.datetime.now()), "Level: "+str(Level), "mm. Pin states: "+StateText)
-            RecordingsFile.write("Time: "+str(datetime.datetime.now())+" Level: "+str(Level)+"mm, Pin states: "+StateText+"\n")
+    #Start the monitor thread. Also wait a few seconds to let it initialise. This also allows us to take the first reading before we wait for 5 minutes.
+    MonitorThread = ResistanceProbeMonitor(Probe, NumberOfReadingsToTake, ReadingInterval=ReadingInterval)
+    time.sleep(10)
 
-            #Flush the system buffer.
-            #Also flush Python's buffer just in case our buffer size argument didn't work as intended.
-            RecordingsFile.flush()
-            os.fsync(RecordingsFile.fileno())
+    #Keep tabs on its progress so we can write new readings to the file.
+    while MonitorThread.IsRunning():
+        #Check for new readings.
+        while MonitorThread.HasData():
+            Reading = MonitorThread.GetReading()
 
-            NumberOfReadingsTaken += 1
+            #Write any new readings to the file and to stdout.
+            print(Reading)
+            RecordingsFile.write(Reading)
 
-            #Take readings every 5 minutes.
-            time.sleep(300)
+        #Wait until it's time to check for another reading.
+        time.sleep(ReadingInterval)
 
-    except BaseException as E:
-        #Ignore all errors. Generally bad practice :P
-        print("\nCaught Exception: ", E)
+    #Always clean up properly.
+    print("Cleaning up...")
 
-    finally:
-        #Always clean up properly.
-        print("Cleaning up...")
+    RecordingsFile.close()
 
-        RecordingsFile.close()
-
-        #Reset GPIO pins.
-        GPIO.cleanup()
+    #Reset GPIO pins.
+    GPIO.cleanup()
 
 if __name__ == "__main__":
     RunStandalone() 
