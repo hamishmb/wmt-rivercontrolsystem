@@ -19,12 +19,12 @@ import RPi.GPIO as GPIO
 
 import time
 
-#TODO Check that the change to BCN hasn't screwed anything up.
+#TODO Check that the change to BCM hasn't screwed anything up.
 GPIO.setmode(GPIO.BCM)
 
-class BaseDeviceClass:
+class BaseDeviceClass: #NOTE: Should this be in coretools?
     # ---------- CONSTRUCTOR ----------
-    def __init__ (self, Name):
+    def __init__(self, Name):
         """
         This is the constructor.
         It is not intended to be used except as part of the initialistion for a derived class.
@@ -32,20 +32,18 @@ class BaseDeviceClass:
 
         #Set some semi-private variables.
         self._Name = Name                   #Just a label.
-        self._ControlPin = -1               #Needs to be set/deleted.
+        self._Pin = -1                      #Needs to be set/deleted.
         self._Pins = []                     #Needs to be set/deleted.
         self._RPins = []                    #Needs to be set/deleted.
 
     # ---------- INFO SETTER FUNCTIONS ---------- NOTE: If we aren't going to use some of these/they aren't applicable in some derived classes, they can be removed from the derived classes (at least sort of).
-    def SetPin(self, Pin): #TODO Check if this Pin is already in use. If so throw an error. Also check if this pin is a valid output pin.
+    def SetPin(self, Pin): #FIXME: Check if this Pin is already in use. If so throw an error. Also check if this pin is a valid output pin.
         """
         Sets the pin for the device.
         Usage:
 
             <Device-Object>.SetPin(int Pin)
         """
-
-        #TODO: Can we un-setup an old pin?
         self._Pin = Pin
 
         GPIO.setup(self._Pin, GPIO.OUT)
@@ -61,18 +59,10 @@ class BaseDeviceClass:
         self._Pins = Pins
         self._RPins = Pins[::-1]
 
-        #Setup the pins. TODO Make more flexible (we may want more/fewer than 10 pins).
-        #10 Inputs. 0 is for the lowest depth, 9 the highest.
-        GPIO.setup(self._Pins[0], GPIO.IN)
-        GPIO.setup(self._Pins[1], GPIO.IN)
-        GPIO.setup(self._Pins[2], GPIO.IN)
-        GPIO.setup(self._Pins[3], GPIO.IN)
-        GPIO.setup(self._Pins[4], GPIO.IN)
-        GPIO.setup(self._Pins[5], GPIO.IN)
-        GPIO.setup(self._Pins[6], GPIO.IN)
-        GPIO.setup(self._Pins[7], GPIO.IN)
-        GPIO.setup(self._Pins[8], GPIO.IN)
-        GPIO.setup(self._Pins[9], GPIO.IN)
+        #Setup the pins.
+        #From lowest to highest, inputs.
+        for Pin in self._Pins:
+            GPIO.setup(Pin, GPIO.IN)
 
     # ---------- INFO GETTER FUNCTIONS ---------- NOTE: If we aren't going to use some of these/they aren't applicable in some derived classes, they can be removed from the derived classes (at least sort of).
     def GetName(self):
@@ -105,7 +95,7 @@ class BaseDeviceClass:
 
         return self._Pins
 
-class Motor(BaseDeviceClass): #TODO Check types of arguments before setting to avoid weird errors later. Alternatively, use Python 3's type specifiers (this is python 3 only anyway).
+class Motor(BaseDeviceClass):
     # ---------- CONSTRUCTORS ----------
     def __init__(self, Name): 
         """
@@ -189,7 +179,7 @@ class Motor(BaseDeviceClass): #TODO Check types of arguments before setting to a
 
 # -------------------- SENSOR PROBES --------------------
 
-class CapacitiveProbe(BaseDeviceClass): #TODO Handle improper setup better.
+class CapacitiveProbe(BaseDeviceClass):
     # ---------- CONSTRUCTORS ----------
     def __init__(self, Name):
         """
@@ -238,7 +228,7 @@ class CapacitiveProbe(BaseDeviceClass): #TODO Handle improper setup better.
 
         return Freq
 
-class ResistanceProbe(BaseDeviceClass): #TODO Handle improper setup better.
+class ResistanceProbe(BaseDeviceClass):
     # ---------- CONSTRUCTORS ----------
     def __init__(self, Name):
         """
@@ -304,7 +294,7 @@ class ResistanceProbe(BaseDeviceClass): #TODO Handle improper setup better.
                 StateText += str(GPIO.input(Pin))
 
             #Check for faults.
-            self.CheckForFaults(Index, StateText)
+            StateText = self.CheckForFaults(Index, StateText)
 
             #Return the level, assume pin 0 is at 0mm. Also return FaultText
             return Index*100, StateText
@@ -312,7 +302,7 @@ class ResistanceProbe(BaseDeviceClass): #TODO Handle improper setup better.
         #No pins were high.
         return -1, "1111111111"
 
-    def CheckForFaults(self, HighestActivePin, StateText): #TODO setup and use a logger for this. TODO Actually do something with the data instead of just printing it and then throwing it away.
+    def CheckForFaults(self, HighestActivePin, StateText): #TODO setup and use a logger for this (later).
         """Checks for faults in the sensor. Isn't capable of finding all faults without another sensor to compare against.
         Usage:
 
@@ -320,23 +310,23 @@ class ResistanceProbe(BaseDeviceClass): #TODO Handle improper setup better.
         """
         #Must convert string to int first, because any string except "" evals to boolean True. 
        
-        Faulty = False
+        FaultText = ""
 
         #All pins before this one should be active.
         for Pin in StateText[:HighestActivePin]:
             if bool(int(Pin)) != self._ActiveState:
                 print("FAULT DETECTED")
-                Faulty = True
+                FaultText = "FAULT DETECTED"
 
         #All pins after this one should be inactive.
         for Pin in StateText[HighestActivePin+1:]:
             if bool(int(Pin)) == self._ActiveState:
                 print("FAULT DETECTED")
-                Faulty = True
+                FaultText = "FAULT DETECTED"
 
-        return Faulty
+        return StateText+" "+FaultText
 
-class HallEffectDevice(BaseDeviceClass): #TODO Handle improper setup better.
+class HallEffectDevice(BaseDeviceClass):
     # ---------- CONSTRUCTORS ----------
     def __init__(self, Name):
         """

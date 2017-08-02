@@ -28,7 +28,7 @@ def usage():
     print("       -h, --help:               Show this help message")
     print("       -f, --file:               Specify file to write the recordings to. Default: interactive.")
     print("       -n <int>, --num=<int>     Specify number of readings to take before exiting. Without this option, readings will be taken until the program is terminated")
-    print("capacitive_rpobe_monitor_standalone.py is released under the GNU GPL Version 3")
+    print("capacitive_probe_monitor_standalone.py is released under the GNU GPL Version 3")
     print("Copyright (C) Wimborne Model Town 2017")
 
 def RunStandalone():

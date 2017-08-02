@@ -22,6 +22,8 @@ import getopt #Proper option handler.
 import os
 import threading
 
+#NOTE: Can probably be refactored a bit with a base class.
+
 # ---------- MONITOR THREAD FOR RESISTANCE PROBES ---------- 
 class ResistanceProbeMonitor(threading.Thread):
     def __init__(self, Probe, NumberOfReadingsToTake, ReadingInterval):
@@ -29,6 +31,7 @@ class ResistanceProbeMonitor(threading.Thread):
         self.Probe = Probe
         self.NumberOfReadingsToTake = NumberOfReadingsToTake
         self.ReadingInterval = ReadingInterval
+        self.Queue = []
 
         threading.Thread.__init__(self)
         self.start()
@@ -40,13 +43,32 @@ class ResistanceProbeMonitor(threading.Thread):
         while (self.NumberOfReadingsToTake == 0 or (NumberOfReadingsTaken < self.NumberOfReadingsToTake)):
             Level, StateText = self.Probe.GetLevel()
 
-            print("Time: ", str(datetime.datetime.now()), "Level: "+str(Level), "mm. Pin states: "+StateText) #TODO Add to message queue, or something else useful.
+            print("Time: ", str(datetime.datetime.now()), "Level: "+str(Level), "mm. Pin states: "+StateText)
+            self.Queue.append("Time: ", str(datetime.datetime.now()), "Level: "+str(Level), "mm. Pin states: "+StateText)
 
             NumberOfReadingsTaken += 1
 
             #Take readings every however often it is.
             time.sleep(self.ReadingInterval)
 
+    def HasData(self):
+        """
+        Returns True if the queue isn't empty, False if it is.
+        Usage:
+            bool HasData()
+        """
+
+        return int(len(self.Queue))
+
+    def GetReading(self):
+        """
+        Returns a reading from the queue, and deletes it from the queue.
+        Usage:
+            string GetReading()
+        """
+
+        return self.Queue.pop()
+        
 # ---------- MONITOR THREAD FOR HALL EFFECT DEVICES ----------
 class HallEffectMonitor(threading.Thread):
     def __init__(self, Probe, NumberOfReadingsToTake, ReadingInterval):
@@ -54,6 +76,7 @@ class HallEffectMonitor(threading.Thread):
         self.Probe = Probe
         self.NumberOfReadingsToTake = NumberOfReadingsToTake
         self.ReadingInterval = ReadingInterval
+        self.Queue = []
 
         threading.Thread.__init__(self)
         self.start()
@@ -63,11 +86,32 @@ class HallEffectMonitor(threading.Thread):
         NumberOfReadingsTaken = 0
 
         while (self.NumberOfReadingsToTake == 0 or (NumberOfReadingsTaken < self.NumberOfReadingsToTake)):
-            Level, StateText = self.Probe.GetLevel()
+            RPM, StateText = self.Probe.GetRPM()
 
-            print("Time: ", str(datetime.datetime.now()), "Level: "+str(Level), "mm. Pin states: "+StateText) #TODO Add to message queue, or something else useful.
+            #Add the reading to the queue.
+            self.Queue.append("Time: ", str(datetime.datetime.now()), "RPM: "+str(RPM), ". Pin states: "+StateText)
 
             NumberOfReadingsTaken += 1
 
             #Take readings every however often it is.
             time.sleep(self.ReadingInterval)
+
+    def HasData(self):
+        """
+        Returns True if the queue isn't empty, False if it is.
+        Usage:
+            bool HasData()
+        """
+
+        return int(len(self.Queue))
+
+    def GetReading(self):
+        """
+        Returns a reading from the queue, and deletes it from the queue.
+        Usage:
+            string GetReading()
+        """
+
+        return self.Queue.pop()
+
+#TODO Make a monitor thread for capacitive probes.

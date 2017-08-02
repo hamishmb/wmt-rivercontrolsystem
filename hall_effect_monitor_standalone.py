@@ -37,9 +37,11 @@ def RunStandalone():
     import Tools
 
     from Tools import sensorobjects
+    from Tools import monitortools
     from Tools import coretools as CoreTools
 
     from Tools.sensorobjects import HallEffectDevice
+    from Tools.monitortools import HallEffectMonitor
 
     #Handle cmdline options.
     FileName, NumberOfReadingsToTake = CoreTools.HandleCmdlineOptions(usage)
@@ -58,67 +60,66 @@ def RunStandalone():
     #Holds the number of readings we've taken.
     NumberOfReadingsTaken = 0
 
-    try:
-        while (NumberOfReadingsToTake == 0 or NumberOfReadingsTaken < NumberOfReadingsToTake):
-            RPM = Probe.GetRPM()
+    #Start the monitor thread.
+    MonitorThread = HallEffectMonitor(Probe, NumberOfReadingsToTake, ReadingInterval=300)
 
-            print("Time: ", str(datetime.datetime.now()), ": "+str(RPM))
-            RecordingsFile.write("Time: "+str(datetime.datetime.now())+" RPM: "+str(RPM)+"\n")
+    #Keep tabs on its progress so we can write new readings to the file.
+    while MonitorThread.IsRunning():
+        #Check for new readings.
+        while MonitorThread.HasReadings():
+            Reading = MonitorThread.GetReading()
 
-            NumberOfReadingsTaken += 1
+            #Write any new readings to the file and to stdout.
+            print(Reading)
+            RecordingsFile.write(Reading)
 
-            #Wait five minutes between readings.
-            time.sleep(300)
+        #Wait until it's time to check for another reading.
+        time.sleep(300)
 
-    except BaseException as E:
-        #Ignore all errors. Generally bad practice :P
-        print("\nCaught Exception: ", E)
+    #Always clean up properly.
+    print("Cleaning up...")
 
-    finally:
-        #Always clean up properly.
-        print("Cleaning up...")
+    RecordingsFile.close()
 
-        RecordingsFile.close()
+    print("Calculating mean average...")
+    RecordingsFile = open(FileName, "r")
 
-        print("Calculating mean average...")
-        RecordingsFile = open(FileName, "r")
+    Sum = 0
+    Count = 0
 
-        Sum = 0
-        Count = 0
+    #Sum up and keep count of readings.
+    while True:
+        Line = RecordingsFile.readline()
 
-        #Sum up and keep count of readings.
-        while True:
-            Line = RecordingsFile.readline()
-
-            if Line == "":
-                #EOF.
-                break
-
-            try:
-                Sum += int(Line.split()[4].replace("\n", ""))
-                Count += 1
-
-            except IndexError:
-                #Will happen until we reach the lines with the readings.
-                pass
-
-        RecordingsFile.close()
+        if Line == "":
+            #EOF.
+            break
 
         try:
-            Mean = Sum / Count
+            Sum += int(Line.split()[4].replace("\n", ""))
+            Count += 1
 
-        except ZeroDivisionError:
-            Mean = 0
+        except IndexError:
+            #Will happen until we reach the lines with the readings.
+            pass
 
-        #Write mean to file.
-        RecordingsFile = open(FileName, "a")
-        RecordingsFile.write("Mean Average: "+str(Mean))
-        RecordingsFile.close()
+    RecordingsFile.close()
 
-        print("Mean: "+str(Mean))
+    try:
+        Mean = Sum / Count
 
-        #Reset GPIO pins.
-        GPIO.cleanup()
+    except ZeroDivisionError:
+        Mean = 0
+
+    #Write mean to file.
+    RecordingsFile = open(FileName, "a")
+    RecordingsFile.write("Mean Average: "+str(Mean))
+    RecordingsFile.close()
+
+    print("Mean: "+str(Mean))
+
+    #Reset GPIO pins.
+    GPIO.cleanup()
 
 if __name__ == "__main__":
     RunStandalone()
