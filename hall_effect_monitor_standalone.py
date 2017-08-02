@@ -63,9 +63,9 @@ def RunStandalone():
     #Reading interval.
     ReadingInterval = 300
 
-    #Start the monitor thread. Also wait a few seconds to let it initialise.
+    #Start the monitor thread. Also wait a few seconds to let it initialise. This also allows us to take the first reading before we wait for 5 minutes.
     MonitorThread = HallEffectMonitor(Probe, NumberOfReadingsToTake, ReadingInterval=ReadingInterval)
-    time.sleep(5)
+    time.sleep(10)
 
     #Keep tabs on its progress so we can write new readings to the file.
     while MonitorThread.IsRunning():
