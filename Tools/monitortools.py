@@ -32,6 +32,7 @@ class ResistanceProbeMonitor(threading.Thread):
         self.NumberOfReadingsToTake = NumberOfReadingsToTake
         self.ReadingInterval = ReadingInterval
         self.Queue = []
+        self.Running = True
 
         threading.Thread.__init__(self)
         self.start()
@@ -40,16 +41,32 @@ class ResistanceProbeMonitor(threading.Thread):
         """Main part of the thread"""
         NumberOfReadingsTaken = 0
 
-        while (self.NumberOfReadingsToTake == 0 or (NumberOfReadingsTaken < self.NumberOfReadingsToTake)):
-            Level, StateText = self.Probe.GetLevel()
+        try:
+            while (self.NumberOfReadingsToTake == 0 or (NumberOfReadingsTaken < self.NumberOfReadingsToTake)):
+                Level, StateText = self.Probe.GetLevel()
 
-            print("Time: ", str(datetime.datetime.now()), "Level: "+str(Level), "mm. Pin states: "+StateText)
-            self.Queue.append("Time: ", str(datetime.datetime.now()), "Level: "+str(Level), "mm. Pin states: "+StateText)
+                print("Time: ", str(datetime.datetime.now()), "Level: "+str(Level), "mm. Pin states: "+StateText)
+                self.Queue.append("Time: ", str(datetime.datetime.now()), "Level: "+str(Level), "mm. Pin states: "+StateText)
 
-            NumberOfReadingsTaken += 1
+                NumberOfReadingsTaken += 1
 
-            #Take readings every however often it is.
-            time.sleep(self.ReadingInterval)
+                #Take readings every however often it is.
+                time.sleep(self.ReadingInterval)
+
+        except BaseException as E:
+            #Ignore all errors. Generally bad practice :P
+            print("\nCaught Exception: ", E)
+
+        self.Running = False
+
+    def IsRunning(self):
+        """
+        Returns True if running, else False.
+        Usage:
+            bool IsRunning()
+        """
+
+        return self.Running
 
     def HasData(self):
         """
@@ -77,6 +94,7 @@ class HallEffectMonitor(threading.Thread):
         self.NumberOfReadingsToTake = NumberOfReadingsToTake
         self.ReadingInterval = ReadingInterval
         self.Queue = []
+        self.Running = True
 
         threading.Thread.__init__(self)
         self.start()
@@ -85,16 +103,32 @@ class HallEffectMonitor(threading.Thread):
         """Main part of the thread"""
         NumberOfReadingsTaken = 0
 
-        while (self.NumberOfReadingsToTake == 0 or (NumberOfReadingsTaken < self.NumberOfReadingsToTake)):
-            RPM, StateText = self.Probe.GetRPM()
+        try:
+            while (self.NumberOfReadingsToTake == 0 or (NumberOfReadingsTaken < self.NumberOfReadingsToTake)):
+                RPM = self.Probe.GetRPM()
 
-            #Add the reading to the queue.
-            self.Queue.append("Time: ", str(datetime.datetime.now()), "RPM: "+str(RPM), ". Pin states: "+StateText)
+                #Add the reading to the queue.
+                self.Queue.append("Time: ", str(datetime.datetime.now()), "RPM: "+str(RPM))
 
-            NumberOfReadingsTaken += 1
+                NumberOfReadingsTaken += 1
 
-            #Take readings every however often it is.
-            time.sleep(self.ReadingInterval)
+                #Take readings every however often it is.
+                time.sleep(self.ReadingInterval)
+
+        except BaseException as E:
+            #Ignore all errors. Generally bad practice :P
+            print("\nCaught Exception: ", E)
+
+        self.Running = False
+
+    def IsRunning(self):
+        """
+        Returns True if running, else False.
+        Usage:
+            bool IsRunning()
+        """
+
+        return self.Running
 
     def HasData(self):
         """
