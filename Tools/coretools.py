@@ -18,6 +18,9 @@ import datetime
 import sys
 import getopt
 import time
+import socket
+import select
+import threading
 
 def HandleCmdlineOptions(UsageFunc):
     """
@@ -128,45 +131,6 @@ class Sockets:
         self.IncomingQueue = []
         self.OutgoingQueue = []
 
-        #Handler functions.
-        #static void Handler(Sockets* Ptr)
-        #void CreateAndConnect(Sockets* Ptr)
-
-        #//Connection functions (Plug).
-        #void CreatePlug()
-        #void ConnectPlug()
-
-        #//Connection functions (Socket).
-        #void CreateSocket()
-       #void ConnectSocket()
-
-        #//R/W Functions.
-        #int SendAnyPendingMessages()
-        #int AttemptToReadFromSocket()
-
-        #//Setup functions.
-        #void SetPortNumber(const int& PortNo)
-        #void SetServerAddress(const std::string& ServerAdd) //Only needed when creating a plug.
-        #void SetConsoleOutput(const bool State) //Can tell us not to output any message to console (used in server).
-        #void StartHandler()
-
-        #//Info getter functions.
-        #bool IsReady()
-        #bool JustReconnected()
-        #void WaitForHandlerToExit()
-        #bool HandlerHasExited()
-
-        #//Controller functions.
-        #void RequestHandlerExit()
-        #void Reset()
-
-        #//Request R/W functions.
-        #void Write(std::vector<char> Msg)
-        #void SendToPeer(const std::vector<char>& Msg) //Convenience function that waits for an acknowledgement before returning.
-        #bool HasPendingData()
-        #std::vector<char> Read()
-        #void Pop()
-
     # ---------- Setup Functions ----------
     def SetPortNumber(self, PortNo):
         """Sets the port number for the socket"""
@@ -268,87 +232,39 @@ class Sockets:
             #Logger.Debug("Socket Tools: Sockets::CreateAndConnect(): Asking handler to exit...")
             self.HandlerShouldExit = True
 
-    def Handler(self):
-        """Handles setup, send/receive, and maintenance of socket (reconnections)."""
-        #Logger.Debug("Socket Tools: Sockets::Handler(): Starting up...")
-        Sent = -1
-        ReadResult = -1
-
-        #Setup the socket.
-        #Logger.Debug("Socket Tools: Sockets::Handler(): Calling Ptr->CreateAndConnect to set the socket up...")
-        self.CreateAndConnect()
-
-        #Logger.Debug("Socket Tools: Sockets::Handler(): Done! Entering main loop.")
-
-        #Keep sending and receiving messages until we're asked to exit.
-        while not self.HandlerShouldExit:
-            #Send any pending messages.
-            Sent = self.SendAnyPendingMessages()
-
-            #Receive messages if there are any.
-            ReadResult = self.AttemptToReadFromSocket()
-
-            #Check if the peer left.
-            if ReadResult == -1:
-                #Logger.Debug("Socket Tools: Sockets::Handler(): Lost connection to peer. Attempting to reconnect...")
-
-                if self.Verbose:
-                    print("\n\nLost connection to peer. Reconnecting...")
-
-                #Reset the socket. Also sets the tracker.
-                #Logger.Debug("Socket Tools: Sockets::Handler(): Resetting socket...")
-                self.Reset()
-
-                #Wait for the socket to reconnect or we're requested to exit.
-                #Wait for 2 seconds first.
-                time.sleep(2)
-
-                #Logger.Debug("Socket Tools: Sockets::Handler(): Recreating and attempting to reconnect the socket...")
-                self.CreateAndConnect()
-
-                #If reconnection was successful, set flag and tell user.
-                if not self.HandlerShouldExit:
-                    #Logger.Debug("Socket Tools: Sockets::Handler(): Success! Telling user and re-entering main loop...")
-                    self.Reconnected = True
-
-                    if self.Verbose:
-                        print("Reconnected to peer.\nPress ENTER to continue.")
-
-        #Flag that we've exited.
-        #Logger.Debug("Socket Tools: Sockets::Handler(): Exiting as per the request...")
-        self.HandlerExited = True
-
     # ---------- Connection Functions (Plugs) ----------
-    def CreatePlug(self): pass
-        #"""Sets up the plug for us."""
+    def CreatePlug(self):
+        """Sets up the plug for us."""
         #Logger.Info("Socket Tools: Sockets::CreatePlug(): Creating the plug...")
 
-        #***
+        self.Socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         #Logger.Info("Socket Tools: Sockets::CreatePlug(): Done!")
 
-    def ConnectPlug(self): pass #*** ERROR HANDLING ***
-        #"""Waits until the plug has connected to a socket."""
+    def ConnectPlug(self): #*** ERROR HANDLING ***
+        """Waits until the plug has connected to a socket."""
         #Logger.Info("Socket Tools: Sockets::ConnectPlug(): Attempting to connect to the requested socket...")
 
-        #***
+        self.Socket.connect((self.ServerAddress, self.PortNumber))
 
         #Logger.Info("Socket Tools: Sockets::ConnectPlug(): Done!")
 
     # ---------- Connection Functions (Sockets) ----------
-    def CreateSocket(self): pass
-        #"""Sets up the socket for us."""
+    def CreateSocket(self):
+        """Sets up the socket for us."""
         #Logger.Info("Socket Tools: Sockets::CreateSocket(): Creating the socket...")
 
-        #***
+        self.ServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.ServerSocket.bind((socket.gethostname(), 30000))
+        self.ServerSocket.listen(1)
 
         #Logger.Info("Socket Tools: Sockets::CreateSocket(): Done!")
 
-    def ConnectSocket(self): pass
-        #"""Waits until the socket has connected to a plug."""
+    def ConnectSocket(self):
+        """Waits until the socket has connected to a plug."""
         #Logger.Info("Socket Tools: Sockets::ConnectSocket(): Attempting to connect to the requested socket...")
 
-        #***
+        self.Socket = self.ServerSocket.accept()
 
         #Logger.Info("Socket Tools: Sockets::ConnectSocket(): Done!")
 
@@ -401,17 +317,11 @@ class Sockets:
 
             #Write the data.
             #Logger.Debug("Socket Tools: Sockets::SendAnyPendingMessages(): Sending data...")
-            #boost::asio::write(*Socket, boost::asio::buffer(OutgoingQueue.front()), Error)
+            ReturnCode = self.Socket.send(self.OutgoingQueue[0])
 
-            #if (Error == boost::asio::error::eof) {
-            #    Logger.Error("Socket Tools: Sockets::SendAnyPendingMessages(): Connection was closed cleanly by the peer...")
-            #    return false // Connection closed cleanly by peer. *** HANDLE BETTER ***
-    
-            #} elif (Error) {
-            #    Logger.Error("Socket Tools: Sockets::SendAnyPendingMessages(): Other error from boost! throwing boost::system::system_error...")
-            #    throw boost::system::system_error(Error) // Some other error.
-
-            #}
+            if ReturnCode == 0:
+                #Logger.Error("Socket Tools: Sockets::SendAnyPendingMessages(): Connection was closed cleanly by the peer...")
+                return False #Connection closed cleanly by peer. *** HANDLE BETTER ***
 
             #Remove last thing from message queue.
             #Logger.Debug("Socket Tools: Sockets::SendAnyPendingMessages(): Clearing item at front of OutgoingQueue...")
@@ -428,75 +338,88 @@ class Sockets:
         """Attempts to read some data from the socket."""
         #Logger.Debug("Socket Tools: Sockets::AttemptToReadFromSocket(): Attempting to read some data from the socket...")
 
-        #Setup.
-        #std::vector<char>* MyBuffer = new std::vector<char> (128, '#')
-        #boost::system::error_code Error
-        #int Result
+        try:
+            #This is a solution I found on Stack Overflow.
 
-        try: pass
-            #This is a solution I found on Stack Overflow, but it means this is no longer platform independant :( I'll keep researching.
-            #Set up a timed select call, so we can handle timeout cases.
-            #fd_set fileDescriptorSet
-            #struct timeval timeStruct
-
-            #Set the timeout to 1 second
-            #timeStruct.tv_sec = 1
-            #timeStruct.tv_usec = 0
-            #FD_ZERO(&fileDescriptorSet)
-
-            #We'll need to get the underlying native socket for this select call, in order
-            #to add a simple timeout on the read:
-            #int nativeSocket = Socket->native()
-
-            #FD_SET(nativeSocket, &fileDescriptorSet)
-
-            #//Don't use mutexes here (blocks writing).
             #Logger.Debug("Socket Tools: Sockets::AttemptToReadFromSocket(): Waiting for data...")
 
-            #Result = select(nativeSocket+1, &fileDescriptorSet, NULL, NULL, &timeStruct)
+            Data = ""
 
-            #if (!FD_ISSET(nativeSocket, &fileDescriptorSet)) {
-            #    //We timed-out. Return.
-            #    Logger.Debug("Socket Tools: Sockets::AttemptToReadFromSocket(): Timed out. Giving up for now...")
-            #    return 0
+            #While the socket is ready for reading, keep trying to read small packets of data.
+            while select.select(self.Socket, [], [], 1)[0]:
+                #Use a 1-second timeout.
+                self.Socket.settimeout(1.0)
 
-            #} elif (Result == -1) {
-            #    //Error. Socket is probably closed.
-            #    Logger.Error("Socket Tools: Sockets::AttemptToReadFromSocket(): Socket is closed!")
-            #    return -1
+                Data += self.Socket.recv(2048)
 
-            #}
-
-            #//Try to read some data.
-            #Logger.Debug("Socket Tools: Sockets::AttemptToReadFromSocket(): Attempting to read some data...")
-
-            #Socket->read_some(boost::asio::buffer(*MyBuffer), Error)
-
-            #if (Error == boost::asio::error::eof) {
-            #    Logger.Error("Socket Tools: Sockets::AttemptToReadFromSocket(): Socket closed cleanly by peer! Returning -1...")
-
-            #    return -1 // Connection closed cleanly by peer.
-
-            #} else if (Error) {
-            #    Logger.Error("Socket Tools: Sockets::AttemptToReadFromSocket(): Other error from boost! throwing boost::system::system_error...")
-            #    throw boost::system::system_error(Error) // Some other error.
-
-            #}
-
-            #//Remove any remaining "#"s.
-            #Logger.Debug("Socket Tools: Sockets::AttemptToReadFromSocket(): Erasing any remaining '#'s from the message...")
-            #MyBuffer->erase(std::remove(MyBuffer->begin(), MyBuffer->end(), '#'), MyBuffer->end())
-
-            #//Push to the message queue.
+            #Push to the message queue.
             #Logger.Debug("Socket Tools: Sockets::AttemptToReadFromSocket(): Pushing message to IncomingQueue...")
-            #IncomingQueue.push(*MyBuffer)
+            self.IncomingQueue.append(Data)
 
             #Logger.Debug("Socket Tools: Sockets::AttemptToReadFromSocket(): Done.")
 
-            #return Result
+            return 0
 
         except BaseException as E:
             #Logger.Error("Socket Tools: Sockets::AttemptToReadFromSocket(): Caught unhandled exception! Error was "+static_cast<string>(err.what())+"...")
             print("Error: ", E)
             return -1
+
+class SocketHandlerThread(threading.Thread):
+    def __init__(self, Socket):
+        """Initialize and start the thread."""
+        self.Socket = Socket
+
+        threading.Thread.__init__(self)
+        self.start()
+
+    def run(self):
+        """Handles setup, send/receive, and maintenance of socket (reconnections)."""
+        #Logger.Debug("Socket Tools: Sockets::Handler(): Starting up...")
+        Sent = -1
+        ReadResult = -1
+
+        #Setup the socket.
+        #Logger.Debug("Socket Tools: Sockets::Handler(): Calling Ptr->CreateAndConnect to set the socket up...")
+        self.Socket.CreateAndConnect()
+
+        #Logger.Debug("Socket Tools: Sockets::Handler(): Done! Entering main loop.")
+
+        #Keep sending and receiving messages until we're asked to exit.
+        while not self.Socket.HandlerShouldExit:
+            #Send any pending messages.
+            Sent = self.Socket.SendAnyPendingMessages()
+
+            #Receive messages if there are any.
+            ReadResult = self.Socket.AttemptToReadFromSocket()
+
+            #Check if the peer left.
+            if ReadResult == -1:
+                #Logger.Debug("Socket Tools: Sockets::Handler(): Lost connection to peer. Attempting to reconnect...")
+
+                if self.Socket.Verbose:
+                    print("\n\nLost connection to peer. Reconnecting...")
+
+                #Reset the socket. Also sets the tracker.
+                #Logger.Debug("Socket Tools: Sockets::Handler(): Resetting socket...")
+                self.Socket.Reset()
+
+                #Wait for the socket to reconnect or we're requested to exit.
+                #Wait for 2 seconds first.
+                time.sleep(2)
+
+                #Logger.Debug("Socket Tools: Sockets::Handler(): Recreating and attempting to reconnect the socket...")
+                self.Socket.CreateAndConnect()
+
+                #If reconnection was successful, set flag and tell user.
+                if not self.Socket.HandlerShouldExit:
+                    #Logger.Debug("Socket Tools: Sockets::Handler(): Success! Telling user and re-entering main loop...")
+                    self.Socket.Reconnected = True
+
+                    if self.Socket.Verbose:
+                        print("Reconnected to peer.\nPress ENTER to continue.")
+
+        #Flag that we've exited.
+        #Logger.Debug("Socket Tools: Sockets::Handler(): Exiting as per the request...")
+        self.Socket.HandlerExited = True
 
