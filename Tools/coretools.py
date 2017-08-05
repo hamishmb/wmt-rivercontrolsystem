@@ -141,7 +141,7 @@ class Sockets:
     def SetServerAddress(self, ServerAdd):
         """Sets the server address for the socket"""
         logger.debug("Socket Tools: Sockets::SetServerAddress(): Setting ServerAddress to "+ServerAdd+"...")
-        self.ServerAddress = ServerAdd
+        self.ServerAddress = socket.gethostbyname(ServerAdd)
 
     def SetConsoleOutput(self, State):
         """Can tell us not to output any messages to console (used in server)"""

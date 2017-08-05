@@ -35,8 +35,8 @@ def RunStandalone():
     Socket = CoreTools.Sockets("Plug")
 
     #Set the object up.
-    Socket.SetPortNumber(30000)
-    Socket.SetServerAddress("127.0.0.1")
+    Socket.SetPortNumber(80)
+    Socket.SetServerAddress("www.google.com")
 
     Socket.StartHandler()
 
