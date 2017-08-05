@@ -321,7 +321,7 @@ class Sockets:
 
             #Write the data.
             logger.debug("Socket Tools: Sockets::SendAnyPendingMessages(): Sending data...")
-            ReturnCode = self.Socket.sendall(self.OutgoingQueue[0])
+            ReturnCode = self.Socket.sendall(bytes(self.OutgoingQueue[0], "utf-8"))
 
             if ReturnCode == 0:
                 logger.error("Socket Tools: Sockets::SendAnyPendingMessages(): Connection was closed cleanly by the peer...")
@@ -354,7 +354,7 @@ class Sockets:
                 #Use a 1-second timeout.
                 self.Socket.settimeout(1.0)
 
-                Data += self.Socket.recv(2048)
+                Data += str(self.Socket.recv(2048))
 
             #Push to the message queue.
             logger.debug("Socket Tools: Sockets::AttemptToReadFromSocket(): Pushing message to IncomingQueue...")
@@ -365,7 +365,7 @@ class Sockets:
             return 0
 
         except BaseException as E:
-            logger.error("Socket Tools: Sockets::AttemptToReadFromSocket(): Caught unhandled exception! Error was "+static_cast<string>(err.what())+"...")
+            logger.error("Socket Tools: Sockets::AttemptToReadFromSocket(): Caught unhandled exception! Error was "+str(E)+"...")
             print("Error: ", E)
             return -1
 
