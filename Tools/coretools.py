@@ -134,18 +134,18 @@ class Sockets:
     # ---------- Setup Functions ----------
     def SetPortNumber(self, PortNo):
         """Sets the port number for the socket"""
-        #Logger.Debug("Socket Tools: Sockets::SetPortNumber(): Setting PortNumber to "+std::to_string(PortNo)+"...")
+        logger.debug("Socket Tools: Sockets::SetPortNumber(): Setting PortNumber to "+std::to_string(PortNo)+"...")
         self.PortNumber = PortNo
 
     #Only useful when creating a plug, rather than a socket.
     def SetServerAddress(self, ServerAdd):
         """Sets the server address for the socket"""
-        #Logger.Debug("Socket Tools: Sockets::SetServerAddress(): Setting ServerAddress to "+ServerAdd+"...")
+        logger.debug("Socket Tools: Sockets::SetServerAddress(): Setting ServerAddress to "+ServerAdd+"...")
         self.ServerAddress = ServerAdd
 
     def SetConsoleOutput(self, State):
         """Can tell us not to output any messages to console (used in server)"""
-        #Logger.Debug("Socket Tools: Sockets::SetConsoleOutput(): Setting Verbose to "+boost::lexical_cast<string>(State)+"...")
+        logger.debug("Socket Tools: Sockets::SetConsoleOutput(): Setting Verbose to "+boost::lexical_cast<string>(State)+"...")
         Verbose = State
 
     def StartHandler(self):
@@ -157,11 +157,11 @@ class Sockets:
         self.HandlerExited = False
 
         if self.Type in ("Plug", "Socket"):
-            #Logger.Debug("Socket Tools: Sockets::StartHandler(): Check passed, starting handler...")
+            logger.debug("Socket Tools: Sockets::StartHandler(): Check passed, starting handler...")
             self.HandlerThread = SocketHandlerThread(self)
 
         else:
-            #Logger.Debug("Socket Tools: Sockets::StartHandler(): Type isn't set correctly! Throwing runtime_error...")
+            logger.debug("Socket Tools: Sockets::StartHandler(): Type isn't set correctly! Throwing runtime_error...")
             raise ValueError("Type not set correctly")
 
     # ---------- Info getter functions ----------
@@ -183,12 +183,12 @@ class Sockets:
 
     # ---------- Controller Functions ----------
     def RequestHandlerExit(self):
-        #Logger.Debug("Socket Tools: Sockets::RequestHandlerExit(): Requesting handler to exit...")
+        logger.debug("Socket Tools: Sockets::RequestHandlerExit(): Requesting handler to exit...")
         self.HandlerShouldExit = True
 
     def Reset(self):
         """Resets the socket to the default state."""
-        #Logger.Debug("Socket Tools: Sockets::Reset(): Resetting socket...")
+        logger.debug("Socket Tools: Sockets::Reset(): Resetting socket...")
 
         #Variables for tracking status of the other thread.
         self.ReadyForTransmission = False
@@ -204,7 +204,7 @@ class Sockets:
         self.Socket = ""
         self.ServerSocket = ""
 
-        #Logger.Debug("Socket Tools: Sockets::Reset(): Done! Socket is now in its default state...")
+        logger.debug("Socket Tools: Sockets::Reset(): Done! Socket is now in its default state...")
 
     # ---------- Handler Thread & Functions ----------
     def CreateAndConnect(self):
@@ -212,85 +212,85 @@ class Sockets:
         #Handle any errors while connecting.
         try:
             if self.Type == "Plug":
-                #Logger.Debug("Socket Tools: Sockets::CreateAndConnect(): Creating and connecting plug...")
+                logger.debug("Socket Tools: Sockets::CreateAndConnect(): Creating and connecting plug...")
                 self.CreatePlug()
                 self.ConnectPlug()
 
             elif self.Type == "Socket":
-                #Logger.Debug("Socket Tools: Sockets::CreateAndConnect(): Creating and connecting socket...")
+                logger.debug("Socket Tools: Sockets::CreateAndConnect(): Creating and connecting socket...")
                 self.CreateSocket()
                 self.ConnectSocket()
 
             #We are now connected.
-            #Logger.Debug("Socket Tools: Sockets::CreateAndConnect(): Done!")
+            logger.debug("Socket Tools: Sockets::CreateAndConnect(): Done!")
             self.ReadyForTransmission = True
 
         except: #*** WHAT ERROR WOULD WE NEED TO CATCH? ***
-            #Logger.Critical("Socket Tools: Sockets::CreateAndConnect(): Error connecting: "+static_cast<string>(e.what())+". Exiting...")
+            logger.critical("Socket Tools: Sockets::CreateAndConnect(): Error connecting: "+static_cast<string>(e.what())+". Exiting...")
 
             if self.Verbose:
                 print("Connecting Failed!") # " << e.what() << std::endl
                 print("Press ENTER to exit.")
 
             #Make the handler exit.
-            #Logger.Debug("Socket Tools: Sockets::CreateAndConnect(): Asking handler to exit...")
+            logger.debug("Socket Tools: Sockets::CreateAndConnect(): Asking handler to exit...")
             self.HandlerShouldExit = True
 
     # ---------- Connection Functions (Plugs) ----------
     def CreatePlug(self):
         """Sets up the plug for us."""
-        #Logger.Info("Socket Tools: Sockets::CreatePlug(): Creating the plug...")
+        logger.info("Socket Tools: Sockets::CreatePlug(): Creating the plug...")
 
         self.Socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        #Logger.Info("Socket Tools: Sockets::CreatePlug(): Done!")
+        logger.info("Socket Tools: Sockets::CreatePlug(): Done!")
 
     def ConnectPlug(self): #*** ERROR HANDLING ***
         """Waits until the plug has connected to a socket."""
-        #Logger.Info("Socket Tools: Sockets::ConnectPlug(): Attempting to connect to the requested socket...")
+        logger.info("Socket Tools: Sockets::ConnectPlug(): Attempting to connect to the requested socket...")
 
         self.Socket.connect((self.ServerAddress, self.PortNumber))
 
-        #Logger.Info("Socket Tools: Sockets::ConnectPlug(): Done!")
+        logger.info("Socket Tools: Sockets::ConnectPlug(): Done!")
 
     # ---------- Connection Functions (Sockets) ----------
     def CreateSocket(self):
         """Sets up the socket for us."""
-        #Logger.Info("Socket Tools: Sockets::CreateSocket(): Creating the socket...")
+        logger.info("Socket Tools: Sockets::CreateSocket(): Creating the socket...")
 
         self.ServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.ServerSocket.bind((socket.gethostname(), self.PortNumber))
         self.ServerSocket.listen(1)
 
-        #Logger.Info("Socket Tools: Sockets::CreateSocket(): Done!")
+        logger.info("Socket Tools: Sockets::CreateSocket(): Done!")
 
     def ConnectSocket(self):
         """Waits until the socket has connected to a plug."""
-        #Logger.Info("Socket Tools: Sockets::ConnectSocket(): Attempting to connect to the requested socket...")
+        logger.info("Socket Tools: Sockets::ConnectSocket(): Attempting to connect to the requested socket...")
 
         self.Socket = self.ServerSocket.accept()
 
-        #Logger.Info("Socket Tools: Sockets::ConnectSocket(): Done!")
+        logger.info("Socket Tools: Sockets::ConnectSocket(): Done!")
 
     # --------- Read/Write Functions ----------
     def Write(self, Msg):
         """Pushes a message to the outgoing message queue so it can be written later by the handler thread."""
-        #Logger.Debug("Socket Tools: Sockets::Write(): Appending "+Msg+" to OutgoingQueue...")
+        logger.debug("Socket Tools: Sockets::Write(): Appending "+Msg+" to OutgoingQueue...")
         self.OutgoingQueue.append(Msg)
 
     def SendToPeer(self, Msg):
         """Sends the given message to the peer and waits for an acknowledgement). A convenience function.""" #*** TODO If ACK is very slow, try again *** *** Will need to change this later cos if there's a high volume of messages it might fail ***
-        #Logger.Debug("Socket Tools: Sockets::SendToPeer(): Sending message "+ConvertToString(Msg)+" to peer...")
+        logger.debug("Socket Tools: Sockets::SendToPeer(): Sending message "+ConvertToString(Msg)+" to peer...")
 
         #Push it to the message queue.
         self.Write(Msg)
 
         #Wait until an \x06 (ACK) has arrived.
-        #Logger.Debug("Socket Tools: Sockets::SendToPeer(): Waiting for acknowledgement...")
+        logger.debug("Socket Tools: Sockets::SendToPeer(): Waiting for acknowledgement...")
         while not self.HasPendingData(): time.sleep(0.1)
 
         #Remove the ACK from the queue.
-        #Logger.Info("Socket Tools: Sockets::SendToPeer(): Done.")
+        logger.info("Socket Tools: Sockets::SendToPeer(): Done.")
         self.Pop()
 
     def HasPendingData(self):
@@ -299,53 +299,53 @@ class Sockets:
 
     def Read(self):
         """Returns the item at the front of IncomingQueue."""
-        #Logger.Debug("Socket Tools: Sockets::Read(): Returning front of IncomingQueue...") 
+        logger.debug("Socket Tools: Sockets::Read(): Returning front of IncomingQueue...") 
         return self.IncomingQueue[0]
 
     def Pop(self):
         """Clears the front element from IncomingQueue. Prevents crash also if the queue is empty."""
         if len(self.IncomingQueue) > 0:
-            #Logger.Debug("Socket Tools: Sockets::Pop(): Clearing front element of IncomingQueue...")
+            logger.debug("Socket Tools: Sockets::Pop(): Clearing front element of IncomingQueue...")
             self.IncomingQueue.pop(0)
 
     # ---------- Other Functions ----------
     def SendAnyPendingMessages(self):
         """Sends any messages waiting in the message queue."""
-        #Logger.Debug("Socket Tools: Sockets::SendAnyPendingMessages(): Sending any pending messages...")
+        logger.debug("Socket Tools: Sockets::SendAnyPendingMessages(): Sending any pending messages...")
 
         try:
             #Wait until there's something to send in the queue.
             if len(self.OutgoingQueue) == 0:
-                #Logger.Debug("Socket Tools: Sockets::SendAnyPendingMessages(): Nothing to send.")
+                logger.debug("Socket Tools: Sockets::SendAnyPendingMessages(): Nothing to send.")
                 return False
 
             #Write the data.
-            #Logger.Debug("Socket Tools: Sockets::SendAnyPendingMessages(): Sending data...")
+            logger.debug("Socket Tools: Sockets::SendAnyPendingMessages(): Sending data...")
             ReturnCode = self.Socket.send(self.OutgoingQueue[0])
 
             if ReturnCode == 0:
-                #Logger.Error("Socket Tools: Sockets::SendAnyPendingMessages(): Connection was closed cleanly by the peer...")
+                logger.error("Socket Tools: Sockets::SendAnyPendingMessages(): Connection was closed cleanly by the peer...")
                 return False #Connection closed cleanly by peer. *** HANDLE BETTER ***
 
             #Remove last thing from message queue.
-            #Logger.Debug("Socket Tools: Sockets::SendAnyPendingMessages(): Clearing item at front of OutgoingQueue...")
+            logger.debug("Socket Tools: Sockets::SendAnyPendingMessages(): Clearing item at front of OutgoingQueue...")
             self.OutgoingQueue.pop(0)  
 
         except BaseException as E:
-            #Logger.Error("Socket Tools: Sockets::SendAnyPendingMessages(): Caught unhandled exception! Error was "+static_cast<string>(err.what())+"...")
+            logger.error("Socket Tools: Sockets::SendAnyPendingMessages(): Caught unhandled exception! Error was "+static_cast<string>(err.what())+"...")
             print("Error: ", E)
 
-        #Logger.Debug("Socket Tools: Sockets::SendAnyPendingMessages(): Done.")
+        logger.debug("Socket Tools: Sockets::SendAnyPendingMessages(): Done.")
         return True
 
     def AttemptToReadFromSocket(self):
         """Attempts to read some data from the socket."""
-        #Logger.Debug("Socket Tools: Sockets::AttemptToReadFromSocket(): Attempting to read some data from the socket...")
+        logger.debug("Socket Tools: Sockets::AttemptToReadFromSocket(): Attempting to read some data from the socket...")
 
         try:
             #This is a solution I found on Stack Overflow.
 
-            #Logger.Debug("Socket Tools: Sockets::AttemptToReadFromSocket(): Waiting for data...")
+            logger.debug("Socket Tools: Sockets::AttemptToReadFromSocket(): Waiting for data...")
 
             Data = ""
 
@@ -357,15 +357,15 @@ class Sockets:
                 Data += self.Socket.recv(2048)
 
             #Push to the message queue.
-            #Logger.Debug("Socket Tools: Sockets::AttemptToReadFromSocket(): Pushing message to IncomingQueue...")
+            logger.debug("Socket Tools: Sockets::AttemptToReadFromSocket(): Pushing message to IncomingQueue...")
             self.IncomingQueue.append(Data)
 
-            #Logger.Debug("Socket Tools: Sockets::AttemptToReadFromSocket(): Done.")
+            logger.debug("Socket Tools: Sockets::AttemptToReadFromSocket(): Done.")
 
             return 0
 
         except BaseException as E:
-            #Logger.Error("Socket Tools: Sockets::AttemptToReadFromSocket(): Caught unhandled exception! Error was "+static_cast<string>(err.what())+"...")
+            logger.error("Socket Tools: Sockets::AttemptToReadFromSocket(): Caught unhandled exception! Error was "+static_cast<string>(err.what())+"...")
             print("Error: ", E)
             return -1
 
@@ -379,15 +379,15 @@ class SocketHandlerThread(threading.Thread):
 
     def run(self):
         """Handles setup, send/receive, and maintenance of socket (reconnections)."""
-        #Logger.Debug("Socket Tools: Sockets::Handler(): Starting up...")
+        logger.debug("Socket Tools: Sockets::Handler(): Starting up...")
         Sent = -1
         ReadResult = -1
 
         #Setup the socket.
-        #Logger.Debug("Socket Tools: Sockets::Handler(): Calling Ptr->CreateAndConnect to set the socket up...")
+        logger.debug("Socket Tools: Sockets::Handler(): Calling Ptr->CreateAndConnect to set the socket up...")
         self.Socket.CreateAndConnect()
 
-        #Logger.Debug("Socket Tools: Sockets::Handler(): Done! Entering main loop.")
+        logger.debug("Socket Tools: Sockets::Handler(): Done! Entering main loop.")
 
         #Keep sending and receiving messages until we're asked to exit.
         while not self.Socket.HandlerShouldExit:
@@ -399,31 +399,31 @@ class SocketHandlerThread(threading.Thread):
 
             #Check if the peer left.
             if ReadResult == -1:
-                #Logger.Debug("Socket Tools: Sockets::Handler(): Lost connection to peer. Attempting to reconnect...")
+                logger.debug("Socket Tools: Sockets::Handler(): Lost connection to peer. Attempting to reconnect...")
 
                 if self.Socket.Verbose:
                     print("\n\nLost connection to peer. Reconnecting...")
 
                 #Reset the socket. Also sets the tracker.
-                #Logger.Debug("Socket Tools: Sockets::Handler(): Resetting socket...")
+                logger.debug("Socket Tools: Sockets::Handler(): Resetting socket...")
                 self.Socket.Reset()
 
                 #Wait for the socket to reconnect or we're requested to exit.
                 #Wait for 2 seconds first.
                 time.sleep(2)
 
-                #Logger.Debug("Socket Tools: Sockets::Handler(): Recreating and attempting to reconnect the socket...")
+                logger.debug("Socket Tools: Sockets::Handler(): Recreating and attempting to reconnect the socket...")
                 self.Socket.CreateAndConnect()
 
                 #If reconnection was successful, set flag and tell user.
                 if not self.Socket.HandlerShouldExit:
-                    #Logger.Debug("Socket Tools: Sockets::Handler(): Success! Telling user and re-entering main loop...")
+                    logger.debug("Socket Tools: Sockets::Handler(): Success! Telling user and re-entering main loop...")
                     self.Socket.Reconnected = True
 
                     if self.Socket.Verbose:
                         print("Reconnected to peer.\nPress ENTER to continue.")
 
         #Flag that we've exited.
-        #Logger.Debug("Socket Tools: Sockets::Handler(): Exiting as per the request...")
+        logger.debug("Socket Tools: Sockets::Handler(): Exiting as per the request...")
         self.Socket.HandlerExited = True
 

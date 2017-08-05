@@ -27,6 +27,8 @@ def RunStandalone():
 
     from Tools import coretools as CoreTools
 
+    Tools.coretools.logger = logger
+
     print("Testing. Please stand by...")
 
     #Create the sockets object.
@@ -52,4 +54,10 @@ def RunStandalone():
         Socket.Reset()
 
 if __name__ == "__main__":
+    #Set up basic logging to stdout.
+    import logging
+
+    logger = logging
+    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p', level=logging.DEBUG)
+
     RunStandalone() 
