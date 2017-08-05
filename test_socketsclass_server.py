@@ -25,14 +25,14 @@ def RunStandalone():
     #Do required imports.
     import Tools
 
-    from Tools import coretools as CoreTools
+    from Tools import sockettools as SocketTools
 
-    Tools.coretools.logger = logger
+    Tools.sockettools.logger = logger
 
     print("Testing. Please stand by...")
 
     #Create the sockets object.
-    Socket = CoreTools.Sockets("Socket")
+    Socket = SocketTools.Sockets("Socket")
 
     #Set the object up.
     Socket.SetPortNumber(30000)

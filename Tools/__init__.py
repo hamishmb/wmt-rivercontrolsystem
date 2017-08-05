@@ -17,5 +17,6 @@
 from __future__ import absolute_import
 
 from . import coretools
+from . import sockettools
 from . import sensorobjects
 from . import monitortools
