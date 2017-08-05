@@ -260,7 +260,7 @@ class Sockets:
 
         self.ServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.ServerSocket.bind((socket.gethostname(), self.PortNumber))
-        self.ServerSocket.listen(1)
+        self.ServerSocket.listen(10)
 
         logger.info("Socket Tools: Sockets::CreateSocket(): Done!")
 
@@ -321,7 +321,7 @@ class Sockets:
 
             #Write the data.
             logger.debug("Socket Tools: Sockets::SendAnyPendingMessages(): Sending data...")
-            ReturnCode = self.Socket.send(self.OutgoingQueue[0])
+            ReturnCode = self.Socket.sendall(self.OutgoingQueue[0])
 
             if ReturnCode == 0:
                 logger.error("Socket Tools: Sockets::SendAnyPendingMessages(): Connection was closed cleanly by the peer...")
