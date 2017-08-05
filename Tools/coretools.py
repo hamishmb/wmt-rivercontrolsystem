@@ -134,7 +134,7 @@ class Sockets:
     # ---------- Setup Functions ----------
     def SetPortNumber(self, PortNo):
         """Sets the port number for the socket"""
-        logger.debug("Socket Tools: Sockets::SetPortNumber(): Setting PortNumber to "+std::to_string(PortNo)+"...")
+        logger.debug("Socket Tools: Sockets::SetPortNumber(): Setting PortNumber to "+str(PortNo)+"...")
         self.PortNumber = PortNo
 
     #Only useful when creating a plug, rather than a socket.
@@ -145,7 +145,7 @@ class Sockets:
 
     def SetConsoleOutput(self, State):
         """Can tell us not to output any messages to console (used in server)"""
-        logger.debug("Socket Tools: Sockets::SetConsoleOutput(): Setting Verbose to "+boost::lexical_cast<string>(State)+"...")
+        logger.debug("Socket Tools: Sockets::SetConsoleOutput(): Setting Verbose to "+str(State)+"...")
         Verbose = State
 
     def StartHandler(self):
@@ -225,8 +225,8 @@ class Sockets:
             logger.debug("Socket Tools: Sockets::CreateAndConnect(): Done!")
             self.ReadyForTransmission = True
 
-        except: #*** WHAT ERROR WOULD WE NEED TO CATCH? ***
-            logger.critical("Socket Tools: Sockets::CreateAndConnect(): Error connecting: "+static_cast<string>(e.what())+". Exiting...")
+        except BaseException as E: #*** WHAT ERROR WOULD WE NEED TO CATCH? ***
+            logger.critical("Socket Tools: Sockets::CreateAndConnect(): Error connecting: "+str(E)+". Exiting...")
 
             if self.Verbose:
                 print("Connecting Failed!") # " << e.what() << std::endl
@@ -280,7 +280,7 @@ class Sockets:
 
     def SendToPeer(self, Msg):
         """Sends the given message to the peer and waits for an acknowledgement). A convenience function.""" #*** TODO If ACK is very slow, try again *** *** Will need to change this later cos if there's a high volume of messages it might fail ***
-        logger.debug("Socket Tools: Sockets::SendToPeer(): Sending message "+ConvertToString(Msg)+" to peer...")
+        logger.debug("Socket Tools: Sockets::SendToPeer(): Sending message "+Msg+" to peer...")
 
         #Push it to the message queue.
         self.Write(Msg)
