@@ -156,9 +156,9 @@ class Sockets:
         self.HandlerShouldExit = False
         self.HandlerExited = False
 
-        if self.Type in ("Plug", "Socket"): pass
+        if self.Type in ("Plug", "Socket"):
             #Logger.Debug("Socket Tools: Sockets::StartHandler(): Check passed, starting handler...")
-            #HandlerThread = std::thread(Handler, this)
+            self.HandlerThread = SocketHandlerThread(self)
 
         else:
             #Logger.Debug("Socket Tools: Sockets::StartHandler(): Type isn't set correctly! Throwing runtime_error...")
@@ -175,8 +175,8 @@ class Sockets:
 
         return Temp
 
-    def WaitForHandlerToExit(self): pass
-        #self.HandlerThread.join()
+    def WaitForHandlerToExit(self):
+        self.HandlerThread.join()
 
     def HandlerHasExited(self):
         return self.HandlerExited
@@ -199,7 +199,11 @@ class Sockets:
         #Queues.
         self.IncomingQueue = []
         self.OutgoingQueue = []
-    
+
+        #Sockets.
+        self.Socket = ""
+        self.ServerSocket = ""
+
         #Logger.Debug("Socket Tools: Sockets::Reset(): Done! Socket is now in its default state...")
 
     # ---------- Handler Thread & Functions ----------
@@ -255,7 +259,7 @@ class Sockets:
         #Logger.Info("Socket Tools: Sockets::CreateSocket(): Creating the socket...")
 
         self.ServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.ServerSocket.bind((socket.gethostname(), 30000))
+        self.ServerSocket.bind((socket.gethostname(), self.PortNumber))
         self.ServerSocket.listen(1)
 
         #Logger.Info("Socket Tools: Sockets::CreateSocket(): Done!")
