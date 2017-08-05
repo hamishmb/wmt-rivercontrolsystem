@@ -350,7 +350,7 @@ class Sockets:
             Data = ""
 
             #While the socket is ready for reading, keep trying to read small packets of data.
-            while select.select(self.Socket, [], [], 1)[0]:
+            while select.select([self.Socket], [], [], 1)[0]:
                 #Use a 1-second timeout.
                 self.Socket.settimeout(1.0)
 
