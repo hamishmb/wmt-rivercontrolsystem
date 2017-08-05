@@ -259,7 +259,7 @@ class Sockets:
         logger.info("Socket Tools: Sockets::CreateSocket(): Creating the socket...")
 
         self.ServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.ServerSocket.bind((socket.gethostname(), self.PortNumber))
+        self.ServerSocket.bind(('', self.PortNumber))
         self.ServerSocket.listen(10)
 
         logger.info("Socket Tools: Sockets::CreateSocket(): Done!")
@@ -268,7 +268,7 @@ class Sockets:
         """Waits until the socket has connected to a plug."""
         logger.info("Socket Tools: Sockets::ConnectSocket(): Attempting to connect to the requested socket...")
 
-        self.Socket = self.ServerSocket.accept()
+        self.Socket, addr = self.ServerSocket.accept()
 
         logger.info("Socket Tools: Sockets::ConnectSocket(): Done!")
 
