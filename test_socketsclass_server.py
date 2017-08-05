@@ -36,7 +36,7 @@ def RunStandalone():
 
     #Set the object up.
     Socket.SetPortNumber(30000)
-    Socket.SetServerAddress("localhost")
+    Socket.SetServerAddress("127.0.0.1")
 
     Socket.StartHandler()
 

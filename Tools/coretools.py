@@ -201,7 +201,7 @@ class Sockets:
         self.OutgoingQueue = []
 
         #Sockets.
-        self.Socket = ""
+        self.Socket.close()
         self.ServerSocket = ""
 
         logger.debug("Socket Tools: Sockets::Reset(): Done! Socket is now in its default state...")
