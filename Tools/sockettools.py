@@ -19,6 +19,11 @@
 
 #NOTE: Using this terminology, "Plugs" are client sockets, "Sockets" are server sockets.
 
+import socket
+import select
+import threading
+import time
+
 # ---------- Sockets Class ----------
 class Sockets:
     def __init__(self, TheType):
@@ -243,7 +248,7 @@ class Sockets:
             self.OutgoingQueue.pop(0)  
 
         except BaseException as E:
-            logger.error("Socket Tools: Sockets.SendAnyPendingMessages(): Caught unhandled exception! Error was "+static_cast<string>(err.what())+"...")
+            logger.error("Socket Tools: Sockets.SendAnyPendingMessages(): Caught unhandled exception! Error was "+str(E)+"...")
             print("Error: ", E)
 
         logger.debug("Socket Tools: Sockets.SendAnyPendingMessages(): Done.")

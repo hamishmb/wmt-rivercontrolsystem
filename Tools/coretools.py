@@ -18,9 +18,6 @@ import datetime
 import sys
 import getopt
 import time
-import socket
-import select
-import threading
 
 def HandleCmdlineOptions(UsageFunc):
     """
