@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Hall Effect Device Monitoring Tools for the River System Control and Monitoring Software Version 1.0
+# Capacitive Probe Monitoring Tools for the River System Control and Monitoring Software Version 1.0
 # Copyright (C) 2017 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
@@ -27,6 +27,7 @@ def usage():
     print("Options:\n")
     print("       -h, --help:               Show this help message")
     print("       -f, --file:               Specify file to write the recordings to. Default: interactive.")
+    print("       -c, --controlleraddress:  Specify the DNS name/IP of the controlling server we want to send our level data to, if any.")
     print("       -n <int>, --num=<int>     Specify number of readings to take before exiting. Without this option, readings will be taken until the program is terminated")
     print("capacitive_probe_monitor_standalone.py is released under the GNU GPL Version 3")
     print("Copyright (C) Wimborne Model Town 2017")
@@ -42,10 +43,23 @@ def RunStandalone():
     from Tools.sensorobjects import CapacitiveProbe
 
     #Handle cmdline options.
-    FileName, NumberOfReadingsToTake = CoreTools.HandleCmdlineOptions(usage)
+    FileName, ServerAddress, NumberOfReadingsToTake = CoreTools.HandleCmdlineOptions(usage)
+
+    #Connect to server, if any.
+    if ServerAddress is not None:
+        print("Initialising connection to server, please wait...")
+        Socket = SocketTools.Sockets("Plug")
+        Socket.SetPortNumber(30000)
+        Socket.SetServerAddress("localhost")
+        Socket.StartHandler()
+
+        #Wait until the socket is connected and ready.
+        while not Socket.IsReady(): time.sleep(0.5)
+
+        print("Done!")
 
     #Greet and get filename.
-    FileName, RecordingsFile = CoreTools.GreetAndGetFilename("Hall Effect Device Monitor", FileName)
+    FileName, RecordingsFile = CoreTools.GreetAndGetFilename("Capacitive Probe Monitor", FileName)
 
     print("Starting to take readings. Please stand by...")
 
@@ -64,6 +78,9 @@ def RunStandalone():
 
             print("Time: ", str(datetime.datetime.now()), ": "+str(Freq))
             RecordingsFile.write("Time: "+str(datetime.datetime.now())+" Frequency: "+str(Freq)+"\n")
+
+            if ServerAddress is not None:
+                Socket.write("Time: ", str(datetime.datetime.now()), ": "+str(Freq))
 
             NumberOfReadingsTaken += 1
 

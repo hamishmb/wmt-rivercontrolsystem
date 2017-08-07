@@ -28,10 +28,11 @@ def HandleCmdlineOptions(UsageFunc):
     """
 
     FileName = "Unknown"
+    ServerAddress = None
 
     #Check all cmdline options are valid.
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hf:n:", ["help", "file=", "num="])
+        opts, args = getopt.getopt(sys.argv[1:], "hf:c:n:", ["help", "file=", "controlleraddress=", "num="])
 
     except getopt.GetoptError as err:
         #Invalid option. Show the help message and then exit.
@@ -50,6 +51,9 @@ def HandleCmdlineOptions(UsageFunc):
         elif o in ["-f", "--file"]:
             FileName = a
 
+        elif o in ["-c", "--controlleraddress"]:
+            ServerAddress = a
+
         elif o in ["-h", "--help"]:
             UsageFunc()
             sys.exit()
@@ -57,7 +61,7 @@ def HandleCmdlineOptions(UsageFunc):
         else:
             assert False, "unhandled option"
 
-    return FileName, NumberOfReadingsToTake
+    return FileName, ServerAddress, NumberOfReadingsToTake
 
 def GreetAndGetFilename(ModuleName, FileName):
     """
