@@ -39,6 +39,7 @@ def RunStandalone():
 
     from Tools import sensorobjects
     from Tools import coretools as CoreTools
+    from Tools import sockettools as SocketTools
 
     from Tools.sensorobjects import CapacitiveProbe
 
@@ -76,11 +77,11 @@ def RunStandalone():
         while (NumberOfReadingsToTake == 0 or NumberOfReadingsTaken < NumberOfReadingsToTake):
             Freq = Probe.GetLevel()
 
-            print("Time: ", str(datetime.datetime.now()), ": "+str(Freq))
+            print("Time: "+str(datetime.datetime.now())+" Frequency: "+str(Freq)+"\n")
             RecordingsFile.write("Time: "+str(datetime.datetime.now())+" Frequency: "+str(Freq)+"\n")
 
             if ServerAddress is not None:
-                Socket.write("Time: ", str(datetime.datetime.now()), ": "+str(Freq))
+                Socket.Write("Time: "+str(datetime.datetime.now())+": Frequency: "+str(Freq))
 
             NumberOfReadingsTaken += 1
 
