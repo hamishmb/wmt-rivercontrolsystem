@@ -348,26 +348,25 @@ class ResistanceProbe(BaseDeviceClass):
         #No pins were high.
         return -1, "1111111111"
 
-    def CheckForFaults(self, HighestActivePin, StateText): #TODO setup and use a logger for this (later).
-        """Checks for faults in the sensor. Isn't capable of finding all faults without another sensor to compare against.
+    def CheckForFaults(self, HighestActivePin, StateText):
+        """
+        Checks for faults in the sensor. Isn't capable of finding all faults without another sensor to compare against.
         Usage:
 
             bool <ResistanceProbe-Object>.CheckForFaults(int HighestActivePin)
         """
-        #Must convert string to int first, because any string except "" evals to boolean True. 
-       
+
+        #Must convert string to int first, because any string except "" evals to boolean True.
         FaultText = ""
 
         #All pins before this one should be active.
         for Pin in StateText[:HighestActivePin]:
             if bool(int(Pin)) != self._ActiveState:
-                print("FAULT DETECTED")
                 FaultText = "FAULT DETECTED"
 
         #All pins after this one should be inactive.
         for Pin in StateText[HighestActivePin+1:]:
             if bool(int(Pin)) == self._ActiveState:
-                print("FAULT DETECTED")
                 FaultText = "FAULT DETECTED"
 
         return StateText+" "+FaultText

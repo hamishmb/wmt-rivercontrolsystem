@@ -22,7 +22,7 @@ import getopt #Proper option handler.
 import os
 import threading
 
-#NOTE: Can probably be refactored a bit with a base class.
+#NOTE: Can probably be refactored a bit with a base class, but don't do it prematurely.
 
 # ---------- BASE CLASS ----------
 class BaseMonitorClass(threading.Thread):
