@@ -21,6 +21,7 @@ import sys
 import getopt #Proper option handler.
 import os
 import threading
+import logging
 
 def usage():
     #Only used when running standalone.
@@ -28,6 +29,7 @@ def usage():
     print("Options:\n")
     print("       -h, --help:               Show this help message")
     print("       -f, --file:               Specify file to write the recordings to. Default: interactive.")
+    print("       -c, --controlleraddress:  Specify the DNS name/IP of the controlling server we want to send our level data to, if any.")
     print("       -n <int>, --num=<int>     Specify number of readings to take before exiting. Without this option, readings will be taken until the program is terminated")
     print("resistance_probe_monitor_standalone.py is released under the GNU GPL Version 3")
     print("Copyright (C) Wimborne Model Town 2017")
@@ -40,12 +42,26 @@ def RunStandalone():
     from Tools import sensorobjects
     from Tools import monitortools
     from Tools import coretools as CoreTools
+    from Tools import sockettools as SocketTools
 
     from Tools.sensorobjects import ResistanceProbe
     from Tools.monitortools import ResistanceProbeMonitor
 
     #Handle cmdline options.
-    FileName, NumberOfReadingsToTake = CoreTools.HandleCmdlineOptions(usage)
+    FileName, ServerAddress, NumberOfReadingsToTake = CoreTools.HandleCmdlineOptions(usage)
+
+    #Connect to server, if any.
+    if ServerAddress is not None:
+        print("Initialising connection to server, please wait...")
+        Socket = SocketTools.Sockets("Plug")
+        Socket.SetPortNumber(30000)
+        Socket.SetServerAddress("localhost")
+        Socket.StartHandler()
+
+        #Wait until the socket is connected and ready.
+        while not Socket.IsReady(): time.sleep(0.5)
+
+        print("Done!")
 
     #Greet and get filename.
     FileName, RecordingsFile = CoreTools.GreetAndGetFilename("Resistance Probe Monitor", FileName)
@@ -79,6 +95,9 @@ def RunStandalone():
             print(Reading)
             RecordingsFile.write(Reading)
 
+            if ServerAddress is not None:
+                Socket.Write(Reading)
+
         #Wait until it's time to check for another reading.
         time.sleep(ReadingInterval)
 
@@ -87,8 +106,16 @@ def RunStandalone():
 
     RecordingsFile.close()
 
+    if ServerAddress is not None:
+        Socket.RequestHandlerExit()
+        Socket.WaitForHandlerToExit()
+        Socket.Reset()
+
     #Reset GPIO pins.
     GPIO.cleanup()
 
 if __name__ == "__main__":
+    logger = logging
+    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p', level=logging.WARNING)
+
     RunStandalone() 

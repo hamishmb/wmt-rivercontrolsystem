@@ -101,6 +101,11 @@ def RunStandalone():
 
         RecordingsFile.close()
 
+        if ServerAddress is not None:
+            Socket.RequestHandlerExit()
+            Socket.WaitForHandlerToExit()
+            Socket.Reset()
+
         print("Calculating mean average...")
         RecordingsFile = open(FileName, "r")
 
