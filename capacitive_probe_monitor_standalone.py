@@ -41,8 +41,10 @@ def RunStandalone():
     from Tools import sensorobjects
     from Tools import coretools as CoreTools
     from Tools import sockettools as SocketTools
+    from Tools import monitortools
 
     from Tools.sensorobjects import CapacitiveProbe
+    from Tools.monitortools import CapacitiveProbeMonitor
 
     Tools.sockettools.logger = logger
 
@@ -76,75 +78,78 @@ def RunStandalone():
     #Holds the number of readings we've taken.
     NumberOfReadingsTaken = 0
 
-    try:
-        while (NumberOfReadingsToTake == 0 or NumberOfReadingsTaken < NumberOfReadingsToTake):
-            Freq = Probe.GetLevel()
+    #Reading interval.
+    ReadingInterval = 300
 
-            print("Time: "+str(datetime.datetime.now())+" Frequency: "+str(Freq)+"\n")
-            RecordingsFile.write("Time: "+str(datetime.datetime.now())+" Frequency: "+str(Freq)+"\n")
+    #Start the monitor thread. Also wait a few seconds to let it initialise. This also allows us to take the first reading before we start waiting.
+    MonitorThread = CapacitiveProbeMonitor(Probe, NumberOfReadingsToTake, ReadingInterval=ReadingInterval)
+    time.sleep(10)
+
+    #Keep tabs on its progress so we can write new readings to the file.
+    while MonitorThread.IsRunning():
+        #Check for new readings.
+        while MonitorThread.HasData():
+            Reading = MonitorThread.GetReading()
+
+            #Write any new readings to the file and to stdout.
+            print(Reading)
+            RecordingsFile.write(Reading)
 
             if ServerAddress is not None:
-                Socket.Write("Time: "+str(datetime.datetime.now())+": Frequency: "+str(Freq))
+                Socket.Write(Reading)
 
-            NumberOfReadingsTaken += 1
+        #Wait until it's time to check for another reading.
+        time.sleep(ReadingInterval)
 
-            #Wait five minutes between readings.
-            time.sleep(300)
+    #Always clean up properly.
+    print("Cleaning up...")
 
-    except BaseException as E:
-        #Ignore all errors. Generally bad practice :P
-        print("\nCaught Exception: ", E)
+    RecordingsFile.close()
 
-    finally:
-        #Always clean up properly.
-        print("Cleaning up...")
+    if ServerAddress is not None:
+        Socket.RequestHandlerExit()
+        Socket.WaitForHandlerToExit()
+        Socket.Reset()
 
-        RecordingsFile.close()
+    print("Calculating mean average...")
+    RecordingsFile = open(FileName, "r")
 
-        if ServerAddress is not None:
-            Socket.RequestHandlerExit()
-            Socket.WaitForHandlerToExit()
-            Socket.Reset()
+    Sum = 0
+    Count = 0
 
-        print("Calculating mean average...")
-        RecordingsFile = open(FileName, "r")
+    #Sum up and keep count of readings.
+    while True:
+        Line = RecordingsFile.readline()
 
-        Sum = 0
-        Count = 0
-
-        #Sum up and keep count of readings.
-        while True:
-            Line = RecordingsFile.readline()
-
-            if Line == "":
-                #EOF.
-                break
-
-            try:
-                Sum += int(Line.split()[4].replace("\n", ""))
-                Count += 1
-
-            except IndexError:
-                #Will happen until we reach the lines with the readings.
-                pass
-
-        RecordingsFile.close()
+        if Line == "":
+            #EOF.
+            break
 
         try:
-            Mean = Sum / Count
+            Sum += int(Line.split()[4].replace("\n", ""))
+            Count += 1
 
-        except ZeroDivisionError:
-            Mean = 0
+        except IndexError:
+            #Will happen until we reach the lines with the readings.
+            pass
 
-        #Write mean to file.
-        RecordingsFile = open(FileName, "a")
-        RecordingsFile.write("Mean Average: "+str(Mean))
-        RecordingsFile.close()
+    RecordingsFile.close()
 
-        print("Mean: "+str(Mean))
+    try:
+        Mean = Sum / Count
 
-        #Reset GPIO pins.
-        GPIO.cleanup()
+    except ZeroDivisionError:
+        Mean = 0
+
+    #Write mean to file.
+    RecordingsFile = open(FileName, "a")
+    RecordingsFile.write("Mean Average: "+str(Mean))
+    RecordingsFile.close()
+
+    print("Mean: "+str(Mean))
+
+    #Reset GPIO pins.
+    GPIO.cleanup()
 
 if __name__ == "__main__":
     logger = logging

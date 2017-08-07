@@ -62,7 +62,7 @@ class BaseMonitorClass(threading.Thread):
 
 # ---------- MONITOR THREAD FOR RESISTANCE PROBES ---------- 
 class ResistanceProbeMonitor(BaseMonitorClass):
-    def __init__(self, Probe, NumberOfReadingsToTake, ReadingInterval, ServerAddress):
+    def __init__(self, Probe, NumberOfReadingsToTake, ReadingInterval):
         """Initialise and start the thread"""
         BaseMonitorClass.__init__(self, Probe, NumberOfReadingsToTake, ReadingInterval)
         threading.Thread.__init__(self)
@@ -119,4 +119,31 @@ class HallEffectMonitor(BaseMonitorClass):
 
         self.Running = False
 
-#TODO Make a monitor thread for capacitive probes.
+# ---------- MONITOR THREAD FOR CAPACITIVE PROBES ----------
+class CapacitiveProbeMonitor(BaseMonitorClass):
+    def __init__(self, Probe, NumberOfReadingsToTake, ReadingInterval):
+        """Initialise and start the thread"""
+        BaseMonitorClass.__init__(self, Probe, NumberOfReadingsToTake, ReadingInterval)
+        threading.Thread.__init__(self)
+        self.Start()
+
+    def run(self):
+        """Main part of the thread"""
+        NumberOfReadingsTaken = 0
+
+        try:
+            while (self.NumberOfReadingsToTake == 0 or NumberOfReadingsTaken < self.NumberOfReadingsToTake):
+                Freq = self.Probe.GetLevel()
+
+            self.Queue.append("Time: "+str(datetime.datetime.now())+" Frequency: "+str(Freq))
+
+            NumberOfReadingsTaken += 1
+
+            #Take readings every however often it is.
+            time.sleep(self.ReadingInterval)
+
+        except BaseException as E:
+            #Ignore all errors. Generally bad practice :P
+            print("\nCaught Exception: ", E)
+
+        self.Running = False

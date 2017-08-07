@@ -61,7 +61,7 @@ class BaseMonitorClass(threading.Thread):
         return self.Queue.pop()
 
 # ---------- MONITOR THREAD FOR RESISTANCE PROBES ---------- 
-class ResistanceProbeMonitor(BaseMonitorClass):
+class ResistanceProbeMonitor(BaseMonitorClass, threading.Thread):
     def __init__(self, Probe, NumberOfReadingsToTake, ReadingInterval):
         """Initialise and start the thread"""
         BaseMonitorClass.__init__(self, Probe, NumberOfReadingsToTake, ReadingInterval)
@@ -90,7 +90,7 @@ class ResistanceProbeMonitor(BaseMonitorClass):
         self.Running = False
         
 # ---------- MONITOR THREAD FOR HALL EFFECT DEVICES ----------
-class HallEffectMonitor(BaseMonitorClass):
+class HallEffectMonitor(BaseMonitorClass, threading.Thread):
     def __init__(self, Probe, NumberOfReadingsToTake, ReadingInterval):
         """Initialise and start the thread"""
         BaseMonitorClass.__init__(self, Probe, NumberOfReadingsToTake, ReadingInterval)
@@ -119,4 +119,31 @@ class HallEffectMonitor(BaseMonitorClass):
 
         self.Running = False
 
-#TODO Make a monitor thread for capacitive probes.
+# ---------- MONITOR THREAD FOR CAPACITIVE PROBES ----------
+class CapacitiveProbeMonitor(BaseMonitorClass, threading.Thread):
+    def __init__(self, Probe, NumberOfReadingsToTake, ReadingInterval):
+        """Initialise and start the thread"""
+        BaseMonitorClass.__init__(self, Probe, NumberOfReadingsToTake, ReadingInterval)
+        threading.Thread.__init__(self)
+        self.Start()
+
+    def run(self):
+        """Main part of the thread"""
+        NumberOfReadingsTaken = 0
+
+        try:
+            while (self.NumberOfReadingsToTake == 0 or NumberOfReadingsTaken < self.NumberOfReadingsToTake):
+                Freq = self.Probe.GetLevel()
+
+            self.Queue.append("Time: "+str(datetime.datetime.now())+" Frequency: "+str(Freq))
+
+            NumberOfReadingsTaken += 1
+
+            #Take readings every however often it is.
+            time.sleep(self.ReadingInterval)
+
+        except BaseException as E:
+            #Ignore all errors. Generally bad practice :P
+            print("\nCaught Exception: ", E)
+
+        self.Running = False
