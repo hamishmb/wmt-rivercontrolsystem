@@ -125,7 +125,7 @@ class CapacitiveProbeMonitor(BaseMonitorClass, threading.Thread):
         """Initialise and start the thread"""
         BaseMonitorClass.__init__(self, Probe, NumberOfReadingsToTake, ReadingInterval)
         threading.Thread.__init__(self)
-        self.Start()
+        self.start()
 
     def run(self):
         """Main part of the thread"""

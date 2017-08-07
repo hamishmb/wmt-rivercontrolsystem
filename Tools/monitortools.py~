@@ -61,7 +61,7 @@ class BaseMonitorClass(threading.Thread):
         return self.Queue.pop()
 
 # ---------- MONITOR THREAD FOR RESISTANCE PROBES ---------- 
-class ResistanceProbeMonitor(BaseMonitorClass):
+class ResistanceProbeMonitor(BaseMonitorClass, threading.Thread):
     def __init__(self, Probe, NumberOfReadingsToTake, ReadingInterval):
         """Initialise and start the thread"""
         BaseMonitorClass.__init__(self, Probe, NumberOfReadingsToTake, ReadingInterval)
@@ -90,7 +90,7 @@ class ResistanceProbeMonitor(BaseMonitorClass):
         self.Running = False
         
 # ---------- MONITOR THREAD FOR HALL EFFECT DEVICES ----------
-class HallEffectMonitor(BaseMonitorClass):
+class HallEffectMonitor(BaseMonitorClass, threading.Thread):
     def __init__(self, Probe, NumberOfReadingsToTake, ReadingInterval):
         """Initialise and start the thread"""
         BaseMonitorClass.__init__(self, Probe, NumberOfReadingsToTake, ReadingInterval)
@@ -120,7 +120,7 @@ class HallEffectMonitor(BaseMonitorClass):
         self.Running = False
 
 # ---------- MONITOR THREAD FOR CAPACITIVE PROBES ----------
-class CapacitiveProbeMonitor(BaseMonitorClass):
+class CapacitiveProbeMonitor(BaseMonitorClass, threading.Thread):
     def __init__(self, Probe, NumberOfReadingsToTake, ReadingInterval):
         """Initialise and start the thread"""
         BaseMonitorClass.__init__(self, Probe, NumberOfReadingsToTake, ReadingInterval)
