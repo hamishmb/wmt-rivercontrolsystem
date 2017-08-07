@@ -47,6 +47,8 @@ def RunStandalone():
     from Tools.sensorobjects import ResistanceProbe
     from Tools.monitortools import ResistanceProbeMonitor
 
+    Tools.sockettools.logger = logger
+
     #Handle cmdline options.
     FileName, ServerAddress, NumberOfReadingsToTake = CoreTools.HandleCmdlineOptions(usage)
 
