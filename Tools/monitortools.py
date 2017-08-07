@@ -135,12 +135,12 @@ class CapacitiveProbeMonitor(BaseMonitorClass, threading.Thread):
             while (self.NumberOfReadingsToTake == 0 or NumberOfReadingsTaken < self.NumberOfReadingsToTake):
                 Freq = self.Probe.GetLevel()
 
-            self.Queue.append("Time: "+str(datetime.datetime.now())+" Frequency: "+str(Freq))
+                self.Queue.append("Time: "+str(datetime.datetime.now())+" Frequency: "+str(Freq))
 
-            NumberOfReadingsTaken += 1
+                NumberOfReadingsTaken += 1
 
-            #Take readings every however often it is.
-            time.sleep(self.ReadingInterval)
+                #Take readings every however often it is.
+                time.sleep(self.ReadingInterval)
 
         except BaseException as E:
             #Ignore all errors. Generally bad practice :P
