@@ -213,7 +213,7 @@ class FloatSwitch(BaseDeviceClass):
         Usage:
             bool <FloatSwitch-Object>.GetState()
         """
-        return GPIO.input(self._Pin)
+        return bool(GPIO.input(self._Pin))
 
 class CapacitiveProbe(BaseDeviceClass):
     # ---------- CONSTRUCTORS ----------
