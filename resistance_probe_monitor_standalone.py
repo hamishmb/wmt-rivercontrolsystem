@@ -75,7 +75,7 @@ def RunStandalone():
 
     #Set the probe up.
     Probe.SetActiveState(False)     #Active low.
-    Probe.SetPins((15, 17, 18, 27, 22, 23, 24, 10, 9, 25))
+    Probe.SetPins((15, 17, 27, 22, 23, 24, 10, 9, 25, 11))
 
     #Holds the number of readings we've taken.
     NumberOfReadingsTaken = 0

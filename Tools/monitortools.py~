@@ -22,7 +22,7 @@ import getopt #Proper option handler.
 import os
 import threading
 
-#NOTE: Can probably be refactored a bit with a base class.
+#NOTE: Can probably be refactored a bit with a base class, but don't do it prematurely.
 
 # ---------- BASE CLASS ----------
 class BaseMonitorClass(threading.Thread):
@@ -147,3 +147,33 @@ class CapacitiveProbeMonitor(BaseMonitorClass, threading.Thread):
             print("\nCaught Exception: ", E)
 
         self.Running = False
+
+# ---------- MONITOR THREAD FOR FLOAT SWITCHES ----------
+class FloatSwitchMonitor(BaseMonitorClass, threading.Thread):
+    def __init__(self, Probe, NumberOfReadingsToTake, ReadingInterval):
+        """Initialise and start the thread"""
+        BaseMonitorClass.__init__(self, Probe, NumberOfReadingsToTake, ReadingInterval)
+        threading.Thread.__init__(self)
+        self.start()
+
+    def run(self):
+        """Main part of the thread"""
+        NumberOfReadingsTaken = 0
+
+        try:
+            while (self.NumberOfReadingsToTake == 0 or NumberOfReadingsTaken < self.NumberOfReadingsToTake):
+                State = self.Probe.GetState()
+
+                self.Queue.append("Time: "+str(datetime.datetime.now())+" State: "+str(State))
+
+                NumberOfReadingsTaken += 1
+
+                #Take readings every however often it is.
+                time.sleep(self.ReadingInterval)
+
+        except BaseException as E:
+            #Ignore all errors. Generally bad practice :P
+            print("\nCaught Exception: ", E)
+
+        self.Running = False
+

@@ -209,7 +209,7 @@ class FloatSwitch(BaseDeviceClass):
 
     def GetState(self):
         """
-        Returns the state of the switch. True = on, False = off.
+        Returns the state of the switch. True = on, False = off (***?***).
         Usage:
             bool <FloatSwitch-Object>.GetState()
         """
