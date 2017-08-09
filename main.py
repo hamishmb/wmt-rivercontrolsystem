@@ -163,14 +163,14 @@ def RunStandalone():
 
         #Logic. TODO: Tidy up. Make the readings more machine-readable.
 
-        if int(SumpProbeReading[4].replace("m", "")) > 700:
+        if int(SumpProbeReading.split()[4].replace("m", "")) > 700:
             #Level in the sump is getting high.
             #Pump some water to the butts if they aren't full.
             #If they are full, do nothing and let the sump overflow.
             logger.warning("Water level in the sump > 700mm!")
             print("Water level in the sump > 700mm!")
 
-            if FloatSwitchReading[-1] == "False":
+            if FloatSwitchReading.split()[-1] == "False":
                 #Pump to the butts.
                 logger.warning("Pumping water to the butts...")
                 print("Pumping water to the butts...")
@@ -193,7 +193,7 @@ def RunStandalone():
                 print("Setting reading interval to 5 minutes...")
                 ReadingInterval = 300
 
-        elif int(SumpProbeReading[4].replace("m", "")) < 700 and int(SumpProbeReading[4].replace("m", "")) > 500:
+        elif int(SumpProbeReading.split()[4].replace("m", "")) < 700 and int(SumpProbeReading.split()[4].replace("m", "")) > 500:
             #Level in the sump is good.
             #If the butts pump is on, turn it off.
             AuxMotor.TurnOff()
@@ -205,7 +205,7 @@ def RunStandalone():
             print("Setting reading interval to 5 minutes...")
             ReadingInterval = 300
 
-        elif int(SumpProbeReading[4].replace("m", "")) < 500:
+        elif int(SumpProbeReading.split()[4].replace("m", "")) < 500:
             #Level in the sump is getting low.
             #If the butts pump is on, turn it off.
             AuxMotor.TurnOff()
@@ -224,7 +224,7 @@ def RunStandalone():
             #We have no choice here but to wait for water to come back from the butts and warn the user.
             #^ Tap is left half-open.
 
-        elif int(SumpProbeReading[4].replace("m", "")) < 400:
+        elif int(SumpProbeReading.split()[4].replace("m", "")) < 400:
             #Level in the sump is very low!
             #If the butts pump is on, turn it off.
             AuxMotor.TurnOff()
