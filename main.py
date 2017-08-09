@@ -276,7 +276,7 @@ def RunStandalone():
         SumpProbeMonitorThread.SetReadingInterval(ReadingInterval)
 
         #Wait until it's time to check for another reading.
-        time.sleep(ReadingInterval//10)
+        time.sleep(ReadingInterval)
 
     #Always clean up properly.
     logger.info("Cleaning up...")
