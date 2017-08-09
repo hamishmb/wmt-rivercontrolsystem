@@ -107,9 +107,6 @@ def RunStandalone():
     #Greet and get filename.
     FileName, RecordingsFile = CoreTools.GreetAndGetFilename("River System Control and Monitoring Software", FileName)
 
-    logger.info("Starting to take readings...")
-    print("Starting to take readings. Please stand by...")
-
     #Create the devices.
     SumpProbe = SensorObjects.ResistanceProbe("Sump Level")
     AuxMotor = SensorObjects.Motor("Aux Motor") #SSR.
@@ -125,8 +122,14 @@ def RunStandalone():
     #Reading interval.
     ReadingInterval = 300
 
+    logger.info("Waiting for client to connect...")
+    print("Waiting for client to connect...")
+
     #Wait until the socket is connected and ready.
     while not Socket.IsReady(): time.sleep(0.5)
+
+    logger.info("Starting to take readings...")
+    print("Starting to take readings. Please stand by...")
 
     #Start the monitor thread. Take readings indefinitely.
     #Also wait a few seconds to let it initialise. This also allows us to take the first reading before we start waiting.
