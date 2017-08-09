@@ -136,7 +136,7 @@ def RunStandalone():
     SumpProbeMonitorThread = MonitorTools.ResistanceProbeMonitor(SumpProbe, 0, ReadingInterval=ReadingInterval)
     time.sleep(10)
 
-    #Keep tabs on its progress so we can write new readings to the file.
+    #Keep tabs on its progress so we can write new readings to the file. TODO Proper error handling.
     while True:
         #Exit if the resistance probe monitor thread crashes for some reason.
         if not SumpProbeMonitorThread.IsRunning():
@@ -160,7 +160,7 @@ def RunStandalone():
                 #Client not ready, ignore this reading, but prevent errors. Assume the butts are full.
                 logger.info("Client not ready for reading butts level. Assuming butts are full for now.")
                 print("Client not ready for reading butts level. Assuming butts are full for now.")
-                SumpProbeReading = "Time: None State: True"
+                FloatSwitchReading = "Time: None State: True"
 
             else:
                 #Write any new readings to the file and to stdout.
