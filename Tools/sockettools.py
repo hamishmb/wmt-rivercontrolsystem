@@ -403,7 +403,7 @@ class Sockets:
             #Push to the message queue, if there is a message.
             if Data != "":
                 logger.debug("Socket Tools: Sockets.AttemptToReadFromSocket(): Pushing message to IncomingQueue...")
-                self.IncomingQueue.append(Data)
+                self.IncomingQueue.append(Data.decode("utf-8"))
 
                 logger.debug("Socket Tools: Sockets.AttemptToReadFromSocket(): Done.")
 
