@@ -398,12 +398,12 @@ class Sockets:
                 #Use a 1-second timeout.
                 self.Socket.settimeout(1.0)
 
-                Data += str(self.Socket.recv(2048))
+                Data += self.Socket.recv(2048).decode("utf-8")
 
             #Push to the message queue, if there is a message.
             if Data != "":
                 logger.debug("Socket Tools: Sockets.AttemptToReadFromSocket(): Pushing message to IncomingQueue...")
-                self.IncomingQueue.append(Data.decode("utf-8"))
+                self.IncomingQueue.append(Data)
 
                 logger.debug("Socket Tools: Sockets.AttemptToReadFromSocket(): Done.")
 
