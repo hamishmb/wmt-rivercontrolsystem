@@ -400,11 +400,12 @@ class Sockets:
 
                 Data += str(self.Socket.recv(2048))
 
-            #Push to the message queue.
-            logger.debug("Socket Tools: Sockets.AttemptToReadFromSocket(): Pushing message to IncomingQueue...")
-            self.IncomingQueue.append(Data)
+            #Push to the message queue, if there is a message.
+            if Data != "":
+                logger.debug("Socket Tools: Sockets.AttemptToReadFromSocket(): Pushing message to IncomingQueue...")
+                self.IncomingQueue.append(Data)
 
-            logger.debug("Socket Tools: Sockets.AttemptToReadFromSocket(): Done.")
+                logger.debug("Socket Tools: Sockets.AttemptToReadFromSocket(): Done.")
 
             return 0
 

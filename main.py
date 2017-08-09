@@ -23,6 +23,8 @@
 #      It will communicate with the other pi over a socket,
 #      and the other pi will be running float_switch_monitor_standalone.py.
 
+# TODO Implement setting reading interval across monitors running on different systems.
+
 import RPi.GPIO as GPIO
 import time
 import datetime
