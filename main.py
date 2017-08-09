@@ -32,6 +32,10 @@ import os
 import threading
 import logging
 
+#Define global variables.
+Version = "1.0"
+ReleaseDate = "9/8/2017" #TODO Update when you make changes.
+
 def usage():
     print("\nUsage: main.py [OPTION]\n\n")
     print("Options:\n")
@@ -93,16 +97,17 @@ def RunStandalone():
     FileName = HandleCmdlineOptions()
 
     #Provide a connection for clients to connect to.
-    print("Creating a socket for clients to connect to, please wait...")
+    logger.debug("Creating a socket for clients to connect to, please wait...")
     Socket = SocketTools.Sockets("Socket")
     Socket.SetPortNumber(30000)
     Socket.StartHandler()
 
-    print("Done!")
+    logger.debug("Done!")
 
     #Greet and get filename.
     FileName, RecordingsFile = CoreTools.GreetAndGetFilename("River System Control and Monitoring Software", FileName)
 
+    logger.info("Starting to take readings...")
     print("Starting to take readings. Please stand by...")
 
     #Create the devices.
@@ -114,6 +119,7 @@ def RunStandalone():
     SumpProbe.SetPins((15, 17, 27, 22, 23, 24, 10, 9, 25, 11))
 
     #Aux motor doesn't support PWM.
+    AuxMotor.SetPin(5)
     AuxMotor.SetPWMAvailable(False, -1)
 
     #Reading interval.
@@ -138,6 +144,7 @@ def RunStandalone():
             SumpProbeReading = SumpProbeMonitorThread.GetReading()
 
             #Write any new readings to the file and to stdout.
+            logger.debug("Resistance Probe: "+SumpProbeReading)
             print("Resistance Probe: "+SumpProbeReading)
             RecordingsFile.write("Resistance Probe: "+SumpProbeReading)
 
@@ -146,6 +153,7 @@ def RunStandalone():
             FloatSwitchReading = Socket.Read()
 
             #Write any new readings to the file and to stdout.
+            logger.debug("Float Switch: "+FloatSwitchReading)
             print("Float Switch: "+FloatSwitchReading)
             RecordingsFile.write("Float Switch: "+FloatSwitchReading)
 
@@ -155,13 +163,16 @@ def RunStandalone():
             #Level in the sump is getting high.
             #Pump some water to the butts if they aren't full.
             #If they are full, do nothing and let the sump overflow.
+            logger.warning("Water level in the sump > 700mm!")
             print("Water level in the sump > 700mm!")
 
             if FloatSwitchReading[-1] == "False":
                 #Pump to the butts.
+                logger.warning("Pumping water to the butts...")
                 print("Pumping water to the butts...")
                 AuxMotor.TurnOn() #FIXME check return value is True (success).
 
+                logger.warning("Changing reading interval to 30 seconds so we can keep a close eye on what's happening...")
                 print("Changing reading interval to 30 seconds so we can keep a close eye on what's happening...")
                 ReadingInterval = 30
                 #SumpProbeMonitorThread.SetReadingInterval(ReadingInterval) FIXME
@@ -170,9 +181,11 @@ def RunStandalone():
                 #Butts are full. Do nothing, but warn user.
                 AuxMotor.TurnOff()
 
+                logger.warning("The water butts are full. Allowing the sump to overflow.")
                 print("The water butts are full.")
                 print("Allowing the sump to overflow.")
 
+                logger.warning("Setting reading interval to 5 minutes...")
                 print("Setting reading interval to 5 minutes...")
                 ReadingInterval = 300
 
@@ -181,8 +194,10 @@ def RunStandalone():
             #If the butts pump is on, turn it off.
             AuxMotor.TurnOff()
 
+            logger.debug("Water level in the sump is good. Doing nothing...")
             print("Water level in the sump is good. Doing nothing...")
 
+            logger.debug("Setting reading interval to 5 minutes...")
             print("Setting reading interval to 5 minutes...")
             ReadingInterval = 300
 
@@ -191,10 +206,15 @@ def RunStandalone():
             #If the butts pump is on, turn it off.
             AuxMotor.TurnOff()
 
+            logger.warning("Water level in the sump < 500mm!")
+            logger.warning("Waiting for water to come back from the butts before requesting human intervention...")
+
             print("Water level in the sump < 500mm!")
             print("Waiting for water to come back from the butts before requesting human intervention...")
 
+            logger.warning("Setting reading interval to 1 minute so we can monitor more closely...")
             print("Setting reading interval to 1 minute so we can monitor more closely...")
+
             ReadingInterval = 60
 
             #We have no choice here but to wait for water to come back from the butts and warn the user.
@@ -205,10 +225,15 @@ def RunStandalone():
             #If the butts pump is on, turn it off.
             AuxMotor.TurnOff()
 
+            logger.error("*** NOTICE ***: Water level in the sump < 400mm!")
+            logger.error("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
+
             print("*** NOTICE ***: Water level in the sump < 400mm!")
             print("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
 
+            logger.warning("Setting reading interval to 30 seconds for close monitoring...")
             print("Setting reading interval to 30 seconds for close monitoring...")
+
             ReadingInterval = 30
 
         else:
@@ -216,17 +241,24 @@ def RunStandalone():
             #If the butts pump is on, turn it off.
             AuxMotor.TurnOff()
 
+            logger.critical("*** CRITICAL ***: Water level in the sump < 300mm!")
+            logger.critical("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
+            logger.critical("*** CRITICAL ***: The pump might be running dry RIGHT NOW!")
+
             print("*** CRITICAL ***: Water level in the sump < 300mm!")
             print("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
             print("*** CRITICAL ***: The pump might be running dry RIGHT NOW!")
 
+            logger.critical("Setting reading interval to 15 seconds for super close monitoring...")
             print("Setting reading interval to 15 seconds for super close monitoring...")
+
             ReadingInterval = 15
 
         #Wait until it's time to check for another reading.
         time.sleep(ReadingInterval)
 
     #Always clean up properly.
+    logger.info("Cleaning up...")
     print("Cleaning up...")
 
     RecordingsFile.close()
@@ -239,8 +271,11 @@ def RunStandalone():
     GPIO.cleanup()
 
 if __name__ == "__main__":
-    #FIXME: Log to a file in the version we will deploy. Leave as is for the moment for easy debugging in the test installation.
-    logger = logging
+    logger = logging.getLogger('River System Control Software '+Version)
+
+    #logging.basicConfig(filename='./rivercontrolsystem.log', format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p') TODO: Switch to logging to file in the final deployment.
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p', level=logging.WARNING)
 
-    RunStandalone() 
+    logger.setLevel(logging.INFO)
+
+    RunStandalone()

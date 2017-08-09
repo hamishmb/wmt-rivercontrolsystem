@@ -39,7 +39,7 @@ def RunStandalone():
     TestMotor = Motor("Motorey")
 
     #Set the motor up.
-    TestMotor.SetPin(15)
+    TestMotor.SetPin(5)
 
     try:
         time.sleep(3)

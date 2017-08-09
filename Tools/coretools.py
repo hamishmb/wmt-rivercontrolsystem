@@ -78,6 +78,9 @@ def GreetAndGetFilename(ModuleName, FileName):
     #Get filename, if one wasn't specified.
     if FileName == "Unknown":
         print("Please enter a filename to save the readings to.")
+        print("This isn't a log file. The log file will be created automatically")
+        print("and will store debugging information, whereas this file just stores")
+        print("Readings.\n")
         print("The file will be appended to.")
         print("Make sure it's somewhere where there's plenty of disk space. Suggested: readings.txt")
 
