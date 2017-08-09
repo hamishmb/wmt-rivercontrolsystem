@@ -156,10 +156,17 @@ def RunStandalone():
             FloatSwitchReading = Socket.Read()
             Socket.Pop()
 
-            #Write any new readings to the file and to stdout.
-            logger.debug("Float Switch: "+FloatSwitchReading)
-            print("Float Switch: "+FloatSwitchReading)
-            RecordingsFile.write("Float Switch: "+FloatSwitchReading)
+            if FloatSwitchReading == "":
+                #Client not ready, ignore this reading, but prevent errors. Assume the butts are full.
+                logger.info("Client not ready for reading butts level. Assuming butts are full for now.")
+                print("Client not ready for reading butts level. Assuming butts are full for now.")
+                SumpProbeReading = "Time: None State: True"
+
+            else:
+                #Write any new readings to the file and to stdout.
+                logger.debug("Float Switch: "+FloatSwitchReading)
+                print("Float Switch: "+FloatSwitchReading)
+                RecordingsFile.write("Float Switch: "+FloatSwitchReading)
 
         #Logic. TODO: Tidy up. Make the readings more machine-readable.
 
