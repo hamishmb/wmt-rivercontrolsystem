@@ -85,7 +85,7 @@ class ResistanceProbeMonitor(BaseMonitorClass):
             while (self.NumberOfReadingsToTake == 0 or (NumberOfReadingsTaken < self.NumberOfReadingsToTake)):
                 Level, StateText = self.Probe.GetLevel()
 
-                self.Queue.append("Time: "+str(datetime.datetime.now())+" Level: "+str(Level)+"mm. Pin states: "+StateText)
+                self.Queue.append("Time: "+str(datetime.datetime.now())+" Level: "+str(Level)+"mm Pin states: "+StateText)
 
                 NumberOfReadingsTaken += 1
 
