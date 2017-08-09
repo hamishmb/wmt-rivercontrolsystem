@@ -116,7 +116,7 @@ def RunStandalone():
     SumpProbe.SetPins((15, 17, 27, 22, 23, 24, 10, 9, 25, 11))
 
     #Aux motor doesn't support PWM.
-    AuxMotor.SetPin(5)
+    AuxMotor.SetPin(5, Input=False) #This is an output.
     AuxMotor.SetPWMAvailable(False, -1)
 
     #Reading interval.
