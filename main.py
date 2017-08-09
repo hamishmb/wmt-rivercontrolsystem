@@ -130,7 +130,7 @@ def RunStandalone():
 
     #Start the monitor thread. Take readings indefinitely.
     #Also wait a few seconds to let it initialise. This also allows us to take the first reading before we start waiting.
-    SumpProbeMonitorThread = MonitorTools.ResistanceProbeMonitor(SumpProbe, 0, ReadingInterval=ReadingInterval) #FIXME: Must be able to change reading interval as and when required.
+    SumpProbeMonitorThread = MonitorTools.ResistanceProbeMonitor(SumpProbe, 0, ReadingInterval=ReadingInterval)
     time.sleep(10)
 
     #Keep tabs on its progress so we can write new readings to the file.
@@ -157,7 +157,7 @@ def RunStandalone():
             print("Float Switch: "+FloatSwitchReading)
             RecordingsFile.write("Float Switch: "+FloatSwitchReading)
 
-        #Logic. TODO: Tidy up. Make the readings more machine-readable. Sort out logging to file. Don't only print status messages.
+        #Logic. TODO: Tidy up. Make the readings more machine-readable.
 
         if int(SumpProbeReading[4].replace("m", "")) > 700:
             #Level in the sump is getting high.
@@ -170,12 +170,12 @@ def RunStandalone():
                 #Pump to the butts.
                 logger.warning("Pumping water to the butts...")
                 print("Pumping water to the butts...")
-                AuxMotor.TurnOn() #FIXME check return value is True (success).
+                AuxMotor.TurnOn()
 
                 logger.warning("Changing reading interval to 30 seconds so we can keep a close eye on what's happening...")
                 print("Changing reading interval to 30 seconds so we can keep a close eye on what's happening...")
+
                 ReadingInterval = 30
-                #SumpProbeMonitorThread.SetReadingInterval(ReadingInterval) FIXME
 
             else:
                 #Butts are full. Do nothing, but warn user.
@@ -253,6 +253,9 @@ def RunStandalone():
             print("Setting reading interval to 15 seconds for super close monitoring...")
 
             ReadingInterval = 15
+
+        #Set the reading interval in the thread.
+        SumpProbeMonitorThread.SetReadingInterval(ReadingInterval)
 
         #Wait until it's time to check for another reading.
         time.sleep(ReadingInterval)

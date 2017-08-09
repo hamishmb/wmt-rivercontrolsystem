@@ -60,8 +60,17 @@ class BaseMonitorClass(threading.Thread):
 
         return self.Queue.pop()
 
+    def SetReadingInterval(self, Interval):
+        """
+        Sets the reading interval. Takes immediate effect.
+        Usage:
+            SetReadingInterval(int Interval)
+        """
+
+        self.ReadingInterval = Interval
+
 # ---------- MONITOR THREAD FOR RESISTANCE PROBES ---------- 
-class ResistanceProbeMonitor(BaseMonitorClass, threading.Thread):
+class ResistanceProbeMonitor(BaseMonitorClass):
     def __init__(self, Probe, NumberOfReadingsToTake, ReadingInterval):
         """Initialise and start the thread"""
         BaseMonitorClass.__init__(self, Probe, NumberOfReadingsToTake, ReadingInterval)
@@ -81,7 +90,13 @@ class ResistanceProbeMonitor(BaseMonitorClass, threading.Thread):
                 NumberOfReadingsTaken += 1
 
                 #Take readings every however often it is.
-                time.sleep(self.ReadingInterval)
+                #I know we could use a long time.sleep(), but this MUST be responsive to changes in the reading interval.
+                Count = 0
+
+                while Count < self.ReadingInterval:
+                    #This way, if our reading interval changes, the code will respond to the change immediately.
+                    time.sleep(1)
+                    Count += 1
 
         except BaseException as E:
             #Ignore all errors. Generally bad practice :P
@@ -90,7 +105,7 @@ class ResistanceProbeMonitor(BaseMonitorClass, threading.Thread):
         self.Running = False
         
 # ---------- MONITOR THREAD FOR HALL EFFECT DEVICES ----------
-class HallEffectMonitor(BaseMonitorClass, threading.Thread):
+class HallEffectMonitor(BaseMonitorClass):
     def __init__(self, Probe, NumberOfReadingsToTake, ReadingInterval):
         """Initialise and start the thread"""
         BaseMonitorClass.__init__(self, Probe, NumberOfReadingsToTake, ReadingInterval)
@@ -111,7 +126,13 @@ class HallEffectMonitor(BaseMonitorClass, threading.Thread):
                 NumberOfReadingsTaken += 1
 
                 #Take readings every however often it is.
-                time.sleep(self.ReadingInterval)
+                #I know we could use a long time.sleep(), but this MUST be responsive to changes in the reading interval.
+                Count = 0
+
+                while Count < self.ReadingInterval:
+                    #This way, if our reading interval changes, the code will respond to the change immediately.
+                    time.sleep(1)
+                    Count += 1
 
         except BaseException as E:
             #Ignore all errors. Generally bad practice :P
@@ -120,7 +141,7 @@ class HallEffectMonitor(BaseMonitorClass, threading.Thread):
         self.Running = False
 
 # ---------- MONITOR THREAD FOR CAPACITIVE PROBES ----------
-class CapacitiveProbeMonitor(BaseMonitorClass, threading.Thread):
+class CapacitiveProbeMonitor(BaseMonitorClass):
     def __init__(self, Probe, NumberOfReadingsToTake, ReadingInterval):
         """Initialise and start the thread"""
         BaseMonitorClass.__init__(self, Probe, NumberOfReadingsToTake, ReadingInterval)
@@ -140,7 +161,13 @@ class CapacitiveProbeMonitor(BaseMonitorClass, threading.Thread):
                 NumberOfReadingsTaken += 1
 
                 #Take readings every however often it is.
-                time.sleep(self.ReadingInterval)
+                #I know we could use a long time.sleep(), but this MUST be responsive to changes in the reading interval.
+                Count = 0
+
+                while Count < self.ReadingInterval:
+                    #This way, if our reading interval changes, the code will respond to the change immediately.
+                    time.sleep(1)
+                    Count += 1
 
         except BaseException as E:
             #Ignore all errors. Generally bad practice :P
@@ -149,7 +176,7 @@ class CapacitiveProbeMonitor(BaseMonitorClass, threading.Thread):
         self.Running = False
 
 # ---------- MONITOR THREAD FOR FLOAT SWITCHES ----------
-class FloatSwitchMonitor(BaseMonitorClass, threading.Thread):
+class FloatSwitchMonitor(BaseMonitorClass):
     def __init__(self, Probe, NumberOfReadingsToTake, ReadingInterval):
         """Initialise and start the thread"""
         BaseMonitorClass.__init__(self, Probe, NumberOfReadingsToTake, ReadingInterval)
@@ -169,7 +196,13 @@ class FloatSwitchMonitor(BaseMonitorClass, threading.Thread):
                 NumberOfReadingsTaken += 1
 
                 #Take readings every however often it is.
-                time.sleep(self.ReadingInterval)
+                #I know we could use a long time.sleep(), but this MUST be responsive to changes in the reading interval.
+                Count = 0
+
+                while Count < self.ReadingInterval:
+                    #This way, if our reading interval changes, the code will respond to the change immediately.
+                    time.sleep(1)
+                    Count += 1
 
         except BaseException as E:
             #Ignore all errors. Generally bad practice :P
