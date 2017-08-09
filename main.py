@@ -173,6 +173,7 @@ def RunStandalone():
                 logger.debug("Float Switch: "+FloatSwitchReading)
                 print("Float Switch: "+FloatSwitchReading)
                 RecordingsFile.write("Float Switch: "+FloatSwitchReading)
+                print(FloatSwitchReading.split()[-1])
 
         #Logic. TODO: Tidy up. Make the readings more machine-readable.
 
@@ -275,7 +276,7 @@ def RunStandalone():
         SumpProbeMonitorThread.SetReadingInterval(ReadingInterval)
 
         #Wait until it's time to check for another reading.
-        time.sleep(ReadingInterval)
+        time.sleep(ReadingInterval//10)
 
     #Always clean up properly.
     logger.info("Cleaning up...")
