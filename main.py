@@ -151,6 +151,7 @@ def RunStandalone():
         #Check for new readings from the float switch.
         while Socket.HasPendingData():
             FloatSwitchReading = Socket.Read()
+            Socket.Pop()
 
             #Write any new readings to the file and to stdout.
             logger.debug("Float Switch: "+FloatSwitchReading)
