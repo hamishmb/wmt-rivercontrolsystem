@@ -138,6 +138,10 @@ def RunStandalone():
     SumpProbeMonitorThread = MonitorTools.ResistanceProbeMonitor(SumpProbe, 0, ReadingInterval=ReadingInterval)
     time.sleep(10)
 
+    #Setup. Preent errors.
+    FloatSwitchReading = "Time: None State: True"
+    SumpProbeReading = "Time: Empty Time Level: -1mm Pin states: 1111111111"
+
     #Keep tabs on its progress so we can write new readings to the file. TODO Proper error handling.
     while True:
         #Exit if the resistance probe monitor thread crashes for some reason.
