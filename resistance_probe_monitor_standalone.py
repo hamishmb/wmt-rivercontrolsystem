@@ -85,7 +85,7 @@ def RunStandalone():
 
     #Start the monitor thread. Also wait a few seconds to let it initialise. This also allows us to take the first reading before we start waiting.
     MonitorThread = ResistanceProbeMonitor(Probe, NumberOfReadingsToTake, ReadingInterval=ReadingInterval)
-    time.sleep(10)
+    time.sleep(2)
 
     #Keep tabs on its progress so we can write new readings to the file.
     while MonitorThread.IsRunning():

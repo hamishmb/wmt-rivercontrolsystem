@@ -134,9 +134,9 @@ def RunStandalone():
     print("Starting to take readings. Please stand by...")
 
     #Start the monitor thread. Take readings indefinitely.
-    #Also wait a few seconds to let it initialise. This also allows us to take the first reading before we start waiting.
+    #Also wait a few seconds to let everything initialise. This also allows us to get the first readings before we start waiting.
     SumpProbeMonitorThread = MonitorTools.ResistanceProbeMonitor(SumpProbe, 0, ReadingInterval=ReadingInterval)
-    time.sleep(10)
+    time.sleep(15)
 
     #Setup. Prevent errors.
     FloatSwitchReading = "Time: None State: True"
