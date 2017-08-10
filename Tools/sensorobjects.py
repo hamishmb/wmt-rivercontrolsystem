@@ -204,6 +204,9 @@ class FloatSwitch(BaseDeviceClass):
         del self._Pins
         del self._RPins
 
+        #Set some semi-private variables.
+        self._ActiveState = False           #Active low by default.
+
     # ---------- OVERRIDE IRRELEVANT FUNCTIONS ---------
     def SetPins(self, Pins):
         raise NotImplementedError
@@ -211,13 +214,26 @@ class FloatSwitch(BaseDeviceClass):
     def GetPins(self):
         raise NotImplementedError
 
+    # ---------- INFO SETTER FUNCTIONS ----------
+    def SetActiveState(self, State):
+        """
+        Sets the active state for the pins. True for active high, False for active low.
+        Usage:
+
+            <ResistanceProbe-Object>.SetActiveState(bool State)
+        """
+
+        self._ActiveState = State
+
+    # ---------- INFO GETTER FUNCTIONS ----------
     def GetState(self):
         """
         Returns the state of the switch. True = on, False = off (***?***).
         Usage:
             bool <FloatSwitch-Object>.GetState()
         """
-        return bool(GPIO.input(self._Pin))
+
+        return bool(GPIO.input(self._Pin) == self._ActiveState)
 
 class CapacitiveProbe(BaseDeviceClass):
     # ---------- CONSTRUCTORS ----------
