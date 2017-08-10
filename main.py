@@ -230,15 +230,15 @@ def RunStandalone():
             print("Setting reading interval to 5 minutes...")
             ReadingInterval = 300
 
-        elif rawProbeReading < 400:
+        elif rawProbeReading == 300:
             #Level in the sump is getting low.
             #If the butts pump is on, turn it off.
             AuxMotor.TurnOff()
 
-            logger.warning("Water level in the sump < 400mm!")
+            logger.warning("Water level in the sump is 300mm!")
             logger.warning("Waiting for water to come back from the butts before requesting human intervention...")
 
-            print("Water level in the sump < 400mm!")
+            print("Water level in the sump is 300mm!")
             print("Waiting for water to come back from the butts before requesting human intervention...")
 
             logger.warning("Setting reading interval to 1 minute so we can monitor more closely...")
@@ -249,15 +249,15 @@ def RunStandalone():
             #We have no choice here but to wait for water to come back from the butts and warn the user.
             #^ Tap is left half-open.
 
-        elif rawProbeReading < 300:
+        elif rawProbeReading == 200:
             #Level in the sump is very low!
             #If the butts pump is on, turn it off.
             AuxMotor.TurnOff()
 
-            logger.error("*** NOTICE ***: Water level in the sump < 300mm!")
+            logger.error("*** NOTICE ***: Water level in the sump is 200mm!")
             logger.error("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
 
-            print("*** NOTICE ***: Water level in the sump < 300mm!")
+            print("*** NOTICE ***: Water level in the sump is 200mm!")
             print("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
 
             logger.warning("Setting reading interval to 30 seconds for close monitoring...")
