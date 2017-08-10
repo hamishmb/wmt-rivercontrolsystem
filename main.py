@@ -36,7 +36,7 @@ import logging
 
 #Define global variables.
 Version = "1.0"
-ReleaseDate = "9/8/2017" #TODO Update when you make changes.
+ReleaseDate = "10/8/2017" #TODO Update when you make changes.
 
 def usage():
     print("\nUsage: main.py [OPTION]\n\n")
@@ -138,11 +138,11 @@ def RunStandalone():
     SumpProbeMonitorThread = MonitorTools.ResistanceProbeMonitor(SumpProbe, 0, ReadingInterval=ReadingInterval)
     time.sleep(10)
 
-    #Setup. Preent errors.
+    #Setup. Prevent errors.
     FloatSwitchReading = "Time: None State: True"
     SumpProbeReading = "Time: Empty Time Level: -1mm Pin states: 1111111111"
 
-    #Keep tabs on its progress so we can write new readings to the file. TODO Proper error handling.
+    #Keep tabs on its progress so we can write new readings to the file.
     while True:
         #Exit if the resistance probe monitor thread crashes for some reason.
         if not SumpProbeMonitorThread.IsRunning():
@@ -175,16 +175,27 @@ def RunStandalone():
                 RecordingsFile.write("Float Switch: "+FloatSwitchReading)
                 print(FloatSwitchReading.split()[-1])
 
-        #Logic. TODO: Tidy up. Make the readings more machine-readable.
+        #Logic.
+        #Handle errors when interpreting the readings.
+        try:
+            rawProbeReading = int(SumpProbeReading.split()[4].replace("m", ""))
+            rawSwitchReading = FloatSwitchReading.split()[-1]
 
-        if int(SumpProbeReading.split()[4].replace("m", "")) > 700:
+        except BaseException as E:
+            logger.error("Error interpreting readings: "+str(E)+". This indicates a bug in the software. Trying to get new readings...")
+            print("Error interpreting readings: "+str(E)+". This indicates a bug in the software.")
+            print("Getting new readings to try and recover...")
+            continue
+
+        if rawProbeReading > 600:
+            #Adjusted to 600mm because the 700mm sensor on the probe is broken at the moment.
             #Level in the sump is getting high.
             #Pump some water to the butts if they aren't full.
             #If they are full, do nothing and let the sump overflow.
-            logger.warning("Water level in the sump > 700mm!")
-            print("Water level in the sump > 700mm!")
+            logger.warning("Water level in the sump > 600mm!")
+            print("Water level in the sump > 600mm!")
 
-            if FloatSwitchReading.split()[-1] == "False":
+            if rawSwitchReading == "False":
                 #Pump to the butts.
                 logger.warning("Pumping water to the butts...")
                 print("Pumping water to the butts...")
@@ -207,27 +218,27 @@ def RunStandalone():
                 print("Setting reading interval to 5 minutes...")
                 ReadingInterval = 300
 
-        elif int(SumpProbeReading.split()[4].replace("m", "")) < 700 and int(SumpProbeReading.split()[4].replace("m", "")) > 500:
+        elif rawProbeReading <= 600 and rawProbeReading >= 400:
             #Level in the sump is good.
             #If the butts pump is on, turn it off.
             AuxMotor.TurnOff()
 
             logger.debug("Water level in the sump is good. Doing nothing...")
-            print("Water level in the sump is good. Doing nothing...")
+            print("Water level in the sump is good. (600 - 400mm inclusive) Doing nothing...")
 
             logger.debug("Setting reading interval to 5 minutes...")
             print("Setting reading interval to 5 minutes...")
             ReadingInterval = 300
 
-        elif int(SumpProbeReading.split()[4].replace("m", "")) < 500:
+        elif rawProbeReading < 400:
             #Level in the sump is getting low.
             #If the butts pump is on, turn it off.
             AuxMotor.TurnOff()
 
-            logger.warning("Water level in the sump < 500mm!")
+            logger.warning("Water level in the sump < 400mm!")
             logger.warning("Waiting for water to come back from the butts before requesting human intervention...")
 
-            print("Water level in the sump < 500mm!")
+            print("Water level in the sump < 400mm!")
             print("Waiting for water to come back from the butts before requesting human intervention...")
 
             logger.warning("Setting reading interval to 1 minute so we can monitor more closely...")
@@ -238,15 +249,15 @@ def RunStandalone():
             #We have no choice here but to wait for water to come back from the butts and warn the user.
             #^ Tap is left half-open.
 
-        elif int(SumpProbeReading.split()[4].replace("m", "")) < 400:
+        elif rawProbeReading < 300:
             #Level in the sump is very low!
             #If the butts pump is on, turn it off.
             AuxMotor.TurnOff()
 
-            logger.error("*** NOTICE ***: Water level in the sump < 400mm!")
+            logger.error("*** NOTICE ***: Water level in the sump < 300mm!")
             logger.error("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
 
-            print("*** NOTICE ***: Water level in the sump < 400mm!")
+            print("*** NOTICE ***: Water level in the sump < 300mm!")
             print("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
 
             logger.warning("Setting reading interval to 30 seconds for close monitoring...")
@@ -259,11 +270,11 @@ def RunStandalone():
             #If the butts pump is on, turn it off.
             AuxMotor.TurnOff()
 
-            logger.critical("*** CRITICAL ***: Water level in the sump < 300mm!")
+            logger.critical("*** CRITICAL ***: Water level in the sump < 200mm!")
             logger.critical("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
             logger.critical("*** CRITICAL ***: The pump might be running dry RIGHT NOW!")
 
-            print("*** CRITICAL ***: Water level in the sump < 300mm!")
+            print("*** CRITICAL ***: Water level in the sump < 200mm!")
             print("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
             print("*** CRITICAL ***: The pump might be running dry RIGHT NOW!")
 
