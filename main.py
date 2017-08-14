@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# River System Control and Monitoring Software Version 1.0
+# River System Control and Monitoring Software Version 0.9
 # Copyright (C) 2017 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
@@ -35,7 +35,7 @@ import threading
 import logging
 
 #Define global variables.
-Version = "1.0"
+Version = "0.9"
 ReleaseDate = "10/8/2017" #TODO Update when you make changes.
 
 def usage():

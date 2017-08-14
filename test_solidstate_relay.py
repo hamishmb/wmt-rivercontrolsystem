@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Solid-State-Relay test for the River System Control and Monitoring Software Version 1.0
+# Solid-State-Relay test for the River System Control and Monitoring Software Version 0.9
 # This file is part of the River System Control and Monitoring Software.
 # Copyright (C) 2017 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
