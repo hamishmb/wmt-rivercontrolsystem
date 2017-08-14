@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Socket Tools for the River System Control and Monitoring Software Version 1.0
+# Socket Tools for the River System Control and Monitoring Software Version 0.9.1
 # Copyright (C) 2017 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
@@ -396,7 +396,7 @@ class Sockets:
             #While the socket is ready for reading, keep trying to read small packets of data.
             while select.select([self.Socket], [], [], 1)[0]:
                 #Use a 1-second timeout.
-                self.Socket.settimeout(1.0)
+                self.Socket.settimeout(0.9.1)
 
                 Data += self.Socket.recv(2048).decode("utf-8")
 
