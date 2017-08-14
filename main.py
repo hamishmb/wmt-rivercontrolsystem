@@ -36,7 +36,7 @@ import logging
 
 #Define global variables.
 Version = "0.9.1"
-ReleaseDate = "10/8/2017" #TODO Update when you make changes.
+ReleaseDate = "14/8/2017" #TODO Update when you make changes.
 
 def usage():
     print("\nUsage: main.py [OPTION]\n\n")

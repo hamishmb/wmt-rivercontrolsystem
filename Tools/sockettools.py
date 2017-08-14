@@ -396,7 +396,7 @@ class Sockets:
             #While the socket is ready for reading, keep trying to read small packets of data.
             while select.select([self.Socket], [], [], 1)[0]:
                 #Use a 1-second timeout.
-                self.Socket.settimeout(0.9.1)
+                self.Socket.settimeout(1.0)
 
                 Data += self.Socket.recv(2048).decode("utf-8")
 
