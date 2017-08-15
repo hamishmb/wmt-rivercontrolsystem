@@ -98,7 +98,7 @@ def RunStandalone():
             RecordingsFile.write(Reading)
 
             if ServerAddress is not None:
-                Socket.Write(Reading)
+                Socket.Write(Reading+"\n")
 
         #Wait until it's time to check for another reading.
         time.sleep(ReadingInterval)

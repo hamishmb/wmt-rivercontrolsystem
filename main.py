@@ -155,7 +155,7 @@ def RunStandalone():
             #Write any new readings to the file and to stdout.
             logger.debug("Resistance Probe: "+SumpProbeReading)
             print("Resistance Probe: "+SumpProbeReading)
-            RecordingsFile.write("Resistance Probe: "+SumpProbeReading)
+            RecordingsFile.write("Resistance Probe: "+SumpProbeReading+"\n")
 
         #Check for new readings from the float switch.
         while Socket.HasPendingData():
@@ -172,7 +172,7 @@ def RunStandalone():
                 #Write any new readings to the file and to stdout.
                 logger.debug("Float Switch: "+FloatSwitchReading)
                 print("Float Switch: "+FloatSwitchReading)
-                RecordingsFile.write("Float Switch: "+FloatSwitchReading)
+                RecordingsFile.write("Float Switch: "+FloatSwitchReading+"\n")
                 print(FloatSwitchReading.split()[-1])
 
         #Logic.

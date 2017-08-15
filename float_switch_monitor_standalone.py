@@ -93,7 +93,7 @@ def RunStandalone():
 
             #Write any new readings to the file and to stdout.
             print(Reading)
-            RecordingsFile.write(Reading)
+            RecordingsFile.write(Reading+"\n")
 
             if ServerAddress is not None:
                 Socket.Write(Reading)
