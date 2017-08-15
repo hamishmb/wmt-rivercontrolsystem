@@ -56,7 +56,7 @@ def RunStandalone():
         print("Initialising connection to server, please wait...")
         Socket = SocketTools.Sockets("Plug")
         Socket.SetPortNumber(30000)
-        Socket.SetServerAddress("localhost")
+        Socket.SetServerAddress(ServerAddress)
         Socket.StartHandler()
 
         #Wait until the socket is connected and ready.
