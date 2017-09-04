@@ -27,11 +27,8 @@
 
 import RPi.GPIO as GPIO
 import time
-import datetime
 import sys
 import getopt #Proper option handler.
-import os
-import threading
 import logging
 
 #Define global variables.

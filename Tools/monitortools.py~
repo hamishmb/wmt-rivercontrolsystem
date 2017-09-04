@@ -81,7 +81,7 @@ class Monitor(BaseMonitorClass):
         elif Type == "Hall Effect":
             self.reading_func = Probe.GetRPM
 
-        elif Type == "Capacitive Prob":
+        elif Type == "Capacitive Probe":
             self.reading_func = Probe.GetLevel
 
         elif Type == "Float Switch":
