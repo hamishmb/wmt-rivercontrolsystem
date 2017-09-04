@@ -35,7 +35,7 @@ def RunStandalone():
     from Tools import monitortools
 
     from Tools.sensorobjects import CapacitiveProbe
-    from Tools.monitortools import CapacitiveProbeMonitor
+    from Tools.monitortools import Monitor
 
     Tools.sockettools.logger = logger
 
@@ -70,10 +70,10 @@ def RunStandalone():
     NumberOfReadingsTaken = 0
 
     #Reading interval.
-    ReadingInterval = 300
+    ReadingInterval = 30
 
     #Start the monitor thread. Also wait a few seconds to let it initialise. This also allows us to take the first reading before we start waiting.
-    MonitorThread = CapacitiveProbeMonitor(Probe, NumberOfReadingsToTake, ReadingInterval=ReadingInterval)
+    MonitorThread = Monitor("Capacitive", Probe, NumberOfReadingsToTake, ReadingInterval=ReadingInterval)
     time.sleep(2)
 
     #Keep tabs on its progress so we can write new readings to the file.

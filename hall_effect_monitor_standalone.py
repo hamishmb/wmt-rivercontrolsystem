@@ -36,7 +36,7 @@ def RunStandalone():
     from Tools import sockettools as SocketTools
 
     from Tools.sensorobjects import HallEffectDevice
-    from Tools.monitortools import HallEffectMonitor
+    from Tools.monitortools import Monitor
 
     Tools.sockettools.logger = logger
 
@@ -74,7 +74,7 @@ def RunStandalone():
     ReadingInterval = 300
 
     #Start the monitor thread. Also wait a few seconds to let it initialise. This also allows us to take the first reading before we start waiting.
-    MonitorThread = HallEffectMonitor(Probe, NumberOfReadingsToTake, ReadingInterval=ReadingInterval)
+    MonitorThread = Monitor("Hall Effect", Probe, NumberOfReadingsToTake, ReadingInterval=ReadingInterval)
     time.sleep(2)
 
     #Keep tabs on its progress so we can write new readings to the file.
