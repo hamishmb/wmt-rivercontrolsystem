@@ -37,22 +37,7 @@ class BaseDeviceClass: #NOTE: Should this be in coretools?
         self._RPins = []                    #Needs to be set/deleted.
 
     # ---------- INFO SETTER FUNCTIONS ---------- NOTE: If we aren't going to use some of these/they aren't applicable in some derived classes, they can be removed from the derived classes (at least sort of).
-    def SetPin(self, Pin, Input=True): #FIXME: Check if this Pin is already in use. If so throw an error. Also check if this pin is a valid input pin.
-        """
-        Sets the pin for the device.
-        Usage:
-
-            <Device-Object>.SetPin(int Pin)
-        """
-        self._Pin = Pin
-
-        if Input:
-            GPIO.setup(self._Pin, GPIO.IN)
-
-        else:
-            GPIO.setup(self._Pin, GPIO.OUT)
-
-    def SetPins(self, Pins):
+    def SetPins(self, Pins): #FIXME: Check if these pins are already in use. If so throw an error. Also check if these pins are valid input pins.
         """
         Sets the pins this device will use (from low to high if a resistance probe).
         Usage:
@@ -68,6 +53,10 @@ class BaseDeviceClass: #NOTE: Should this be in coretools?
         for Pin in self._Pins:
             GPIO.setup(Pin, GPIO.IN)
 
+        #Set self._Pin if required.
+        if len(self._Pins) == 1:
+            self._Pin = self._Pins[0]
+
     # ---------- INFO GETTER FUNCTIONS ---------- NOTE: If we aren't going to use some of these/they aren't applicable in some derived classes, they can be removed from the derived classes (at least sort of).
     def GetName(self):
         """
@@ -78,16 +67,6 @@ class BaseDeviceClass: #NOTE: Should this be in coretools?
         """
 
         return self._Name
-
-    def GetPin(self):
-        """
-        Returns the pin for this device.
-        Usage:
-
-            int <Device-Object>.GetControlPin()
-        """
-
-        return self._Pin
 
     def GetPins(self):
         """
@@ -112,21 +91,10 @@ class Motor(BaseDeviceClass):
         #Call the base class constructor.
         BaseDeviceClass.__init__(self, Name)
 
-        #Delete some unwanted variables.
-        del self._Pins
-        del self._RPins
-
         #Set some semi-private variables.
         self._State = False                 #Motor is initialised to be off.
         self._IsVariableSpeed = False       #Assume we don't have PWM by default.
         self._PWMPin = -1                   #Needs to be set.
-
-    # ---------- OVERRIDE IRRELEVANT FUNCTIONS ----------
-    def SetPins(self, Pins):
-        raise NotImplementedError
-
-    def GetPins(self):
-        raise NotImplementedError
 
     # ---------- INFO SETTER FUNCTIONS ----------
     def SetPWMAvailable(self, PWMAvailable, PWMPin): #TODO Hardware check to determine if PWM is avaiable.
@@ -200,19 +168,8 @@ class FloatSwitch(BaseDeviceClass):
         #Call the base class constructor.
         BaseDeviceClass.__init__(self, Name)
 
-        #Delete some unwanted variables.
-        del self._Pins
-        del self._RPins
-
         #Set some semi-private variables.
         self._ActiveState = False           #Active low by default.
-
-    # ---------- OVERRIDE IRRELEVANT FUNCTIONS ---------
-    def SetPins(self, Pins):
-        raise NotImplementedError
-
-    def GetPins(self):
-        raise NotImplementedError
 
     # ---------- INFO SETTER FUNCTIONS ----------
     def SetActiveState(self, State):
@@ -247,19 +204,8 @@ class CapacitiveProbe(BaseDeviceClass):
         #Call the base class constructor.
         BaseDeviceClass.__init__(self, Name)
 
-        #Delete some unwanted variables.
-        del self._Pins
-        del self._RPins
-
         #Set some semi-private variables.
         self._Detections = 0                #Internal use only.
-
-    # ---------- OVERRIDE IRRELEVANT FUNCTIONS ----------
-    def SetPins(self, Pins):
-        raise NotImplementedError
-
-    def GetPins(self):
-        raise NotImplementedError
 
     # ---------- PRIVATE FUNCTIONS ----------
     def IncrementDetections(self, channel):
@@ -301,18 +247,8 @@ class ResistanceProbe(BaseDeviceClass):
         #Call the base class constructor.
         BaseDeviceClass.__init__(self, Name)
 
-        #Delete some unwanted variables.
-        del self._Pin
-
         #Set some semi-private variables.
         self._ActiveState = False           #Active low by default.
-
-    # ---------- OVERRIDE IRRELEVANT FUNCTIONS ----------
-    def SetPin(self, Pins):
-        raise NotImplementedError
-
-    def GetPin(self):
-        raise NotImplementedError
 
     # ---------- INFO SETTER FUNCTIONS ----------
     def SetActiveState(self, State):
@@ -404,19 +340,8 @@ class HallEffectDevice(BaseDeviceClass):
         #Call the base class costructor.
         BaseDeviceClass.__init__(self, Name)
 
-        #Delete some unwanted variables.
-        del self._Pins
-        del self._RPins
-
         #Set some semi-private variables.
         self._Detections = 0                  #Internal use only.
-
-    # ---------- OVERRIDE IRRELEVANT FUNCTIONS ----------
-    def SetPins(self, Pins):
-        raise NotImplementedError
-
-    def GetPins(self):
-        raise NotImplementedError
 
     # ---------- PRIVATE FUNCTIONS ----------
     def IncrementDetections(self, channel):

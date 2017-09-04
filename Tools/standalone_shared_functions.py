@@ -36,12 +36,13 @@ def handle_cmdline_options(program_name):
         tuple HandleCmdlineOptions(function UsageFunc)
     """
 
+    _type = "Unknown"
     FileName = "Unknown"
     ServerAddress = None
 
     #Check all cmdline options are valid.
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hf:c:n:", ["help", "file=", "controlleraddress=", "num="])
+        opts, args = getopt.getopt(sys.argv[1:], "ht:f:c:n:", ["help", "type=", "file=", "controlleraddress=", "num="])
 
     except getopt.GetoptError as err:
         #Invalid option. Show the help message and then exit.
@@ -54,14 +55,17 @@ def handle_cmdline_options(program_name):
     NumberOfReadingsToTake = 0 #Take readings indefinitely by default.
 
     for o, a in opts:
-        if o in ["-n", "--num"]:
-            NumberOfReadingsToTake = int(a)
+        if o in ["-t", "--type"]:
+            _type = a
 
         elif o in ["-f", "--file"]:
             FileName = a
 
         elif o in ["-c", "--controlleraddress"]:
             ServerAddress = a
+
+        elif o in ["-n", "--num"]:
+            NumberOfReadingsToTake = int(a)
 
         elif o in ["-h", "--help"]:
             usage(program_name)
@@ -70,4 +74,7 @@ def handle_cmdline_options(program_name):
         else:
             assert False, "unhandled option"
 
-    return FileName, ServerAddress, NumberOfReadingsToTake
+    if _type == "Unknown":
+        assert False, "You must specify the type of probe you want to monitor."
+
+    return _type, FileName, ServerAddress, NumberOfReadingsToTake

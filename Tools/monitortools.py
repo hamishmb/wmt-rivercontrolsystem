@@ -75,13 +75,13 @@ class Monitor(BaseMonitorClass):
         threading.Thread.__init__(self)
 
         #Determine level getting function.
-        if Type == "Resistance":
+        if Type == "Resistance Probe":
             self.reading_func = Probe.GetLevel
 
         elif Type == "Hall Effect":
             self.reading_func = Probe.GetRPM
 
-        elif Type == "Capacitive":
+        elif Type == "Capacitive Probe":
             self.reading_func = Probe.GetLevel
 
         elif Type == "Float Switch":

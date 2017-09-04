@@ -70,7 +70,7 @@ def RunStandalone():
     NumberOfReadingsTaken = 0
 
     #Reading interval.
-    ReadingInterval = 30
+    ReadingInterval = 300
 
     #Start the monitor thread. Also wait a few seconds to let it initialise. This also allows us to take the first reading before we start waiting.
     MonitorThread = Monitor("Capacitive", Probe, NumberOfReadingsToTake, ReadingInterval=ReadingInterval)
