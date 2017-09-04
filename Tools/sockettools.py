@@ -359,7 +359,6 @@ class Sockets:
             #Write the data.
             logger.debug("Socket Tools: Sockets.SendAnyPendingMessages(): Sending data...")
             self.Socket.sendall(bytes(self.OutgoingQueue[0], "utf-8"))
-            self.Socket.flush()
 
             #Remove last thing from message queue.
             logger.debug("Socket Tools: Sockets.SendAnyPendingMessages(): Clearing item at front of OutgoingQueue...")
