@@ -22,22 +22,14 @@ import getopt #Proper option handler.
 import threading
 import logging
 
-def usage():
-    #Only used when running standalone.
-    print("\nUsage: hall_effect_monitor_standalone.py [OPTION]\n\n")
-    print("Options:\n")
-    print("       -h, --help:               Show this help message")
-    print("       -f, --file:               Specify file to write the recordings to. Default: interactive.")
-    print("       -c, --controlleraddress:  Specify the DNS name/IP of the controlling server we want to send our level data to, if any.")
-    print("       -n <int>, --num=<int>     Specify number of readings to take before exiting. Without this option, readings will be taken until the program is terminated")
-    print("hall_effect_monitor_standalone.py is released under the GNU GPL Version 3")
-    print("Copyright (C) Wimborne Model Town 2017")
+#NOTE: The usage function is shared between these standalone monitors, and is in standalone_shared_functions.py.
 
 def RunStandalone():
     #Allows the progam to run standalone as well as being a module.
     #Do required imports.
     import Tools
 
+    from Tools import standalone_shared_functions as functions
     from Tools import sensorobjects
     from Tools import monitortools
     from Tools import coretools as CoreTools
@@ -49,7 +41,7 @@ def RunStandalone():
     Tools.sockettools.logger = logger
 
     #Handle cmdline options.
-    FileName, ServerAddress, NumberOfReadingsToTake = CoreTools.HandleCmdlineOptions(usage)
+    FileName, ServerAddress, NumberOfReadingsToTake = functions.handle_cmdline_options("hall_effect_monitor_standalone.py")
 
     #Connect to server, if any.
     if ServerAddress is not None:
@@ -65,7 +57,7 @@ def RunStandalone():
         print("Done!")
 
     #Greet and get filename.
-    FileName, RecordingsFile = CoreTools.GreetAndGetFilename("Hall Effect Device Monitor", FileName)
+    FileName, RecordingsFile = CoreTools.greet_and_get_filename("Hall Effect Device Monitor", FileName)
 
     print("Starting to take readings. Please stand by...")
 

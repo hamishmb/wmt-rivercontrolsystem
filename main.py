@@ -36,7 +36,7 @@ import logging
 
 #Define global variables.
 Version = "0.9.1"
-ReleaseDate = "14/8/2017" #TODO Update when you make changes.
+ReleaseDate = "4/9/2017" #TODO Update when you make changes.
 
 def usage():
     print("\nUsage: main.py [OPTION]\n\n")
@@ -107,7 +107,7 @@ def RunStandalone():
     logger.debug("Done!")
 
     #Greet and get filename.
-    FileName, RecordingsFile = CoreTools.GreetAndGetFilename("River System Control and Monitoring Software", FileName)
+    FileName, RecordingsFile = CoreTools.greet_and_get_filename("River System Control and Monitoring Software", FileName)
 
     #Create the devices.
     SumpProbe = SensorObjects.ResistanceProbe("Sump Level")

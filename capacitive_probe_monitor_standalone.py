@@ -56,7 +56,7 @@ def RunStandalone():
         print("Done!")
 
     #Greet and get filename.
-    FileName, RecordingsFile = functions.greet_and_get_filename("Capacitive Probe Monitor", FileName)
+    FileName, RecordingsFile = CoreTools.greet_and_get_filename("Capacitive Probe Monitor", FileName)
 
     print("Starting to take readings. Please stand by...")
 
