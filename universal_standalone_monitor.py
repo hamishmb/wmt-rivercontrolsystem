@@ -1,0 +1,112 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Universal Standalone Monitor for the River System Control and Monitoring Software Version 0.9.1
+# Copyright (C) 2017 Wimborne Model Town
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 3 or,
+# at your option, any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import RPi.GPIO as GPIO
+import time
+import logging
+
+#NOTE: The usage function is shared between these standalone monitors, and is in standalone_shared_functions.py.
+
+def RunStandalone():
+    #Do required imports.
+    import universal_standalone_monitor_config as config
+
+    import Tools
+
+    from Tools import standalone_shared_functions as functions
+    from Tools import sensorobjects
+    from Tools import coretools as CoreTools
+    from Tools import sockettools as SocketTools
+    from Tools import monitortools
+
+    from Tools.sensorobjects import CapacitiveProbe
+    from Tools.monitortools import Monitor
+
+    Tools.sockettools.logger = logger
+
+    #Handle cmdline options.
+    _type, FileName, ServerAddress, NumberOfReadingsToTake = functions.handle_cmdline_options("universal_standalone_monitor.py")
+
+    #Connect to server, if any.
+    if ServerAddress is not None:
+        print("Initialising connection to server, please wait...")
+        Socket = SocketTools.Sockets("Plug")
+        Socket.SetPortNumber(30000)
+        Socket.SetServerAddress(ServerAddress)
+        Socket.StartHandler()
+
+        #Wait until the socket is connected and ready.
+        while not Socket.IsReady(): time.sleep(0.5)
+
+        print("Done!")
+
+    #Greet and get filename.
+    FileName, RecordingsFile = CoreTools.greet_and_get_filename("Universal Monitor ("+_type+")", FileName)
+
+    #Get settings for this type of monitor from the config file.
+    assert _type in config.DATA, "Invalid Type Specified" 
+
+    probe, pins, reading_interval = config.DATA[_type]
+
+    #Create the probe object.
+    probe = probe("Probey")
+
+    #Set the probe up.
+    probe.SetPins(pins)
+
+    #Holds the number of readings we've taken.
+    NumberOfReadingsTaken = 0
+
+    print("Starting to take readings. Please stand by...")
+
+    #Start the monitor thread. Also wait a few seconds to let it initialise. This also allows us to take the first reading before we start waiting.
+    MonitorThread = Monitor(_type, probe, NumberOfReadingsToTake, ReadingInterval=reading_interval)
+    time.sleep(2)
+
+    #Keep tabs on its progress so we can write new readings to the file.
+    while MonitorThread.IsRunning():
+        #Check for new readings.
+        while MonitorThread.HasData():
+            Reading = MonitorThread.GetReading()
+
+            #Write any new readings to the file and to stdout.
+            print(Reading)
+            RecordingsFile.write(Reading+"\n")
+
+            if ServerAddress is not None:
+                Socket.Write(Reading)
+
+        #Wait until it's time to check for another reading.
+        time.sleep(reading_interval)
+
+    #Always clean up properly.
+    print("Cleaning up...")
+
+    RecordingsFile.close()
+
+    if ServerAddress is not None:
+        Socket.RequestHandlerExit()
+        Socket.WaitForHandlerToExit()
+        Socket.Reset()
+
+    #Reset GPIO pins.
+    GPIO.cleanup()
+
+if __name__ == "__main__":
+    logger = logging
+    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p', level=logging.WARNING)
+
+    RunStandalone()
