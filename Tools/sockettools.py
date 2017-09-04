@@ -14,8 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#TODO All of this is a hastily-done port of some C++ code from Stroodlr (my newest imcomplete project). As such, it needs a lot of cleanup and testing. It's all very hacky and messy, but it works, mostly.
-#FIXME Won't detect when a socket is lost at the other end.
+#TODO All of this is a hastily-done port of some C++ code from Stroodlr (my (Hamish) newest incomplete project). As such, it needs a lot of cleanup and testing. It's all very hacky and messy, but it works, mostly.
 
 #NOTE: Using this terminology, "Plugs" are client sockets, "Sockets" are server sockets.
 
@@ -359,24 +358,21 @@ class Sockets:
 
             #Write the data.
             logger.debug("Socket Tools: Sockets.SendAnyPendingMessages(): Sending data...")
-            ReturnCode = self.Socket.sendall(bytes(self.OutgoingQueue[0], "utf-8"))
-
-            if ReturnCode == 0:
-                logger.error("Socket Tools: Sockets.SendAnyPendingMessages(): Connection was closed cleanly by the peer...")
-                return False #Connection closed cleanly by peer. FIXME: HANDLE BETTER
+            self.Socket.sendall(bytes(self.OutgoingQueue[0], "utf-8"))
+            self.Socket.flush()
 
             #Remove last thing from message queue.
             logger.debug("Socket Tools: Sockets.SendAnyPendingMessages(): Clearing item at front of OutgoingQueue...")
             self.OutgoingQueue.pop(0)  
 
-        except BaseException as E:
-            logger.error("Socket Tools: Sockets.SendAnyPendingMessages(): Caught unhandled exception! Error was "+str(E)+"...")
-            print("Error: ", E)
+        except BaseException as E: #FIXME: Looking for an exception from sendall(), but don't know what it is.
+            logger.error("Socket Tools: Sockets.SendAnyPendingMessages(): Connection was closed cleanly by the peer...")
+            return False #Connection closed cleanly by peer. FIXME: HANDLE BETTER
 
         logger.debug("Socket Tools: Sockets.SendAnyPendingMessages(): Done.")
         return True
 
-    def AttemptToReadFromSocket(self): #FIXME: Fix me so that it can be detected if a peer goes dead. All rather hacky.
+    def AttemptToReadFromSocket(self):
         """
         Attempts to read some data from the socket.
         Should only be used by the handler thread.
@@ -398,7 +394,13 @@ class Sockets:
                 #Use a 1-second timeout.
                 self.Socket.settimeout(1.0)
 
-                Data += self.Socket.recv(2048).decode("utf-8")
+                new_data = self.Socket.recv(2048).decode("utf-8")
+
+                if new_data == "":
+                    logger.error("Socket Tools: Sockets.SendAnyPendingMessages(): Connection was closed cleanly by the peer...")
+                    return -1 #Connection closed cleanly by peer. FIXME: HANDLE BETTER
+
+                Data += new_data
 
             #Push to the message queue, if there is a message.
             if Data != "":
@@ -417,7 +419,7 @@ class Sockets:
 class SocketHandlerThread(threading.Thread):
     """
     This is the socket handler thread, used in conjunction with the Sockets class.
-    Creation of an instance if this thread is handled by Sockets.
+    Creation of an instance of this thread is handled by the Sockets Class.
     Usage:
 
         [var =] SocketHandlerThread(self)"""
