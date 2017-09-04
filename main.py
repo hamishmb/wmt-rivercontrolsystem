@@ -115,7 +115,7 @@ def RunStandalone():
     SumpProbe.SetPins((15, 17, 27, 22, 23, 24, 10, 9, 25, 11))
 
     #Aux motor doesn't support PWM.
-    AuxMotor.SetPin(5, Input=False) #This is an output.
+    AuxMotor.SetPins(5, Input=False) #This is an output.
     AuxMotor.SetPWMAvailable(False, -1)
 
     #Reading interval.
@@ -132,7 +132,7 @@ def RunStandalone():
 
     #Start the monitor thread. Take readings indefinitely.
     #Also wait a few seconds to let everything initialise. This also allows us to get the first readings before we start waiting.
-    SumpProbeMonitorThread = MonitorTools.ResistanceProbeMonitor(SumpProbe, 0, ReadingInterval=ReadingInterval)
+    SumpProbeMonitorThread = MonitorTools.Monitor("Resistance Probe", SumpProbe, 0, ReadingInterval=ReadingInterval)
     time.sleep(15)
 
     #Setup. Prevent errors.

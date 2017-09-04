@@ -37,12 +37,12 @@ class BaseDeviceClass: #NOTE: Should this be in coretools?
         self._RPins = []                    #Needs to be set/deleted.
 
     # ---------- INFO SETTER FUNCTIONS ---------- NOTE: If we aren't going to use some of these/they aren't applicable in some derived classes, they can be removed from the derived classes (at least sort of).
-    def SetPins(self, Pins): #FIXME: Check if these pins are already in use. If so throw an error. Also check if these pins are valid input pins.
+    def SetPins(self, Pins, Input=True): #FIXME: Check if these pins are already in use. If so throw an error. Also check if these pins are valid input/output pins.
         """
         Sets the pins this device will use (from low to high if a resistance probe).
         Usage:
 
-            <Device-Object>.SetPins(tuple Pins)
+            <Device-Object>.SetPins(tuple Pins, bool Input)
         """
 
         #Put the int in a list so this works.
@@ -53,9 +53,15 @@ class BaseDeviceClass: #NOTE: Should this be in coretools?
         self._RPins = Pins[::-1]
 
         #Setup the pins.
+        if Input:
+            Mode = GPIO.IN
+
+        else:
+            Mode = GPIO.OUT
+
         #From lowest to highest, inputs.
         for Pin in self._Pins:
-            GPIO.setup(Pin, GPIO.IN)
+            GPIO.setup(Pin, Mode)
 
         #Set self._Pin if required.
         if len(self._Pins) == 1:
