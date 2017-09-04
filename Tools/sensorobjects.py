@@ -45,6 +45,10 @@ class BaseDeviceClass: #NOTE: Should this be in coretools?
             <Device-Object>.SetPins(tuple Pins)
         """
 
+        #Put the int in a list so this works.
+        if type(Pins) == type(0):
+            Pins = [Pins]
+
         self._Pins = Pins
         self._RPins = Pins[::-1]
 
