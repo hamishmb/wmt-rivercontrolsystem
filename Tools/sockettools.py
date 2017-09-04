@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#TODO All of this is a hastily-done port of some C++ code from Stroodlr (my (Hamish) newest incomplete project). As such, it needs a lot of cleanup and testing. It's all very hacky and messy, but it works, mostly.
+#TODO All of this is a hastily-done port of some C++ code from Stroodlr (my (Hamish's) newest incomplete project). As such, it needs a lot of cleanup and testing. It's all very hacky and messy, but it works, mostly.
 
 #NOTE: Using this terminology, "Plugs" are client sockets, "Sockets" are server sockets.
 
@@ -203,11 +203,10 @@ class Sockets:
             self.ReadyForTransmission = True
 
         except BaseException as E: #FIXME WHAT ERROR WOULD WE NEED TO CATCH?
-            logger.critical("Socket Tools: Sockets.CreateAndConnect(): Error connecting: "+str(E)+". Exiting...")
+            logger.critical("Socket Tools: Sockets.CreateAndConnect(): Error connecting: "+str(E)+". Retrying in 10 seconds...")
 
             if self.Verbose:
-                print("Connecting Failed: "+str(E))
-                print("Press ENTER to exit.")
+                print("Connecting Failed: "+str(E)+". Retrying in 10 seconds...")
 
             #Make the handler exit.
             logger.debug("Socket Tools: Sockets.CreateAndConnect(): Asking handler to exit...")
@@ -351,22 +350,19 @@ class Sockets:
         logger.debug("Socket Tools: Sockets.SendAnyPendingMessages(): Sending any pending messages...")
 
         try:
-            #Wait until there's something to send in the queue.
-            if len(self.OutgoingQueue) == 0:
-                logger.debug("Socket Tools: Sockets.SendAnyPendingMessages(): Nothing to send.")
-                return False
+            #Write all pending messages.
+            while len(self.OutgoingQueue) > 0:
+                #Write the oldest message first.
+                logger.debug("Socket Tools: Sockets.SendAnyPendingMessages(): Sending data...")
+                self.Socket.sendall(bytes(self.OutgoingQueue[0], "utf-8"))
 
-            #Write the data.
-            logger.debug("Socket Tools: Sockets.SendAnyPendingMessages(): Sending data...")
-            self.Socket.sendall(bytes(self.OutgoingQueue[0], "utf-8"))
-
-            #Remove last thing from message queue.
-            logger.debug("Socket Tools: Sockets.SendAnyPendingMessages(): Clearing item at front of OutgoingQueue...")
-            self.OutgoingQueue.pop(0)  
+                #Remove the oldest message from message queue.
+                logger.debug("Socket Tools: Sockets.SendAnyPendingMessages(): Clearing item at front of OutgoingQueue...")
+                self.OutgoingQueue.pop(0)  
 
         except BaseException as E: #FIXME: Looking for an exception from sendall(), but don't know what it is.
             logger.error("Socket Tools: Sockets.SendAnyPendingMessages(): Connection was closed cleanly by the peer...")
-            return False #Connection closed cleanly by peer. FIXME: HANDLE BETTER
+            return False #Connection closed cleanly by peer.
 
         logger.debug("Socket Tools: Sockets.SendAnyPendingMessages(): Done.")
         return True
@@ -397,7 +393,7 @@ class Sockets:
 
                 if new_data == "":
                     logger.error("Socket Tools: Sockets.SendAnyPendingMessages(): Connection was closed cleanly by the peer...")
-                    return -1 #Connection closed cleanly by peer. FIXME: HANDLE BETTER
+                    return -1 #Connection closed cleanly by peer.
 
                 Data += new_data
 
@@ -455,28 +451,30 @@ class SocketHandlerThread(threading.Thread):
                 logger.debug("Socket Tools: Sockets.Handler(): Lost connection to peer. Attempting to reconnect...")
 
                 if self.Socket.Verbose:
-                    print("\n\nLost connection to peer. Reconnecting...")
+                    print("Lost connection to peer. Reconnecting...")
 
-                #Reset the socket. Also sets the tracker.
-                logger.debug("Socket Tools: Sockets.Handler(): Resetting socket...")
-                self.Socket.Reset()
+                #Wait indefinitely for the socket to reconnect.
+                while True:
+                    #Reset the socket. Also resets the status trackers.
+                    logger.debug("Socket Tools: Sockets.Handler(): Resetting socket...")
+                    self.Socket.Reset()
 
-                #Wait for the socket to reconnect or we're requested to exit.
-                #Wait for 2 seconds first.
-                time.sleep(2)
+                    #Wait for 5 seconds in between attempts.
+                    time.sleep(5)
 
-                logger.debug("Socket Tools: Sockets.Handler(): Recreating and attempting to reconnect the socket...")
-                self.Socket.CreateAndConnect()
+                    logger.debug("Socket Tools: Sockets.Handler(): Recreating and attempting to reconnect the socket...")
+                    self.Socket.CreateAndConnect()
 
-                #If reconnection was successful, set flag and tell user.
-                if not self.Socket.HandlerShouldExit:
-                    logger.debug("Socket Tools: Sockets.Handler(): Success! Telling user and re-entering main loop...")
-                    self.Socket.Reconnected = True
+                    #If reconnection was successful, set flag and return to normal operation.
+                    if not self.Socket.HandlerShouldExit:
+                        logger.debug("Socket Tools: Sockets.Handler(): Success! Re-entering main loop...")
+                        self.Socket.Reconnected = True
 
-                    if self.Socket.Verbose:
-                        print("Reconnected to peer.\nPress ENTER to continue.")
+                        if self.Socket.Verbose:
+                            print("Reconnected to peer.")
+
+                        break
 
         #Flag that we've exited.
         logger.debug("Socket Tools: Sockets.Handler(): Exiting as per the request...")
         self.Socket.HandlerExited = True
-
