@@ -21,7 +21,6 @@ import sys
 import os
 
 def RunStandalone():
-    #Allows the progam to run standalone as well as being a module.
     #Do required imports.
     import Tools.sockettools as SocketTools
 
