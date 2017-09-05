@@ -23,11 +23,9 @@ import os
 def RunStandalone():
     #Allows the progam to run standalone as well as being a module.
     #Do required imports.
-    import Tools
+    import Tools.sockettools as SocketTools
 
-    from Tools import sockettools as SocketTools
-
-    Tools.sockettools.logger = logger
+    SocketTools.logger = logger
 
     print("Testing. Please stand by...")
 

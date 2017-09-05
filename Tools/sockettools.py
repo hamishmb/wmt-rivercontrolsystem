@@ -22,6 +22,7 @@ import socket
 import select
 import threading
 import time
+from collections import deque
 
 # ---------- Sockets Class ----------
 class Sockets:
@@ -41,8 +42,8 @@ class Sockets:
         self.HandlerExited = False
 
         #Message queues (actually lists).
-        self.IncomingQueue = []
-        self.OutgoingQueue = []
+        self.IncomingQueue = deque()
+        self.OutgoingQueue = deque()
 
     # ---------- Setup Functions ----------
     def SetPortNumber(self, PortNo):
@@ -93,8 +94,8 @@ class Sockets:
         self.HandlerExited = False
 
         #Queues.
-        self.IncomingQueue = []
-        self.OutgoingQueue = []
+        self.IncomingQueue = deque()
+        self.OutgoingQueue = deque()
 
         #Sockets.
         self.Socket.close()
@@ -328,14 +329,14 @@ class Sockets:
 
     def Pop(self):
         """
-        Clears the front element from IncomingQueue, if any.
+        Clears the oldest element from IncomingQueue, if any.
         Usage:
 
             <Sockets-Instance.Pop()"""
 
         if len(self.IncomingQueue) > 0:
-            logger.debug("Socket Tools: Sockets.Pop(): Clearing front element of IncomingQueue...")
-            self.IncomingQueue.pop(0)
+            logger.debug("Socket Tools: Sockets.Pop(): Clearing oldest element of IncomingQueue...")
+            self.IncomingQueue.popleft()
 
     # ---------- Other Functions ----------
     def SendAnyPendingMessages(self):
@@ -358,7 +359,7 @@ class Sockets:
 
                 #Remove the oldest message from message queue.
                 logger.debug("Socket Tools: Sockets.SendAnyPendingMessages(): Clearing item at front of OutgoingQueue...")
-                self.OutgoingQueue.pop(0)  
+                self.OutgoingQueue.popleft()  
 
         except BaseException as E: #FIXME: Looking for an exception from sendall(), but don't know what it is.
             logger.error("Socket Tools: Sockets.SendAnyPendingMessages(): Connection was closed cleanly by the peer...")
@@ -434,7 +435,20 @@ class SocketHandlerThread(threading.Thread):
 
         #Setup the socket.
         logger.debug("Socket Tools: Sockets.Handler(): Calling Ptr->CreateAndConnect to set the socket up...")
-        self.Socket.CreateAndConnect()
+
+        while True:
+            self.Socket.CreateAndConnect()
+
+            if not self.Socket.HandlerShouldExit:
+                break
+
+            #Otherwise destroy and recreate he socket until we connect.
+            #Reset the socket. Also resets the status trackers.
+            logger.debug("Socket Tools: Sockets.Handler(): Resetting socket...")
+            self.Socket.Reset()
+
+            #Wait for 10 seconds in between attempts.
+            time.sleep(10)
 
         logger.debug("Socket Tools: Sockets.Handler(): Done! Entering main loop.")
 
