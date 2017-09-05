@@ -40,8 +40,11 @@ def RunStandalone():
     #Handle cmdline options.
     _type, FileName, ServerAddress, NumberOfReadingsToTake = functions.handle_cmdline_options("universal_standalone_monitor.py")
 
+    logger.debug("Running in "+_type+" mode...")
+
     #Connect to server, if any.
     if ServerAddress is not None:
+        logger.info("Initialising connection to server, please wait...")
         print("Initialising connection to server, please wait...")
         Socket = SocketTools.Sockets("Plug")
         Socket.SetPortNumber(30000)
@@ -51,15 +54,21 @@ def RunStandalone():
         #Wait until the socket is connected and ready.
         while not Socket.IsReady(): time.sleep(0.5)
 
+        logger.info("Connected to server.")
         print("Done!")
 
     #Greet and get filename.
+    logger.info("Greeting user and asking for filename if required...")
     FileName, RecordingsFile = CoreTools.greet_and_get_filename("Universal Monitor ("+_type+")", FileName)
+    logger.info("File name: "+FileName+"...")
 
     #Get settings for this type of monitor from the config file.
-    assert _type in config.DATA, "Invalid Type Specified" 
+    logger.info("Asserting that the specified type is valid...")
+    assert _type in config.DATA, "Invalid Type Specified"
 
     probe, pins, reading_interval = config.DATA[_type]
+
+    logger.info("Setting up the probe...")
 
     #Create the probe object.
     probe = probe("Probey")
@@ -70,11 +79,14 @@ def RunStandalone():
     #Holds the number of readings we've taken.
     NumberOfReadingsTaken = 0
 
+    logger.info("Starting the monitor thread...")
     print("Starting to take readings. Please stand by...")
 
     #Start the monitor thread. Also wait a few seconds to let it initialise. This also allows us to take the first reading before we start waiting.
     MonitorThread = Monitor(_type, probe, NumberOfReadingsToTake, ReadingInterval=reading_interval)
     time.sleep(2)
+
+    logger.info("You should begin to see readings now...")
 
     #Keep tabs on its progress so we can write new readings to the file.
     while MonitorThread.IsRunning():
@@ -83,6 +95,7 @@ def RunStandalone():
             Reading = MonitorThread.GetReading()
 
             #Write any new readings to the file and to stdout.
+            logger.info("New reading: "+Reading)
             print(Reading)
             RecordingsFile.write(Reading+"\n")
 
@@ -93,6 +106,7 @@ def RunStandalone():
         time.sleep(reading_interval)
 
     #Always clean up properly.
+    logger.info("Cleaning up...")
     print("Cleaning up...")
 
     RecordingsFile.close()
@@ -106,7 +120,8 @@ def RunStandalone():
     GPIO.cleanup()
 
 if __name__ == "__main__":
-    logger = logging
-    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p', level=logging.WARNING)
+    logger = logging.getLogger('Universal Standalone Monitor 0.9.1')
+    logging.basicConfig(filename='./universalmonitor.log', format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
+    logger.setLevel(logging.DEBUG)
 
     RunStandalone()

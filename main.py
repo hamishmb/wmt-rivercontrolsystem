@@ -33,7 +33,7 @@ import logging
 
 #Define global variables.
 Version = "0.9.1"
-ReleaseDate = "4/9/2017" #TODO Update when you make changes.
+ReleaseDate = "5/9/2017" #TODO Update when you make changes.
 
 def usage():
     print("\nUsage: main.py [OPTION]\n\n")
@@ -301,10 +301,7 @@ def RunStandalone():
 
 if __name__ == "__main__":
     logger = logging.getLogger('River System Control Software '+Version)
-
-    #logging.basicConfig(filename='./rivercontrolsystem.log', format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p') TODO: Switch to logging to file in the final deployment.
-    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p', level=logging.WARNING)
-
-    logger.setLevel(logging.INFO)
+    logging.basicConfig(filename='./rivercontrolsystem.log', format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
+    logger.setLevel(logging.DEBUG)
 
     RunStandalone()

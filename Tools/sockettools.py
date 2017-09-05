@@ -459,8 +459,8 @@ class SocketHandlerThread(threading.Thread):
                     logger.debug("Socket Tools: Sockets.Handler(): Resetting socket...")
                     self.Socket.Reset()
 
-                    #Wait for 5 seconds in between attempts.
-                    time.sleep(5)
+                    #Wait for 10 seconds in between attempts.
+                    time.sleep(10)
 
                     logger.debug("Socket Tools: Sockets.Handler(): Recreating and attempting to reconnect the socket...")
                     self.Socket.CreateAndConnect()
