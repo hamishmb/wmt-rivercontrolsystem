@@ -90,6 +90,7 @@ def RunStandalone():
     from Tools import coretools as CoreTools
     from Tools import sockettools as SocketTools
 
+    Tools.coretools.logger = logger
     Tools.sockettools.logger = logger
 
     #Handle cmdline options.
@@ -140,151 +141,52 @@ def RunStandalone():
     SumpProbeReading = "Time: Empty Time Level: -1mm Pin states: 1111111111"
 
     #Keep tabs on its progress so we can write new readings to the file.
-    while True:
-        #Exit if the resistance probe monitor thread crashes for some reason.
-        if not SumpProbeMonitorThread.IsRunning():
-            break;
+    try:
+        while True:
+            #Exit if the resistance probe monitor thread crashes for some reason.
+            if not SumpProbeMonitorThread.IsRunning():
+                break;
 
-        #Check for new readings from the resistance probe.
-        while SumpProbeMonitorThread.HasData():
-            SumpProbeReading = SumpProbeMonitorThread.GetReading()
+            #Check for new readings from the resistance probe.
+            while SumpProbeMonitorThread.HasData():
+                SumpProbeReading = SumpProbeMonitorThread.GetReading()
 
-            #Write any new readings to the file and to stdout.
-            logger.debug("Resistance Probe: "+SumpProbeReading)
-            print("Resistance Probe: "+SumpProbeReading)
-            RecordingsFile.write("Resistance Probe: "+SumpProbeReading+"\n")
-
-        #Check for new readings from the float switch.
-        while Socket.HasPendingData():
-            FloatSwitchReading = Socket.Read()
-            Socket.Pop()
-
-            if FloatSwitchReading == "":
-                #Client not ready, ignore this reading, but prevent errors. Assume the butts are full.
-                logger.info("Client not ready for reading butts level. Assuming butts are full for now.")
-                print("Client not ready for reading butts level. Assuming butts are full for now.")
-                FloatSwitchReading = "Time: None State: True"
-
-            else:
                 #Write any new readings to the file and to stdout.
-                logger.debug("Float Switch: "+FloatSwitchReading)
-                print("Float Switch: "+FloatSwitchReading)
-                RecordingsFile.write("Float Switch: "+FloatSwitchReading+"\n")
-                print(FloatSwitchReading.split()[-1])
+                logger.debug("Resistance Probe: "+SumpProbeReading)
+                print("Resistance Probe: "+SumpProbeReading)
+                RecordingsFile.write("Resistance Probe: "+SumpProbeReading+"\n")
 
-        #Logic.
-        #Handle errors when interpreting the readings.
-        try:
-            rawProbeReading = int(SumpProbeReading.split()[4].replace("m", ""))
-            rawSwitchReading = FloatSwitchReading.split()[-1]
+            #Check for new readings from the float switch.
+            while Socket.HasPendingData():
+                FloatSwitchReading = Socket.Read()
+                Socket.Pop()
 
-        except BaseException as E:
-            logger.error("Error interpreting readings: "+str(E)+". This indicates a bug in the software. Trying to get new readings...")
-            print("Error interpreting readings: "+str(E)+". This indicates a bug in the software.")
-            print("Getting new readings to try and recover...")
-            continue
+                if FloatSwitchReading == "":
+                    #Client not ready, ignore this reading, but prevent errors. Assume the butts are full.
+                    logger.info("Client not ready for reading butts level. Assuming butts are full for now.")
+                    print("Client not ready for reading butts level. Assuming butts are full for now.")
+                    FloatSwitchReading = "Time: None State: True"
 
-        if rawProbeReading > 600:
-            #Adjusted to 600mm because the 700mm sensor on the probe is broken at the moment.
-            #Level in the sump is getting high.
-            #Pump some water to the butts if they aren't full.
-            #If they are full, do nothing and let the sump overflow.
-            logger.warning("Water level in the sump > 600mm!")
-            print("Water level in the sump > 600mm!")
+                else:
+                    #Write any new readings to the file and to stdout.
+                    logger.debug("Float Switch: "+FloatSwitchReading)
+                    print("Float Switch: "+FloatSwitchReading)
+                    RecordingsFile.write("Float Switch: "+FloatSwitchReading+"\n")
+                    print(FloatSwitchReading.split()[-1])
 
-            if rawSwitchReading == "False":
-                #Pump to the butts.
-                logger.warning("Pumping water to the butts...")
-                print("Pumping water to the butts...")
-                AuxMotor.TurnOn()
+            #Logic.
+            CoreTools.do_control_logic(SumpProbeReading, FloatSwitchReading, AuxMotor, SumpProbeMonitorThread)
 
-                logger.warning("Changing reading interval to 30 seconds so we can keep a close eye on what's happening...")
-                print("Changing reading interval to 30 seconds so we can keep a close eye on what's happening...")
+            #Wait until it's time to check for another reading.
+            time.sleep(ReadingInterval)
 
-                ReadingInterval = 30
+    except KeyboardInterrupt:
+        #Ask the thread to exit.
+        logger.info("Caught keyboard interrupt. Asking monitor thread to exit...")
+        print("Caught keyboard interrupt. Asking monitor thread to exit.")
+        print("This may take a little while, so please be patient...")
 
-            else:
-                #Butts are full. Do nothing, but warn user.
-                AuxMotor.TurnOff()
-
-                logger.warning("The water butts are full. Allowing the sump to overflow.")
-                print("The water butts are full.")
-                print("Allowing the sump to overflow.")
-
-                logger.warning("Setting reading interval to 5 minutes...")
-                print("Setting reading interval to 5 minutes...")
-                ReadingInterval = 300
-
-        elif rawProbeReading <= 600 and rawProbeReading >= 400:
-            #Level in the sump is good.
-            #If the butts pump is on, turn it off.
-            AuxMotor.TurnOff()
-
-            logger.debug("Water level in the sump is good. Doing nothing...")
-            print("Water level in the sump is good. (600 - 400mm inclusive) Doing nothing...")
-
-            logger.debug("Setting reading interval to 5 minutes...")
-            print("Setting reading interval to 5 minutes...")
-            ReadingInterval = 300
-
-        elif rawProbeReading == 300:
-            #Level in the sump is getting low.
-            #If the butts pump is on, turn it off.
-            AuxMotor.TurnOff()
-
-            logger.warning("Water level in the sump is 300mm!")
-            logger.warning("Waiting for water to come back from the butts before requesting human intervention...")
-
-            print("Water level in the sump is 300mm!")
-            print("Waiting for water to come back from the butts before requesting human intervention...")
-
-            logger.warning("Setting reading interval to 1 minute so we can monitor more closely...")
-            print("Setting reading interval to 1 minute so we can monitor more closely...")
-
-            ReadingInterval = 60
-
-            #We have no choice here but to wait for water to come back from the butts and warn the user.
-            #^ Tap is left half-open.
-
-        elif rawProbeReading == 200:
-            #Level in the sump is very low!
-            #If the butts pump is on, turn it off.
-            AuxMotor.TurnOff()
-
-            logger.error("*** NOTICE ***: Water level in the sump is 200mm!")
-            logger.error("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
-
-            print("*** NOTICE ***: Water level in the sump is 200mm!")
-            print("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
-
-            logger.warning("Setting reading interval to 30 seconds for close monitoring...")
-            print("Setting reading interval to 30 seconds for close monitoring...")
-
-            ReadingInterval = 30
-
-        else:
-            #Level in the sump is critically low!
-            #If the butts pump is on, turn it off.
-            AuxMotor.TurnOff()
-
-            logger.critical("*** CRITICAL ***: Water level in the sump < 200mm!")
-            logger.critical("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
-            logger.critical("*** CRITICAL ***: The pump might be running dry RIGHT NOW!")
-
-            print("*** CRITICAL ***: Water level in the sump < 200mm!")
-            print("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
-            print("*** CRITICAL ***: The pump might be running dry RIGHT NOW!")
-
-            logger.critical("Setting reading interval to 15 seconds for super close monitoring...")
-            print("Setting reading interval to 15 seconds for super close monitoring...")
-
-            ReadingInterval = 15
-
-        #Set the reading interval in the thread.
-        SumpProbeMonitorThread.SetReadingInterval(ReadingInterval)
-
-        #Wait until it's time to check for another reading.
-        time.sleep(ReadingInterval)
+        SumpProbeMonitorThread.RequestExit(wait=True)
 
     #Always clean up properly.
     logger.info("Cleaning up...")
