@@ -14,12 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import RPi.GPIO as GPIO
 import time
 import datetime
-import sys
-import getopt #Proper option handler.
-import os
 import threading
 
 # ---------- BASE CLASS ----------

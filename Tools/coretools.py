@@ -16,6 +16,7 @@
 
 import datetime
 import sys
+import os
 
 def greet_and_get_filename(ModuleName, FileName):
     """
@@ -43,11 +44,18 @@ def greet_and_get_filename(ModuleName, FileName):
         FileName = input()
 
         print("\n\nSelected File: "+FileName)
+
+        if os.path.isfile(FileName):
+            print("*WARNING* This file already exists!")
+
         print("Press CTRL-C if you are not happy with this choice.\n")
 
         print("Press ENTER to continue...")
 
         input() #Wait until user presses enter.
+
+    if os.path.isfile(FileName):
+        print("*WARNING* The file chosen already exists!")
 
     try:
         print("Opening file...")

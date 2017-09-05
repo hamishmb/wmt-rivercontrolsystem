@@ -95,7 +95,8 @@ class Monitor(BaseMonitorClass):
 
                 self.Queue.append("Time: "+str(datetime.datetime.now())+" Reading: "+str(Reading)+" State: "+StateText)
 
-                NumberOfReadingsTaken += 1
+                if self.NumberOfReadingsToTake != 0:
+                    NumberOfReadingsTaken += 1
 
                 #Take readings every however often it is.
                 #I know we could use a long time.sleep(), but this MUST be responsive to changes in the reading interval.
