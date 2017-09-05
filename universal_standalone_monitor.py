@@ -89,21 +89,30 @@ def RunStandalone():
     logger.info("You should begin to see readings now...")
 
     #Keep tabs on its progress so we can write new readings to the file.
-    while MonitorThread.IsRunning():
-        #Check for new readings.
-        while MonitorThread.HasData():
-            Reading = MonitorThread.GetReading()
+    try:
+        while MonitorThread.IsRunning():
+            #Check for new readings.
+            while MonitorThread.HasData():
+                Reading = MonitorThread.GetReading()
 
-            #Write any new readings to the file and to stdout.
-            logger.info("New reading: "+Reading)
-            print(Reading)
-            RecordingsFile.write(Reading+"\n")
+                #Write any new readings to the file and to stdout.
+                logger.info("New reading: "+Reading)
+                print(Reading)
+                RecordingsFile.write(Reading+"\n")
 
-            if ServerAddress is not None:
-                Socket.Write(Reading)
+                if ServerAddress is not None:
+                    Socket.Write(Reading)
 
-        #Wait until it's time to check for another reading.
-        time.sleep(reading_interval)
+            #Wait until it's time to check for another reading.
+            time.sleep(reading_interval)
+
+    except KeyboardInterrupt:
+        #Ask the thread to exit.
+        logger.info("Caught keyboard interrupt. Asking monitor thread to exit...")
+        print("Caught keyboard interrupt. Asking monitor thread to exit.")
+        print("This may take a little while, so please be patient...")
+
+        MonitorThread.RequestExit(wait=True)
 
     #Always clean up properly.
     logger.info("Cleaning up...")

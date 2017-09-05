@@ -26,6 +26,7 @@ class BaseMonitorClass(threading.Thread):
         self.ReadingInterval = ReadingInterval
         self.Queue = []
         self.Running = True
+        self.ShouldExit = False
 
     def IsRunning(self):
         """
@@ -63,6 +64,19 @@ class BaseMonitorClass(threading.Thread):
 
         self.ReadingInterval = Interval
 
+    def RequestExit(self, wait=False):
+        """
+        Used to ask the thread to exit. Doesn't wait before returning unless specified.
+        Usage:
+            RequestExit([bool wait])
+        """
+        self.ShouldExit = True
+        self.ReadingInterval = 0 #Helps thread to react faster.
+
+        if wait:
+            while self.Running:
+                time.sleep(5)
+
 # ---------- Universal Monitor ----------
 class Monitor(BaseMonitorClass):
     def __init__(self, Type, Probe, NumberOfReadingsToTake, ReadingInterval):
@@ -90,7 +104,7 @@ class Monitor(BaseMonitorClass):
         NumberOfReadingsTaken = 0
 
         try:
-            while (self.NumberOfReadingsToTake == 0 or (NumberOfReadingsTaken < self.NumberOfReadingsToTake)):
+            while ((not self.ShouldExit) and (self.NumberOfReadingsToTake == 0 or (NumberOfReadingsTaken < self.NumberOfReadingsToTake))):
                 Reading, StateText = self.reading_func()
 
                 self.Queue.append("Time: "+str(datetime.datetime.now())+" Reading: "+str(Reading)+" State: "+StateText)
