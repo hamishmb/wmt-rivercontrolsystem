@@ -442,7 +442,7 @@ class SocketHandlerThread(threading.Thread):
             if not self.Socket.HandlerShouldExit:
                 break
 
-            #Otherwise destroy and recreate he socket until we connect.
+            #Otherwise destroy and recreate the socket until we connect.
             #Reset the socket. Also resets the status trackers.
             logger.debug("Socket Tools: Sockets.Handler(): Resetting socket...")
             self.Socket.Reset()
@@ -450,7 +450,9 @@ class SocketHandlerThread(threading.Thread):
             #Wait for 10 seconds in between attempts.
             time.sleep(10)
 
+        #We have connected.
         logger.debug("Socket Tools: Sockets.Handler(): Done! Entering main loop.")
+        print("Connected to peer.")
 
         #Keep sending and receiving messages until we're asked to exit.
         while not self.Socket.HandlerShouldExit:

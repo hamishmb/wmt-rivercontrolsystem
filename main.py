@@ -122,11 +122,8 @@ def RunStandalone():
     #Reading interval.
     ReadingInterval = 300
 
-    logger.info("Waiting for client to connect...")
-    print("Waiting for client to connect...")
-
-    #Wait until the socket is connected and ready.
-    while not Socket.IsReady(): time.sleep(0.5)
+    logger.info("The client(s) can connect whenever they're ready.")
+    print("The client(s) can connect whenever they're ready.")
 
     logger.info("Starting to take readings...")
     print("Starting to take readings. Please stand by...")

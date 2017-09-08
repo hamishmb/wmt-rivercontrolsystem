@@ -51,11 +51,8 @@ def RunStandalone():
         Socket.SetServerAddress(ServerAddress)
         Socket.StartHandler()
 
-        #Wait until the socket is connected and ready.
-        while not Socket.IsReady(): time.sleep(0.5)
-
-        logger.info("Connected to server.")
-        print("Done!")
+        logger.info("Will connect to server as soon as it becomes available.")
+        print("Will connect to server as soon as it becomes available.")
 
     #Greet and get filename.
     logger.info("Greeting user and asking for filename if required...")
