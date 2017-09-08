@@ -200,7 +200,7 @@ class FloatSwitch(BaseDeviceClass):
             bool <FloatSwitch-Object>.GetState()
         """
 
-        return bool(GPIO.input(self._Pin) == self._ActiveState), "" #TODO Actual State Text.
+        return bool(GPIO.input(self._Pin) == self._ActiveState), "OK" #TODO Actual fault checking.
 
 class CapacitiveProbe(BaseDeviceClass):
     # ---------- CONSTRUCTORS ----------
@@ -243,7 +243,7 @@ class CapacitiveProbe(BaseDeviceClass):
         #Use integer divison '//' because it's fast.
         Freq = self._Detections // 5 #Because we're measuring over 5 seconds, take the mean average over 5 seconds.
 
-        return Freq, "" #TODO Actual State Text.
+        return Freq, "OK" #TODO Actual fault checking.
 
 class ResistanceProbe(BaseDeviceClass):
     # ---------- CONSTRUCTORS ----------
@@ -382,4 +382,4 @@ class HallEffectDevice(BaseDeviceClass):
         #Then multiply by 12 to get RPM.
         RPM = RevsPer5Sec * 12
 
-        return RPM, "" #TODO Actual State Text.
+        return RPM, "OK" #TODO Actual fault checking.

@@ -132,9 +132,14 @@ def RunStandalone():
     print("Starting to take readings. Please stand by...")
 
     #Start the monitor thread. Take readings indefinitely.
-    #Also wait a few seconds to let everything initialise. This also allows us to get the first readings before we start waiting.
     SumpProbeMonitorThread = MonitorTools.Monitor("Resistance Probe", SumpProbe, 0, ReadingInterval=ReadingInterval)
-    time.sleep(15)
+
+    #Wait until the first reading has come in so we are synchronised.
+    while not SumpProbeMonitorThread.HasData():
+        time.sleep(0.5)
+
+    #Sleep a few more seconds to make sure the client is ready.
+    time.sleep(10)
 
     #Setup. Prevent errors.
     FloatSwitchReading = "Time: None State: True"
@@ -172,7 +177,6 @@ def RunStandalone():
                     logger.debug("Float Switch: "+FloatSwitchReading)
                     print("Float Switch: "+FloatSwitchReading)
                     RecordingsFile.write("Float Switch: "+FloatSwitchReading+"\n")
-                    print(FloatSwitchReading.split()[-1])
 
             #Logic.
             CoreTools.do_control_logic(SumpProbeReading, FloatSwitchReading, AuxMotor, SumpProbeMonitorThread)

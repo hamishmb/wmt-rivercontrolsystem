@@ -25,7 +25,7 @@ class BaseMonitorClass(threading.Thread):
         self.NumberOfReadingsToTake = NumberOfReadingsToTake
         self.ReadingInterval = ReadingInterval
         self.Queue = []
-        self.Running = True
+        self.Running = False
         self.ShouldExit = False
 
     def IsRunning(self):
@@ -102,6 +102,7 @@ class Monitor(BaseMonitorClass):
     def run(self):
         """Main part of the thread"""
         NumberOfReadingsTaken = 0
+        self.Running = True
 
         try:
             while ((not self.ShouldExit) and (self.NumberOfReadingsToTake == 0 or (NumberOfReadingsTaken < self.NumberOfReadingsToTake))):

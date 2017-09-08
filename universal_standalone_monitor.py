@@ -82,9 +82,12 @@ def RunStandalone():
     logger.info("Starting the monitor thread...")
     print("Starting to take readings. Please stand by...")
 
-    #Start the monitor thread. Also wait a few seconds to let it initialise. This also allows us to take the first reading before we start waiting.
+    #Start the monitor thread.
     MonitorThread = Monitor(_type, probe, NumberOfReadingsToTake, ReadingInterval=reading_interval)
-    time.sleep(2)
+
+    #Wait until the first reading has come in so we are synchronised.
+    while not MonitorThread.HasData():
+        time.sleep(0.5)
 
     logger.info("You should begin to see readings now...")
 
