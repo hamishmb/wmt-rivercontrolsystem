@@ -74,7 +74,7 @@ def greet_and_get_filename(ModuleName, FileName):
 
     return FileName, RecordingsFile
 
-def do_control_logic(SumpProbeReading, FloatSwitchReading, AuxMotor, SumpProbeMonitorThread):
+def do_control_logic(SumpProbeReading, FloatSwitchReading, AuxMotor, SumpProbeMonitorThread, Socket):
     """
     Decides what to do based on the readings.
 
@@ -191,5 +191,6 @@ def do_control_logic(SumpProbeReading, FloatSwitchReading, AuxMotor, SumpProbeMo
 
         ReadingInterval = 15
 
-    #Set the reading interval in the thread.
+    #Set the reading interval in the thread, and send it down the socket to the peer.
     SumpProbeMonitorThread.SetReadingInterval(ReadingInterval)
+    Socket.Write("Reading Interval: "+str(ReadingInterval))

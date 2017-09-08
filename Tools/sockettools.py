@@ -98,7 +98,13 @@ class Sockets:
         self.OutgoingQueue = deque()
 
         #Sockets.
-        self.Socket.close()
+        try:
+            self.Socket.close()
+
+        except AttributeError:
+            #On server side, this may happen if the client socket was never created. Never mind.
+            pass
+
         self.ServerSocket = ""
 
         logger.debug("Socket Tools: Sockets.Reset(): Done! Socket is now in its default state...")

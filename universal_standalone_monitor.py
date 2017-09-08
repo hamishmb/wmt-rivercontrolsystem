@@ -104,7 +104,25 @@ def RunStandalone():
                     Socket.Write(Reading)
 
             #Wait until it's time to check for another reading.
-            time.sleep(reading_interval)
+            #I know we could use a long time.sleep(), but this MUST be responsive to changes in the reading interval.
+            count = 0
+
+            while count < reading_interval:
+                #This way, if our reading interval changes, the code will respond to the change immediately.
+                #Check if we have a new reading interval. TODO needs refactoring/optimisation.
+                if ServerAddress is not None:
+                    if Socket.HasPendingData():
+                        Data = Socket.Read()
+
+                        if "Reading Interval" in Data:
+                            reading_interval = int(Data.split()[-1])
+                            logger.info("New reading interval: "+str(reading_interval))
+                            print("New reading interval: "+str(reading_interval))
+
+                        Socket.Pop()
+
+                time.sleep(1)
+                count += 1
 
     except KeyboardInterrupt:
         #Ask the thread to exit.

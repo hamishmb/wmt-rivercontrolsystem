@@ -176,7 +176,7 @@ def RunStandalone():
                     RecordingsFile.write("Float Switch: "+FloatSwitchReading+"\n")
 
             #Logic.
-            CoreTools.do_control_logic(SumpProbeReading, FloatSwitchReading, AuxMotor, SumpProbeMonitorThread)
+            CoreTools.do_control_logic(SumpProbeReading, FloatSwitchReading, AuxMotor, SumpProbeMonitorThread, Socket)
 
             #Wait until it's time to check for another reading.
             time.sleep(ReadingInterval)
