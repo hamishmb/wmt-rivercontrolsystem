@@ -21,12 +21,10 @@ from Tools import sensorobjects
 #FIXME: Pins MUST NOT conflict.
 
 DATA = {
-#Probe Name:            (Probe Object                        , Pin(s)                                 , Default Reading Interval)
+    #Probe Name: (Probe Object, Pin(s), Default Reading Interval)
 
-"Resistance Probe":     (Tools.sensorobjects.ResistanceProbe , (15, 17, 27, 22, 23, 24, 10, 9, 25, 11), 300                     ),
-"Hall Effect"     :     (Tools.sensorobjects.HallEffectDevice, (15)                                   , 300                     ),
-"Capacitive Probe":     (Tools.sensorobjects.CapacitiveProbe , (15)                                   , 300                     ),
-"Float Switch"    :     (Tools.sensorobjects.FloatSwitch     , (8)                                    , 30                      ),
-
-
+    "Resistance Probe": (Tools.sensorobjects.ResistanceProbe, (15, 17, 27, 22, 23, 24, 10, 9, 25, 11), 300),
+    "Hall Effect": (Tools.sensorobjects.HallEffectDevice, (15), 300),
+    "Capacitive Probe": (Tools.sensorobjects.CapacitiveProbe, (15), 300),
+    "Float Switch": (Tools.sensorobjects.FloatSwitch, (8), 30),
 }

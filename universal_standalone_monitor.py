@@ -14,13 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import RPi.GPIO as GPIO
 import time
 import logging
+import RPi.GPIO as GPIO
 
-#NOTE: The usage function is shared between these standalone monitors, and is in standalone_shared_functions.py.
-
-def RunStandalone():
+def run_standalone():
     #Do required imports.
     import universal_standalone_monitor_config as config
 
@@ -28,8 +26,8 @@ def RunStandalone():
 
     from Tools import standalone_shared_functions as functions
     from Tools import sensorobjects
-    from Tools import coretools as CoreTools
-    from Tools import sockettools as SocketTools
+    from Tools import coretools as core_tools
+    from Tools import sockettools as socket_tools
     from Tools import monitortools
 
     from Tools.sensorobjects import CapacitiveProbe
@@ -38,26 +36,26 @@ def RunStandalone():
     Tools.sockettools.logger = logger
 
     #Handle cmdline options.
-    _type, FileName, ServerAddress, NumberOfReadingsToTake = functions.handle_cmdline_options("universal_standalone_monitor.py")
+    _type, file_name, server_address, num_readings = functions.handle_cmdline_options("universal_standalone_monitor.py")
 
     logger.debug("Running in "+_type+" mode...")
 
     #Connect to server, if any.
-    if ServerAddress is not None:
+    if server_address is not None:
         logger.info("Initialising connection to server, please wait...")
         print("Initialising connection to server, please wait...")
-        Socket = SocketTools.Sockets("Plug")
-        Socket.SetPortNumber(30000)
-        Socket.SetServerAddress(ServerAddress)
-        Socket.StartHandler()
+        socket = socket_tools.Sockets("Plug")
+        socket.set_portnumber(30000)
+        socket.set_server_address(server_address)
+        socket.start_handler()
 
         logger.info("Will connect to server as soon as it becomes available.")
         print("Will connect to server as soon as it becomes available.")
 
     #Greet and get filename.
     logger.info("Greeting user and asking for filename if required...")
-    FileName, RecordingsFile = CoreTools.greet_and_get_filename("Universal Monitor ("+_type+")", FileName)
-    logger.info("File name: "+FileName+"...")
+    file_name, file_handle = core_tools.greet_and_get_filename("Universal Monitor ("+_type+")", file_name)
+    logger.info("File name: "+file_name+"...")
 
     #Get settings for this type of monitor from the config file.
     logger.info("Asserting that the specified type is valid...")
@@ -73,53 +71,52 @@ def RunStandalone():
     #Set the probe up.
     probe.SetPins(pins)
 
-    #Holds the number of readings we've taken.
-    NumberOfReadingsTaken = 0
-
     logger.info("Starting the monitor thread...")
     print("Starting to take readings. Please stand by...")
 
     #Start the monitor thread.
-    MonitorThread = Monitor(_type, probe, NumberOfReadingsToTake, ReadingInterval=reading_interval)
+    monitor = Monitor(_type, probe, num_readings, reading_interval)
 
     #Wait until the first reading has come in so we are synchronised.
-    while not MonitorThread.HasData():
+    while not monitor.has_data():
         time.sleep(0.5)
 
     logger.info("You should begin to see readings now...")
 
     #Keep tabs on its progress so we can write new readings to the file.
     try:
-        while MonitorThread.IsRunning():
+        while monitor.is_running():
             #Check for new readings.
-            while MonitorThread.HasData():
-                Reading = MonitorThread.GetReading()
+            while monitor.has_data():
+                reading = monitor.get_reading()
 
                 #Write any new readings to the file and to stdout.
-                logger.info("New reading: "+Reading)
-                print(Reading)
-                RecordingsFile.write(Reading+"\n")
+                logger.info("New reading: "+reading)
+                print(reading)
+                file_handle.write(reading+"\n")
 
-                if ServerAddress is not None:
-                    Socket.Write(Reading)
+                if server_address is not None:
+                    socket.write(reading)
 
             #Wait until it's time to check for another reading.
-            #I know we could use a long time.sleep(), but this MUST be responsive to changes in the reading interval.
+            #I know we could use a long time.sleep(),
+            #but this MUST be responsive to changes in the reading interval.
             count = 0
 
             while count < reading_interval:
-                #This way, if our reading interval changes, the code will respond to the change immediately.
+                #This way, if our reading interval changes,
+                #the code will respond to the change immediately.
                 #Check if we have a new reading interval. TODO needs refactoring/optimisation.
-                if ServerAddress is not None:
-                    if Socket.HasPendingData():
-                        Data = Socket.Read()
+                if server_address is not None:
+                    if socket.has_data():
+                        data = socket.read()
 
-                        if "Reading Interval" in Data:
-                            reading_interval = int(Data.split()[-1])
+                        if "Reading Interval" in data:
+                            reading_interval = int(data.split()[-1])
                             logger.info("New reading interval: "+str(reading_interval))
                             print("New reading interval: "+str(reading_interval))
 
-                        Socket.Pop()
+                        socket.pop()
 
                 time.sleep(1)
                 count += 1
@@ -130,18 +127,18 @@ def RunStandalone():
         print("Caught keyboard interrupt. Asking monitor thread to exit.")
         print("This may take a little while, so please be patient...")
 
-        MonitorThread.RequestExit(wait=True)
+        monitor.request_exit(wait=True)
 
     #Always clean up properly.
     logger.info("Cleaning up...")
     print("Cleaning up...")
 
-    RecordingsFile.close()
+    file_handle.close()
 
-    if ServerAddress is not None:
-        Socket.RequestHandlerExit()
-        Socket.WaitForHandlerToExit()
-        Socket.Reset()
+    if server_address is not None:
+        socket.request_handler_exit()
+        socket.wait_for_handler_to_exit()
+        socket.reset()
 
     #Reset GPIO pins.
     GPIO.cleanup()
@@ -151,4 +148,4 @@ if __name__ == "__main__":
     logging.basicConfig(filename='./universalmonitor.log', format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
     logger.setLevel(logging.DEBUG)
 
-    RunStandalone()
+    run_standalone()
