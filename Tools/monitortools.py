@@ -86,18 +86,7 @@ class Monitor(BaseMonitorClass):
         """Initialise and start the thread"""
         BaseMonitorClass.__init__(self, probe, num_readings, reading_interval)
 
-        #Determine level getting function.
-        if Type == "Resistance probe":
-            self.reading_func = probe.GetLevel
-
-        elif Type == "Hall Effect":
-            self.reading_func = probe.GetRPM
-
-        elif Type == "Capacitive probe":
-            self.reading_func = probe.GetLevel
-
-        elif Type == "Float Switch":
-            self.reading_func = probe.GetState
+        self.reading_func = probe.get_reading
 
         self.start()
 

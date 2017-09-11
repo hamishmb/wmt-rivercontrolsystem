@@ -86,18 +86,7 @@ class Monitor(BaseMonitorClass):
         """Initialise and start the thread"""
         BaseMonitorClass.__init__(self, probe, num_readings, reading_interval)
 
-        #Determine level getting function.
-        if Type == "Resistance probe":
-            self.reading_func = probe.GetLevel
-
-        elif Type == "Hall Effect":
-            self.reading_func = probe.GetRPM
-
-        elif Type == "Capacitive probe":
-            self.reading_func = probe.GetLevel
-
-        elif Type == "Float Switch":
-            self.reading_func = probe.GetState
+        self.reading_func = probe.GetLeve
 
         self.start()
 
@@ -108,9 +97,9 @@ class Monitor(BaseMonitorClass):
 
         try:
             while ((not self.should_exit) and (self.num_readings == 0 or (num_readings_taken < self.num_readings))):
-                the_reading, StateText = self.reading_func()
+                the_reading, status_text = self.reading_func()
 
-                self.queue.append("Time: "+str(datetime.datetime.now())+" the_reading: "+str(the_reading)+" State: "+StateText)
+                self.queue.append("Time: "+str(datetime.datetime.now())+" the_reading: "+str(the_reading)+" Status: "+status_text)
 
                 if self.num_readings != 0:
                     num_readings_taken += 1
@@ -118,17 +107,17 @@ class Monitor(BaseMonitorClass):
                 #Take readings every however often it is.
                 #I know we could use a long time.sleep(),
                 #but this MUST be responsive to changes in the reading interval.
-                Count = 0
+                count = 0
 
-                while Count < self.reading_interval:
+                while count < self.reading_interval:
                     #This way, if our reading interval changes,
                     #the code will respond to the change immediately.
                     time.sleep(1)
-                    Count += 1
+                    count += 1
 
-        except BaseException as E:
+        except BaseException as err:
             #Ignore all errors. Generally bad practice :P
-            print("\nCaught Exception: ", E)
+            print("\nCaught Exception: ", err)
 
         self.running = False
 
