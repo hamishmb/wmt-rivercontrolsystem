@@ -22,9 +22,13 @@ def usage(program_name):
     print("\nUsage: "+program_name+" [OPTION]\n\n")
     print("Options:\n")
     print("       -h, --help:               Show this help message")
-    print("       -f, --file:               Specify file to write the recordings to. Default: interactive.")
-    print("       -c, --controlleraddress:  Specify the DNS name/IP of the controlling server we want to send our level data to, if any.")
-    print("       -n <int>, --num=<int>     Specify number of readings to take before exiting. Without this option, readings will be taken until the program is terminated")
+    print("       -f, --file:               Specify file to write the recordings to.")
+    print("                                 If not specified: interactive.")
+    print("       -c, --controlleraddress:  Specify the DNS name/IP of the controlling server")
+    print("                                 we want to send our level data to, if any.")
+    print("       -n <int>, --num=<int>     Specify number of readings to take before exiting.")
+    print("                                 Without this option, readings will be taken until")
+    print("                                 the program is terminated")
     print(program_name+" is released under the GNU GPL Version 3")
     print("Copyright (C) Wimborne Model Town 2017")
 
@@ -37,8 +41,8 @@ def handle_cmdline_options(program_name):
     """
 
     _type = "Unknown"
-    FileName = "Unknown"
-    ServerAddress = None
+    file_name = "Unknown"
+    server_address = None
 
     #Check all cmdline options are valid.
     try:
@@ -52,29 +56,29 @@ def handle_cmdline_options(program_name):
         sys.exit(2)
 
     #Do setup. o=option, a=argument.
-    NumberOfReadingsToTake = 0 #Take readings indefinitely by default.
+    num_readings = 0 #Take readings indefinitely by default.
 
     for o, a in opts:
         if o in ["-t", "--type"]:
             _type = a
 
         elif o in ["-f", "--file"]:
-            FileName = a
+            file_name = a
 
         elif o in ["-c", "--controlleraddress"]:
-            ServerAddress = a
+            server_address = a
 
         elif o in ["-n", "--num"]:
-            NumberOfReadingsToTake = int(a)
+            num_readings = int(a)
 
         elif o in ["-h", "--help"]:
             usage(program_name)
             sys.exit()
-    
+
         else:
             assert False, "unhandled option"
 
     if _type == "Unknown":
         assert False, "You must specify the type of probe you want to monitor."
 
-    return _type, FileName, ServerAddress, NumberOfReadingsToTake
+    return _type, file_name, server_address, num_readings
