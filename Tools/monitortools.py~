@@ -56,7 +56,7 @@ class BaseMonitorClass(threading.Thread):
             string get_reading()
         """
 
-        return self.queue.pop()
+        return self.queue.pop() #popleft.
 
     def set_reading_interval(self, interval):
         """
@@ -99,7 +99,7 @@ class Monitor(BaseMonitorClass):
             while ((not self.should_exit) and (self.num_readings == 0 or (num_readings_taken < self.num_readings))):
                 the_reading, status_text = self.reading_func()
 
-                self.queue.append("Time: "+str(datetime.datetime.now())+" the_reading: "+str(the_reading)+" Status: "+status_text)
+                self.queue.append("Time: "+str(datetime.datetime.now())+" Reading: "+str(the_reading)+" Status: "+status_text)
 
                 if self.num_readings != 0:
                     num_readings_taken += 1
