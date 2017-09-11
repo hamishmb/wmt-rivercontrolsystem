@@ -108,7 +108,7 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket):
             #Pump to the butts.
             logger.warning("Pumping water to the butts...")
             print("Pumping water to the butts...")
-            butts_pump.TurnOn()
+            butts_pump.enable()
 
             logger.warning("Changing reading interval to 30 seconds so we can keep a close eye on what's happening...")
             print("Changing reading interval to 30 seconds so we can keep a close eye on what's happening...")
@@ -117,7 +117,7 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket):
 
         else:
             #Butts are full. Do nothing, but warn user.
-            butts_pump.TurnOff()
+            butts_pump.disable()
 
             logger.warning("The water butts are full. Allowing the sump to overflow.")
             print("The water butts are full.")
@@ -130,7 +130,7 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket):
     elif sump_reading <= 600 and sump_reading >= 400:
         #Level in the sump is good.
         #If the butts pump is on, turn it off.
-        butts_pump.TurnOff()
+        butts_pump.disable()
 
         logger.debug("Water level in the sump is good. Doing nothing...")
         print("Water level in the sump is good. (600 - 400mm inclusive) Doing nothing...")
@@ -142,7 +142,7 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket):
     elif sump_reading == 300:
         #Level in the sump is getting low.
         #If the butts pump is on, turn it off.
-        butts_pump.TurnOff()
+        butts_pump.disable()
 
         logger.warning("Water level in the sump is 300mm!")
         logger.warning("Waiting for water to come back from the butts before requesting human intervention...")
@@ -161,7 +161,7 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket):
     elif sump_reading == 200:
         #Level in the sump is very low!
         #If the butts pump is on, turn it off.
-        butts_pump.TurnOff()
+        butts_pump.disable()
 
         logger.error("*** NOTICE ***: Water level in the sump is 200mm!")
         logger.error("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
@@ -177,7 +177,7 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket):
     else:
         #Level in the sump is critically low!
         #If the butts pump is on, turn it off.
-        butts_pump.TurnOff()
+        butts_pump.disable()
 
         logger.critical("*** CRITICAL ***: Water level in the sump < 200mm!")
         logger.critical("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
