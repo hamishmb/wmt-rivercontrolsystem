@@ -86,7 +86,7 @@ class Monitor(BaseMonitorClass):
         """Initialise and start the thread"""
         BaseMonitorClass.__init__(self, probe, num_readings, reading_interval)
 
-        self.reading_func = probe.GetLeve
+        self.reading_func = probe.get_reading
 
         self.start()
 

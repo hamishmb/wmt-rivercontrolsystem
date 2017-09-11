@@ -193,5 +193,5 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket):
         reading_interval = 15
 
     #Set the reading interval in the thread, and send it down the socket to the peer.
-    monitor.SetReadingInterval(reading_interval)
-    socket.Write("Reading Interval: "+str(reading_interval))
+    monitor.set_reading_interval(reading_interval)
+    socket.write("Reading Interval: "+str(reading_interval))
