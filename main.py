@@ -96,7 +96,7 @@ def run_standalone():
 
     #Provide a connection for clients to connect to.
     logger.debug("Creating a socket for clients to connect to, please wait...")
-    socket = socket_tools.Sockets("socket")
+    socket = socket_tools.Sockets("Socket")
     socket.set_portnumber(30000)
     socket.start_handler()
 

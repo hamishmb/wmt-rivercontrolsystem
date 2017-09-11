@@ -27,7 +27,7 @@ def run_standalone():
     print("Testing. Please stand by...")
 
     #Create the sockets object.
-    socket = socket_tools.Sockets("socket")
+    socket = socket_tools.Sockets("Socket")
 
     #Set the object up.
     socket.set_portnumber(30000)
