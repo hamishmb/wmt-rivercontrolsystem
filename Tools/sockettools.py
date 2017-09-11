@@ -466,7 +466,7 @@ class SocketHandlerThread(threading.Thread):
         while True:
             self.underlying_socket.create_and_connect()
 
-            if not self.underlying_socket.HandlerShouldExit:
+            if not self.underlying_socket.requested_handler_exit:
                 break
 
             #Otherwise destroy and recreate the socket until we connect.
@@ -482,7 +482,7 @@ class SocketHandlerThread(threading.Thread):
         print("Connected to peer.")
 
         #Keep sending and receiving messages until we're asked to exit.
-        while not self.underlying_socket.HandlerShouldExit:
+        while not self.underlying_socket.requested_handler_exit:
             #Send any pending messages.
             sent = self.underlying_socket.send_pending_messages()
 
@@ -509,7 +509,7 @@ class SocketHandlerThread(threading.Thread):
                     self.underlying_socket.create_and_connect()
 
                     #If reconnection was successful, set flag and return to normal operation.
-                    if not self.underlying_socket.HandlerShouldExit:
+                    if not self.underlying_socket.requested_handler_exit:
                         logger.debug("Sockets.Handler(): Success! Re-entering main loop...")
                         self.underlying_socket.Reconnected = True
 

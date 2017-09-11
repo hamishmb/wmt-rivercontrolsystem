@@ -69,7 +69,7 @@ def run_standalone():
     probe = probe("Probey")
 
     #Set the probe up.
-    probe.SetPins(pins)
+    probe.set_pins(pins)
 
     logger.info("Starting the monitor thread...")
     print("Starting to take readings. Please stand by...")
