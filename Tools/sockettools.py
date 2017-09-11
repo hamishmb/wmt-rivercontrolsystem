@@ -493,7 +493,7 @@ class SocketHandlerThread(threading.Thread):
             if read_result == -1:
                 logger.debug("Sockets.Handler(): Lost connection. Attempting to reconnect...")
 
-                if self.underlying_socket.Verbose:
+                if self.underlying_socket.verbose:
                     print("Lost connection to peer. Reconnecting...")
 
                 #Wait indefinitely for the socket to reconnect.
@@ -511,13 +511,13 @@ class SocketHandlerThread(threading.Thread):
                     #If reconnection was successful, set flag and return to normal operation.
                     if not self.underlying_socket.requested_handler_exit:
                         logger.debug("Sockets.Handler(): Success! Re-entering main loop...")
-                        self.underlying_socket.Reconnected = True
+                        self.underlying_socket.reconnected = True
 
-                        if self.underlying_socket.Verbose:
+                        if self.underlying_socket.verbose:
                             print("Reconnected to peer.")
 
                         break
 
         #Flag that we've exited.
         logger.debug("Sockets.Handler(): Exiting as per the request...")
-        self.underlying_socket.HandlerExited = True
+        self.underlying_socket.handler_exited = True
