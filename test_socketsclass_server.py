@@ -15,48 +15,45 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
 import time
-import datetime
-import sys
-import os
 
-def RunStandalone():
+def run_standalone():
     #Do required imports.
-    import Tools.sockettools as SocketTools
+    import Tools.sockettools as socket_tools
 
-    SocketTools.logger = logger
+    socket_tools.logger = logger
 
     print("Testing. Please stand by...")
 
     #Create the sockets object.
-    Socket = SocketTools.Sockets("Socket")
+    socket = socket_tools.Sockets("socket")
 
     #Set the object up.
-    Socket.SetPortNumber(30000)
+    socket.set_portnumber(30000)
 
-    Socket.StartHandler()
+    socket.start_handler()
 
-    while not Socket.IsReady(): time.sleep(0.5)
+    while not socket.is_ready():
+        time.sleep(0.5)
 
     try:
         while True:
-            while Socket.HasPendingData():
-                print(Socket.Read())
-                Socket.Pop()
+            while socket.has_data():
+                print(socket.read())
+                socket.pop()
 
             time.sleep(1)
 
     except KeyboardInterrupt:
         #Clean up.
-        Socket.RequestHandlerExit()
-        Socket.WaitForHandlerToExit()
-        Socket.Reset()
+        socket.request_handler_exit()
+        socket.wait_for_handler_to_exit()
+        socket.reset()
 
 if __name__ == "__main__":
     #Set up basic logging to stdout.
-    import logging
-
     logger = logging
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p', level=logging.DEBUG)
 
-    RunStandalone() 
+    run_standalone()

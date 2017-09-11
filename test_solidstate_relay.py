@@ -15,44 +15,38 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-import RPi.GPIO as GPIO
 import time
-import datetime
-import sys
-import getopt #Proper option handler.
-import os
+import RPi.GPIO as GPIO
 
-def RunStandalone():
+def run_standalone():
     #Allows the progam to run standalone as well as being a module.
     #Do required imports.
     import Tools
 
     from Tools import sensorobjects
-    from Tools import coretools as CoreTools
 
     from Tools.sensorobjects import Motor
 
     print("Testing. Please stand by...")
 
     #Create the motor object.
-    TestMotor = Motor("Motorey")
+    ssr = Motor("Motorey")
 
     #Set the motor up.
-    TestMotor.SetPin(5)
+    ssr.set_pins(5)
 
     try:
         time.sleep(3)
         print("On")
-        TestMotor.TurnOn()
+        ssr.enable()
 
         time.sleep(15)
         print("Off")
-        TestMotor.TurnOff()
+        ssr.disable()
 
-    except BaseException as E:
+    except BaseException as err:
         #Ignore all errors. Generally bad practice :P
-        print("\nCaught Exception: ", E)
+        print("\nCaught Exception: ", err)
 
     finally:
         #Always clean up properly.
@@ -62,4 +56,4 @@ def RunStandalone():
         GPIO.cleanup()
 
 if __name__ == "__main__":
-    RunStandalone() 
+    run_standalone()
