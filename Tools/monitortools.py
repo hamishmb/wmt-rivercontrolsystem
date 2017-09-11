@@ -18,113 +18,117 @@ import time
 import datetime
 import threading
 
+#TODO use deque and popleft.
+
 # ---------- BASE CLASS ----------
 class BaseMonitorClass(threading.Thread):
-    def __init__(self, Probe, NumberOfReadingsToTake, ReadingInterval):
-        self.Probe = Probe
-        self.NumberOfReadingsToTake = NumberOfReadingsToTake
-        self.ReadingInterval = ReadingInterval
-        self.Queue = []
-        self.Running = False
-        self.ShouldExit = False
+    def __init__(self, probe, num_readings, reading_interval):
+        threading.Thread.__init__(self)
+        self.probe = probe
+        self.num_readings = num_readings
+        self.reading_interval = reading_interval
+        self.queue = []
+        self.running = False
+        self.should_exit = False
 
-    def IsRunning(self):
+    def is_running(self):
         """
         Returns True if running, else False.
         Usage:
-            bool IsRunning()
+            bool is_running()
         """
 
-        return self.Running
+        return self.running
 
-    def HasData(self):
+    def has_data(self):
         """
         Returns True if the queue isn't empty, False if it is.
         Usage:
-            bool HasData()
+            bool has_data()
         """
 
-        return int(len(self.Queue))
+        return int(len(self.queue))
 
-    def GetReading(self):
+    def get_reading(self):
         """
         Returns a reading from the queue, and deletes it from the queue.
         Usage:
-            string GetReading()
+            string get_reading()
         """
 
-        return self.Queue.pop()
+        return self.queue.pop()
 
-    def SetReadingInterval(self, Interval):
+    def set_reading_interval(self, interval):
         """
         Sets the reading interval. Takes immediate effect.
         Usage:
-            SetReadingInterval(int Interval)
+            set_reading_interval(int interval)
         """
 
-        self.ReadingInterval = Interval
+        self.reading_interval = interval
 
-    def RequestExit(self, wait=False):
+    def request_exit(self, wait=False):
         """
         Used to ask the thread to exit. Doesn't wait before returning unless specified.
         Usage:
-            RequestExit([bool wait])
+            request_exit([bool wait])
         """
-        self.ShouldExit = True
-        self.ReadingInterval = 0 #Helps thread to react faster.
+        self.should_exit = True
+        self.reading_interval = 0 #Helps thread to react faster.
 
         if wait:
-            while self.Running:
+            while self.running:
                 time.sleep(5)
 
 # ---------- Universal Monitor ----------
 class Monitor(BaseMonitorClass):
-    def __init__(self, Type, Probe, NumberOfReadingsToTake, ReadingInterval):
+    def __init__(self, Type, probe, num_readings, reading_interval):
         """Initialise and start the thread"""
-        BaseMonitorClass.__init__(self, Probe, NumberOfReadingsToTake, ReadingInterval)
-        threading.Thread.__init__(self)
+        BaseMonitorClass.__init__(self, probe, num_readings, reading_interval)
 
         #Determine level getting function.
-        if Type == "Resistance Probe":
-            self.reading_func = Probe.GetLevel
+        if Type == "Resistance probe":
+            self.reading_func = probe.GetLevel
 
         elif Type == "Hall Effect":
-            self.reading_func = Probe.GetRPM
+            self.reading_func = probe.GetRPM
 
-        elif Type == "Capacitive Probe":
-            self.reading_func = Probe.GetLevel
+        elif Type == "Capacitive probe":
+            self.reading_func = probe.GetLevel
 
         elif Type == "Float Switch":
-            self.reading_func = Probe.GetState
+            self.reading_func = probe.GetState
 
         self.start()
 
     def run(self):
         """Main part of the thread"""
-        NumberOfReadingsTaken = 0
-        self.Running = True
+        num_readings_taken = 0
+        self.running = True
 
         try:
-            while ((not self.ShouldExit) and (self.NumberOfReadingsToTake == 0 or (NumberOfReadingsTaken < self.NumberOfReadingsToTake))):
-                Reading, StateText = self.reading_func()
+            while ((not self.should_exit) and (self.num_readings == 0 or (num_readings_taken < self.num_readings))):
+                the_reading, status_text = self.reading_func()
 
-                self.Queue.append("Time: "+str(datetime.datetime.now())+" Reading: "+str(Reading)+" State: "+StateText)
+                self.queue.append("Time: "+str(datetime.datetime.now())+" the_reading: "+str(the_reading)+" Status: "+status_text)
 
-                if self.NumberOfReadingsToTake != 0:
-                    NumberOfReadingsTaken += 1
+                if self.num_readings != 0:
+                    num_readings_taken += 1
 
                 #Take readings every however often it is.
-                #I know we could use a long time.sleep(), but this MUST be responsive to changes in the reading interval.
-                Count = 0
+                #I know we could use a long time.sleep(),
+                #but this MUST be responsive to changes in the reading interval.
+                count = 0
 
-                while Count < self.ReadingInterval:
-                    #This way, if our reading interval changes, the code will respond to the change immediately.
+                while count < self.reading_interval:
+                    #This way, if our reading interval changes,
+                    #the code will respond to the change immediately.
                     time.sleep(1)
-                    Count += 1
+                    count += 1
 
-        except BaseException as E:
+        except BaseException as err:
             #Ignore all errors. Generally bad practice :P
-            print("\nCaught Exception: ", E)
+            print("\nCaught Exception: ", err)
 
-        self.Running = False
+        self.running = False
 
