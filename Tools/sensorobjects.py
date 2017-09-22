@@ -419,6 +419,8 @@ class HallEffectProbe(BaseDeviceClass):
         GPIO.add_event_detect(self._pins[8], GPIO.FALLING, callback=self.level8)
         GPIO.add_event_detect(self._pins[9], GPIO.FALLING, callback=self.level9)
 
+        self._post_init_called = True
+
     # ---------- PRIVATE FUNCTIONS ----------
     def level0(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
