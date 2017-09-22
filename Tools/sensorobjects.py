@@ -465,7 +465,7 @@ class HallEffectProbe(BaseDeviceClass):
         """
         Returns the level at which the magnet is bobbing about at.
         """
-        if not self.post_init_called:
+        if not self._post_init_called:
             self.post_init()
 
         return self._current_reading, "OK" #TODO Actual fault checking.
