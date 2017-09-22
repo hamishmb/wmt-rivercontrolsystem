@@ -17,7 +17,7 @@
 #NOTE: This program currently has LIMITED FUNCTIONALITY.
 #      It is a pre-production version that is being used
 #      to set up a test system that uses 2 RPis, one at
-#      the sump, with a resistance probe and SSR connected
+#      the sump, with a hall effect probe and SSR connected
 #      and the other Pi is installed at the butts, and has
 #      a float switch. The sump pi will be using this program.
 #      It will communicate with the other pi over a socket,
@@ -106,11 +106,11 @@ def run_standalone():
     file_name, file_handle = core_tools.greet_and_get_filename("River System Control and Monitoring Software", file_name)
 
     #Create the devices.
-    sump_probe = sensor_objects.ResistanceProbe("Sump Level")
+    sump_probe = sensor_objects.HallEffectProbe("Sump Level")
     butts_pump = sensor_objects.Motor("Aux Motor") #SSR.
 
     #Set the devices up.
-    sump_probe.set_active_state(False)     #Active low.
+    #sump_probe.set_active_state(False)     #Active low. Disabled because meaningless for this probe.
     sump_probe.set_pins((15, 17, 27, 22, 23, 24, 10, 9, 25, 11))
 
     #Butts pump doesn't support PWM.
@@ -127,7 +127,7 @@ def run_standalone():
     print("Starting to take readings. Please stand by...")
 
     #Start the monitor thread. Take readings indefinitely.
-    monitor = monitor_tools.Monitor("Resistance Probe", sump_probe, 0, reading_interval)
+    monitor = monitor_tools.Monitor("Hall Effect Probe", sump_probe, 0, reading_interval)
 
     #Wait until the first reading has come in so we are synchronised.
     while not monitor.has_data():
