@@ -47,8 +47,6 @@ class BaseDeviceClass: #NOTE: Should this be in coretools?
             <Device-Object>.set_pins(tuple pins, bool _input)
         """
 
-        print(pins)
-
         #Put the int in a list so this works.
         if isinstance(pins, int):
             pins = [pins]
@@ -406,8 +404,10 @@ class HallEffectProbe(BaseDeviceClass):
 
         #Set some semi-private variables.
         self._current_reading = 0                  #Internal use only.
+        self._post_init_called = False             #Internal use only.
 
-        #Automatically call our functions when a falling edge is detected on each pin.
+    def post_init(self):
+        """Automatically call our functions when a falling edge is detected on each pin."""
         GPIO.add_event_detect(self._pins[0], GPIO.FALLING, callback=self.level0)
         GPIO.add_event_detect(self._pins[1], GPIO.FALLING, callback=self.level1)
         GPIO.add_event_detect(self._pins[2], GPIO.FALLING, callback=self.level2)
@@ -465,4 +465,7 @@ class HallEffectProbe(BaseDeviceClass):
         """
         Returns the level at which the magnet is bobbing about at.
         """
+        if not self.post_init_called:
+            self.post_init()
+
         return self._current_reading, "OK" #TODO Actual fault checking.
