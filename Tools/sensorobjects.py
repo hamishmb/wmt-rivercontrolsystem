@@ -47,6 +47,8 @@ class BaseDeviceClass: #NOTE: Should this be in coretools?
             <Device-Object>.set_pins(tuple pins, bool _input)
         """
 
+        print(pins)
+
         #Put the int in a list so this works.
         if isinstance(pins, int):
             pins = [pins]
