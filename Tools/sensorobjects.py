@@ -388,3 +388,79 @@ class HallEffectDevice(BaseDeviceClass):
         rpm = revs_per_5_seconds * 12
 
         return rpm, "OK" #TODO Actual fault checking.
+
+class HallEffectProbe(BaseDeviceClass):
+    # ---------- CONSTRUCTORS ----------
+    def __init__(self, Name):
+        """
+        This is the constructor.
+        Usage:
+
+            <Variable-Name> = HallEffectDevice(string DeviceName)
+        """
+
+        #Call the base class costructor.
+        BaseDeviceClass.__init__(self, Name)
+
+        #Set some semi-private variables.
+        self._current_reading = 0                  #Internal use only.
+
+        #Automatically call our functions when a falling edge is detected on each pin.
+        GPIO.add_event_detect(self._pins[0], GPIO.FALLING, callback=self.level0)
+        GPIO.add_event_detect(self._pins[1], GPIO.FALLING, callback=self.level1)
+        GPIO.add_event_detect(self._pins[2], GPIO.FALLING, callback=self.level2)
+        GPIO.add_event_detect(self._pins[3], GPIO.FALLING, callback=self.level3)
+        GPIO.add_event_detect(self._pins[4], GPIO.FALLING, callback=self.level4)
+        GPIO.add_event_detect(self._pins[5], GPIO.FALLING, callback=self.level5)
+        GPIO.add_event_detect(self._pins[6], GPIO.FALLING, callback=self.level6)
+        GPIO.add_event_detect(self._pins[7], GPIO.FALLING, callback=self.level7)
+        GPIO.add_event_detect(self._pins[8], GPIO.FALLING, callback=self.level8)
+        GPIO.add_event_detect(self._pins[9], GPIO.FALLING, callback=self.level9)
+
+    # ---------- PRIVATE FUNCTIONS ----------
+    def level0(self, channel):
+        """Called when a falling edge is detected. Sets current reading to relevant level"""
+        self._current_reading = 0
+
+    def level1(self, channel):
+        """Called when a falling edge is detected. Sets current reading to relevant level"""
+        self._current_reading = 100
+
+    def level2(self, channel):
+        """Called when a falling edge is detected. Sets current reading to relevant level"""
+        self._current_reading = 200
+
+    def level3(self, channel):
+        """Called when a falling edge is detected. Sets current reading to relevant level"""
+        self._current_reading = 300
+
+    def level4(self, channel):
+        """Called when a falling edge is detected. Sets current reading to relevant level"""
+        self._current_reading = 400
+
+    def level5(self, channel):
+        """Called when a falling edge is detected. Sets current reading to relevant level"""
+        self._current_reading = 500
+
+    def level6(self, channel):
+        """Called when a falling edge is detected. Sets current reading to relevant level"""
+        self._current_reading = 600
+
+    def level7(self, channel):
+        """Called when a falling edge is detected. Sets current reading to relevant level"""
+        self._current_reading = 700
+
+    def level8(self, channel):
+        """Called when a falling edge is detected. Sets current reading to relevant level"""
+        self._current_reading = 800
+
+    def level9(self, channel):
+        """Called when a falling edge is detected. Sets current reading to relevant level"""
+        self._current_reading = 900
+
+    # ---------- CONTROL FUNCTIONS ----------
+    def get_reading(self):
+        """
+        Returns the level at which the magnet is bobbing about at.
+        """
+        return self._current_reading, "OK" #TODO Actual fault checking.

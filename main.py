@@ -32,7 +32,7 @@ import RPi.GPIO as GPIO
 
 #Define global variables.
 VERSION = "0.9.1"
-RELEASEDATE = "11/9/2017"
+RELEASEDATE = "22/9/2017"
 
 def usage():
     print("\nUsage: main.py [OPTION]\n\n")
