@@ -195,3 +195,5 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket):
     #Set the reading interval in the thread, and send it down the socket to the peer.
     monitor.set_reading_interval(reading_interval)
     socket.write("Reading Interval: "+str(reading_interval))
+
+    return reading_interval

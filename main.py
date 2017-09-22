@@ -152,9 +152,9 @@ def run_standalone():
                 sump_reading = monitor.get_reading()
 
                 #Write any new readings to the file and to stdout.
-                logger.debug("Resistance Probe: "+sump_reading)
-                print("Resistance Probe: "+sump_reading)
-                file_handle.write("Resistance Probe: "+sump_reading+"\n")
+                logger.debug("Sump Probe: "+sump_reading)
+                print("Sump Probe: "+sump_reading)
+                file_handle.write("Sump Probe: "+sump_reading+"\n")
 
             #Check for new readings from the float switch.
             while socket.has_data():
@@ -175,7 +175,7 @@ def run_standalone():
                     file_handle.write("Float Switch: "+butts_reading+"\n")
 
             #Logic.
-            core_tools.do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket)
+            reading_interval = core_tools.do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket)
 
             #Wait until it's time to check for another reading.
             time.sleep(reading_interval)
