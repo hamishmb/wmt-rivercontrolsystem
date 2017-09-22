@@ -425,42 +425,52 @@ class HallEffectProbe(BaseDeviceClass):
     def level0(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 0
+        print(0)
 
     def level1(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 100
+        print(100)
 
     def level2(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 200
+        print(200)
 
     def level3(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 300
+        print(300)
 
     def level4(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 400
+        print(400)
 
     def level5(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 500
+        print(500)
 
     def level6(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 600
+        print(600)
 
     def level7(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 700
+        print(700)
 
     def level8(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 800
+        print(800)
 
     def level9(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 900
+        print(900)
 
     # ---------- CONTROL FUNCTIONS ----------
     def get_reading(self):
