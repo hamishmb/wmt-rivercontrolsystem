@@ -88,7 +88,7 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket):
     #Handle errors when interpreting the readings.
     try:
         sump_reading = int(sump_reading.split()[4].replace("m", ""))
-        butts_reading = butts_reading.split()[-1]
+        butts_reading = butts_reading.split()[-3]
 
     except BaseException as err:
         logger.error("Error interpreting readings: "+str(err)+". This indicates a bug in the software. Trying to get new readings...")

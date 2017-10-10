@@ -33,7 +33,7 @@ def run_standalone():
     ssr = Motor("Motorey")
 
     #Set the motor up.
-    ssr.set_pins(5)
+    ssr.set_pins(5, _input=False)
 
     try:
         time.sleep(3)

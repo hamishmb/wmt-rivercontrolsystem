@@ -182,7 +182,7 @@ class FloatSwitch(BaseDeviceClass):
         BaseDeviceClass.__init__(self, Name)
 
         #Set some semi-private variables.
-        self._active_state = False           #Active low by default.
+        self._active_state = True           #Active low by default.
 
     # ---------- INFO SETTER FUNCTIONS ----------
     def set_active_state(self, state):
