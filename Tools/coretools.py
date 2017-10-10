@@ -79,7 +79,7 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket):
     """
     Decides what to do based on the readings.
 
-    NOTE: At the moment, this is fine tuned for the was-August-now-September test deployment.
+    NOTE: At the moment, this is fine tuned for the was-August-now-October test deployment.
 
     Usage:
         do_control_logic(string sump_reading, string butts_reading, <sensor-obj> butts_pump, <monitorthread-obj> monitor)
@@ -96,13 +96,12 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket):
         print("Getting new readings to try and recover...")
         return
 
-    if sump_reading > 600:
-        #Adjusted to 600mm because the 700mm sensor on the probe is broken at the moment.
+    if sump_reading => 600:
         #Level in the sump is getting high.
         #Pump some water to the butts if they aren't full.
         #If they are full, do nothing and let the sump overflow.
-        logger.warning("Water level in the sump > 600mm!")
-        print("Water level in the sump > 600mm!")
+        logger.warning("Water level in the sump => 600mm!")
+        print("Water level in the sump => 600mm!")
 
         if butts_reading == "False":
             #Pump to the butts.
@@ -127,15 +126,22 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket):
             print("Setting reading interval to 5 minutes...")
             reading_interval = 300
 
-    elif sump_reading <= 600 and sump_reading >= 400:
+    elif sump_reading == 500:
+        #Level is okay.
+        #We might be pumping right now, or the level is increasing, but do nothing.
+        #^ Do NOT change the state of the pump.
+        logger.info("Water level in the sump is 500mm. Doing nothing...")
+        print("Water level in the sump is 500mm. Doing nothing...")
+        
+    elif sump_reading == 400:
         #Level in the sump is good.
         #If the butts pump is on, turn it off.
         butts_pump.disable()
 
-        logger.debug("Water level in the sump is good. Doing nothing...")
+        logger.info("Water level in the sump is good. Doing nothing...")
         print("Water level in the sump is good. (600 - 400mm inclusive) Doing nothing...")
 
-        logger.debug("Setting reading interval to 5 minutes...")
+        logger.info("Setting reading interval to 5 minutes...")
         print("Setting reading interval to 5 minutes...")
         reading_interval = 300
 

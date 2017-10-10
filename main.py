@@ -32,7 +32,7 @@ import RPi.GPIO as GPIO
 
 #Define global variables.
 VERSION = "0.9.1"
-RELEASEDATE = "22/9/2017"
+RELEASEDATE = "10/10/2017"
 
 def usage():
     print("\nUsage: main.py [OPTION]\n\n")
@@ -95,7 +95,7 @@ def run_standalone():
     file_name = handle_cmdline_options()
 
     #Provide a connection for clients to connect to.
-    logger.debug("Creating a socket for clients to connect to, please wait...")
+    logger.info("Creating a socket for clients to connect to, please wait...")
     socket = socket_tools.Sockets("Socket")
     socket.set_portnumber(30000)
     socket.start_handler()
@@ -170,7 +170,7 @@ def run_standalone():
 
                 else:
                     #Write any new readings to the file and to stdout.
-                    logger.debug("Float Switch: "+butts_reading)
+                    logger.info("Float Switch: "+butts_reading)
                     print("Float Switch: "+butts_reading)
                     file_handle.write("Float Switch: "+butts_reading+"\n")
 
@@ -204,6 +204,6 @@ def run_standalone():
 if __name__ == "__main__":
     logger = logging.getLogger('River System Control Software '+VERSION)
     logging.basicConfig(filename='./rivercontrolsystem.log', format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
 
     run_standalone()

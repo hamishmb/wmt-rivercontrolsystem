@@ -147,6 +147,6 @@ def run_standalone():
 if __name__ == "__main__":
     logger = logging.getLogger('Universal Standalone Monitor 0.9.1')
     logging.basicConfig(filename='./universalmonitor.log', format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
 
     run_standalone()
