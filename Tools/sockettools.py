@@ -470,7 +470,7 @@ class SocketHandlerThread(threading.Thread):
             self.socket.create_and_connect()
 
             #If we have connected without error, break out of this loop and enter the main loop.
-            if not self.socket.self.internal_request_exit:
+            if not self.socket.internal_request_exit:
                 break
 
             #Otherwise destroy and recreate the socket until we connect.
