@@ -16,27 +16,88 @@
 
 import time
 import logging
+import getopt
+import sys
 import RPi.GPIO as GPIO
 
+#Do required imports.
+import universal_standalone_monitor_config as config
+
+import Tools
+
+from Tools import coretools as core_tools
+from Tools import sockettools as socket_tools
+from Tools.monitortools import Monitor
+
+def usage():
+    """Standard usage function for all monitors."""
+    print("\nUsage: universal_standalone_monitor.py [OPTION]\n\n")
+    print("Options:\n")
+    print("       -h, --help:               Show this help message")
+    print("       -f, --file:               Specify file to write the recordings to.")
+    print("                                 If not specified: interactive.")
+    print("       -c, --controlleraddress:  Specify the DNS name/IP of the controlling server")
+    print("                                 we want to send our level data to, if any.")
+    print("       -n <int>, --num=<int>     Specify number of readings to take before exiting.")
+    print("                                 Without this option, readings will be taken until")
+    print("                                 the program is terminated")
+    print("universal_standalone_monitor.py is released under the GNU GPL Version 3")
+    print("Copyright (C) Wimborne Model Town 2017")
+
+def handle_cmdline_options():
+    """
+    Handles commandline options for the standalone monitor programs.
+    Usage:
+
+        tuple HandleCmdlineOptions(function UsageFunc)
+    """
+
+    _type = "Unknown"
+    file_name = "Unknown"
+    server_address = None
+
+    #Check all cmdline options are valid.
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "ht:f:c:n:", ["help", "type=", "file=", "controlleraddress=", "num="])
+
+    except getopt.GetoptError as err:
+        #Invalid option. Show the help message and then exit.
+        #Show the error.
+        print(str(err))
+        usage()
+        sys.exit(2)
+
+    #Do setup. o=option, a=argument.
+    num_readings = 0 #Take readings indefinitely by default.
+
+    for o, a in opts:
+        if o in ["-t", "--type"]:
+            _type = a
+
+        elif o in ["-f", "--file"]:
+            file_name = a
+
+        elif o in ["-c", "--controlleraddress"]:
+            server_address = a
+
+        elif o in ["-n", "--num"]:
+            num_readings = int(a)
+
+        elif o in ["-h", "--help"]:
+            usage()
+            sys.exit()
+
+        else:
+            assert False, "unhandled option"
+
+    if _type == "Unknown":
+        assert False, "You must specify the type of probe you want to monitor."
+
+    return _type, file_name, server_address, num_readings
+
 def run_standalone():
-    #Do required imports.
-    import universal_standalone_monitor_config as config
-
-    import Tools
-
-    from Tools import standalone_shared_functions as functions
-    from Tools import sensorobjects
-    from Tools import coretools as core_tools
-    from Tools import sockettools as socket_tools
-    from Tools import monitortools
-
-    from Tools.sensorobjects import CapacitiveProbe
-    from Tools.monitortools import Monitor
-
-    Tools.sockettools.logger = logger
-
     #Handle cmdline options.
-    _type, file_name, server_address, num_readings = functions.handle_cmdline_options("universal_standalone_monitor.py")
+    _type, file_name, server_address, num_readings = handle_cmdline_options()
 
     logger.debug("Running in "+_type+" mode...")
 
@@ -148,5 +209,6 @@ if __name__ == "__main__":
     logger = logging.getLogger('Universal Standalone Monitor 0.9.1')
     logging.basicConfig(filename='./universalmonitor.log', format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
     logger.setLevel(logging.INFO)
+    Tools.sockettools.logger = logger
 
     run_standalone()
