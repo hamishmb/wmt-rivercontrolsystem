@@ -52,6 +52,7 @@ class Sockets:
         self.ready_to_send = False
         self.reconnected = False
         self.requested_handler_exit = False
+        self.internal_request_exit = False
         self.handler_exited = False
 
         #Message queues (actually lists).
@@ -105,6 +106,7 @@ class Sockets:
         self.ready_to_send = False
         self.reconnected = False
         self.requested_handler_exit = False
+        self.internal_request_exit = False
         self.handler_exited = False
 
         #Queues.
@@ -179,6 +181,7 @@ class Sockets:
         self.ready_to_send = False
         self.reconnected = False
         self.requested_handler_exit = False
+        self.internal_request_exit = False
         self.handler_exited = False
 
         if self.type in ("Plug", "Socket"):
@@ -226,14 +229,14 @@ class Sockets:
 
         except BaseException as err: #FIXME WHAT ERROR WOULD WE NEED TO CATCH?
             logger.critical("Sockets.create_and_connect(): Error connecting: "+str(err))
-            logger.critical("Socket.create_and_connect(): .Retrying in 10 seconds...")
+            logger.critical("Socket.create_and_connect(): Retrying in 10 seconds...")
 
             if self.verbose:
                 print("Connecting Failed: "+str(err)+". Retrying in 10 seconds...")
 
             #Make the handler exit.
             logger.debug("Sockets.create_and_connect(): Asking handler to exit...")
-            self.requested_handler_exit = True
+            self.internal_request_exit = True
 
     # ---------- Connection Functions (Plugs) ---------- FIXME: Add error handling.
     def create_plug(self):
@@ -450,7 +453,7 @@ class SocketHandlerThread(threading.Thread):
 
     def __init__(self, Socket):
         """Initialize and start the thread."""
-        self.underlying_socket = Socket
+        self.socket = Socket
 
         threading.Thread.__init__(self)
         self.start()
@@ -464,15 +467,16 @@ class SocketHandlerThread(threading.Thread):
         logger.debug("Sockets.Handler(): Calling Ptr->create_and_connect to set the socket up...")
 
         while True:
-            self.underlying_socket.create_and_connect()
+            self.socket.create_and_connect()
 
-            if not self.underlying_socket.requested_handler_exit:
+            #If we have connected without error, break out of this loop and enter the main loop.
+            if not self.socket.self.internal_request_exit:
                 break
 
             #Otherwise destroy and recreate the socket until we connect.
             #Reset the socket. Also resets the status trackers.
             logger.debug("Sockets.Handler(): Resetting socket...")
-            self.underlying_socket.reset()
+            self.socket.reset()
 
             #Wait for 10 seconds in between attempts.
             time.sleep(10)
@@ -482,42 +486,42 @@ class SocketHandlerThread(threading.Thread):
         print("Connected to peer.")
 
         #Keep sending and receiving messages until we're asked to exit.
-        while not self.underlying_socket.requested_handler_exit:
+        while not self.socket.requested_handler_exit:
             #Send any pending messages.
-            sent = self.underlying_socket.send_pending_messages()
+            sent = self.socket.send_pending_messages()
 
             #Receive messages if there are any.
-            read_result = self.underlying_socket.read_pending_messages()
+            read_result = self.socket.read_pending_messages()
 
             #Check if the peer left.
             if read_result == -1:
                 logger.debug("Sockets.Handler(): Lost connection. Attempting to reconnect...")
 
-                if self.underlying_socket.verbose:
+                if self.socket.verbose:
                     print("Lost connection to peer. Reconnecting...")
 
-                #Wait indefinitely for the socket to reconnect.
-                while True:
+                #Wait for the socket to reconnect, unless the user ends the program (this allows us to exit cleanly if the peer is gone).
+                while not self.socket.requested_handler_exit:
                     #Reset the socket. Also resets the status trackers.
                     logger.debug("Sockets.Handler(): Resetting socket...")
-                    self.underlying_socket.reset()
+                    self.socket.reset()
 
                     #Wait for 10 seconds in between attempts.
                     time.sleep(10)
 
                     logger.debug("Sockets.Handler(): Recreating and reconnecting the socket...")
-                    self.underlying_socket.create_and_connect()
+                    self.socket.create_and_connect()
 
                     #If reconnection was successful, set flag and return to normal operation.
-                    if not self.underlying_socket.requested_handler_exit:
+                    if not self.socket.internal_request_exit:
                         logger.debug("Sockets.Handler(): Success! Re-entering main loop...")
-                        self.underlying_socket.reconnected = True
+                        self.socket.reconnected = True
 
-                        if self.underlying_socket.verbose:
+                        if self.socket.verbose:
                             print("Reconnected to peer.")
 
                         break
 
         #Flag that we've exited.
         logger.debug("Sockets.Handler(): Exiting as per the request...")
-        self.underlying_socket.handler_exited = True
+        self.socket.handler_exited = True
