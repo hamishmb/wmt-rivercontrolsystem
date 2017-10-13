@@ -17,6 +17,11 @@
 import datetime
 import sys
 import os
+import logging
+
+VERSION = "0.9.1"
+
+logger = logging.getLogger('River System Control Software '+VERSION)
 
 def greet_and_get_filename(module_name, file_name):
     """

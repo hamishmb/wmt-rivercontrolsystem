@@ -29,6 +29,8 @@ from Tools import coretools as core_tools
 from Tools import sockettools as socket_tools
 from Tools.monitortools import Monitor
 
+VERSION = "0.9.1"
+
 def usage():
     """Standard usage function for all monitors."""
     print("\nUsage: universal_standalone_monitor.py [OPTION]\n\n")
@@ -206,9 +208,8 @@ def run_standalone():
     GPIO.cleanup()
 
 if __name__ == "__main__":
-    logger = logging.getLogger('Universal Standalone Monitor 0.9.1')
+    logger = logging.getLogger('Universal Standalone Monitor '+VERSION)
     logging.basicConfig(filename='./universalmonitor.log', format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
     logger.setLevel(logging.INFO)
-    Tools.sockettools.logger = logger
 
     run_standalone()

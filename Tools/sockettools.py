@@ -25,6 +25,12 @@ import socket
 import select
 import threading
 import time
+import logging
+
+VERSION = "0.9.1"
+
+logger = logging.getLogger('River System Control Software '+VERSION)
+
 from collections import deque
 
 # ---------- Sockets Class ----------

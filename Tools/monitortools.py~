@@ -56,7 +56,7 @@ class BaseMonitorClass(threading.Thread):
             string get_reading()
         """
 
-        return self.queue.pop() #popleft.
+        return self.queue.pop()
 
     def set_reading_interval(self, interval):
         """

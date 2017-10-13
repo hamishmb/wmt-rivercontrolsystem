@@ -18,6 +18,8 @@ import time
 import datetime
 import threading
 
+VERSION = "0.9.1"
+
 #TODO use deque and popleft.
 
 # ---------- BASE CLASS ----------

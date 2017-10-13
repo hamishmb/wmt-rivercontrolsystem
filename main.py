@@ -88,9 +88,6 @@ def run_standalone():
     from Tools import coretools as core_tools
     from Tools import sockettools as socket_tools
 
-    Tools.coretools.logger = logger
-    Tools.sockettools.logger = logger
-
     #Handle cmdline options.
     file_name = handle_cmdline_options()
 
