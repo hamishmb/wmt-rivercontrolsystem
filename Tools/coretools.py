@@ -96,12 +96,12 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket):
         print("Getting new readings to try and recover...")
         return
 
-    if sump_reading => 600:
+    if sump_reading >= 600:
         #Level in the sump is getting high.
         #Pump some water to the butts if they aren't full.
         #If they are full, do nothing and let the sump overflow.
-        logger.warning("Water level in the sump => 600mm!")
-        print("Water level in the sump => 600mm!")
+        logger.warning("Water level in the sump ("+str(sump_reading)+") >= 600mm!")
+        print("Water level in the sump ("+str(sump_reading)+") >= 600mm!")
 
         if butts_reading == "False":
             #Pump to the butts.
