@@ -19,7 +19,6 @@ import time
 
 import RPi.GPIO as GPIO
 
-#TODO Check that the change to BCM hasn't screwed anything up.
 GPIO.setmode(GPIO.BCM)
 
 class BaseDeviceClass: #NOTE: Should this be in coretools?

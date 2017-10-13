@@ -14,13 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#TODO All of this is a hastily-done port of some C++ code from Stroodlr,
-#(my (Hamish's) newest incomplete project).
-#As such, it needs a lot of cleanup and testing.
-#It's all very hacky and messy, but it works, mostly.
-
 #NOTE: Using this terminology, "Plugs" are client sockets, "Sockets" are server sockets.
 
+from collections import deque
 import socket
 import select
 import threading
@@ -30,8 +26,6 @@ import logging
 VERSION = "0.9.1"
 
 logger = logging.getLogger('River System Control Software '+VERSION)
-
-from collections import deque
 
 # ---------- Sockets Class ----------
 class Sockets:

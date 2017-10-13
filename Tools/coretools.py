@@ -143,8 +143,8 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket):
         #If the butts pump is on, turn it off.
         butts_pump.disable()
 
-        logger.info("Water level in the sump is good. Doing nothing...")
-        print("Water level in the sump is good. (600 - 400mm inclusive) Doing nothing...")
+        logger.info("Water level in the sump is 400mm. Turned the butts pump off, if it was on.") #TODO Check if it was and customise the message.
+        print("Water level in the sump is 400mm. Turned the butts pump off, if it was on.")
 
         logger.info("Setting reading interval to 5 minutes...")
         print("Setting reading interval to 5 minutes...")
