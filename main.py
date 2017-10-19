@@ -136,6 +136,8 @@ def run_standalone():
     #Setup. Prevent errors.
     butts_reading = "Time: None State: True"
     sump_reading = "Time: Empty Time Level: -1mm Pin states: 1111111111"
+    last_sump_reading = "No Reading"
+    last_butts_reading = "No Reading"
 
     #Keep tabs on its progress so we can write new readings to the file.
     try:
@@ -148,10 +150,18 @@ def run_standalone():
             while monitor.has_data():
                 sump_reading = monitor.get_reading()
 
-                #Write any new readings to the file and to stdout.
-                logger.debug("Sump Probe: "+sump_reading)
-                print("Sump Probe: "+sump_reading)
-                file_handle.write("Sump Probe: "+sump_reading+"\n")
+                #Check if the reading is different to the last reading.
+                if sump_reading == last_sump_reading:
+                    #Write a . to each file.
+                    logger.info(".")
+                    print(".", end='') #Disable newline when printing this message.
+                    file_handle.write(".")
+
+                else:
+                    #Write any new readings to the file and to stdout.
+                    logger.info("Sump Probe: "+sump_reading)
+                    print("Sump Probe: "+sump_reading)
+                    file_handle.write("Sump Probe: "+sump_reading+"\n")
 
             #Check for new readings from the float switch.
             while socket.has_data():
@@ -166,10 +176,18 @@ def run_standalone():
                     butts_reading = "Time: None State: True"
 
                 else:
-                    #Write any new readings to the file and to stdout.
-                    logger.info("Float Switch: "+butts_reading)
-                    print("Float Switch: "+butts_reading)
-                    file_handle.write("Float Switch: "+butts_reading+"\n")
+                    #Check if the reading is different to the last reading.
+                    if butts_reading == last_butts_reading:
+                        #Write a . to each file.
+                        logger.info(".")
+                        print(".", end='') #Disable newline when printing this message.
+                        file_handle.write(".")
+
+                    else:
+                        #Write any new readings to the file and to stdout.
+                        logger.info("Float Switch: "+butts_reading)
+                        print("Float Switch: "+butts_reading)
+                        file_handle.write("Float Switch: "+butts_reading+"\n")
 
             #Logic.
             reading_interval = core_tools.do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket)

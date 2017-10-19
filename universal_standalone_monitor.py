@@ -146,6 +146,8 @@ def run_standalone():
 
     logger.info("You should begin to see readings now...")
 
+    last_reading = "No Reading"
+
     #Keep tabs on its progress so we can write new readings to the file.
     try:
         while monitor.is_running():
@@ -153,10 +155,18 @@ def run_standalone():
             while monitor.has_data():
                 reading = monitor.get_reading()
 
-                #Write any new readings to the file and to stdout.
-                logger.info(_type+": "+reading)
-                print(_type+": "+reading)
-                file_handle.write(_type+": "+reading+"\n")
+                #Check if the reading is different to the last reading.
+                if reading == last_reading:
+                    #Write a . to each file.
+                    logger.info(".")
+                    print(".", end='') #Disable newline when printing this message.
+                    file_handle.write(".")
+
+                else:
+                    #Write any new readings to the file and to stdout.
+                    logger.info(_type+": "+reading)
+                    print(_type+": "+reading)
+                    file_handle.write(_type+": "+reading+"\n")
 
                 if server_address is not None:
                     socket.write(reading)
