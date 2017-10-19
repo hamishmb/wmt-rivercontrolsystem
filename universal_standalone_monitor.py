@@ -168,6 +168,9 @@ def run_standalone():
                     print(_type+": "+reading)
                     file_handle.write(_type+": "+reading+"\n")
 
+                    #Set last reading to this reading.
+                    last_reading = reading
+
                 if server_address is not None:
                     socket.write(reading)
 

@@ -163,6 +163,9 @@ def run_standalone():
                     print("Sump Probe: "+sump_reading)
                     file_handle.write("Sump Probe: "+sump_reading+"\n")
 
+                    #Set last sump reading to this reading.
+                    last_sump_reading = sump_reading
+
             #Check for new readings from the float switch.
             while socket.has_data():
                 butts_reading = socket.read()
@@ -188,6 +191,9 @@ def run_standalone():
                         logger.info("Float Switch: "+butts_reading)
                         print("Float Switch: "+butts_reading)
                         file_handle.write("Float Switch: "+butts_reading+"\n")
+
+                        #Set last butts reading to this reading.
+                        last_butts_reading = butts_reading
 
             #Logic.
             reading_interval = core_tools.do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket)
