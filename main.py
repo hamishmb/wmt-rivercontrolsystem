@@ -175,7 +175,7 @@ def run_standalone():
 
             #Check for new readings from the float switch.
             while socket.has_data():
-                butts_reading_time, butts_reading, butts_reading_status = socket.read().split(" ")
+                butts_reading_time, butts_reading, butts_reading_status = socket.read().split(",")
                 socket.pop()
 
                 if butts_reading == "":
