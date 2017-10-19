@@ -18,6 +18,8 @@ import time
 import logging
 import getopt
 import sys
+import traceback
+
 import RPi.GPIO as GPIO
 
 #Do required imports.
@@ -231,4 +233,9 @@ if __name__ == "__main__":
     logging.basicConfig(filename='./universalmonitor.log', format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
     logger.setLevel(logging.INFO)
 
-    run_standalone()
+    #Catch any unexpected errors and log them so we know what happened.
+    try:
+        run_standalone()
+
+    except:
+        logger.critical("Unexpected error \n\n"+str(traceback.format_exc())+"\n\n while running. Exiting...")
