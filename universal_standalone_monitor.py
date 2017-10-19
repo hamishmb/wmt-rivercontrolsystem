@@ -154,9 +154,9 @@ def run_standalone():
                 reading = monitor.get_reading()
 
                 #Write any new readings to the file and to stdout.
-                logger.info("New reading: "+reading)
-                print(reading)
-                file_handle.write(reading+"\n")
+                logger.info(_type+": "+reading)
+                print(_type+": "+reading)
+                file_handle.write(_type+": "+reading+"\n")
 
                 if server_address is not None:
                     socket.write(reading)
