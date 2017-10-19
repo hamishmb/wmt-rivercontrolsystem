@@ -166,6 +166,10 @@ def run_standalone():
                     #Set last sump reading to this reading.
                     last_sump_reading = sump_reading
 
+                #Flush buffers.
+                sys.stdout.flush()
+                file_handle.flush()
+
             #Check for new readings from the float switch.
             while socket.has_data():
                 butts_reading = socket.read()

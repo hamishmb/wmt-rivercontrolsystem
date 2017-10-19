@@ -171,6 +171,10 @@ def run_standalone():
                     #Set last reading to this reading.
                     last_reading = reading
 
+                #Flush buffers.
+                sys.stdout.flush()
+                file_handle.flush()
+
                 if server_address is not None:
                     socket.write(reading)
 
