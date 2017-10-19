@@ -16,6 +16,7 @@
 
 #Standard Imports.
 import time
+import logging
 
 import RPi.GPIO as GPIO
 
