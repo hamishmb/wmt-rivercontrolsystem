@@ -156,7 +156,7 @@ def run_standalone():
                 reading = monitor.get_reading()
 
                 #Check if the reading is different to the last reading.
-                if reading[-4:] == last_reading[-4:]: #FIXME This ignores the time when comparing. Need to make these reading machine-friendly.
+                if reading.split()[-4:] == last_reading.split()[-4:]: #FIXME This ignores the time when comparing. Need to make these reading machine-friendly.
                     #Write a . to each file.
                     logger.info(".")
                     print(".", end='') #Disable newline when printing this message.

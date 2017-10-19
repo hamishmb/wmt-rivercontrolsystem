@@ -151,7 +151,7 @@ def run_standalone():
                 sump_reading = monitor.get_reading()
 
                 #Check if the reading is different to the last reading.
-                if sump_reading[-4:] == last_sump_reading[-4:]:
+                if sump_reading.split()[-4:] == last_sump_reading.split()[-4:]:
                     #Write a . to each file.
                     logger.info(".")
                     print(".", end='') #Disable newline when printing this message.
@@ -177,7 +177,7 @@ def run_standalone():
 
                 else:
                     #Check if the reading is different to the last reading.
-                    if butts_reading[-4:] == last_butts_reading[-4:]: #FIXME This ignores the time when comparing. Need to make these reading machine-friendly.
+                    if butts_reading.split()[-4:] == last_butts_reading.split()[-4:]: #FIXME This ignores the time when comparing. Need to make these reading machine-friendly.
                         #Write a . to each file.
                         logger.info(".")
                         print(".", end='') #Disable newline when printing this message.
