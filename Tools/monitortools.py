@@ -14,13 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from collections import deque
 import time
 import datetime
 import threading
 
 VERSION = "0.9.1"
-
-#TODO use deque and popleft.
 
 # ---------- BASE CLASS ----------
 class BaseMonitorClass(threading.Thread):
@@ -29,7 +28,7 @@ class BaseMonitorClass(threading.Thread):
         self.probe = probe
         self.num_readings = num_readings
         self.reading_interval = reading_interval
-        self.queue = []
+        self.queue = deque()
         self.running = False
         self.should_exit = False
 
@@ -61,7 +60,7 @@ class BaseMonitorClass(threading.Thread):
             list get_reading()
         """
 
-        return self.queue.pop()
+        return self.queue.popleft()
 
     def set_reading_interval(self, interval):
         """
