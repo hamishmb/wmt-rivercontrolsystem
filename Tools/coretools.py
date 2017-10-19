@@ -90,16 +90,8 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket):
         do_control_logic(string sump_reading, string butts_reading, <sensor-obj> butts_pump, <monitorthread-obj> monitor)
     """
 
-    #Handle errors when interpreting the readings.
-    try:
-        sump_reading = int(sump_reading.split()[4].replace("m", ""))
-        butts_reading = butts_reading.split()[-3]
-
-    except BaseException as err:
-        logger.error("Error interpreting readings: "+str(err)+". This indicates a bug in the software. Trying to get new readings...")
-        print("Error interpreting readings: "+str(err)+". This indicates a bug in the software.")
-        print("Getting new readings to try and recover...")
-        return
+    #Remove the 'mm' from the end of the reading and convert to int.
+    sump_reading = int(sump_reading.replace("m", ""))
 
     if sump_reading >= 600:
         #Level in the sump is getting high.

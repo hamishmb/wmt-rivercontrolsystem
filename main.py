@@ -32,7 +32,7 @@ import RPi.GPIO as GPIO
 
 #Define global variables.
 VERSION = "0.9.1"
-RELEASEDATE = "10/10/2017"
+RELEASEDATE = "19/10/2017"
 
 def usage():
     print("\nUsage: main.py [OPTION]\n\n")
@@ -134,10 +134,13 @@ def run_standalone():
     time.sleep(10)
 
     #Setup. Prevent errors.
+    butts_reading_time = butts_reading_status = ""
     butts_reading = "Time: None State: True"
+    last_butts_reading = "No Reading"
+
+    sump_reading_time = sump_reading_status = ""
     sump_reading = "Time: Empty Time Level: -1mm Pin states: 1111111111"
     last_sump_reading = "No Reading"
-    last_butts_reading = "No Reading"
 
     #Keep tabs on its progress so we can write new readings to the file.
     try:
@@ -146,12 +149,12 @@ def run_standalone():
             if not monitor.is_running():
                 break
 
-            #Check for new readings from the resistance probe.
+            #Check for new readings from the sump probe. TODO What to do here if a fault is detected?
             while monitor.has_data():
-                sump_reading = monitor.get_reading()
+                sump_reading_time, sump_reading, sump_reading_status = monitor.get_reading()
 
                 #Check if the reading is different to the last reading.
-                if sump_reading.split()[-4:] == last_sump_reading.split()[-4:]:
+                if sump_reading == last_sump_reading:
                     #Write a . to each file.
                     logger.info(".")
                     print(".", end='') #Disable newline when printing this message.
@@ -159,9 +162,9 @@ def run_standalone():
 
                 else:
                     #Write any new readings to the file and to stdout.
-                    logger.info("Sump Probe: "+sump_reading)
-                    print("Sump Probe: "+sump_reading)
-                    file_handle.write("Sump Probe: "+sump_reading+"\n")
+                    logger.info("Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
+                    print("Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
+                    file_handle.write("Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
 
                     #Set last sump reading to this reading.
                     last_sump_reading = sump_reading
@@ -184,7 +187,7 @@ def run_standalone():
 
                 else:
                     #Check if the reading is different to the last reading.
-                    if butts_reading.split()[-4:] == last_butts_reading.split()[-4:]: #FIXME This ignores the time when comparing. Need to make these reading machine-friendly.
+                    if butts_reading == last_butts_reading:
                         #Write a . to each file.
                         logger.info(".")
                         print(".", end='') #Disable newline when printing this message.
@@ -192,9 +195,9 @@ def run_standalone():
 
                     else:
                         #Write any new readings to the file and to stdout.
-                        logger.info("Float Switch: "+butts_reading)
-                        print("Float Switch: "+butts_reading)
-                        file_handle.write("Float Switch: "+butts_reading+"\n")
+                        logger.info("Time: "+butts_reading_time+" Float Switch: "+butts_reading+" Status: "+butts_reading_status)
+                        print("Time: "+butts_reading_time+" Float Switch: "+butts_reading+" Status: "+butts_reading_status)
+                        file_handle.write("Time: "+butts_reading_time+" Float Switch: "+butts_reading+" Status: "+butts_reading_status)
 
                         #Set last butts reading to this reading.
                         last_butts_reading = butts_reading

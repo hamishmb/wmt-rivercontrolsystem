@@ -54,8 +54,11 @@ class BaseMonitorClass(threading.Thread):
     def get_reading(self):
         """
         Returns a reading from the queue, and deletes it from the queue.
+        Format:
+            [str (time), str (reading), str (status)].
+
         Usage:
-            string get_reading()
+            list get_reading()
         """
 
         return self.queue.pop()
@@ -101,7 +104,8 @@ class Monitor(BaseMonitorClass):
             while ((not self.should_exit) and (self.num_readings == 0 or (num_readings_taken < self.num_readings))):
                 the_reading, status_text = self.reading_func()
 
-                self.queue.append("Time: "+str(datetime.datetime.now())+" Reading: "+str(the_reading)+" Status: "+status_text)
+                #Format: Time, reading, status.
+                self.queue.append([str(datetime.datetime.now()), str(the_reading), status_text])
 
                 if self.num_readings != 0:
                     num_readings_taken += 1

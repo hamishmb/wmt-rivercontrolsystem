@@ -146,6 +146,8 @@ def run_standalone():
 
     logger.info("You should begin to see readings now...")
 
+    #Set to sensible defaults to avoid errors.
+    reading_time = reading_status = ""
     last_reading = "No Reading"
 
     #Keep tabs on its progress so we can write new readings to the file. TODO Sections of this code are duplicated w/ main.py, fix that.
@@ -153,10 +155,10 @@ def run_standalone():
         while monitor.is_running():
             #Check for new readings.
             while monitor.has_data():
-                reading = monitor.get_reading()
+                reading_time, reading, reading_status = monitor.get_reading()
 
                 #Check if the reading is different to the last reading.
-                if reading.split()[-4:] == last_reading.split()[-4:]: #FIXME This ignores the time when comparing. Need to make these reading machine-friendly.
+                if reading == last_reading: #TODO What to do here if a fault is detected?
                     #Write a . to each file.
                     logger.info(".")
                     print(".", end='') #Disable newline when printing this message.
@@ -164,9 +166,9 @@ def run_standalone():
 
                 else:
                     #Write any new readings to the file and to stdout.
-                    logger.info(_type+": "+reading)
-                    print(_type+": "+reading)
-                    file_handle.write(_type+": "+reading+"\n")
+                    logger.info("Time: "+reading_time+" "+_type+": "+reading+" Status: "+reading_status)
+                    print("Time: "+reading_time+" "+_type+": "+reading+" Status: "+reading_status)
+                    file_handle.write("Time: "+reading_time+" "+_type+": "+reading+" Status: "+reading_status)
 
                     #Set last reading to this reading.
                     last_reading = reading
