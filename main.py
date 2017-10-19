@@ -240,4 +240,5 @@ if __name__ == "__main__":
         run_standalone()
 
     except:
-        logger.critical("Unexpected error \n\n"+str(traceback.format_exc())+"\n\n while running. Exiting...")
+        logger.critical("Unexpected error \n\n"+str(traceback.format_exc())+"\n\nwhile running. Exiting...")
+        print("Unexpected error \n\n"+str(traceback.format_exc())+"\n\nwhile running. Exiting...")
