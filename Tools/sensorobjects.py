@@ -21,6 +21,9 @@ import RPi.GPIO as GPIO
 
 GPIO.setmode(GPIO.BCM)
 
+#Use logger here too.
+logger = logging.getLogger('River System Control Software '+VERSION)
+
 class BaseDeviceClass: #NOTE: Should this be in coretools?
     # ---------- CONSTRUCTOR ----------
     def __init__(self, Name):
@@ -35,7 +38,7 @@ class BaseDeviceClass: #NOTE: Should this be in coretools?
         self._pins = []                     #Needs to be set/deleted.
         self._reverse_pins = []                    #Needs to be set/deleted.
 
-    # ---------- INFO SETTER FUNCTIONS ----------
+    # ---------- INFO SETTER METHODS ----------
     def set_pins(self, pins, _input=True):
         #FIXME: Check if these pins are already in use.
         #FIXME: If so throw an error. Also check if these pins are valid input/output pins.
@@ -68,7 +71,7 @@ class BaseDeviceClass: #NOTE: Should this be in coretools?
         if len(self._pins) == 1:
             self._pin = self._pins[0]
 
-    # ---------- INFO GETTER FUNCTIONS ----------
+    # ---------- INFO GETTER METHODS ----------
     def get_name(self):
         """
         Returns the name of the device this object is representing.
@@ -107,7 +110,7 @@ class Motor(BaseDeviceClass):
         self._supports_pwm = False       #Assume we don't have PWM by default.
         self._pwm_pin = -1                   #Needs to be set.
 
-    # ---------- INFO SETTER FUNCTIONS ----------
+    # ---------- INFO SETTER METHODS ----------
     def set_pwm_available(self, pwm_available, pwm_pin):
         #TODO Hardware check to determine if PWM is avaiable.
         """
@@ -120,7 +123,7 @@ class Motor(BaseDeviceClass):
         self._supports_pwm = pwm_available
         self._pwm_pin = pwm_pin
 
-    # ---------- INFO GETTER FUNCTIONS ----------
+    # ---------- INFO GETTER METHODS ----------
     def pwm_supported(self):
         """
         Returns True if PWM is supported for this motor. Else False.
@@ -131,7 +134,7 @@ class Motor(BaseDeviceClass):
 
         return self._supports_pwm
 
-    # ---------- CONTROL FUNCTIONS ----------
+    # ---------- CONTROL METHODS ----------
     def enable(self):
         """
         Turn the motor on. Returns True if successful, false if not.
@@ -146,6 +149,9 @@ class Motor(BaseDeviceClass):
 
         #Turn the pin on.
         GPIO.output(self._pin, True)
+
+        #Log it.
+        logger.info("Motor "+_name+": Enabled.")
 
         return True
 
@@ -164,6 +170,9 @@ class Motor(BaseDeviceClass):
         #Turn the pin off.
         GPIO.output(self._pin, False)
 
+        #Log it.
+        logger.info("Motor "+_name+": Disabled.")
+
         return True
 
 # -------------------- SENSOR PROBES --------------------
@@ -181,9 +190,9 @@ class FloatSwitch(BaseDeviceClass):
         BaseDeviceClass.__init__(self, Name)
 
         #Set some semi-private variables.
-        self._active_state = True           #Active low by default.
+        self._active_state = True           #Active low by default. FIXME (hardware?) *** NOTE THIS WEIRD OVERRIDE ***
 
-    # ---------- INFO SETTER FUNCTIONS ----------
+    # ---------- INFO SETTER METHODS ----------
     def set_active_state(self, state):
         """
         Sets the active state for the pins. True for active high, False for active low.
@@ -194,10 +203,10 @@ class FloatSwitch(BaseDeviceClass):
 
         self._active_state = state
 
-    # ---------- INFO GETTER FUNCTIONS ----------
+    # ---------- INFO GETTER METHODS ----------
     def get_reading(self):
         """
-        Returns the state of the switch. True = on, False = off.
+        Returns the state of the switch. True = triggered, False = not triggered.
         Usage:
             bool <FloatSwitch-Object>.get_reading()
         """
@@ -219,12 +228,12 @@ class CapacitiveProbe(BaseDeviceClass):
         #Set some semi-private variables.
         self._num_detections = 0                #Internal use only.
 
-    # ---------- PRIVATE FUNCTIONS ----------
+    # ---------- PRIVATE METHODS ----------
     def increment_num_detections(self, channel):
         """Called when a falling edge is detected. Adds 1 to the number of falling edges detected"""
         self._num_detections += 1
 
-    # ---------- CONTROL FUNCTIONS ----------
+    # ---------- CONTROL METHODS ----------
     def get_reading(self):
         """
         Returns the level of water. Takes readings for 5 seconds and then averages the result.
@@ -262,7 +271,7 @@ class ResistanceProbe(BaseDeviceClass):
         #Set some semi-private variables.
         self._active_state = False           #Active low by default.
 
-    # ---------- INFO SETTER FUNCTIONS ----------
+    # ---------- INFO SETTER METHODS ----------
     def set_active_state(self, state):
         """
         Sets the active state for the pins. True for active high, False for active low.
@@ -273,7 +282,7 @@ class ResistanceProbe(BaseDeviceClass):
 
         self._active_state = state
 
-    # ---------- INFO GETTER FUNCTIONS ----------
+    # ---------- INFO GETTER METHODS ----------
     def get_active_state(self):
         """
         Returns the active state for the pins.
@@ -284,7 +293,7 @@ class ResistanceProbe(BaseDeviceClass):
 
         return self._active_state
 
-    # ---------- CONTROL FUNCTIONS ----------
+    # ---------- CONTROL METHODS ----------
     def get_reading(self):
         """
         Gets the level of the water in the probe.
@@ -356,12 +365,12 @@ class HallEffectDevice(BaseDeviceClass):
         #Set some semi-private variables.
         self._num_detections = 0                  #Internal use only.
 
-    # ---------- PRIVATE FUNCTIONS ----------
+    # ---------- PRIVATE METHODS ----------
     def increment_num_detections(self, channel):
         """Called when a falling edge is detected. Adds 1 to the number of falling edges detected"""
         self._num_detections += 1
 
-    # ---------- CONTROL FUNCTIONS ----------
+    # ---------- CONTROL METHODS ----------
     def get_reading(self):
         """
         Returns the rate at with the hall effect device is rotating.
@@ -406,7 +415,7 @@ class HallEffectProbe(BaseDeviceClass):
         self._post_init_called = False             #Internal use only.
 
     def post_init(self):
-        """Automatically call our functions when a falling edge is detected on each pin."""
+        """Automatically call our METHODS when a falling edge is detected on each pin."""
         GPIO.add_event_detect(self._pins[0], GPIO.FALLING, callback=self.level0)
         GPIO.add_event_detect(self._pins[1], GPIO.FALLING, callback=self.level1)
         GPIO.add_event_detect(self._pins[2], GPIO.FALLING, callback=self.level2)
@@ -420,7 +429,7 @@ class HallEffectProbe(BaseDeviceClass):
 
         self._post_init_called = True
 
-    # ---------- PRIVATE FUNCTIONS ----------
+    # ---------- PRIVATE METHODS ----------
     def level0(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 0
@@ -461,7 +470,7 @@ class HallEffectProbe(BaseDeviceClass):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 900
 
-    # ---------- CONTROL FUNCTIONS ----------
+    # ---------- CONTROL METHODS ----------
     def get_reading(self):
         """
         Returns the level at which the magnet is bobbing about at.

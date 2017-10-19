@@ -129,7 +129,7 @@ def run_standalone():
     logger.info("Setting up the probe...")
 
     #Create the probe object.
-    probe = probe("Probey")
+    probe = probe(_type)
 
     #Set the probe up.
     probe.set_pins(pins)

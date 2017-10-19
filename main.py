@@ -104,7 +104,7 @@ def run_standalone():
 
     #Create the devices.
     sump_probe = sensor_objects.HallEffectProbe("Sump Level")
-    butts_pump = sensor_objects.Motor("Aux Motor") #SSR.
+    butts_pump = sensor_objects.Motor("Butts Pump") #SSR.
 
     #Set the devices up.
     #sump_probe.set_active_state(False)     #Active low. Disabled because meaningless for this probe.

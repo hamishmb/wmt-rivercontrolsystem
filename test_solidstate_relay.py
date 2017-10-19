@@ -16,10 +16,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
+import logging
 import RPi.GPIO as GPIO
 
 def run_standalone():
-    #Allows the progam to run standalone as well as being a module.
     #Do required imports.
     import Tools
 
@@ -56,4 +56,8 @@ def run_standalone():
         GPIO.cleanup()
 
 if __name__ == "__main__":
+    #Set up a logger for the sensor objects.
+    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p', level=logging.DEBUG)
+    logger = logging
+
     run_standalone()
