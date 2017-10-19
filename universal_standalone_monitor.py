@@ -178,7 +178,7 @@ def run_standalone():
                 file_handle.flush()
 
                 if server_address is not None:
-                    socket.write(reading)
+                    socket.write(reading_time+" "+reading+" "+reading_status)
 
             #Wait until it's time to check for another reading.
             #I know we could use a long time.sleep(),
