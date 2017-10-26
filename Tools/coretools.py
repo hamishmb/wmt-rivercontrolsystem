@@ -80,14 +80,14 @@ def greet_and_get_filename(module_name, file_name):
 
     return file_name, recordings_file_handle
 
-def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket):
+def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, reading_interval):
     """
     Decides what to do based on the readings.
 
     NOTE: At the moment, this is fine tuned for the was-August-now-October test deployment.
 
     Usage:
-        do_control_logic(string sump_reading, string butts_reading, <sensor-obj> butts_pump, <monitorthread-obj> monitor)
+        do_control_logic(string sump_reading, string butts_reading, <sensor-obj> butts_pump, <monitorthread-obj> monitor, <sockets-obj> socket, int reading_interval)
     """
 
     #Remove the 'mm' from the end of the reading and convert to int.

@@ -204,7 +204,7 @@ def run_standalone():
                         last_butts_reading = butts_reading
 
             #Logic.
-            reading_interval = core_tools.do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket)
+            reading_interval = core_tools.do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, reading_interval)
 
             #Wait until it's time to check for another reading.
             time.sleep(reading_interval)
