@@ -176,7 +176,15 @@ def run_standalone():
 
             #Check for new readings from the float switch.
             while socket.has_data():
-                butts_reading_time, butts_reading, butts_reading_status = socket.read().split(",")
+                try:
+                    butts_reading_time, butts_reading, butts_reading_status = socket.read().split(",")
+                except:
+                    #FIXME This error occurs when there are too many values to unpack.
+                    #Not sure why this happens but my current theory is that they client and server
+                    #go out of sync and too many packets of data are sent at the same time.
+                    #Could fix with fixed size packets, or read all values into a list and read them 3 at a time in case we do go out of sync.
+                    pass
+
                 socket.pop()
 
                 if butts_reading == "":
