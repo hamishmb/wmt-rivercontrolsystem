@@ -33,7 +33,7 @@ import RPi.GPIO as GPIO
 
 #Define global variables.
 VERSION = "0.9.1"
-RELEASEDATE = "19/10/2017"
+RELEASEDATE = "30/10/2017"
 
 def usage():
     print("\nUsage: main.py [OPTION]\n\n")
@@ -165,7 +165,7 @@ def run_standalone():
                     #Write any new readings to the file and to stdout.
                     logger.info("Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
                     print("Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
-                    file_handle.write("Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
+                    file_handle.write("\nTime: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
 
                     #Set last sump reading to this reading.
                     last_sump_reading = sump_reading
