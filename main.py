@@ -23,6 +23,12 @@
 #      It will communicate with the other pi over a socket,
 #      and the other pi will be running float_switch_monitor_standalone.py.
 
+"""
+A demonstration.
+
+
+"""
+
 import time
 import sys
 import getopt #Proper option handler.
