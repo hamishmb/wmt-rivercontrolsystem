@@ -16,5 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import absolute_import
 
-from . import main
 from . import Tools
+from . import main
+from . import universal_standalone_monitor_config
+from . import universal_standalone_monitor

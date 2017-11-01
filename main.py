@@ -56,6 +56,7 @@ def usage():
 
     >>> usage()
     """
+
     print("\nUsage: main.py [OPTION]\n\n")
     print("Options:\n")
     print("       -h, --help:               Show this help message")
@@ -71,7 +72,8 @@ def handle_cmdline_options():
 
     Valid commandline options to main.py:
         -h, --help         Calls the usage() function to display help information to the user.
-        -f, --file         Specifies file to write the recordings to. 
+        -f, --file         Specifies file to write the recordings to. If not specified, the
+                           user is asked during execution in the greeting phase.
 
     Returns:
         string.
@@ -117,10 +119,11 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     """
     This is the main part of the program.
     It imports everything required from the Tools package,
-    and sets up the server socket, greets the user,
-    sets up the sensor objects, and the monitors.
+    and sets up the server socket, calls the function to
+    greet the user, sets up the sensor objects, and the
+    monitors.
 
-    After that, it enters a monitor loop and repeatedly check for new
+    After that, it enters a monitor loop and repeatedly checks for new
     sensor data, and then calls the coretools.do_control_logic() function
     to make decisions about what to do based on this data.
 

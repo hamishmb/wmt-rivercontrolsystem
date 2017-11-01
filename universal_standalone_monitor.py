@@ -14,25 +14,38 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+This is the secondary part of the software. It forms the
+universal monitor that is used on the slave/client pis.
+Universal in this case means that this same program can be
+used for all of the probes this software framework supports.
+
+.. module:: universal_standalone_monitor.py
+    :platform: Linux
+    :synopsis: The secondary part of the control software.
+
+.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
+
+"""
+
 import time
 import logging
 import getopt
 import sys
 import traceback
 
-#Do required imports.
-import universal_standalone_monitor_config as config
-
-import Tools
-
-from Tools import coretools as core_tools
-from Tools import sockettools as socket_tools
-from Tools.monitortools import Monitor
-
 VERSION = "0.9.1"
 
 def usage():
-    """Standard usage function for all monitors."""
+    """
+    This function is used to output help information to the standard output
+    if the user passes invalid/incorrect commandline arguments.
+
+    Usage:
+
+    >>> usage()
+    """
+
     print("\nUsage: universal_standalone_monitor.py [OPTION]\n\n")
     print("Options:\n")
     print("       -h, --help:               Show this help message")
@@ -51,10 +64,37 @@ def usage():
 
 def handle_cmdline_options():
     """
-    Handles commandline options for the standalone monitor programs.
+    This function is used to handle the commandline options passed
+    to universal_standalone_monitor.py.
+
+    Valid commandline options to universal_standalone_monitor.py:
+        -h, --help                          Calls the usage() function to display help information
+                                            to the user.
+        -t <str>, --type=<str>              Type of probe this monitor is for. Must be one of
+                                            'Resistance Probe', 'Hall Effect', 'Hall Effect Probe'
+                                            'Capacitive Probe', or 'Float Switch'. Mandatory.
+        -f, --file                          Specifies file to write the recordings to. If not
+                                            specified, the user is asked during execution in
+                                            the greeting phase.
+        -c, --controlleraddress             Specify the DNS name/IP of the controlling server
+                                            to which we want to send our level data to, if any.
+        -n <int>, --num=<int>               Specify the number of readings to take before exiting.
+                                            if not specified, readings will be taken until
+                                            the program is terminated with CRTL-C.
+
+    Returns:
+        tuple (string _type, string file_name, string server_address, int num_readings).
+
+            This will be whatever arguments the user provided on the commandline.
+            If any arguments were missing, default values will be provided instead
+            as discussed above.
+
+    Raises:
+        AssertionError, if there are unhandled options.
+
     Usage:
 
-        tuple HandleCmdlineOptions(function UsageFunc)
+    >>> _type, file_name, server_address, num_readings = handle_cmdline_options()
     """
 
     _type = "Unknown"
@@ -101,6 +141,43 @@ def handle_cmdline_options():
     return _type, file_name, server_address, num_readings
 
 def run_standalone():
+    """
+    This is the main part of the program.
+    It imports everything required from the Tools package,
+    and sets up the client socket, calls the function to
+    greet the user, sets up the sensor objects, and the
+    monitors.
+
+    After that, it enters a monitor loop, continuously getting
+    new probe data, and then it sends it down the socket to the
+    server, if any.
+
+    Raises:
+        Nothing, hopefully. It's possible that an unhandled exception
+        could be propagated through here though, so I recommend that
+        you call this function like this at the current time:
+
+        >>> try:
+        >>>     run_standalone()
+        >>> 
+        >>> except:
+        >>>     #Handle the error and put it in the log file for debugging purposes.
+        >>>     #Write the error to the standard output.
+        >>>     #Exit the program.
+
+    Usage:
+        As above.
+    """
+
+    #Do required imports.
+    import universal_standalone_monitor_config as config
+
+    import Tools
+
+    from Tools import coretools as core_tools
+    from Tools import sockettools as socket_tools
+    from Tools.monitortools import Monitor
+
     #Handle cmdline options.
     _type, file_name, server_address, num_readings = handle_cmdline_options()
 
