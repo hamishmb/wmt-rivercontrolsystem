@@ -29,8 +29,6 @@ import getopt #Proper option handler.
 import logging
 import traceback
 
-import RPi.GPIO as GPIO
-
 #Define global variables.
 VERSION = "0.9.1"
 RELEASEDATE = "30/10/2017"
@@ -239,6 +237,9 @@ def run_standalone():
     GPIO.cleanup()
 
 if __name__ == "__main__":
+    #Import here to prevent errors when generating documentation on non-RPi systems.
+    import RPi.GPIO as GPIO
+
     logger = logging.getLogger('River System Control Software '+VERSION)
     logging.basicConfig(filename='./rivercontrolsystem.log', format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
     logger.setLevel(logging.INFO)

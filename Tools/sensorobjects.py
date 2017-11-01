@@ -20,9 +20,12 @@ VERSION = "0.9.1"
 import time
 import logging
 
-import RPi.GPIO as GPIO
+try:
+    #Allow us to generate documentation on non-RPi systems.
+    import RPi.GPIO as GPIO
+    GPIO.setmode(GPIO.BCM)
 
-GPIO.setmode(GPIO.BCM)
+except ImportError: pass
 
 #Use logger here too.
 logger = logging.getLogger('River System Control Software '+VERSION)

@@ -17,7 +17,6 @@
 
 import time
 import logging
-import RPi.GPIO as GPIO
 
 def run_standalone():
     #Do required imports.
@@ -56,6 +55,9 @@ def run_standalone():
         GPIO.cleanup()
 
 if __name__ == "__main__":
+    #Import here to prevent errors when generating documentation on non-RPi systems.
+    import RPi.GPIO as GPIO
+
     #Set up a logger for the sensor objects.
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p', level=logging.DEBUG)
     logger = logging
