@@ -14,18 +14,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#NOTE: This program currently has LIMITED FUNCTIONALITY.
-#      It is a pre-production version that is being used
-#      to set up a test system that uses 2 RPis, one at
-#      the sump, with a hall effect probe and SSR connected
-#      and the other Pi is installed at the butts, and has
-#      a float switch. The sump pi will be using this program.
-#      It will communicate with the other pi over a socket,
-#      and the other pi will be running float_switch_monitor_standalone.py.
-
 """
-A demonstration.
+This is the main part of the control software, and it currently manages
+balancing water between the butts and the sump using a magnetic probe and
+a solid state relay to control the butts pump. This software runs on sumppi.
+It communicates with buttspi over the network to gather float switch readings.
 
+NOTE: This program currently has LIMITED FUNCTIONALITY.
+      It is a pre-production version that is being used
+      to set up a test system that uses 2 RPis, one at
+      the sump, with a hall effect probe and SSR connected
+      and the other Pi is installed at the butts, and has
+      a float switch. The sump pi will be using this program.
+      It will communicate with the other pi over a socket,
+      and the other pi will be running universal_standalone_monitor.py.
+
+.. module:: main.py
+    :platform: Linux
+    :synopsis: The main part of the control software.
+
+.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
 
 """
 
@@ -40,6 +48,14 @@ VERSION = "0.9.1"
 RELEASEDATE = "30/10/2017"
 
 def usage():
+    """
+    This function is used to output help information to the standard output
+    if the user passes invalid/incorrect commandline arguments.
+
+    Usage:
+
+    >>> usage()
+    """
     print("\nUsage: main.py [OPTION]\n\n")
     print("Options:\n")
     print("       -h, --help:               Show this help message")
@@ -50,10 +66,24 @@ def usage():
 
 def handle_cmdline_options():
     """
-    Handles commandline options.
+    This function is used to handle the commandline options passed
+    to main.py.
+
+    Valid commandline options to main.py:
+        -h, --help         Calls the usage() function to display help information to the user.
+        -f, --file         Specifies file to write the recordings to. 
+
+    Returns:
+        string.
+
+            This will be whatever filename the user provided on the commandline.
+
+    Raises:
+        AssertionError, if there are unhandled options.
+
     Usage:
 
-        tuple handle_cmdline_options()
+    >>> filename = handle_cmdline_options()
     """
 
     file_name = "Unknown"
@@ -83,7 +113,35 @@ def handle_cmdline_options():
 
     return file_name
 
-def run_standalone():
+def run_standalone(): #TODO Refactor me into lots of smaller functions.
+    """
+    This is the main part of the program.
+    It imports everything required from the Tools package,
+    and sets up the server socket, greets the user,
+    sets up the sensor objects, and the monitors.
+
+    After that, it enters a monitor loop and repeatedly check for new
+    sensor data, and then calls the coretools.do_control_logic() function
+    to make decisions about what to do based on this data.
+
+    Raises:
+        Nothing, hopefully. It's possible that an unhandled exception
+        could be propagated through here though, so I recommend that
+        you call this function like this at the current time:
+
+        >>> try:
+        >>>     run_standalone()
+        >>> 
+        >>> except:
+        >>>     #Handle the error and put it in the log file for debugging purposes.
+        >>>     #Write the error to the standard output.
+        >>>     #Exit the program.
+
+    Usage:
+        As above.
+    """
+
+
     #Allows the progam to run standalone as well as being a module.
     #Do required imports.
     import Tools
