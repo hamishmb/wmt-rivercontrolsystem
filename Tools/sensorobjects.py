@@ -421,7 +421,7 @@ class HallEffectProbe(BaseDeviceClass):
         self._post_init_called = False             #Internal use only.
 
     def post_init(self):
-        """Automatically call our METHODS when a falling edge is detected on each pin."""
+        """Automatically call our methods when a falling edge is detected on each pin."""
         GPIO.add_event_detect(self._pins[0], GPIO.FALLING, callback=self.level0)
         GPIO.add_event_detect(self._pins[1], GPIO.FALLING, callback=self.level1)
         GPIO.add_event_detect(self._pins[2], GPIO.FALLING, callback=self.level2)
@@ -479,7 +479,7 @@ class HallEffectProbe(BaseDeviceClass):
     # ---------- CONTROL METHODS ----------
     def get_reading(self):
         """
-        Returns the level at which the magnet is bobbing about at.
+        Returns the level at which the magnet is bobbing about.
         """
         if not self._post_init_called:
             self.post_init()

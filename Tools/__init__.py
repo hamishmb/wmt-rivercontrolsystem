@@ -14,9 +14,91 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
+This is the Tools package for the river control system software. It
+forms the entirety of the framework for the program. There are four
+modules in here:
+
+coretools.py
+============
+
+This is kind of superflous at the moment, but I might put some more
+functions in here to refactor later though.
+
+Contains Functions:
+
+- greet_and_get_filename()
+- do_control_logic()
+
+monitortools.py
+===============
+
+This module contains the monitoring tools used in the rest of the
+program. These take the form of classes that have methods executed
+as threads. This approach was decided because it stops the main
+program thread from blocking when taking readings, and allows us
+to take readings from many probes at once without any resulting
+delays/complexity.
+
+Contains Classes:
+
+- BaseMonitorClass
+- Monitor
+
+sensorobjects.py
+================
+
+This module contains all of the classes that are used to represent
+probes and other sensors in the rest of the program. These classes
+all inherit from a common base sensor class that has useful methods
+and attributes. Each individual class implements its own reading
+mechanism, and has several other public methods if needed.
+
+They also each have some private methods. As these are part of
+the implementation, and are subject to change or disappear, they
+are not documented here.
+
+Contains Classes:
+
+- BaseDeviceClass
+- Motor
+- FloatSwitch
+- CapacitiveProbe
+- ResistanceProbe
+- HallEffectDevice (for water-wheels)
+- HallEffectProbe
+
+sockettools.py
+==============
+
+This module contains all of the classes and functionality needed for
+network communications (using sockets). This consists of a Sockets class,
+which is a high-level abstraction of the Python 3.x socket module,
+designed to make network communications easy, fast, simple and reliable.
+
+There's also a SocketHandlerThread class, and one of these is started as
+a thread each time a socket is created. This class handles connection,
+disconnection, input/output, and communication faults/errors for its
+assigned Socket object. This keeps everything simple for the user of
+the Sockets class.
+
+Contains Classes:
+
+- Sockets
+- SocketHandlerThread
+
+.. module:: main.py
+    :platform: Linux
+    :synopsis: The main part of the control software.
+
+.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
+
+"""
+
 from __future__ import absolute_import
 
 from . import coretools
+from . import monitortools
 from . import sockettools
 from . import sensorobjects
-from . import monitortools
