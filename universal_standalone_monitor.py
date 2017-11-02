@@ -34,6 +34,15 @@ import getopt
 import sys
 import traceback
 
+#Do required imports.
+import universal_standalone_monitor_config as config
+
+import Tools
+
+from Tools import coretools as core_tools
+from Tools import sockettools as socket_tools
+from Tools.monitortools import Monitor
+
 VERSION = "0.9.1"
 
 def usage():
@@ -168,15 +177,6 @@ def run_standalone():
     Usage:
         As above.
     """
-
-    #Do required imports.
-    import universal_standalone_monitor_config as config
-
-    import Tools
-
-    from Tools import coretools as core_tools
-    from Tools import sockettools as socket_tools
-    from Tools.monitortools import Monitor
 
     #Handle cmdline options.
     _type, file_name, server_address, num_readings = handle_cmdline_options()

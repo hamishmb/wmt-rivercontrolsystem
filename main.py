@@ -43,6 +43,14 @@ import getopt #Proper option handler.
 import logging
 import traceback
 
+#Do required imports.
+import Tools
+
+from Tools import sensorobjects as sensor_objects
+from Tools import monitortools as monitor_tools
+from Tools import coretools as core_tools
+from Tools import sockettools as socket_tools
+
 #Define global variables.
 VERSION = "0.9.1"
 RELEASEDATE = "30/10/2017"
@@ -143,16 +151,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     Usage:
         As above.
     """
-
-
-    #Allows the progam to run standalone as well as being a module.
-    #Do required imports.
-    import Tools
-
-    from Tools import sensorobjects as sensor_objects
-    from Tools import monitortools as monitor_tools
-    from Tools import coretools as core_tools
-    from Tools import sockettools as socket_tools
 
     #Handle cmdline options.
     file_name = handle_cmdline_options()
