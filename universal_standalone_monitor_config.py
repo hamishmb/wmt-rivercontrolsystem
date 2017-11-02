@@ -14,6 +14,48 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+This is the configuration for the secondary part of the
+software. It forms the config for the universal monitor
+that is used on the slave/client pis. Universal in this
+case means that this same program can be used for all of
+the probes this software framework supports.
+
+This essentially takes the form of a dictionary object
+named "DATA" in the format:
+
+>>> DATA = {
+>>>     Probe Name: (Probe Object, Pin(s), Default Reading Interval),
+>>>     Probe Name2: (Probe Object2, Pin(s), Default Reading Interval),
+>>> }
+
+The probe name forms the key, and has configuration for:
+
+- "Resistance Probe"
+- "Hall Effect" (water-wheel)
+- "Hall Effect Probe"
+- "Capacitive Probe"
+- "Float Switch"
+
+So, if you want configuration for
+a capacitive probe, you can run:
+
+>>> probe, pins, reading_interval = config.DATA["Capactive Probe"]
+
+and for a hall effect device (NOT the probe), run:
+
+>>> probe, pins, reading_interval = config.DATA["Hall Effect"]
+
+There are no classes or functions defined in this file.
+
+.. module:: universal_standalone_monitor_config.py
+    :platform: Linux
+    :synopsis: The configuration for the secondary part of the control software.
+
+.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
+
+"""
+
 import Tools
 from Tools import sensorobjects
 

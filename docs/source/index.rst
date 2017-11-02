@@ -9,10 +9,11 @@ Welcome to WMT River Control System Software's API documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
 
-   main_control_software
-   universal_monitor
+    main_control_software
+    universal_monitor
+    universal_monitor_config
 
 
 
