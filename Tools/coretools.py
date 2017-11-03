@@ -14,6 +14,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+This is the coretools module, which contains tools used by both
+the main control software, and the universal monitor. It's kind
+superflous at the moment, but I will probably move some more
+functions in here to reduce code duplication.
+
+.. module:: main.py
+    :platform: Linux
+    :synopsis: The main part of the control software.
+
+.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
+"""
+
 import datetime
 import sys
 import os
@@ -25,10 +38,29 @@ logger = logging.getLogger('River System Control Software '+VERSION)
 
 def greet_and_get_filename(module_name, file_name):
     """
-    Greets user and gets a file name for readings.
+    This function greets the user and, if needed (not specified on the
+    commandline), asks him/her for a file name to store readings in. It
+    then proceeds to check that the file is valid and writable.
+
+    Args:
+        module_name (str):  The program that has been started. Either
+                            the main software or the universal monitor.
+
+        file_name (str):    The file name the program got from the
+                            commandline arguments. Prompt user to enter
+                            a name if this is "Unknown".
+
+    Returns:
+        tuple(str <file name>, file <file handle>)
+
+    Raises:
+        None, but will exit the program if a critical error is
+        encountered with sys.exit().
+
     Usage:
 
-        file-obj GreetAndGetFilename(string module_name)
+        >>> file_name, file_handle = greet_and_get_filename("AProgramName", "AFileName")
+
     """
 
     print("System Time: ", str(datetime.datetime.now()))
@@ -82,12 +114,49 @@ def greet_and_get_filename(module_name, file_name):
 
 def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, reading_interval):
     """
-    Decides what to do based on the readings.
+    This function is used to decides what action to take based
+    on the readings it is passed. This only involves controlling
+    the butts pump at the moment. The pump is turned on when the
+    sump level >= 600mm, and turned off when it reaches 400mm. The
+    reading intervals at both the sumppi and the buttspi end are
+    controlled and set here as well.
 
     NOTE: At the moment, this is fine tuned for the was-August-now-October test deployment.
 
+    Otherwise, nothing currently happens because there is nothing
+    else we can take control of at the moment.
+
+    Args:
+        sump_reading (str):     The newest reading we have from
+                                the sump probe.
+
+        butts_reading (str):    As above, but for the butts.
+
+        butts_pump (Motor):     A reference to a Motor object
+                                that represents the butts pump.
+
+        monitor (Monitor):      A reference to a Monitor object
+                                that is used to monitor the sump
+                                level. Passed here so we can
+                                control the reading interval at
+                                this end.
+
+        socket (Socket):        A reference to the Socket object
+                                that represents the data connection
+                                between sumppi and buttspi. Passed
+                                here so we can control the reading
+                                interval at that end.
+
+        reading_interval (int): The current reading interval, in
+                                seconds.
+
+    Returns:
+        int: The reading interval, in seconds.
+
     Usage:
-        do_control_logic(string sump_reading, string butts_reading, <sensor-obj> butts_pump, <monitorthread-obj> monitor, <sockets-obj> socket, int reading_interval)
+
+        >>> reading_interval = do_control_logic(<asumpreading>, <abuttsreading>, <apumpobject>, <amonitorthreadobject, <asocketsobject>, <areadinginterval)
+
     """
 
     #Remove the 'mm' from the end of the reading and convert to int.

@@ -15,6 +15,7 @@ Contents:
     universal_monitor
     universal_monitor_config
     tools
+    coretools
 
 
 
