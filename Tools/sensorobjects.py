@@ -55,7 +55,7 @@ class BaseDeviceClass:
     you should derive from it and build upon it. All other device classes
     defined in this module inherit from this class.
 
-    Warning:
+    .. warning::
         Most of the probes that inherit from this class require that you call
         the methods defined here for setup before you can use them. Not doing
         so **WILL** cause problems.
@@ -79,7 +79,8 @@ class BaseDeviceClass:
     Usage:
         >>> probe = BaseDeivceClass("myProbe")
 
-        Note: Not useful unless you derive from it.
+        .. note::
+            Not useful unless you derive from it.
     """
 
     # ---------- CONSTRUCTOR ----------
@@ -102,8 +103,9 @@ class BaseDeviceClass:
         be used to specify one or more output pins. Cannot currently specify both
         input and output pins. Uses RPi BCM pins.
 
-        Note: If you are specifying multiple input pins, eg for a Hall Effect Probe, then
-        specify the pins for each level in order, from low to high.
+        .. note::
+            If you are specifying multiple input pins, eg for a Hall Effect Probe, then
+            specify the pins for each level in order, from low to high.
 
         Args:
             pins (int or tuple(int)):        The BCM pin(s) you want to specify to be used
@@ -195,9 +197,8 @@ class Motor(BaseDeviceClass):
     Usage:
         Use the constructor for this class the same way as for BaseDeviceClass.
 
-    Note:
-
-    Upon instantiaton, a Motor object state is (off, no PWM support, no PWM pin).
+    .. note::
+        Upon instantiaton, a Motor object state is (off, no PWM support, no PWM pin).
     """
 
     # ---------- CONSTRUCTORS ----------
@@ -320,11 +321,10 @@ class FloatSwitch(BaseDeviceClass):
     Usage:
         Use the constructor for this class the same way as for BaseDeviceClass.
 
-    Note:
-
+    .. note::
         Upon instantiaton, a FloatSwitch object is assumed to be active low.
 
-    Warning:
+    .. warning::
 
         At the moment, the active low/high logic has been deliberately inverted. I'm not sure
         why I had to do this, but it could indicate a hardware problem. This means that True
@@ -357,8 +357,7 @@ class FloatSwitch(BaseDeviceClass):
 
             >>> <FloatSwitch-Object>.set_active_state(False)    //Active low.
 
-        Warning:
-
+        .. warning::
             At the moment, the active low/high logic has been deliberately inverted. I'm not sure
             why I had to do this, but it could indicate a hardware problem. This means that True
             temporarily means active low and vice versa.
@@ -371,11 +370,11 @@ class FloatSwitch(BaseDeviceClass):
         """
         This method returns the state of the switch. True = triggered, False = not triggered.
 
-        Note:
+        .. note::
             The return values from this method are not affected by active state, as long as it
             was set correctly.
 
-        Note:
+        .. note::
             No fault checking is done thus far, so the string part of the return value is always
             "OK".
 
@@ -384,12 +383,12 @@ class FloatSwitch(BaseDeviceClass):
 
             bool: The status of the switch.
 
-                True  -- Switch triggered.
-                False -- Switch not triggered.
+                - True  -- Switch triggered.
+                - False -- Switch not triggered.
 
             string: Fault checking status.
 
-                OK -- Everything is fine.
+                - OK -- Everything is fine.
 
         Usage:
             >>> <FloatSwitch-Object>.get_reading()
@@ -433,14 +432,12 @@ class CapacitiveProbe(BaseDeviceClass):
         This method returns the level of water. Takes readings for 5 seconds for accuracy,
         then averages the result.
 
-        Warning:
-
+        .. warning::
             Currently returns the frequency rather than a level in mm, because our
             prototypes haven't yet advanced to the point where we can map frequency to
             mm.
 
-        Note:
-
+        .. note::
             Currently no fault checking is performed, so the string part of the return value
             is always "OK".
 
@@ -561,7 +558,7 @@ class ResistanceProbe(BaseDeviceClass):
                     1111110000                  -- Fine, 500mm.
                     1110011110 FAULT DETECTED   -- Bad; could be anything, but probably 900mm.
 
-        Warning:
+        .. warning::
             We **CANNOT** detect all faults in this manner. For example, if the pin states were:
 
                 1110000000
@@ -669,8 +666,7 @@ class HallEffectDevice(BaseDeviceClass):
         wheel) is rotating, in RPM. Takes readings for 5 seconds for accuracy,
         and then averages the result.
 
-        Note:
-
+        .. note::
             Currently no fault checking is performed, so the string part of the return value
             is always "OK".
 
@@ -799,7 +795,7 @@ class HallEffectProbe(BaseDeviceClass):
         This method returns the rate at which the float is bobbing
         about.
 
-        Note:
+        .. note::
 
             Currently no fault checking is performed, so the string part of the return value
             is always "OK".

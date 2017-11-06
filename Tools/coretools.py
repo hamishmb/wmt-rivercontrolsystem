@@ -121,7 +121,9 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, r
     reading intervals at both the sumppi and the buttspi end are
     controlled and set here as well.
 
-    NOTE: At the moment, this is fine tuned for the was-August-now-October test deployment.
+    ..note::
+        At the moment, this is fine tuned for the
+        was-August-now-October test deployment.
 
     Otherwise, nothing currently happens because there is nothing
     else we can take control of at the moment.

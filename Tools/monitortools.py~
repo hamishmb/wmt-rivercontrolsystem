@@ -79,11 +79,13 @@ class BaseMonitorClass(threading.Thread):
     Usage:
         >>> monitor = BaseMonitorClass(<aProbeObject>, <anInteger>, <aReadingInterval>)
 
-        Note: This won't do anything helpful by itself;
-              you need to derive from it.
+        ..note::
+                This won't do anything helpful by itself;
+                you need to derive from it.
     """
 
     def __init__(self, probe, num_readings, reading_interval):
+        """Constructor as documented above"""
         threading.Thread.__init__(self)
         self.probe = probe
         self.num_readings = num_readings
@@ -104,7 +106,7 @@ class BaseMonitorClass(threading.Thread):
                 False --    Not running.
 
         Usage:
-            >> state = <BaseMonitorClassObject>.is_running()
+            >>> state = <BaseMonitorClassObject>.is_running()
 
         """
 

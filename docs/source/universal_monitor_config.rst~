@@ -1,0 +1,5 @@
+Documentation for the universal monitor configuration file
+**********************************************************
+
+.. automodule:: rivercontrolsystem.universal_standalone_monitor_config
+    :members:

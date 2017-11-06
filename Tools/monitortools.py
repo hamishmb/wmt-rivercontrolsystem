@@ -79,8 +79,9 @@ class BaseMonitorClass(threading.Thread):
     Usage:
         >>> monitor = BaseMonitorClass(<aProbeObject>, <anInteger>, <aReadingInterval>)
 
-        Note: This won't do anything helpful by itself;
-              you need to derive from it.
+        ..note::
+                This won't do anything helpful by itself;
+                you need to derive from it.
     """
 
     def __init__(self, probe, num_readings, reading_interval):
@@ -105,7 +106,7 @@ class BaseMonitorClass(threading.Thread):
                 False --    Not running.
 
         Usage:
-            >> state = <BaseMonitorClassObject>.is_running()
+            >>> state = <BaseMonitorClassObject>.is_running()
 
         """
 
@@ -143,7 +144,8 @@ class BaseMonitorClass(threading.Thread):
                 >>> get_reading()
                 >>> ("2017-10-25 22:59:09.439380", "500", "OK")
 
-            Note: The format of the "reading" section differs slightly
+            .. note::
+                  The format of the "reading" section differs slightly
                   between probe types, because they eg don't all measure
                   water depth in mm.
 

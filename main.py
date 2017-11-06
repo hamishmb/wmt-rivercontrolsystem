@@ -20,7 +20,8 @@ balancing water between the butts and the sump using a magnetic probe and
 a solid state relay to control the butts pump. This software runs on sumppi.
 It communicates with buttspi over the network to gather float switch readings.
 
-NOTE: This program currently has LIMITED FUNCTIONALITY.
+.. note::
+      This program currently has LIMITED FUNCTIONALITY.
       It is a pre-production version that is being used
       to set up a test system that uses 2 RPis, one at
       the sump, with a hall effect probe and SSR connected
