@@ -14,6 +14,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#TODO: Throw errors if setup hasn't been completed properly.
+
+"""
+This is the part of the software framework that contains the
+sensor/probe classes. These represent the probes/sensors that
+we're interfacing with. These classes provide a common API to
+get readings (the get_reading() method), and also draw the
+implementation details for how each probe is managed away from
+the rest of the program.
+
+.. module:: sensorobjects.py
+    :platform: Linux
+    :synopsis: The part of the framework that contains the probe/sensor classes.
+
+.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
+
+"""
+
 VERSION = "0.9.1"
 
 #Standard Imports.
@@ -30,29 +48,89 @@ except ImportError: pass
 #Use logger here too.
 logger = logging.getLogger('River System Control Software '+VERSION)
 
-class BaseDeviceClass: #NOTE: Should this be in coretools?
+class BaseDeviceClass:
+    """
+    This is a base probe/sensor type that defines features common to all
+    probes. It isn't meaningful to construct objects of this type, instead
+    you should derive from it and build upon it. All other device classes
+    defined in this module inherit from this class.
+
+    Warning:
+        Most of the probes that inherit from this class require that you call
+        the methods defined here for setup before you can use them. Not doing
+        so **WILL** cause problems.
+
+    Documentation for the constructor for objects of type BaseDeviceClass:
+
+    This is essentially an abstract class, but as with BaseMonitorClass,
+    the constructor is useful when deriving from this class.
+
+    Args:
+        self (BaseDeviceClass):     A self-reference.
+                                    Only passed when
+                                    helping construct
+                                    a subclass.
+
+        Name (string):              The probe's name.
+                                    Can be used in
+                                    logging messages
+                                    for extra clarity.
+
+    Usage:
+        >>> probe = BaseDeivceClass("myProbe")
+
+        Note: Not useful unless you derive from it.
+    """
+
     # ---------- CONSTRUCTOR ----------
     def __init__(self, Name):
-        """
-        This is the constructor.
-        It is not intended to be used except as part of the initialistion for a derived class.
-        """
-
+        """Constructor as documented above"""
         #Set some semi-private variables.
         self._name = Name                   #Just a label.
         self._pin = -1                      #Needs to be set/deleted.
         self._pins = []                     #Needs to be set/deleted.
-        self._reverse_pins = []                    #Needs to be set/deleted.
+        self._reverse_pins = []             #Needs to be set/deleted.
 
     # ---------- INFO SETTER METHODS ----------
     def set_pins(self, pins, _input=True):
         #FIXME: Check if these pins are already in use.
         #FIXME: If so throw an error. Also check if these pins are valid input/output pins.
+        #TODO?: Currently cannot specify both input and output pins.
         """
-        Sets the pins this device will use (from low to high if a resistance probe).
-        Usage:
+        This method is used to specify the pins this probe will use. This can be a
+        single pin, or multiple pins (eg in the case of a resistance probe). Can also
+        be used to specify one or more output pins. Cannot currently specify both
+        input and output pins. Uses RPi BCM pins.
 
-            <Device-Object>.set_pins(tuple pins, bool _input)
+        Note: If you are specifying multiple input pins, eg for a Hall Effect Probe, then
+        specify the pins for each level in order, from low to high.
+
+        Args:
+            pins (int or tuple(int)):        The BCM pin(s) you want to specify to be used
+                                             with this probe.
+
+        KWargs:
+            _input (bool):                   True if the pins are inputs, False if they are
+                                             outputs. Default is True if not specified.
+
+        Usage:
+            >>> <Device-Object>.set_pins(15)                            //For single input on
+                                                                        BCM pin 15.
+
+            OR
+
+            >>> <Device-Object>.set_pins(15, _input=False)              //For single output
+                                                                        on BCM pin 15.
+
+            OR
+
+            >>> <Device-Object>.set_pins(<tuple<int>>)                  //For multiple inputs
+                                                                        on all listed BCM pins.
+
+            OR
+
+            >>> <Device-Object>.set_pins(<tuple<int>>, _input=False)    //For multiple outputs
+                                                                        on all listed BCM pins.
         """
 
         #Put the int in a list so this works.
@@ -80,50 +158,84 @@ class BaseDeviceClass: #NOTE: Should this be in coretools?
     # ---------- INFO GETTER METHODS ----------
     def get_name(self):
         """
-        Returns the name of the device this object is representing.
+        This method returns this object's name.
+
+        Returns:
+            string. The object's name.
+
         Usage:
 
-            str <Device-Object>.get_name()
+            >>> a_name = <Device-Object>.get_name()
         """
 
         return self._name
 
     def get_pins(self):
         """
-        Returns the pins for this device (from low to high if a resistance probe).
+        This method returns this object's BCM pin numbers.
+
+        Returns:
+            tuple. The BCM pins.
+
         Usage:
 
-            tuple <Device-Object>.get_pins()
+            >>> my_pins = <Device-Object>.get_pins()
         """
 
         return self._pins
 
 class Motor(BaseDeviceClass):
+    """
+    This class is used to represent a motor or pump, for example the butts pump. It is incomplete;
+    there isn't currently a way to set motor speed with PWM, but it does at least have a
+    way of specifying whether PWM is available, and a pin to use for PWM.
+
+    Documentation for the constructor for objects of type Motor:
+
+    Usage:
+        Use the constructor for this class the same way as for BaseDeviceClass.
+
+    Note:
+
+    Upon instantiaton, a Motor object state is (off, no PWM support, no PWM pin).
+    """
+
     # ---------- CONSTRUCTORS ----------
     def __init__(self, Name):
-        """
-        This is the constructor.
-        Usage:
-
-            <Variable-Name> = Motor(str Name)
-        """
+        """This is the constructor, as documented above."""
 
         #Call the base class constructor.
         BaseDeviceClass.__init__(self, Name)
 
         #Set some semi-private variables.
-        self._state = False                 #Motor is initialised to be off.
-        self._supports_pwm = False       #Assume we don't have PWM by default.
+        self._state = False                  #Motor is initialised to be off.
+        self._supports_pwm = False           #Assume we don't have PWM by default.
         self._pwm_pin = -1                   #Needs to be set.
 
     # ---------- INFO SETTER METHODS ----------
-    def set_pwm_available(self, pwm_available, pwm_pin):
-        #TODO Hardware check to determine if PWM is avaiable.
+    def set_pwm_available(self, pwm_available, pwm_pin=-1):
+        #TODO Hardware check to determine if PWM is available.
+        #TODO If PWM available, check if PWM pin is valid and not in use.
         """
-        Enables/Disables PWM support.
+        This method enables/disables PWM support, and allows you to specify the
+        PWM pin.
+
+        Args:
+            pwm_available (bool):       Specify if PWM is available or not.
+                                        True = yes, False = no.
+
+        KWargs:
+            pwm_pin (int):              Specify the PWM pin. Default = -1.
+                                        If you're enabling PWM, you need to
+                                        set this.
+
         Usage:
 
-            <Motor-Object>.set_pwm_available(bool pwm_available, int pwm_pin)
+            >>> <Motor-Object>.set_pwm_available(True, 26)
+
+            OR
+
+            >>> <Motor-Object>.set_pwm_available(False)
         """
 
         self._supports_pwm = pwm_available
@@ -132,10 +244,14 @@ class Motor(BaseDeviceClass):
     # ---------- INFO GETTER METHODS ----------
     def pwm_supported(self):
         """
-        Returns True if PWM is supported for this motor. Else False.
+        This method returns True if PWM is supported for this motor. Else False.
+
+        Returns:
+            bool. True = PWM supported, False = no support.
+
         Usage:
 
-            bool <Motor-Object>.pwm_supported()
+            >>> is_pwm_supported = <Motor-Object>.pwm_supported()
         """
 
         return self._supports_pwm
@@ -143,10 +259,16 @@ class Motor(BaseDeviceClass):
     # ---------- CONTROL METHODS ----------
     def enable(self):
         """
-        Turn the motor on. Returns True if successful, false if not.
+        This method attempts to turn the motor on. Currently, will only return False
+        if motor output pin is not set.
+
+        Returns:
+            bool. True if successful, False if not.
+
         Usage:
 
-            bool <Motor-Object>.enable()
+            >>> <Motor-Object>.enable()
+            >>> True
         """
 
         #Return false if control pin isn't set.
@@ -163,10 +285,16 @@ class Motor(BaseDeviceClass):
 
     def disable(self):
         """
-        Turn the motor off. Returns True if successful, false if not.
+        This method attempts to turn the motor off. Currently, will only return False
+        if motor output pin is not set.
+
+        Returns:
+            bool. True if successful, False if not.
+
         Usage:
 
-            bool <Motor-Object>.disable()
+            >>> <Motor-Object>.disable()
+            >>> True
         """
 
         #Return false if control pin isn't set.
@@ -184,14 +312,28 @@ class Motor(BaseDeviceClass):
 # -------------------- SENSOR PROBES --------------------
 
 class FloatSwitch(BaseDeviceClass):
+    """
+    This class is used to represent a float switch.
+
+    Documentation for the constructor for objects of type FloatSwitch:
+
+    Usage:
+        Use the constructor for this class the same way as for BaseDeviceClass.
+
+    Note:
+
+        Upon instantiaton, a FloatSwitch object is assumed to be active low.
+
+    Warning:
+
+        At the moment, the active low/high logic has been deliberately inverted. I'm not sure
+        why I had to do this, but it could indicate a hardware problem. This means that True
+        temporarily means active low and vice versa.
+    """
+
     # ---------- CONSTRUCTORS ----------
     def __init__(self, Name):
-        """
-        This is the constructor.
-        Usage:
-
-            <Variable-Name> = FloatSwitch(string Name)
-        """
+        """This is the constructor as defined above."""
         #Call the base class constructor.
         BaseDeviceClass.__init__(self, Name)
 
@@ -201,10 +343,25 @@ class FloatSwitch(BaseDeviceClass):
     # ---------- INFO SETTER METHODS ----------
     def set_active_state(self, state):
         """
-        Sets the active state for the pins. True for active high, False for active low.
+        This method sets the active state for the switch.
+
+        Args:
+            State:          The active state for the switch. True for active high, False for
+                            active low.
+
         Usage:
 
-            <ResistanceProbe-Object>.set_active_state(bool state)
+            >>> <FloatSwitch-Object>.set_active_state(True)     //Active high.
+
+            OR
+
+            >>> <FloatSwitch-Object>.set_active_state(False)    //Active low.
+
+        Warning:
+
+            At the moment, the active low/high logic has been deliberately inverted. I'm not sure
+            why I had to do this, but it could indicate a hardware problem. This means that True
+            temporarily means active low and vice versa.
         """
 
         self._active_state = state
@@ -212,22 +369,48 @@ class FloatSwitch(BaseDeviceClass):
     # ---------- INFO GETTER METHODS ----------
     def get_reading(self):
         """
-        Returns the state of the switch. True = triggered, False = not triggered.
+        This method returns the state of the switch. True = triggered, False = not triggered.
+
+        Note:
+            The return values from this method are not affected by active state, as long as it
+            was set correctly.
+
+        Note:
+            No fault checking is done thus far, so the string part of the return value is always
+            "OK".
+
+        Returns:
+            tuple(bool, string).
+
+            bool: The status of the switch.
+
+                True  -- Switch triggered.
+                False -- Switch not triggered.
+
+            string: Fault checking status.
+
+                OK -- Everything is fine.
+
         Usage:
-            bool <FloatSwitch-Object>.get_reading()
+            >>> <FloatSwitch-Object>.get_reading()
+            >>> (False, OK)
         """
 
         return bool(GPIO.input(self._pin) == self._active_state), "OK" #TODO Actual fault checking.
 
 class CapacitiveProbe(BaseDeviceClass):
+    """
+    This class is used to represent a capacitive probe.
+
+    Documentation for the constructor for objects of type CapacitiveProbe:
+
+    Usage:
+        Use the constructor for this class the same way as for BaseDeviceClass.
+    """
+
     # ---------- CONSTRUCTORS ----------
     def __init__(self, Name):
-        """
-        This is the constructor.
-        Usage:
-
-            <Variable-Name> = CapacitiveProbe(string ProbeName)
-        """
+        """This is the constructor, as documented above."""
         #Call the base class constructor.
         BaseDeviceClass.__init__(self, Name)
 
@@ -235,22 +418,52 @@ class CapacitiveProbe(BaseDeviceClass):
         self._num_detections = 0                #Internal use only.
 
     # ---------- PRIVATE METHODS ----------
-    def increment_num_detections(self, channel):
-        """Called when a falling edge is detected. Adds 1 to the number of falling edges detected"""
+    def _increment_num_detections(self, channel):
+        """
+        PRIVATE, implementation detail.
+
+        Called when a falling edge is detected. Adds 1 to the number of falling edges detected
+        """
+
         self._num_detections += 1
 
     # ---------- CONTROL METHODS ----------
     def get_reading(self):
         """
-        Returns the level of water. Takes readings for 5 seconds and then averages the result.
+        This method returns the level of water. Takes readings for 5 seconds for accuracy,
+        then averages the result.
+
+        Warning:
+
+            Currently returns the frequency rather than a level in mm, because our
+            prototypes haven't yet advanced to the point where we can map frequency to
+            mm.
+
+        Note:
+
+            Currently no fault checking is performed, so the string part of the return value
+            is always "OK".
+
+        Returns:
+            tuple(int, string).
+
+            int:
+                The frequency, in Hz.
+
+            string:
+                The fault checking status.
+
+                OK -- Everything is fine.
+
         Usage:
 
             int <CapacitiveProbe-Object>.get_reading()
         """
+
         self._num_detections = 0
 
         #Automatically call our function when a falling edge is detected.
-        GPIO.add_event_detect(self._pin, GPIO.FALLING, callback=self.increment_num_detections)
+        GPIO.add_event_detect(self._pin, GPIO.FALLING, callback=self._increment_num_detections)
 
         time.sleep(5)
 
@@ -263,14 +476,21 @@ class CapacitiveProbe(BaseDeviceClass):
         return freq, "OK" #TODO Actual fault checking.
 
 class ResistanceProbe(BaseDeviceClass):
+    """
+    This class is used to represent a resistance probe.
+
+    Documentation for the constructor for objects of type ResistanceProbe:
+
+    Usage:
+        Use the constructor for this class the same way as for BaseDeviceClass.
+
+    Note:
+        Upon instantiation, a ResiatanceProbe object is assumed to be active low.
+    """
+
     # ---------- CONSTRUCTORS ----------
     def __init__(self, Name):
-        """
-        This is the constructor.
-        Usage:
-
-            <Variable-Name> = ResistanceProbe(string ProbeName)
-        """
+        """This is the constructor, as dcumented above."""
         #Call the base class constructor.
         BaseDeviceClass.__init__(self, Name)
 
@@ -280,10 +500,19 @@ class ResistanceProbe(BaseDeviceClass):
     # ---------- INFO SETTER METHODS ----------
     def set_active_state(self, state):
         """
-        Sets the active state for the pins. True for active high, False for active low.
+        This method sets the active state for the pins.
+
+        Args:
+            State:          The active state for the pins. True for active high, False for
+                            active low.
+
         Usage:
 
-            <ResistanceProbe-Object>.set_active_state(bool state)
+            >>> <ResistanceProbe-Object>.set_active_state(True)     //Active high.
+
+            OR
+
+            >>> <ResistanceProbe-Object>.set_active_state(False)    //Active low.
         """
 
         self._active_state = state
@@ -291,10 +520,19 @@ class ResistanceProbe(BaseDeviceClass):
     # ---------- INFO GETTER METHODS ----------
     def get_active_state(self):
         """
-        Returns the active state for the pins.
+        This method returns the active state for the pins.
+
+        Returns:
+            bool. The active state.
+
+                True  -- Active high.
+                False -- Active low.
+
         Usage:
 
-            bool <ResistanceProbe-Object>.get_active_state()
+            >>> <ResistanceProbe-Object>.get_active_state()
+            >>> False
+
         """
 
         return self._active_state
@@ -302,10 +540,41 @@ class ResistanceProbe(BaseDeviceClass):
     # ---------- CONTROL METHODS ----------
     def get_reading(self):
         """
-        Gets the level of the water in the probe.
+        This method gets the level of the water in the probe. It also does basic
+        fault checking and reports back if any faults were found.
+
+        Returns:
+            tuple(int, string).
+
+            int:
+                The level of water in the probe, in mm.
+
+            string:
+                The fault checking status.
+
+                Pin states for debugging eg "1111111111 ",
+                and message if any fault was detected.
+
+                Examples:
+
+                    1110000000                  -- Fine, 200mm.
+                    1111110000                  -- Fine, 500mm.
+                    1110011110 FAULT DETECTED   -- Bad; could be anything, but probably 900mm.
+
+        Warning:
+            We **CANNOT** detect all faults in this manner. For example, if the pin states were:
+
+                1110000000
+
+            The level could actually be 500mm, instead of 200mm, but the 300, 400 and 500mm
+            sensors could be broken. Essentially, extra checks based on history and the
+            readings from other sensors need to be performed.
+
         Usage:
 
-            (int, string) <ResistanceProbe-Object>.get_reading()
+            >>> <ResistanceProbe-Object>.get_reading()
+            >>> (300, 1111000000)
+
         """
 
         for pin in self._reverse_pins:
@@ -323,7 +592,7 @@ class ResistanceProbe(BaseDeviceClass):
                 status_text += str(GPIO.input(pin))
 
             #Check for faults.
-            status_text = self.detect_faults(index, status_text)
+            status_text = self._detect_faults(index, status_text)
 
             #Return the level, assume pin 0 is at 0mm. Also return fault_text
             return index*100, status_text
@@ -331,13 +600,18 @@ class ResistanceProbe(BaseDeviceClass):
         #No pins were high.
         return -1, "1111111111"
 
-    def detect_faults(self, highest_active_pin, status_text):
+    def _detect_faults(self, highest_active_pin, status_text):
         """
-        Checks for faults in the sensor.
-        Isn't capable of finding all faults without another sensor to compare against.
+        PRIVATE, implementation detail.
+
+        Checks for faults in the probe. Isn't capable of finding all faults,
+        because it doesn't use data from past readings or from other probes;
+        that would be done elsewhere.
+        
         Usage:
 
-            bool <ResistanceProbe-Object>.detect_faults(int highest_active_pin)
+            >>> <ResistanceProbe-Object>.detect_faults(int highest_active_pin, status_text)
+            >>> <status_text> + " FAULT DETECTED"
         """
 
         #Must convert string to int first, because any string except "" evals to boolean True.
@@ -356,14 +630,20 @@ class ResistanceProbe(BaseDeviceClass):
         return status_text+" "+fault_text
 
 class HallEffectDevice(BaseDeviceClass):
+    """
+    This class is used to represent a hall effect device (as in what you may
+    find in a water wheel).
+
+    Documentation for the constructor for objects of type HallEffectDevice:
+
+    Usage:
+        Use the constructor for this class the same way as for BaseDeviceClass.
+
+    """
+
     # ---------- CONSTRUCTORS ----------
     def __init__(self, Name):
-        """
-        This is the constructor.
-        Usage:
-
-            <Variable-Name> = HallEffectDevice(string DeviceName)
-        """
+        """This is the constructor, as documented above."""
 
         #Call the base class costructor.
         BaseDeviceClass.__init__(self, Name)
@@ -372,23 +652,50 @@ class HallEffectDevice(BaseDeviceClass):
         self._num_detections = 0                  #Internal use only.
 
     # ---------- PRIVATE METHODS ----------
-    def increment_num_detections(self, channel):
-        """Called when a falling edge is detected. Adds 1 to the number of falling edges detected"""
+    def _increment_num_detections(self, channel):
+        """
+        PRIVATE, implementation detail.
+
+        Called when a falling edge is detected. Adds 1 to the number of
+        falling edges detected.
+        """
+
         self._num_detections += 1
 
     # ---------- CONTROL METHODS ----------
     def get_reading(self):
         """
-        Returns the rate at with the hall effect device is rotating.
-        Takes readings for 5 seconds and then averages the result.
+        This method returns the rate at which the hall effect device (water
+        wheel) is rotating, in RPM. Takes readings for 5 seconds for accuracy,
+        and then averages the result.
+
+        Note:
+
+            Currently no fault checking is performed, so the string part of the return value
+            is always "OK".
+
+        Returns:
+
+            tuple(int, string)
+
+            int:
+                The RPM of the water wheel.
+
+            string:
+                Fault checking status.
+
+                "OK" -- Everything is fine.
+
         Usage:
 
-            int <HallEffectDevice-Object>.get_reading()
+            >>> <HallEffectDevice-Object>.get_reading()
+            >>> (50, "OK")
+
         """
         self._num_detections = 0
 
         #Automatically call our function when a falling edge is detected.
-        GPIO.add_event_detect(self._pin, GPIO.FALLING, callback=self.increment_num_detections)
+        GPIO.add_event_detect(self._pin, GPIO.FALLING, callback=self._increment_num_detections)
 
         time.sleep(5)
 
@@ -404,84 +711,118 @@ class HallEffectDevice(BaseDeviceClass):
         return rpm, "OK" #TODO Actual fault checking.
 
 class HallEffectProbe(BaseDeviceClass):
+    """
+    This class is used to represent a magnetic probe.
+
+    Documentation for the constructor for objects of type HallEffectProbe:
+
+    Usage:
+        Use the constructor for this class the same way as for BaseDeviceClass.
+
+    """
+
     # ---------- CONSTRUCTORS ----------
     def __init__(self, Name):
-        """
-        This is the constructor.
-        Usage:
+        """This is the constructor, as documented above"""
 
-            <Variable-Name> = HallEffectDevice(string DeviceName)
-        """
-
-        #Call the base class costructor.
+        #Call the base class constructor.
         BaseDeviceClass.__init__(self, Name)
 
         #Set some semi-private variables.
         self._current_reading = 0                  #Internal use only.
         self._post_init_called = False             #Internal use only.
 
-    def post_init(self):
-        """Automatically call our methods when a falling edge is detected on each pin."""
-        GPIO.add_event_detect(self._pins[0], GPIO.FALLING, callback=self.level0)
-        GPIO.add_event_detect(self._pins[1], GPIO.FALLING, callback=self.level1)
-        GPIO.add_event_detect(self._pins[2], GPIO.FALLING, callback=self.level2)
-        GPIO.add_event_detect(self._pins[3], GPIO.FALLING, callback=self.level3)
-        GPIO.add_event_detect(self._pins[4], GPIO.FALLING, callback=self.level4)
-        GPIO.add_event_detect(self._pins[5], GPIO.FALLING, callback=self.level5)
-        GPIO.add_event_detect(self._pins[6], GPIO.FALLING, callback=self.level6)
-        GPIO.add_event_detect(self._pins[7], GPIO.FALLING, callback=self.level7)
-        GPIO.add_event_detect(self._pins[8], GPIO.FALLING, callback=self.level8)
-        GPIO.add_event_detect(self._pins[9], GPIO.FALLING, callback=self.level9)
+    # ---------- PRIVATE METHODS ----------
+    def _post_init(self):
+        """
+        Automatically call our methods when a falling edge is detected on each pin.
+
+        Not done in __init__ because pins aren't defined at that point.
+        """
+
+        GPIO.add_event_detect(self._pins[0], GPIO.FALLING, callback=self._level0)
+        GPIO.add_event_detect(self._pins[1], GPIO.FALLING, callback=self._level1)
+        GPIO.add_event_detect(self._pins[2], GPIO.FALLING, callback=self._level2)
+        GPIO.add_event_detect(self._pins[3], GPIO.FALLING, callback=self._level3)
+        GPIO.add_event_detect(self._pins[4], GPIO.FALLING, callback=self._level4)
+        GPIO.add_event_detect(self._pins[5], GPIO.FALLING, callback=self._level5)
+        GPIO.add_event_detect(self._pins[6], GPIO.FALLING, callback=self._level6)
+        GPIO.add_event_detect(self._pins[7], GPIO.FALLING, callback=self._level7)
+        GPIO.add_event_detect(self._pins[8], GPIO.FALLING, callback=self._level8)
+        GPIO.add_event_detect(self._pins[9], GPIO.FALLING, callback=self._level9)
 
         self._post_init_called = True
 
-    # ---------- PRIVATE METHODS ----------
-    def level0(self, channel):
+    def _level0(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 0
 
-    def level1(self, channel):
+    def _level1(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 100
 
-    def level2(self, channel):
+    def _level2(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 200
 
-    def level3(self, channel):
+    def _level3(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 300
 
-    def level4(self, channel):
+    def _level4(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 400
 
-    def level5(self, channel):
+    def _level5(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 500
 
-    def level6(self, channel):
+    def _level6(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 600
 
-    def level7(self, channel):
+    def _level7(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 700
 
-    def level8(self, channel):
+    def _level8(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 800
 
-    def level9(self, channel):
+    def _level9(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 900
 
     # ---------- CONTROL METHODS ----------
     def get_reading(self):
         """
-        Returns the level at which the magnet is bobbing about.
+        This method returns the rate at which the float is bobbing
+        about.
+
+        Note:
+
+            Currently no fault checking is performed, so the string part of the return value
+            is always "OK".
+
+        Returns:
+
+            tuple(int, string)
+
+            int:
+                The level of the float.
+
+            string:
+                Fault checking status.
+
+                "OK" -- Everything is fine.
+
+        Usage:
+
+            >>> <HallEffectProbe-Object>.get_reading()
+            >>> (500, "OK")
+
         """
         if not self._post_init_called:
-            self.post_init()
+            self._post_init()
 
         return self._current_reading, "OK" #TODO Actual fault checking.

@@ -16,6 +16,8 @@ Contents:
     universal_monitor_config
     tools
     coretools
+    monitortools
+    sensorobjects
 
 
 

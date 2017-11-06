@@ -14,6 +14,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+This is the part of the software framework that contains the
+monitor thread. This is used to obtain readings from sensors
+without causing the main thread to block. It also abstracts
+a bit more of the complexity away.
+
+.. module:: monitortools.py
+    :platform: Linux
+    :synopsis: The part of the framework that contains the monitor tools.
+
+.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
+
+"""
+
 from collections import deque
 import time
 import datetime
@@ -21,10 +35,54 @@ import threading
 
 VERSION = "0.9.1"
 
-#TODO use deque and popleft.
-
 # ---------- BASE CLASS ----------
 class BaseMonitorClass(threading.Thread):
+    """
+    This is a base monitor class that all other monitors
+    inherit from. It contains common functionality and
+    instance variables and is used to reduce code duplication.
+
+    It might be time to integrate this with Monitor and
+    remove it, because we no longer have separate monitors
+    for each type of probe, because the probe classes' API
+    is now standardised.
+
+    Documentatation for constructor for objects of type BaseMonitorClass:
+
+    Absolutely useless by itself, because this class
+    is incapable of monitoring a probe without being
+    derived from.
+
+    Args:
+        self (BaseMonitorClass):    A self-reference.
+                                    Only passed when
+                                    helping construct
+                                    a subclass.
+
+        probe (BaseDeviceClass):    A reference to a
+                                    probe object.
+
+        num_readings (int):         The number of
+                                    readings to take.
+                                    If 0, take readings
+                                    until requested to
+                                    exit.
+
+        reading_interval (int):     The initial reading
+                                    interval for the
+                                    monitor to use.
+
+    Invokes:
+        threading.Thread.__init__(self), to initialise
+        the subclass deriving from this as a thread.
+
+    Usage:
+        >>> monitor = BaseMonitorClass(<aProbeObject>, <anInteger>, <aReadingInterval>)
+
+        Note: This won't do anything helpful by itself;
+              you need to derive from it.
+    """
+
     def __init__(self, probe, num_readings, reading_interval):
         threading.Thread.__init__(self)
         self.probe = probe
@@ -36,49 +94,98 @@ class BaseMonitorClass(threading.Thread):
 
     def is_running(self):
         """
-        Returns True if running, else False.
+        This method returns True if the monitor is
+        running, else False.
+
+        Returns:
+            bool. The state:
+
+                True  --    Currently running.
+                False --    Not running.
+
         Usage:
-            bool is_running()
+            >> state = <BaseMonitorClassObject>.is_running()
+
         """
 
         return self.running
 
     def has_data(self):
         """
-        Returns True if the queue isn't empty, False if it is.
+        This method returns True if the monitor has data sat on
+        its readings queue waiting to be read. False if the queue
+        is empty.
+
+        Returns:
+            bool.
+
+                True  --    Data available.
+                False --    No Data available.
+
         Usage:
-            bool has_data()
+            >>> state = <BaseMonitorClassObject>.has_data()
         """
 
         return int(len(self.queue))
 
     def get_reading(self):
         """
-        Returns a reading from the queue, and deletes it from the queue.
-        Format:
-            [str (time), str (reading), str (status)].
+        This method returns the oldest reading on the queue (so that
+        if there are multiple readings they are read in the correct
+        order), and deletes it from the queue.
+
+        Reading Format:
+            tuple (str (time), str (reading), str (status)).
+
+            For example:
+
+                >>> get_reading()
+                >>> ("2017-10-25 22:59:09.439380", "500", "OK")
+
+            Note: The format of the "reading" section differs slightly
+                  between probe types, because they eg don't all measure
+                  water depth in mm.
 
         Usage:
-            list get_reading()
+
+            >>> time, reading, status = <BaseMonitorClassObject>.get_reading()
         """
 
         return self.queue.popleft()
 
     def set_reading_interval(self, interval):
         """
-        Sets the reading interval. Takes immediate effect.
+        This method sets the reading interval, with immediate effect (ie, if
+        the monitor is currently waiting using the reading interval, it will
+        NOT continue to wait for the whole length of the old reading interval).
+
+        Args:
+            interval:   New reading interval, in seconds.
+
         Usage:
-            set_reading_interval(int interval)
+            >>> <BaseMonitorClassObject>.set_reading_interval(<AnInteger>)
         """
 
         self.reading_interval = interval
 
     def request_exit(self, wait=False):
         """
-        Used to ask the thread to exit. Doesn't wait before returning unless specified.
+        This method is used to ask the monitor thread to exit. It can also wait
+        for the monitor thread to exit before returning if you specify a special
+        argument.
+
+        KWargs:
+            wait (bool):    Whether to wait for the thread to exit before returning.
+                            Default: False.
+
         Usage:
-            request_exit([bool wait])
+            >>> <BaseMonitorClassObject>.request_exit() //Don't wait for thread to exit.
+
+            OR:
+
+            >>> <BaseMonitorClassObject>.request_exit() //Wait for thread to exit.
         """
+
         self.should_exit = True
         self.reading_interval = 0 #Helps thread to react faster.
 
@@ -88,8 +195,37 @@ class BaseMonitorClass(threading.Thread):
 
 # ---------- Universal Monitor ----------
 class Monitor(BaseMonitorClass):
+    """
+    This is the universal monitor thread that is used to monitor all probe
+    types. It inherits from BaseMonitorClass. This is quite a simple class.
+
+    Documentation for constructor for objects of type Monitor:
+
+    Args:
+        Type (str):                 The type of probe we're to monitor.
+                                    Very specific names, defined in
+                                    universal_standalone_monitor_config.py.
+                                    No longer used; still required but
+                                    should be removed.
+
+        probe (BaseDeviceClass):    As defined in BaseMonitorClass'
+                                    constructor.
+
+        num_readings (int):         As defined in BaseMonitorClass'
+                                    constructor.
+
+        reading_interval (int):     As defined in BaseMonitorClass'
+                                    constructor.
+
+    Invokes:
+        Constructor for BaseMonitorClass.
+        self.start() - starts the monitor thread.
+
+    Usage:
+        >>> monitor = Monitor(<aString>, <aProbeObject>, <anInteger>, <aReadingInterval>)
+    """
+
     def __init__(self, Type, probe, num_readings, reading_interval):
-        """Initialise and start the thread"""
         BaseMonitorClass.__init__(self, probe, num_readings, reading_interval)
 
         self.reading_func = probe.get_reading
@@ -97,7 +233,30 @@ class Monitor(BaseMonitorClass):
         self.start()
 
     def run(self):
-        """Main part of the thread"""
+        """
+        This method is the body of the thread. It does some setup and then
+        enters a monitor loop, where it checks for readings and adds them
+        to the queue at every interval of <reading_interval> seconds long.
+
+        The loop will continue to run until either it has taken the number
+        of readings that was asked of it, or it is asked to exit.
+
+        Usage:
+
+            .. warning::
+                Only call me from within a constructor with start(). Do **NOT** call
+                me with run(), and **ABSOLUTELY DO NOT** call me outside a constructor
+                for objects of this type.
+
+            .. warning::
+                Doing the above could cause any number of strange and unstable
+                situations to occcur. Running self.start() is the only way (with the
+                threading library) to start a new thread.
+
+            >>> self.start()
+
+        """
+
         num_readings_taken = 0
         self.running = True
 

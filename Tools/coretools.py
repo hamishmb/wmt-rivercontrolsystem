@@ -20,9 +20,9 @@ the main control software, and the universal monitor. It's kind
 superflous at the moment, but I will probably move some more
 functions in here to reduce code duplication.
 
-.. module:: main.py
+.. module:: coretools.py
     :platform: Linux
-    :synopsis: The main part of the control software.
+    :synopsis: Contains tools used by all parts of the software.
 
 .. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
 """
