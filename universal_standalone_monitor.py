@@ -249,7 +249,7 @@ def run_standalone():
     #Keep tabs on its progress so we can write new readings to the file. TODO Sections of this code are duplicated w/ main.py, fix that. TODO Refactor while we're at it.
     try:
         for monitor in monitors:
-            while monitor.is_running():
+            if monitor.is_running():
                 #Check for new readings. NOTE: Later on, use the readings returned from this
                 #for state history generation etc.
                 core_tools.get_and_handle_new_reading(monitor, types[monitors.index(monitor)], file_handle, server_address, socket)
