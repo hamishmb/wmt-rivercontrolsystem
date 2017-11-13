@@ -229,6 +229,7 @@ def run_standalone():
     #Set to sensible defaults to avoid errors.
     reading_time = reading_status = ""
     last_reading = "No Reading"
+    old_reading_interval = 0
 
     #Keep tabs on its progress so we can write new readings to the file. TODO Sections of this code are duplicated w/ main.py, fix that.
     try:
@@ -268,18 +269,21 @@ def run_standalone():
             while count < reading_interval:
                 #This way, if our reading interval changes,
                 #the code will respond to the change immediately.
-                #Check if we have a new reading interval. TODO needs refactoring/optimisation.
-                if server_address is not None:
-                    if socket.has_data():
-                        data = socket.read()
+                #Check if we have a new reading interval.
+                if server_address is not None and socket.has_data():
+                    data = socket.read()
 
-                        if "Reading Interval" in data:
-                            reading_interval = int(data.split()[-1])
+                    if "Reading Interval" in data:
+                        reading_interval = int(data.split()[-1])
+
+                        #Only add a new line to the log if the reading interval changed.
+                        if reading_interval != old_reading_interval:
+                            old_reading_interval = reading_interval
                             logger.info("New reading interval: "+str(reading_interval))
                             print("New reading interval: "+str(reading_interval))
                             monitor.set_reading_interval(reading_interval)
 
-                        socket.pop()
+                    socket.pop()
 
                 time.sleep(1)
                 count += 1
