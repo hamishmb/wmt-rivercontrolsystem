@@ -240,40 +240,34 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
             #Check for new readings from the float switch.
             while socket.has_data():
-                try:
-                    butts_reading_time, butts_reading, butts_reading_status = socket.read().split(",")
-                except:
-                    #FIXME This error occurs when there are too many values to unpack.
-                    #Not sure why this happens but my current theory is that they client and server
-                    #go out of sync and too many packets of data are sent at the same time.
-                    #Could fix with fixed size packets, or read all values into a list and read them 3 at a time in case we do go out of sync.
-                    pass
+                butts_readings = socket.read().split(",")
 
                 socket.pop()
 
-                if butts_reading == "":
-                    #Client not ready, ignore this reading, but prevent errors.
-                    #Assume the butts are full.
-                    logger.info("Client not ready for reading butts level. Assuming butts are full for now.")
-                    print("Client not ready for reading butts level. Assuming butts are full for now.")
-                    butts_reading = "Time: None State: True"
-
-                else:
-                    #Check if the reading is different to the last reading.
-                    if butts_reading == last_butts_reading:
-                        #Write a . to each file.
-                        logger.info(".")
-                        print(".", end='') #Disable newline when printing this message.
-                        file_handle.write(".")
+                for butts_reading_time, butts_reading, butts_reading_status in butts_readings: 
+                    if butts_reading == "":
+                        #Client not ready, ignore this reading, but prevent errors.
+                        #Assume the butts are full.
+                        logger.info("Client not ready for reading butts level. Assuming butts are full for now.")
+                        print("Client not ready for reading butts level. Assuming butts are full for now.")
+                        butts_reading = "Time: None State: True"
 
                     else:
-                        #Write any new readings to the file and to stdout.
-                        logger.info("Time: "+butts_reading_time+" Float Switch: "+butts_reading+" Status: "+butts_reading_status)
-                        print("Time: "+butts_reading_time+" Float Switch: "+butts_reading+" Status: "+butts_reading_status)
-                        file_handle.write("Time: "+butts_reading_time+" Float Switch: "+butts_reading+" Status: "+butts_reading_status)
+                        #Check if the reading is different to the last reading.
+                        if butts_reading == last_butts_reading:
+                            #Write a . to each file.
+                            logger.info(".")
+                            print(".", end='') #Disable newline when printing this message.
+                            file_handle.write(".")
 
-                        #Set last butts reading to this reading.
-                        last_butts_reading = butts_reading
+                        else:
+                            #Write any new readings to the file and to stdout.
+                            logger.info("Time: "+butts_reading_time+" Float Switch: "+butts_reading+" Status: "+butts_reading_status)
+                            print("Time: "+butts_reading_time+" Float Switch: "+butts_reading+" Status: "+butts_reading_status)
+                            file_handle.write("Time: "+butts_reading_time+" Float Switch: "+butts_reading+" Status: "+butts_reading_status)
+
+                            #Set last butts reading to this reading.
+                            last_butts_reading = butts_reading
 
             #Logic.
             reading_interval = core_tools.do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, reading_interval)
