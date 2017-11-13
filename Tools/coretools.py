@@ -175,6 +175,8 @@ def get_and_handle_new_reading(monitor, _type, file_handle, server_address=None,
         if server_address is not None:
             socket.write(reading_time+","+reading+","+reading_status)
 
+    return reading_time, reading, reading_status
+
 def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, reading_interval):
     """
     This function is used to decides what action to take based
@@ -269,7 +271,7 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, r
         #If the butts pump is on, turn it off.
         butts_pump.disable()
 
-        logger.info("Water level in the sump is 400mm. Turned the butts pump off, if it was on.") #TODO Check if it was and customise the message.
+        logger.info("Water level in the sump is 400mm. Turned the butts pump off, if it was on.")
         print("Water level in the sump is 400mm. Turned the butts pump off, if it was on.")
 
         logger.info("Setting reading interval to 5 minutes...")

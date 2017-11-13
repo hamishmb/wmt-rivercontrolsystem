@@ -145,8 +145,8 @@ def handle_cmdline_options():
         else:
             assert False, "unhandled option"
 
-    if _type == "Unknown":
-        assert False, "You must specify the type of probe you want to monitor."
+    if types == []:
+        assert False, "You must specify the type(s) of probe(s) you want to monitor."
 
     return types, file_name, server_address, num_readings
 
@@ -189,6 +189,8 @@ def run_standalone():
         logger.debug("Monitoring multiple probes...")
 
     #Connect to server, if any.
+    socket = None
+
     if server_address is not None:
         logger.info("Initialising connection to server, please wait...")
         print("Initialising connection to server, please wait...")
@@ -202,7 +204,7 @@ def run_standalone():
 
     #Greet and get filename.
     logger.info("Greeting user and asking for filename if required...")
-    file_name, file_handle = core_tools.greet_and_get_filename("Universal Monitor, file_name)
+    file_name, file_handle = core_tools.greet_and_get_filename("Universal Monitor", file_name)
     logger.info("File name: "+file_name+"...")
 
     #Get settings for each type of monitor from the config file.
@@ -246,36 +248,41 @@ def run_standalone():
 
     #Keep tabs on its progress so we can write new readings to the file. TODO Sections of this code are duplicated w/ main.py, fix that. TODO Refactor while we're at it.
     try:
-        while monitor.is_running():
-            #Check for new readings.
-            
+        for monitor in monitors:
+            while monitor.is_running():
+                #Check for new readings. NOTE: Later on, use the readings returned from this
+                #for state history generation etc.
+                core_tools.get_and_handle_new_reading(monitor, types[monitors.index(monitor)], file_handle, server_address, socket)
 
             #Wait until it's time to check for another reading.
             #I know we could use a long time.sleep(),
             #but this MUST be responsive to changes in the reading interval.
             count = 0
 
-            while count < reading_interval:
-                #This way, if our reading interval changes,
-                #the code will respond to the change immediately.
-                #Check if we have a new reading interval.
-                if server_address is not None and socket.has_data():
-                    data = socket.read()
+        while count < reading_interval:
+            #This way, if our reading interval changes,
+            #the code will respond to the change immediately.
+            #Check if we have a new reading interval.
+            if server_address is not None and socket.has_data():
+                data = socket.read()
 
-                    if "Reading Interval" in data:
-                        reading_interval = int(data.split()[-1])
+                if "Reading Interval" in data:
+                    reading_interval = int(data.split()[-1])
 
-                        #Only add a new line to the log if the reading interval changed.
-                        if reading_interval != old_reading_interval:
-                            old_reading_interval = reading_interval
-                            logger.info("New reading interval: "+str(reading_interval))
-                            print("New reading interval: "+str(reading_interval))
+                    #Only add a new line to the log if the reading interval changed.
+                    if reading_interval != old_reading_interval:
+                        old_reading_interval = reading_interval
+                        logger.info("New reading interval: "+str(reading_interval))
+                        print("New reading interval: "+str(reading_interval))
+
+                        #Make sure all monitors use the new reading interval.
+                        for monitor in monitors:
                             monitor.set_reading_interval(reading_interval)
 
-                    socket.pop()
+                socket.pop()
 
-                time.sleep(1)
-                count += 1
+            time.sleep(1)
+            count += 1
 
     except KeyboardInterrupt:
         #Ask the thread to exit.
