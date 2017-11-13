@@ -112,6 +112,69 @@ def greet_and_get_filename(module_name, file_name):
 
     return file_name, recordings_file_handle
 
+def get_and_handle_new_reading(monitor, _type, file_handle, server_address=None, socket=None):
+    """
+    This function is used to get, handle, and return new readings from the
+    monitors. It checks each monitor to see if there is data, then prints
+    and logs it if needed, before writing the new reading down the socket
+    to the master pi, if a connection has been set up.
+
+    Args:
+        monitor (BaseMonitorClass):     The monitor we're checking.
+        _type (str):                    The type of probe we're monitoring.
+        file_handle (file):             A handle for the readings file.
+
+    KWargs:
+        server_address (str):           The server address. Set to None if  
+                                        not specified.
+
+        socket (Sockets):               The socket connected to the master pi.
+                                        Set to None if not specified.
+
+    Returns:
+        tuple(str reading_time, str reading, str reading_status).
+
+    Usage:
+
+        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, <aFile>)
+        >>> (<time>, "500", "OK")
+
+        OR
+
+        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, <aFile>, "192.168.0.2")
+        >>> (<time>, "500", "OK")
+
+        OR
+
+        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, <aFile>, "192.168.0.2", <Socket-Obj>)
+        >>> (<time>, "500", "OK")
+    """
+
+    while monitor.has_data():
+        last_reading = monitor.get_previous_reading()
+
+        reading_time, reading, reading_status = monitor.get_reading()
+
+        #Check if the reading is different to the last reading.
+        if reading == last_reading: #TODO What to do here if a fault is detected?
+            #Write a . to each file.
+            logger.info(".")
+            print(".", end='') #Disable newline when printing this message.
+            file_handle.write(".")
+
+        else:
+            #Write any new readings to the file and to stdout.
+            logger.info("Time: "+reading_time+" "+_type+": "+reading+" Status: "+reading_status)
+            print("Time: "+reading_time+" "+_type+": "+reading+" Status: "+reading_status)
+            file_handle.write("Time: "+reading_time+" "+_type+": "+reading+" Status: "+reading_status)
+
+        #Flush buffers.
+        sys.stdout.flush()
+        file_handle.flush()
+
+        if server_address is not None:
+            socket.write(reading_time+","+reading+","+reading_status)
+
 def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, reading_interval):
     """
     This function is used to decides what action to take based

@@ -91,6 +91,7 @@ class BaseMonitorClass(threading.Thread):
         self.num_readings = num_readings
         self.reading_interval = reading_interval
         self.queue = deque()
+        self.prev_reading = ""
         self.running = False
         self.should_exit = False
 
@@ -144,7 +145,8 @@ class BaseMonitorClass(threading.Thread):
                 >>> get_reading()
                 >>> ("2017-10-25 22:59:09.439380", "500", "OK")
 
-            Note: The format of the "reading" section differs slightly
+            .. note::
+                  The format of the "reading" section differs slightly
                   between probe types, because they eg don't all measure
                   water depth in mm.
 
@@ -153,7 +155,27 @@ class BaseMonitorClass(threading.Thread):
             >>> time, reading, status = <BaseMonitorClassObject>.get_reading()
         """
 
+        self.prev_reading = self.queue[0]
+
         return self.queue.popleft()
+
+    def get_previous_reading(self):
+        """
+        This method returns the previous (next-to-newest) reading.
+        Call it before you get the next reading.
+
+        The reading format differs to the above, because the time
+        and status aren't included. Only the value is included eg
+        "500".
+
+        Returns:
+            string. The reading.
+
+        Usage:
+            >>> reading =  <BaseMonitorClassObject>.get_previous_reading()
+        """
+
+        return self.prev_reading
 
     def set_reading_interval(self, interval):
         """

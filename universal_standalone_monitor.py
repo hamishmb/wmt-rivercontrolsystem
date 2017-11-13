@@ -82,6 +82,7 @@ def handle_cmdline_options():
         -t <str>, --type=<str>              Type of probe this monitor is for. Must be one of
                                             'Resistance Probe', 'Hall Effect', 'Hall Effect Probe'
                                             'Capacitive Probe', or 'Float Switch'. Mandatory.
+                                            Specify multiple times for multiple probes.
         -f, --file                          Specifies file to write the recordings to. If not
                                             specified, the user is asked during execution in
                                             the greeting phase.
@@ -92,7 +93,7 @@ def handle_cmdline_options():
                                             the program is terminated with CRTL-C.
 
     Returns:
-        tuple (string _type, string file_name, string server_address, int num_readings).
+        tuple (list types, string file_name, string server_address, int num_readings).
 
             This will be whatever arguments the user provided on the commandline.
             If any arguments were missing, default values will be provided instead
@@ -103,10 +104,10 @@ def handle_cmdline_options():
 
     Usage:
 
-    >>> _type, file_name, server_address, num_readings = handle_cmdline_options()
+    >>> types, file_name, server_address, num_readings = handle_cmdline_options()
     """
 
-    _type = "Unknown"
+    types = []
     file_name = "Unknown"
     server_address = None
 
@@ -126,7 +127,7 @@ def handle_cmdline_options():
 
     for o, a in opts:
         if o in ["-t", "--type"]:
-            _type = a
+            types.append(a)
 
         elif o in ["-f", "--file"]:
             file_name = a
@@ -147,7 +148,7 @@ def handle_cmdline_options():
     if _type == "Unknown":
         assert False, "You must specify the type of probe you want to monitor."
 
-    return _type, file_name, server_address, num_readings
+    return types, file_name, server_address, num_readings
 
 def run_standalone():
     """
@@ -179,9 +180,13 @@ def run_standalone():
     """
 
     #Handle cmdline options.
-    _type, file_name, server_address, num_readings = handle_cmdline_options()
+    types, file_name, server_address, num_readings = handle_cmdline_options()
 
-    logger.debug("Running in "+_type+" mode...")
+    if len(types) == 1:
+        logger.debug("Running in "+types[0]+" mode...")
+
+    else:
+        logger.debug("Monitoring multiple probes...")
 
     #Connect to server, if any.
     if server_address is not None:
@@ -197,32 +202,40 @@ def run_standalone():
 
     #Greet and get filename.
     logger.info("Greeting user and asking for filename if required...")
-    file_name, file_handle = core_tools.greet_and_get_filename("Universal Monitor ("+_type+")", file_name)
+    file_name, file_handle = core_tools.greet_and_get_filename("Universal Monitor, file_name)
     logger.info("File name: "+file_name+"...")
 
-    #Get settings for this type of monitor from the config file.
-    logger.info("Asserting that the specified type is valid...")
-    assert _type in config.DATA, "Invalid Type Specified"
+    #Get settings for each type of monitor from the config file.
+    logger.info("Setting up the probes...")
 
-    probe, pins, reading_interval = config.DATA[_type]
+    monitors = []
 
-    logger.info("Setting up the probe...")
+    for _type in types:
+        logger.info("Asserting that the specified type is valid...")
+        assert _type in config.DATA, "Invalid Type Specified"
 
-    #Create the probe object.
-    probe = probe(_type)
+        probe, pins, reading_interval = config.DATA[_type]
 
-    #Set the probe up.
-    probe.set_pins(pins)
+        #Create the probe object.
+        probe = probe(_type)
 
-    logger.info("Starting the monitor thread...")
+        #Set the probe up.
+        probe.set_pins(pins)
+
+        logger.info("Starting the monitor thread for "+_type+"...")
+
+        #Start the monitor threads.
+        #Keep references to these, but no need to with the probes.
+        monitors.append(Monitor(_type, probe, num_readings, reading_interval))
+
+    print("Synchronising with monitor threads...")
+
+    #Wait until the first readings have come in so we are synchronised.
+    for monitor in monitors:
+        while not monitor.has_data():
+            time.sleep(0.5)
+
     print("Starting to take readings. Please stand by...")
-
-    #Start the monitor thread.
-    monitor = Monitor(_type, probe, num_readings, reading_interval)
-
-    #Wait until the first reading has come in so we are synchronised.
-    while not monitor.has_data():
-        time.sleep(0.5)
 
     logger.info("You should begin to see readings now...")
 
@@ -231,35 +244,11 @@ def run_standalone():
     last_reading = "No Reading"
     old_reading_interval = 0
 
-    #Keep tabs on its progress so we can write new readings to the file. TODO Sections of this code are duplicated w/ main.py, fix that.
+    #Keep tabs on its progress so we can write new readings to the file. TODO Sections of this code are duplicated w/ main.py, fix that. TODO Refactor while we're at it.
     try:
         while monitor.is_running():
             #Check for new readings.
-            while monitor.has_data():
-                reading_time, reading, reading_status = monitor.get_reading()
-
-                #Check if the reading is different to the last reading.
-                if reading == last_reading: #TODO What to do here if a fault is detected?
-                    #Write a . to each file.
-                    logger.info(".")
-                    print(".", end='') #Disable newline when printing this message.
-                    file_handle.write(".")
-
-                else:
-                    #Write any new readings to the file and to stdout.
-                    logger.info("Time: "+reading_time+" "+_type+": "+reading+" Status: "+reading_status)
-                    print("Time: "+reading_time+" "+_type+": "+reading+" Status: "+reading_status)
-                    file_handle.write("Time: "+reading_time+" "+_type+": "+reading+" Status: "+reading_status)
-
-                    #Set last reading to this reading.
-                    last_reading = reading
-
-                #Flush buffers.
-                sys.stdout.flush()
-                file_handle.flush()
-
-                if server_address is not None:
-                    socket.write(reading_time+","+reading+","+reading_status)
+            
 
             #Wait until it's time to check for another reading.
             #I know we could use a long time.sleep(),
