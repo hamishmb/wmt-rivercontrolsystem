@@ -150,6 +150,8 @@ def get_and_handle_new_reading(monitor, _type, file_handle, server_address=None,
         >>> (<time>, "500", "OK")
     """
 
+    reading_time = reading = reading_status = ""
+
     while monitor.has_data():
         last_reading = monitor.get_previous_reading()
 
