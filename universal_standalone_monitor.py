@@ -254,10 +254,10 @@ def run_standalone():
                 #for state history generation etc.
                 core_tools.get_and_handle_new_reading(monitor, types[monitors.index(monitor)], file_handle, server_address, socket)
 
-            #Wait until it's time to check for another reading.
-            #I know we could use a long time.sleep(),
-            #but this MUST be responsive to changes in the reading interval.
-            count = 0
+        #Wait until it's time to check for another reading.
+        #I know we could use a long time.sleep(),
+        #but this MUST be responsive to changes in the reading interval.
+        count = 0
 
         while count < reading_interval:
             #This way, if our reading interval changes,
