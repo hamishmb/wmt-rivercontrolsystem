@@ -248,41 +248,51 @@ def run_standalone():
 
     #Keep tabs on its progress so we can write new readings to the file. TODO Sections of this code are duplicated w/ main.py, fix that. TODO Refactor while we're at it.
     try:
-        for monitor in monitors:
-            if monitor.is_running():
-                #Check for new readings. NOTE: Later on, use the readings returned from this
-                #for state history generation etc.
-                core_tools.get_and_handle_new_reading(monitor, types[monitors.index(monitor)], file_handle, server_address, socket)
+        at_least_one_monitor_running = True
 
-        #Wait until it's time to check for another reading.
-        #I know we could use a long time.sleep(),
-        #but this MUST be responsive to changes in the reading interval.
-        count = 0
+        while at_least_one_monitor_running:
+            for monitor in monitors:
+                if monitor.is_running():
+                    #Check for new readings. NOTE: Later on, use the readings returned from this
+                    #for state history generation etc.
+                    core_tools.get_and_handle_new_reading(monitor, types[monitors.index(monitor)], file_handle, server_address, socket)
 
-        while count < reading_interval:
-            #This way, if our reading interval changes,
-            #the code will respond to the change immediately.
-            #Check if we have a new reading interval.
-            if server_address is not None and socket.has_data():
-                data = socket.read()
+            #Wait until it's time to check for another reading.
+            #I know we could use a long time.sleep(),
+            #but this MUST be responsive to changes in the reading interval.
+            count = 0
 
-                if "Reading Interval" in data:
-                    reading_interval = int(data.split()[-1])
+            while count < reading_interval:
+                #This way, if our reading interval changes,
+                #the code will respond to the change immediately.
+                #Check if we have a new reading interval.
+                if server_address is not None and socket.has_data():
+                    data = socket.read()
 
-                    #Only add a new line to the log if the reading interval changed.
-                    if reading_interval != old_reading_interval:
-                        old_reading_interval = reading_interval
-                        logger.info("New reading interval: "+str(reading_interval))
-                        print("New reading interval: "+str(reading_interval))
+                    if "Reading Interval" in data:
+                        reading_interval = int(data.split()[-1])
 
-                        #Make sure all monitors use the new reading interval.
-                        for monitor in monitors:
-                            monitor.set_reading_interval(reading_interval)
+                        #Only add a new line to the log if the reading interval changed.
+                        if reading_interval != old_reading_interval:
+                            old_reading_interval = reading_interval
+                            logger.info("New reading interval: "+str(reading_interval))
+                            print("New reading interval: "+str(reading_interval))
 
-                socket.pop()
+                            #Make sure all monitors use the new reading interval.
+                            for monitor in monitors:
+                                monitor.set_reading_interval(reading_interval)
 
-            time.sleep(1)
-            count += 1
+                    socket.pop()
+
+                time.sleep(1)
+                count += 1
+
+            #Check if at least one monitor is running.
+            at_least_one_monitor_running = False
+
+            for monitor in monitors:
+                if monitor.is_running():
+                    at_least_one_monitor_running = True
 
     except KeyboardInterrupt:
         #Ask the thread to exit.
@@ -290,6 +300,7 @@ def run_standalone():
         print("Caught keyboard interrupt. Asking monitor thread to exit.")
         print("This may take a little while, so please be patient...")
 
+    for monitor in monitors:
         monitor.request_exit(wait=True)
 
     #Always clean up properly.
