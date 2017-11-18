@@ -599,7 +599,7 @@ class Sockets:
             #This is vaguely derived from the C++ solution I found on Stack Overflow.
             logger.debug("Sockets._read_pending_messages(): Waiting for data...")
 
-            data = ""
+            data = b""
 
             #While the socket is ready for reading, keep trying to read small packets of data.
             while select.select([self.underlying_socket], [], [], 1)[0]:
