@@ -700,9 +700,10 @@ class SocketHandlerThread(threading.Thread):
             #Wait for 10 seconds in between attempts.
             time.sleep(10)
 
-        #We have connected.
-        logger.debug("Sockets.Handler(): Done! Entering main loop.")
-        print("Connected to peer.")
+        if not self.socket.requested_handler_exit:
+            #We have connected.
+            logger.debug("Sockets.Handler(): Done! Entering main loop.")
+            print("Connected to peer.")
 
         #Keep sending and receiving messages until we're asked to exit.
         while not self.socket.requested_handler_exit:

@@ -299,7 +299,7 @@ def run_standalone():
                         if reading_interval != old_reading_interval:
                             old_reading_interval = reading_interval
                             logger.info("New reading interval: "+str(reading_interval))
-                            print("New reading interval: "+str(reading_interval))
+                            print("\nNew reading interval: "+str(reading_interval))
 
                             #Make sure all monitors use the new reading interval.
                             for monitor in monitors:

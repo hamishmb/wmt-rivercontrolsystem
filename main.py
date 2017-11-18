@@ -238,7 +238,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                 else:
                     #Write any new readings to the file and to stdout.
                     logger.info("ID: "+sump_reading_id+" Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
-                    print("\nID: "+sump_reading_id+" Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status, end='')
+                    print("\nID: "+sump_reading_id+" Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
                     file_handle.write("\nID: "+sump_reading_id+" Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
 
                     #Set last sump reading to this reading.
@@ -272,7 +272,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                     else:
                         #Write any new readings to the file and to stdout.
                         logger.info("ID: "+butts_reading_id+" Time: "+butts_reading_time+" Float Switch: "+butts_reading+" Status: "+butts_reading_status)
-                        print("\nID: "+butts_reading_id+" Time: "+butts_reading_time+" Float Switch: "+butts_reading+" Status: "+butts_reading_status, end='')
+                        print("\nID: "+butts_reading_id+" Time: "+butts_reading_time+" Float Switch: "+butts_reading+" Status: "+butts_reading_status)
                         file_handle.write("\nID: "+butts_reading_id+" Time: "+butts_reading_time+" Float Switch: "+butts_reading+" Status: "+butts_reading_status)
 
                         #Set last butts reading to this reading, if this reading is from the float switch.TODO
