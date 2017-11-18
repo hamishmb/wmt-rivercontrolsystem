@@ -43,6 +43,7 @@ import select
 import threading
 import time
 import logging
+import pickle
 
 VERSION = "0.9.1"
 
@@ -437,11 +438,11 @@ class Sockets:
         use this.
 
         Args:
-            data (string):      The data to add to the queue.
+            data (any_format):      The data to add to the queue.
 
         Usage:
 
-            >>> <Sockets-Obj>.write(<some_data_in_string_format>)
+            >>> <Sockets-Obj>.write(<some_data_in_any_format>)
         """
 
         logger.debug("Sockets.write(): Appending "+data+" to OutgoingQueue...")
@@ -559,7 +560,12 @@ class Sockets:
             while len(self.out_queue) > 0:
                 #Write the oldest message first.
                 logger.debug("Sockets._send_pending_messages(): Sending data...")
-                self.underlying_socket.sendall(bytes(self.out_queue[0], "utf-8"))
+
+                #Use pickle to serialize everything so we can easily delimit
+                #the readings at the other end.
+                data = pickle.dumps(self.out_queue[0])
+
+                self.underlying_socket.sendall(data)
 
                 #Remove the oldest message from message queue.
                 logger.debug("Sockets._send_pending_messages(): Clearing front of out_queue...")
@@ -610,8 +616,15 @@ class Sockets:
 
             #Push to the message queue, if there is a message.
             if data != "":
-                logger.debug("Sockets._read_pending_messages(): Pushing message to IncomingQueue...")
-                self.in_queue.append(data)
+                #We need to un-serialize the data first.
+                #If there is more than one object in this data, add each one to the queue separately.
+                #Objects are delimited by "."s.
+                temp = data.split(".")
+
+                for obj in temp:
+                    #We need to add the . back for this to work.
+                    logger.debug("Sockets._read_pending_messages(): Pushing message to IncomingQueue...")
+                    self.in_queue.append(pickle.loads(obj+"."))
 
                 logger.debug("Sockets._read_pending_messages(): Done.")
 
@@ -633,7 +646,7 @@ class SocketHandlerThread(threading.Thread):
     Documentation for constructor of objects of type SocketHandlerThread:
 
     Args:
-        socket (Sockets):      The high-level Sockets object that represents
+        a_socket (Sockets):      The high-level Sockets object that represents
                                our socket.
 
     Usage:
@@ -641,9 +654,9 @@ class SocketHandlerThread(threading.Thread):
 
     """
 
-    def __init__(self, socket):
+    def __init__(self, a_socket):
         """The constructor, as documented above"""
-        self.socket = socket
+        self.socket = a_socket
 
         threading.Thread.__init__(self)
         self.start()

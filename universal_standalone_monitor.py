@@ -232,8 +232,17 @@ def run_standalone():
 
         probe, pins, reading_interval = config.DATA[_type]
 
+        #Generate an ID FIXME what if multiple types of same probe?
+        _id = _type
+
+        if _type == "Hall Effect Probe":
+            _id = "M0"
+
+        elif _type == "Float Switch":
+            _id = "FS0"
+
         #Create the probe object.
-        probe = probe(_type)
+        probe = probe(_id)
 
         #Set the probe up.
         probe.set_pins(pins)
@@ -242,7 +251,7 @@ def run_standalone():
 
         #Start the monitor threads.
         #Keep references to these, but no need to with the probes.
-        monitors.append(Monitor(_type, probe, num_readings, reading_interval))
+        monitors.append(Monitor(_type, probe, num_readings, reading_interval, system_id))
 
     print("Synchronising with monitor threads...")
 

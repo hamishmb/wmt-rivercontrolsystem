@@ -132,22 +132,22 @@ def get_and_handle_new_reading(monitor, _type, file_handle, server_address=None,
                                         Set to None if not specified.
 
     Returns:
-        tuple(str reading_time, str reading, str reading_status).
+        tuple(str reading_id, str reading_time, str reading, str reading_status).
 
     Usage:
 
         >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, <aFile>)
-        >>> (<time>, "500", "OK")
+        >>> (<id>, <time>, "500", "OK")
 
         OR
 
         >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, <aFile>, "192.168.0.2")
-        >>> (<time>, "500", "OK")
+        >>> (<id>, <time>, "500", "OK")
 
         OR
 
         >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, <aFile>, "192.168.0.2", <Socket-Obj>)
-        >>> (<time>, "500", "OK")
+        >>> (<id>, <time>, "500", "OK")
     """
 
     reading_time = reading = reading_status = ""
@@ -155,7 +155,7 @@ def get_and_handle_new_reading(monitor, _type, file_handle, server_address=None,
     if monitor.has_data():
         last_reading = monitor.get_previous_reading()
 
-        reading_time, reading, reading_status = monitor.get_reading()
+        reading_id, reading_time, reading, reading_status = monitor.get_reading()
 
         #Check if the reading is different to the last reading.
         if reading == last_reading: #TODO What to do here if a fault is detected?
@@ -166,18 +166,18 @@ def get_and_handle_new_reading(monitor, _type, file_handle, server_address=None,
 
         else:
             #Write any new readings to the file and to stdout.
-            logger.info("Time: "+reading_time+" "+_type+": "+reading+" Status: "+reading_status)
-            print("Time: "+reading_time+" "+_type+": "+reading+" Status: "+reading_status)
-            file_handle.write("Time: "+reading_time+" "+_type+": "+reading+" Status: "+reading_status)
+            logger.info("ID: "+reading_id+" Time: "+reading_time+" "+_type+": "+reading+" Status: "+reading_status)
+            print("\nID: "+reading_id+" Time: "+reading_time+" "+_type+": "+reading+" Status: "+reading_status)
+            file_handle.write("\nID: "+reading_id+" Time: "+reading_time+" "+_type+": "+reading+" Status: "+reading_status)
 
         #Flush buffers.
         sys.stdout.flush()
         file_handle.flush()
 
         if server_address is not None:
-            socket.write(reading_time+","+reading+","+reading_status)
+            socket.write([reading_id, reading_time, reading, reading_status])
 
-    return reading_time, reading, reading_status
+    return reading_id, reading_time, reading, reading_status
 
 def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, reading_interval):
     """

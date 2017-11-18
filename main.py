@@ -237,9 +237,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                 else:
                     #Write any new readings to the file and to stdout.
-                    logger.info("Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
-                    print("Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
-                    file_handle.write("\nTime: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
+                    logger.info("ID: "+reading_id+" Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
+                    print("\nID: "+reading_id+" Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
+                    file_handle.write("\nID: "+reading_id+" Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
 
                     #Set last sump reading to this reading.
                     last_sump_reading = sump_reading
@@ -250,14 +250,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
             #Check for new readings from the float switch.
             while socket.has_data():
-                try:
-                    butts_reading_time, butts_reading, butts_reading_status = socket.read().split(",")
-                except:
-                    #FIXME This error occurs when there are too many values to unpack.
-                    #Not sure why this happens but my current theory is that they client and server
-                    #go out of sync and too many packets of data are sent at the same time.
-                    #Could fix with fixed size packets, or read all values into a list and read them 3 at a time in case we do go out of sync.
-                    pass
+                butts_reading_id, butts_reading_time, butts_reading, butts_reading_status = socket.read().split(",")
 
                 socket.pop()
 
@@ -278,11 +271,11 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                     else:
                         #Write any new readings to the file and to stdout.
-                        logger.info("Time: "+butts_reading_time+" Float Switch: "+butts_reading+" Status: "+butts_reading_status)
-                        print("Time: "+butts_reading_time+" Float Switch: "+butts_reading+" Status: "+butts_reading_status)
-                        file_handle.write("Time: "+butts_reading_time+" Float Switch: "+butts_reading+" Status: "+butts_reading_status)
+                        logger.info("ID: "+butts_reading_id+" Time: "+butts_reading_time+" Float Switch: "+butts_reading+" Status: "+butts_reading_status)
+                        print("\nID: "+butts_reading_id+" Time: "+butts_reading_time+" Float Switch: "+butts_reading+" Status: "+butts_reading_status)
+                        file_handle.write("\nID: "+butts_reading_id+" Time: "+butts_reading_time+" Float Switch: "+butts_reading+" Status: "+butts_reading_status)
 
-                        #Set last butts reading to this reading.
+                        #Set last butts reading to this reading, if this reading is from the float switch.TODO
                         last_butts_reading = butts_reading
 
             #Logic.
