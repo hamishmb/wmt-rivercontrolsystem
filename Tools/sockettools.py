@@ -685,7 +685,7 @@ class SocketHandlerThread(threading.Thread):
         #Setup the socket.
         logger.debug("Sockets.Handler(): Calling Ptr->_create_and_connect to set the socket up...")
 
-        while True:
+        while not self.socket.requested_handler_exit:
             self.socket._create_and_connect()
 
             #If we have connected without error, break out of this loop and enter the main loop.

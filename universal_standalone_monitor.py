@@ -319,8 +319,8 @@ def run_standalone():
 
     except KeyboardInterrupt:
         #Ask the thread to exit.
-        logger.info("Caught keyboard interrupt. Asking monitor thread to exit...")
-        print("Caught keyboard interrupt. Asking monitor thread to exit.")
+        logger.info("Caught keyboard interrupt. Asking monitor thread(s) to exit...")
+        print("Caught keyboard interrupt. Asking monitor thread(s) to exit.")
         print("This may take a little while, so please be patient...")
 
     for monitor in monitors:
