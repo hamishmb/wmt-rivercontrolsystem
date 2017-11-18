@@ -445,7 +445,7 @@ class Sockets:
             >>> <Sockets-Obj>.write(<some_data_in_any_format>)
         """
 
-        logger.debug("Sockets.write(): Appending "+data+" to OutgoingQueue...")
+        logger.debug("Sockets.write(): Appending "+str(data)+" to OutgoingQueue...")
         self.out_queue.append(data)
 
     def send_to_peer(self, data):
@@ -473,7 +473,7 @@ class Sockets:
             >>> <Sockets-Obj>.send_to_peer(<some_data_in_string_format>)
         """
 
-        logger.debug("Sockets.send_to_peer(): Sending message "+data+" to peer...")
+        logger.debug("Sockets.send_to_peer(): Sending message "+str(data)+" to peer...")
 
         #Push it to the message queue.
         self.write(data)
