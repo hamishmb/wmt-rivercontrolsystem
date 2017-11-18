@@ -606,7 +606,7 @@ class Sockets:
                 #Use a 1-second timeout.
                 self.underlying_socket.settimeout(1.0)
 
-                new_data = self.underlying_socket.recv(2048).decode("utf-8")
+                new_data = self.underlying_socket.recv(2048)
 
                 if new_data == "":
                     logger.error("Sockets.__read_pending_messages(): Connection closed cleanly...")
