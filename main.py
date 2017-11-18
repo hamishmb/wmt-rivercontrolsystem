@@ -199,7 +199,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     print("Starting to take readings. Please stand by...")
 
     #Start the monitor thread. Take readings indefinitely.
-    monitor = monitor_tools.Monitor("Hall Effect Probe", sump_probe, 0, reading_interval)
+    monitor = monitor_tools.Monitor("Hall Effect Probe", sump_probe, 0, reading_interval, system_id)
 
     #Wait until the first reading has come in so we are synchronised.
     while not monitor.has_data():
@@ -226,7 +226,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
             #Check for new readings from the sump probe. TODO What to do here if a fault is detected?
             while monitor.has_data():
-                sump_reading_time, sump_reading, sump_reading_status = monitor.get_reading()
+                reading_id, sump_reading_time, sump_reading, sump_reading_status = monitor.get_reading()
 
                 #Check if the reading is different to the last reading.
                 if sump_reading == last_sump_reading:

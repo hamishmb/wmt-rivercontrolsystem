@@ -43,7 +43,8 @@ try:
     import RPi.GPIO as GPIO
     GPIO.setmode(GPIO.BCM)
 
-except ImportError: pass
+except ImportError:
+    pass
 
 #Use logger here too.
 logger = logging.getLogger('River System Control Software '+VERSION)

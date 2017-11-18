@@ -72,24 +72,28 @@ class BaseMonitorClass(threading.Thread):
                                     interval for the
                                     monitor to use.
 
+        system_id (str):            The ID of the pi/system
+                                    this monitor is running on eg G4.
+
     Invokes:
         threading.Thread.__init__(self), to initialise
         the subclass deriving from this as a thread.
 
     Usage:
-        >>> monitor = BaseMonitorClass(<aProbeObject>, <anInteger>, <aReadingInterval>)
+        >>> monitor = BaseMonitorClass(<aProbeObject>, <anInteger>, <aReadingInterval>, <anID>)
 
         ..note::
                 This won't do anything helpful by itself;
                 you need to derive from it.
     """
 
-    def __init__(self, probe, num_readings, reading_interval):
+    def __init__(self, probe, num_readings, reading_interval, system_id):
         """Constructor as documented above"""
         threading.Thread.__init__(self)
         self.probe = probe
         self.num_readings = num_readings
         self.reading_interval = reading_interval
+        self.system_id = system_id
         self.queue = deque()
         self.prev_reading = ""
         self.running = False
@@ -137,8 +141,11 @@ class BaseMonitorClass(threading.Thread):
         if there are multiple readings they are read in the correct
         order), and deletes it from the queue.
 
+        The reading ID is a combination of the system ID and the
+        sensor ID.
+
         Reading Format:
-            tuple (str (time), str (reading), str (status)).
+            tuple (str (reading_id), str (time), str (reading), str (status)).
 
             For example:
 
@@ -152,7 +159,7 @@ class BaseMonitorClass(threading.Thread):
 
         Usage:
 
-            >>> time, reading, status = <BaseMonitorClassObject>.get_reading()
+            >>> reading_id, time, reading, status = <BaseMonitorClassObject>.get_reading()
         """
 
         self.prev_reading = self.queue[0]
@@ -241,6 +248,9 @@ class Monitor(BaseMonitorClass):
         reading_interval (int):     As defined in BaseMonitorClass'
                                     constructor.
 
+        system_id (str):            As defined in BaseMonitorClass'
+                                    constructor.
+
     Invokes:
         Constructor for BaseMonitorClass.
         self.start() - starts the monitor thread.
@@ -249,9 +259,10 @@ class Monitor(BaseMonitorClass):
         >>> monitor = Monitor(<aString>, <aProbeObject>, <anInteger>, <aReadingInterval>)
     """
 
-    def __init__(self, Type, probe, num_readings, reading_interval):
-        BaseMonitorClass.__init__(self, probe, num_readings, reading_interval)
+    def __init__(self, Type, probe, num_readings, reading_interval, system_id):
+        BaseMonitorClass.__init__(self, probe, num_readings, reading_interval, system_id)
 
+        self.probe = probe
         self.reading_func = probe.get_reading
 
         self.start()
@@ -289,7 +300,7 @@ class Monitor(BaseMonitorClass):
                 the_reading, status_text = self.reading_func()
 
                 #Format: Time, reading, status.
-                self.queue.append([str(datetime.datetime.now()), str(the_reading), status_text])
+                self.queue.append([self.probe.get_name(), str(datetime.datetime.now()), str(the_reading), status_text])
 
                 if self.num_readings != 0:
                     num_readings_taken += 1
