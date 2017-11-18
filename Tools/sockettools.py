@@ -615,7 +615,7 @@ class Sockets:
                 data += new_data
 
             #Push to the message queue, if there is a message.
-            if data != "":
+            if data != b"":
                 #We need to un-serialize the data first.
                 #If there is more than one object in this data, add each one to the queue separately.
                 #Objects are delimited by "."s.
