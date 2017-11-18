@@ -604,7 +604,7 @@ class Sockets:
             data = b""
 
             #While the socket is ready for reading, keep trying to read small packets of data.
-            while select.select([self.underlying_socket], [], [], 1)[0]:
+            while select.select([self.underlying_socket], [], [], 1)[0] or data[-1] != b".":
                 #Use a 1-second timeout.
                 self.underlying_socket.settimeout(1.0)
 
