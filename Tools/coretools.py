@@ -167,7 +167,7 @@ def get_and_handle_new_reading(monitor, _type, file_handle, server_address=None,
         else:
             #Write any new readings to the file and to stdout.
             logger.info("ID: "+reading_id+" Time: "+reading_time+" "+_type+": "+reading+" Status: "+reading_status)
-            print("\nID: "+reading_id+" Time: "+reading_time+" "+_type+": "+reading+" Status: "+reading_status)
+            print("\nID: "+reading_id+" Time: "+reading_time+" "+_type+": "+reading+" Status: "+reading_status, end='')
             file_handle.write("\nID: "+reading_id+" Time: "+reading_time+" "+_type+": "+reading+" Status: "+reading_status)
 
         #Flush buffers.
