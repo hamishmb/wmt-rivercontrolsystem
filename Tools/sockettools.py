@@ -619,6 +619,7 @@ class Sockets:
                 #We need to un-serialize the data first.
                 #If there is more than one object in this data, add each one to the queue separately.
                 #Objects are delimited by "."s.
+                print(data)
                 temp = data.split(b".")
 
                 for obj in temp:
