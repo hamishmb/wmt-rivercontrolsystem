@@ -571,7 +571,7 @@ class Sockets:
                 logger.debug("Sockets._send_pending_messages(): Clearing front of out_queue...")
                 self.out_queue.popleft()
 
-        except BaseException as err:
+        except OSError: #BaseException as err:
             #FIXME: Looking for an exception from sendall(), but don't know what it is.
             logger.error("Sockets._send_pending_messages(): Connection closed cleanly...")
             return False #Connection closed cleanly by peer.
@@ -630,7 +630,7 @@ class Sockets:
 
             return 0
 
-        except BaseException as err:
+        except OSError: #BaseException as err:
             logger.error("Sockets._read_pending_messages(): Caught unhandled exception!")
             logger.error("Socket._read_pending_messages(): Error was "+str(err)+"...")
             print("Error: ", err)
