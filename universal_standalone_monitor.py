@@ -120,7 +120,7 @@ def handle_cmdline_options():
 
     #Check all cmdline options are valid.
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "ht:f:i:c:n:", ["help", "type=", "file=", "controlleraddress=", "num="])
+        opts, args = getopt.getopt(sys.argv[1:], "ht:f:i:c:n:", ["help", "type=", "file=", "id=", "controlleraddress=", "num="])
 
     except getopt.GetoptError as err:
         #Invalid option. Show the help message and then exit.
