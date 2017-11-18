@@ -624,6 +624,7 @@ class Sockets:
                 for obj in temp:
                     #We need to add the . back for this to work.
                     logger.debug("Sockets._read_pending_messages(): Pushing message to IncomingQueue...")
+                    print(obj+b".")
                     self.in_queue.append(pickle.loads(obj+b"."))
 
                 logger.debug("Sockets._read_pending_messages(): Done.")
