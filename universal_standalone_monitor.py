@@ -69,6 +69,8 @@ def usage():
     print("       -n <int>, --num=<int>     Specify number of readings to take before exiting.")
     print("                                 Without this option, readings will be taken until")
     print("                                 the program is terminated")
+    print("       -i, --id:                 Specify the ID of this instance of the")
+    print("                                 software. eg \"SUMP\", or \"G4\"Mandatory.")
     print("universal_standalone_monitor.py is released under the GNU GPL Version 3")
     print("Copyright (C) Wimborne Model Town 2017")
 
@@ -92,6 +94,9 @@ def handle_cmdline_options():
         -n <int>, --num=<int>               Specify the number of readings to take before exiting.
                                             if not specified, readings will be taken until
                                             the program is terminated with CRTL-C.
+        -i, --id                            Specify the ID name of this instance of the software.
+                                            eg: 'SUMP', 'G4' etc. Used to identify which reading
+                                            is coming from which probe. Mandatory.
 
     Returns:
         tuple (list types, string file_name, string server_address, int num_readings).
@@ -101,20 +106,21 @@ def handle_cmdline_options():
             as discussed above.
 
     Raises:
-        AssertionError, if there are unhandled options.
+        AssertionError, if there are unhandled options, or if the ID isn't specified.
 
     Usage:
 
-    >>> types, file_name, server_address, num_readings = handle_cmdline_options()
+    >>> types, file_name, system_id, server_address, num_readings = handle_cmdline_options()
     """
 
     types = []
     file_name = "Unknown"
+    system_id = "Unknown"
     server_address = None
 
     #Check all cmdline options are valid.
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "ht:f:c:n:", ["help", "type=", "file=", "controlleraddress=", "num="])
+        opts, args = getopt.getopt(sys.argv[1:], "ht:f:i:c:n:", ["help", "type=", "file=", "controlleraddress=", "num="])
 
     except getopt.GetoptError as err:
         #Invalid option. Show the help message and then exit.
@@ -133,6 +139,9 @@ def handle_cmdline_options():
         elif o in ["-f", "--file"]:
             file_name = a
 
+        elif o in ("-i", "--id"):
+            system_id = a
+
         elif o in ["-c", "--controlleraddress"]:
             server_address = a
 
@@ -149,7 +158,11 @@ def handle_cmdline_options():
     if types == []:
         assert False, "You must specify the type(s) of probe(s) you want to monitor."
 
-    return types, file_name, server_address, num_readings
+    #Fail if ID isn't set.
+    if system_id == "Unknown":
+        assert False, "You must specify the ID."
+
+    return types, file_name, system_id, server_address, num_readings
 
 def run_standalone():
     """
@@ -181,7 +194,7 @@ def run_standalone():
     """
 
     #Handle cmdline options.
-    types, file_name, server_address, num_readings = handle_cmdline_options()
+    types, file_name, system_id, server_address, num_readings = handle_cmdline_options()
 
     if len(types) == 1:
         logger.debug("Running in "+types[0]+" mode...")

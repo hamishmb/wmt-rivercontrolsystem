@@ -54,7 +54,7 @@ from Tools import sockettools as socket_tools
 
 #Define global variables.
 VERSION = "0.9.1"
-RELEASEDATE = "30/10/2017"
+RELEASEDATE = "18/11/2017"
 
 def usage():
     """
@@ -71,6 +71,8 @@ def usage():
     print("       -h, --help:               Show this help message")
     print("       -f, --file:               Specify file to write the recordings to.")
     print("                                 If not specified: interactive.")
+    print("       -i, --id:                 Specify the ID of this instance of the")
+    print("                                 software. eg \"SUMP\", or \"G4\"Mandatory.") 
     print("main.py is released under the GNU GPL Version 3")
     print("Copyright (C) Wimborne Model Town 2017")
 
@@ -83,14 +85,14 @@ def handle_cmdline_options():
         -h, --help         Calls the usage() function to display help information to the user.
         -f, --file         Specifies file to write the recordings to. If not specified, the
                            user is asked during execution in the greeting phase.
+        -i, --id           Specify the ID name of this instance of the software. eg: 'SUMP', 'G4'
+                           etc. Used to identify which reading is coming from which probe. Mandatory.
 
     Returns:
-        string.
-
-            This will be whatever filename the user provided on the commandline.
+        tuple(string file_name, string system_id).
 
     Raises:
-        AssertionError, if there are unhandled options.
+        AssertionError, if there are unhandled options, or if the ID isn't specified.
 
     Usage:
 
@@ -98,10 +100,11 @@ def handle_cmdline_options():
     """
 
     file_name = "Unknown"
+    system_id = "Unknown"
 
     #Check all cmdline options are valid.
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hf:", ["help", "file="])
+        opts, args = getopt.getopt(sys.argv[1:], "hf:i:", ["help", "file=", "id="])
 
     except getopt.GetoptError as err:
         #Invalid option. Show the help message and then exit.
@@ -115,6 +118,9 @@ def handle_cmdline_options():
         if o in ["-f", "--file"]:
             file_name = a
 
+        elif o in ("-i", "--id"):
+            system_id = a
+
         elif o in ["-h", "--help"]:
             usage()
             sys.exit()
@@ -122,7 +128,11 @@ def handle_cmdline_options():
         else:
             assert False, "unhandled option"
 
-    return file_name
+    #Fail if ID isn't set.
+    if system_id == "Unknown":
+        assert False, "You must specify the ID."
+
+    return file_name, system_id
 
 def run_standalone(): #TODO Refactor me into lots of smaller functions.
     """
@@ -154,7 +164,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     """
 
     #Handle cmdline options.
-    file_name = handle_cmdline_options()
+    file_name, system_id = handle_cmdline_options()
 
     #Provide a connection for clients to connect to.
     logger.info("Creating a socket for clients to connect to, please wait...")
@@ -168,8 +178,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     file_name, file_handle = core_tools.greet_and_get_filename("River System Control and Monitoring Software", file_name)
 
     #Create the devices.
-    sump_probe = sensor_objects.HallEffectProbe("Sump Level")
-    butts_pump = sensor_objects.Motor("Butts Pump") #SSR.
+    sump_probe = sensor_objects.HallEffectProbe("M0")
+    butts_pump = sensor_objects.Motor("P0 (Butts Pump)") #SSR.
 
     #Set the devices up.
     #sump_probe.set_active_state(False)     #Active low. Disabled because meaningless for this probe.
