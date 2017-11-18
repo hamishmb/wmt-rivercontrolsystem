@@ -630,7 +630,7 @@ class Sockets:
                     try:
                         self.in_queue.append(pickle.loads(obj+b"."))
 
-                    except _pickle.UnpicklingError:
+                    except (_pickle.UnpicklingError, EOFError):
                         pass
 
                 logger.debug("Sockets._read_pending_messages(): Done.")
