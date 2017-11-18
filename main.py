@@ -316,7 +316,7 @@ if __name__ == "__main__":
 
     logger = logging.getLogger('River System Control Software '+VERSION)
     logging.basicConfig(filename='./rivercontrolsystem.log', format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
 
     #Catch any unexpected errors and log them so we know what happened.
     try:

@@ -49,6 +49,7 @@ import _pickle
 VERSION = "0.9.1"
 
 logger = logging.getLogger('River System Control Software '+VERSION)
+logger.setLevel(logging.DEBUG)
 
 # ---------- Sockets Class ----------
 class Sockets:
