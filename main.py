@@ -209,11 +209,11 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     time.sleep(10)
 
     #Setup. Prevent errors.
-    butts_reading_time = butts_reading_status = ""
+    butts_reading_id = butts_reading_time = butts_reading_status = ""
     butts_reading = "Time: None State: True"
     last_butts_reading = "No Reading"
 
-    sump_reading_time = sump_reading_status = ""
+    sump_reading_id = sump_reading_time = sump_reading_status = ""
     sump_reading = "Time: Empty Time Level: -1mm Pin states: 1111111111"
     last_sump_reading = "No Reading"
 
@@ -226,7 +226,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
             #Check for new readings from the sump probe. TODO What to do here if a fault is detected?
             while monitor.has_data():
-                reading_id, sump_reading_time, sump_reading, sump_reading_status = monitor.get_reading()
+                sump_reading_id, sump_reading_time, sump_reading, sump_reading_status = monitor.get_reading()
 
                 #Check if the reading is different to the last reading.
                 if sump_reading == last_sump_reading:
@@ -237,9 +237,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                 else:
                     #Write any new readings to the file and to stdout.
-                    logger.info("ID: "+reading_id+" Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
-                    print("\nID: "+reading_id+" Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
-                    file_handle.write("\nID: "+reading_id+" Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
+                    logger.info("ID: "+sump_reading_id+" Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
+                    print("\nID: "+sump_reading_id+" Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
+                    file_handle.write("\nID: "+sump_reading_id+" Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
 
                     #Set last sump reading to this reading.
                     last_sump_reading = sump_reading
