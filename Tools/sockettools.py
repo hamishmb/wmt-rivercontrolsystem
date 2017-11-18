@@ -44,6 +44,7 @@ import threading
 import time
 import logging
 import pickle
+import _pickle
 
 VERSION = "0.9.1"
 
