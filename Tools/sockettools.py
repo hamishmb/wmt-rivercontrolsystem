@@ -619,12 +619,12 @@ class Sockets:
                 #We need to un-serialize the data first.
                 #If there is more than one object in this data, add each one to the queue separately.
                 #Objects are delimited by "."s.
-                temp = data.split(".")
+                temp = data.split(b".")
 
                 for obj in temp:
                     #We need to add the . back for this to work.
                     logger.debug("Sockets._read_pending_messages(): Pushing message to IncomingQueue...")
-                    self.in_queue.append(pickle.loads(obj+"."))
+                    self.in_queue.append(pickle.loads(obj+b"."))
 
                 logger.debug("Sockets._read_pending_messages(): Done.")
 
