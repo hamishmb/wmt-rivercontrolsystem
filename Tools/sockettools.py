@@ -603,14 +603,8 @@ class Sockets:
 
             data = b""
 
-            try:
-                pickled_obj_is_incomplete = data[-1] != b"."
-
-            except:
-                pickled_obj_is_incomplete = True
-
             #While the socket is ready for reading, keep trying to read small packets of data.
-            while select.select([self.underlying_socket], [], [], 1)[0] or pickled_obj_is_incomplete:
+            while select.select([self.underlying_socket], [], [], 1)[0]:
                 #Use a 1-second timeout.
                 self.underlying_socket.settimeout(1.0)
 
@@ -621,13 +615,6 @@ class Sockets:
                     return -1 #Connection closed cleanly by peer.
 
                 data += new_data
-
-                try:
-                    pickled_obj_is_incomplete = data[-1] != b"."
-
-                except:
-                    pickled_obj_is_incomplete = True
-
 
             #Push to the message queue, if there is a message.
             if data not in (b"", b"."):
