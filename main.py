@@ -276,8 +276,12 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                         file_handle.write("\nID: "+butts_reading_id+" Time: "+butts_reading_time+" Float Switch: "+butts_reading+" Status: "+butts_reading_status)
 
                         #Set last butts reading to this reading, if this reading is from the float switch.TODO
-                        last_butts_reading = butts_reading
+                        if butts_reading_id == "G4:FS0":
+                            last_butts_reading = butts_reading
 
+                        else:
+                            #Otherwise ignore this reading because we don't want to make any decisions off it.
+                            butts_reading = last_butts_reading
             #Logic.
             reading_interval = core_tools.do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, reading_interval)
 

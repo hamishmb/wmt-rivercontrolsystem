@@ -300,7 +300,7 @@ class Monitor(BaseMonitorClass):
                 the_reading, status_text = self.reading_func()
 
                 #Format: Time, reading, status.
-                self.queue.append([self.probe.get_name(), str(datetime.datetime.now()), str(the_reading), status_text])
+                self.queue.append([self.system_id+":"+self.probe.get_name(), str(datetime.datetime.now()), str(the_reading), status_text])
 
                 if self.num_readings != 0:
                     num_readings_taken += 1

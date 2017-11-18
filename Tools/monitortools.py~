@@ -259,7 +259,7 @@ class Monitor(BaseMonitorClass):
         >>> monitor = Monitor(<aString>, <aProbeObject>, <anInteger>, <aReadingInterval>)
     """
 
-    def __init__(self, Type, probe, num_readings, reading_interval):
+    def __init__(self, Type, probe, num_readings, reading_interval, system_id):
         BaseMonitorClass.__init__(self, probe, num_readings, reading_interval, system_id)
 
         self.probe = probe
@@ -300,7 +300,7 @@ class Monitor(BaseMonitorClass):
                 the_reading, status_text = self.reading_func()
 
                 #Format: Time, reading, status.
-                self.queue.append([self.probe.get_name(), str(datetime.datetime.now()), str(the_reading), status_text])
+                self.queue.append([self.probe.get_name()+":"+self.system_id, str(datetime.datetime.now()), str(the_reading), status_text])
 
                 if self.num_readings != 0:
                     num_readings_taken += 1
