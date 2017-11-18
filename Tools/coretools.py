@@ -307,7 +307,7 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, r
         logger.error("*** NOTICE ***: Water level in the sump is 200mm!")
         logger.error("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
 
-        print("*** NOTICE ***: Water level in the sump is 200mm!")
+        print("\n\n*** NOTICE ***: Water level in the sump is 200mm!")
         print("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
 
         logger.warning("Setting reading interval to 30 seconds for close monitoring...")
@@ -324,7 +324,7 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, r
         logger.critical("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
         logger.critical("*** CRITICAL ***: The pump might be running dry RIGHT NOW!")
 
-        print("*** CRITICAL ***: Water level in the sump < 200mm!")
+        print("\n\n*** CRITICAL ***: Water level in the sump < 200mm!")
         print("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
         print("*** CRITICAL ***: The pump might be running dry RIGHT NOW!")
 
