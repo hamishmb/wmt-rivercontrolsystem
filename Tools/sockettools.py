@@ -610,9 +610,9 @@ class Sockets:
                 pickled_obj_is_incomplete = True
 
             #While the socket is ready for reading, keep trying to read small packets of data.
-            while select.select([self.underlying_socket], [], [], 1)[0] or pickled_obj_is_incomplete:
+            while select.select([self.underlying_socket], [], [], 1)[0]: # or pickled_obj_is_incomplete:
                 #Use a 1-second timeout.
-                self.underlying_socket.settimeout(1.0)
+                self.underlying_socket.settimeout(5.0)
 
                 try:
                     new_data = self.underlying_socket.recv(2048)
