@@ -271,11 +271,11 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                     else:
                         #Write any new readings to the file and to stdout.
-                        logger.info("ID: "+butts_reading_id+" Time: "+butts_reading_time+" Float Switch: "+butts_reading+" Status: "+butts_reading_status)
-                        print("\nID: "+butts_reading_id+" Time: "+butts_reading_time+" Float Switch: "+butts_reading+" Status: "+butts_reading_status)
-                        file_handle.write("\nID: "+butts_reading_id+" Time: "+butts_reading_time+" Float Switch: "+butts_reading+" Status: "+butts_reading_status)
+                        logger.info("ID: "+butts_reading_id+" Time: "+butts_reading_time+" Buttspi: "+butts_reading+" Status: "+butts_reading_status)
+                        print("\nID: "+butts_reading_id+" Time: "+butts_reading_time+" Buttspi: "+butts_reading+" Status: "+butts_reading_status)
+                        file_handle.write("\nID: "+butts_reading_id+" Time: "+butts_reading_time+" Buttspi: "+butts_reading+" Status: "+butts_reading_status)
 
-                        #Set last butts reading to this reading, if this reading is from the float switch.TODO
+                        #Set last butts reading to this reading, if this reading is from the float switch. XXX Temporary solution.
                         if butts_reading_id == "G4:FS0":
                             last_butts_reading = butts_reading
 
@@ -315,7 +315,7 @@ if __name__ == "__main__":
 
     logger = logging.getLogger('River System Control Software '+VERSION)
     logging.basicConfig(filename='./rivercontrolsystem.log', format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
 
     #Catch any unexpected errors and log them so we know what happened.
     try:

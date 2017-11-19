@@ -232,7 +232,7 @@ def run_standalone():
 
         probe, pins, reading_interval = config.DATA[_type]
 
-        #Generate an ID FIXME what if multiple types of same probe?
+        #Generate an ID FIXME what if multiple types of same probe? TODO Make a separate function to generate unique IDs.
         _id = _type
 
         if _type == "Hall Effect Probe":

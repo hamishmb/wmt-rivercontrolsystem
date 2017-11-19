@@ -618,7 +618,7 @@ class Sockets:
                     data += new_data
 
                 except:
-                    #What error are we looking for here?
+                    #What error are we looking for here? TODO
                     pass
 
 
