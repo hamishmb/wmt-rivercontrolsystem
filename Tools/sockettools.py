@@ -648,7 +648,7 @@ class Sockets:
                         print(pickle.loads(obj+b"."))
 
                     except (_pickle.UnpicklingError, EOFError):
-                        pass
+                        print("Unpickling error: "+str(obj, 'utf-8')+".")
 
                 logger.debug("Sockets._read_pending_messages(): Done.")
 
