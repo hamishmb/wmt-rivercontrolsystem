@@ -622,9 +622,9 @@ class Sockets:
                     pass
 
 
-                if b"." in new_data:
-                    objs = new_data.split(b".")
-                    new_data = objs[-1]
+                if b"." in data:
+                    objs = data.split(b".")
+                    data = objs[-1]
 
                     for obj in objs:
                         _process_obj(obj+b".")
