@@ -251,7 +251,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             #Check for new readings from the float switch.
             while socket.has_data():
                 print("test")
-                butts_reading_id, butts_reading_time, butts_reading, butts_reading_status = socket.read().split(",")
+                butts_reading_id, butts_reading_time, butts_reading, butts_reading_status = socket.read()
 
                 socket.pop()
 
