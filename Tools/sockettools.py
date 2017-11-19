@@ -602,15 +602,10 @@ class Sockets:
             logger.debug("Sockets._read_pending_messages(): Waiting for data...")
 
             data = b""
-
-            try:
-                pickled_obj_is_incomplete = data[-1] != b"."
-
-            except:
-                pickled_obj_is_incomplete = True
+            pickled_obj_is_incomplete = True
 
             #While the socket is ready for reading, keep trying to read small packets of data.
-            while select.select([self.underlying_socket], [], [], 1)[0]: # or pickled_obj_is_incomplete:
+            while select.select([self.underlying_socket], [], [], 1)[0] or pickled_obj_is_incomplete:
                 #Use a 1-second timeout.
                 self.underlying_socket.settimeout(5.0)
 
@@ -626,12 +621,15 @@ class Sockets:
                 except:
                     pass
 
-                try:
-                    pickled_obj_is_incomplete = data[-1] != b"."
 
-                except:
-                    pickled_obj_is_incomplete = True
+                if b"." in new_data:
+                    objs = new_data.split(b".")
+                    new_data = objs[-1]
 
+                    for obj in objs:
+                        _process_obj(obj+b".")
+
+                pickled_obj_is_incomplete = (data != b"")
 
             #Push to the message queue, if there is a message.
             if data not in (b"", b"."):
@@ -648,7 +646,7 @@ class Sockets:
                         print(pickle.loads(obj+b"."))
 
                     except (_pickle.UnpicklingError, EOFError):
-                        print("Unpickling error: "+str(obj, 'utf-8')+".")
+                        print(b"Unpickling error: "+obj+b".")
 
                 logger.debug("Sockets._read_pending_messages(): Done.")
 
@@ -659,6 +657,18 @@ class Sockets:
             logger.error("Socket._read_pending_messages(): Error was "+str(err)+"...")
             print("Error: ", err)
             return -1
+
+    def _process_obj(self, obj):
+        #Push the unpickled objects to the message queue.
+        #We need to un-serialize the data first.
+        logger.debug("Sockets._process_obj(): Pushing message to IncomingQueue...")
+
+        try:
+            self.in_queue.append(pickle.loads(obj))
+            print(pickle.loads(obj))
+
+        except (_pickle.UnpicklingError, EOFError):
+            print(b"Unpickling error: "+obj)
 
 class SocketHandlerThread(threading.Thread):
     """
