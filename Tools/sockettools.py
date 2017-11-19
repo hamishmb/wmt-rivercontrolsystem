@@ -627,7 +627,7 @@ class Sockets:
                     data = objs[-1]
 
                     for obj in objs:
-                        _process_obj(obj+b".")
+                        self._process_obj(obj+b".")
 
                 pickled_obj_is_incomplete = (data != b"")
 
