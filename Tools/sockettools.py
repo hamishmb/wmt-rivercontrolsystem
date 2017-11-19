@@ -49,7 +49,6 @@ import _pickle
 VERSION = "0.9.1"
 
 logger = logging.getLogger('River System Control Software '+VERSION)
-logger.setLevel(logging.DEBUG)
 
 # ---------- Sockets Class ----------
 class Sockets:
@@ -480,7 +479,7 @@ class Sockets:
         #Push it to the message queue.
         self.write(data)
 
-        #Wait until a \x06 (ASCII ACK code) has arrived.
+        #Wait until a \x06 (ASCII ACK code) has arrived. FIXME Will not work w/ pickled objects.
         logger.debug("Sockets.send_to_peer(): Waiting for acknowledgement...")
 
         while not self.has_data():
@@ -573,7 +572,7 @@ class Sockets:
                 logger.debug("Sockets._send_pending_messages(): Clearing front of out_queue...")
                 self.out_queue.popleft()
 
-        except OSError: #BaseException as err:
+        except BaseException as err:
             #FIXME: Looking for an exception from sendall(), but don't know what it is.
             logger.error("Sockets._send_pending_messages(): Connection closed cleanly...")
             return False #Connection closed cleanly by peer.
@@ -607,7 +606,7 @@ class Sockets:
             #While the socket is ready for reading, keep trying to read small packets of data.
             while select.select([self.underlying_socket], [], [], 1)[0] or pickled_obj_is_incomplete:
                 #Use a 1-second timeout.
-                self.underlying_socket.settimeout(5.0)
+                self.underlying_socket.settimeout(1.0)
 
                 try:
                     new_data = self.underlying_socket.recv(2048)
@@ -619,6 +618,7 @@ class Sockets:
                     data += new_data
 
                 except:
+                    #What error are we looking for here?
                     pass
 
 
@@ -626,7 +626,7 @@ class Sockets:
                     objs = data.split(b"ENDMSG")
                     data = objs[-1]
 
-                    for obj in objs:
+                    for obj in objs[:-1]:
                         self._process_obj(obj)
 
                 pickled_obj_is_incomplete = (data != b"")
@@ -635,7 +635,7 @@ class Sockets:
 
             return 0
 
-        except OSError: #BaseException as err:
+        except BaseException as err:
             logger.error("Sockets._read_pending_messages(): Caught unhandled exception!")
             logger.error("Socket._read_pending_messages(): Error was "+str(err)+"...")
             print("Error: ", err)
@@ -648,7 +648,6 @@ class Sockets:
 
         try:
             self.in_queue.append(pickle.loads(obj))
-            print(pickle.loads(obj))
 
         except (_pickle.UnpicklingError, EOFError):
             print(b"Unpickling error: "+obj)
