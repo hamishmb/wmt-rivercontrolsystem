@@ -563,11 +563,11 @@ class Sockets:
                 #Write the oldest message first.
                 logger.debug("Sockets._send_pending_messages(): Sending data...")
 
-                #Use pickle to serialize everything so we can easily delimit
-                #the readings at the other end.
+                #Use pickle to serialize everything.
+                #We can easily delimit things with ENDMSG.
                 data = pickle.dumps(self.out_queue[0])
 
-                self.underlying_socket.sendall(data)
+                self.underlying_socket.sendall(data+b"ENDMSG")
 
                 #Remove the oldest message from message queue.
                 logger.debug("Sockets._send_pending_messages(): Clearing front of out_queue...")
@@ -622,33 +622,16 @@ class Sockets:
                     pass
 
 
-                if b"." in data:
-                    objs = data.split(b".")
+                if b"ENDMSG" in data:
+                    objs = data.split(b"ENDMSG")
                     data = objs[-1]
 
                     for obj in objs:
-                        self._process_obj(obj+b".")
+                        self._process_obj(obj)
 
                 pickled_obj_is_incomplete = (data != b"")
 
-            #Push to the message queue, if there is a message.
-            if data not in (b"", b"."):
-                #We need to un-serialize the data first.
-                #If there is more than one object in this data, add each one to the queue separately.
-                #Objects are delimited by "."s.
-                temp = data.split(b".")
-
-                for obj in temp:
-                    #We need to add the . back for this to work.
-                    logger.debug("Sockets._read_pending_messages(): Pushing message to IncomingQueue...")
-                    try:
-                        self.in_queue.append(pickle.loads(obj+b"."))
-                        print(pickle.loads(obj+b"."))
-
-                    except (_pickle.UnpicklingError, EOFError):
-                        print(b"Unpickling error: "+obj+b".")
-
-                logger.debug("Sockets._read_pending_messages(): Done.")
+            logger.debug("Sockets._read_pending_messages(): Done.")
 
             return 0
 
