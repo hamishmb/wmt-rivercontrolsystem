@@ -24,7 +24,7 @@ versions of the code from before this repository was opened
 can be found there as well.
 
 API Documentation
-*****************
+=================
 
 The API documentation for the software is also included
 in this repository, and is generated from docstrings in the
