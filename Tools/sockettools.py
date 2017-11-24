@@ -353,7 +353,7 @@ class Sockets:
             logger.debug("Sockets._create_and_connect(): Asking handler to exit...")
             self.internal_request_exit = True
 
-    # ---------- Connection Functions (Plugs) ---------- FIXME: Add error handling.
+    # ---------- Connection Functions (Plugs) ----------
     def _create_plug(self):
         """
         PRIVATE, implementation detail.
@@ -390,7 +390,7 @@ class Sockets:
 
         logger.info("Sockets._connect_plug(): Done!")
 
-    # ---------- Connection Functions (Sockets) ---------- FIXME: Add error handling.
+    # ---------- Connection Functions (Sockets) ----------
     def _create_socket(self):
         """
         PRIVATE, implementation detail.
@@ -411,7 +411,7 @@ class Sockets:
 
         logger.info("Sockets._create_socket(): Done!")
 
-    def _connect_socket(self):
+    def _connect_socket(self): #TODO Add timeout capability somehow.
         """
         PRIVATE, implementation detail.
 

@@ -52,6 +52,13 @@ from Tools import monitortools as monitor_tools
 from Tools import coretools as core_tools
 from Tools import sockettools as socket_tools
 
+try:
+    #Allow us to generate documentation on non-RPi systems.
+    import RPi.GPIO as GPIO
+
+except ImportError:
+    pass
+
 #Define global variables.
 VERSION = "0.9.1"
 RELEASEDATE = "24/11/2017"
@@ -72,7 +79,7 @@ def usage():
     print("       -f, --file:               Specify file to write the recordings to.")
     print("                                 If not specified: interactive.")
     print("       -i, --id:                 Specify the ID of this instance of the")
-    print("                                 software. eg \"SUMP\", or \"G4\"Mandatory.") 
+    print("                                 software. eg \"SUMP\", or \"G4\"Mandatory.")
     print("main.py is released under the GNU GPL Version 3")
     print("Copyright (C) Wimborne Model Town 2017")
 
@@ -86,7 +93,8 @@ def handle_cmdline_options():
         -f, --file         Specifies file to write the recordings to. If not specified, the
                            user is asked during execution in the greeting phase.
         -i, --id           Specify the ID name of this instance of the software. eg: 'SUMP', 'G4'
-                           etc. Used to identify which reading is coming from which probe. Mandatory.
+                           etc. Used to identify which reading is coming from which probe.
+                           Mandatory.
 
     Returns:
         tuple(string file_name, string system_id).
@@ -182,7 +190,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     butts_pump = sensor_objects.Motor("P0 (Butts Pump)") #SSR.
 
     #Set the devices up.
-    #sump_probe.set_active_state(False)     #Active low. Disabled because meaningless for this probe.
     sump_probe.set_pins((15, 17, 27, 22, 23, 24, 10, 9, 25, 11))
 
     #Butts pump doesn't support PWM.
@@ -224,7 +231,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             if not monitor.is_running():
                 break
 
-            #Check for new readings from the sump probe. TODO What to do here if a fault is detected?
+            #Check for new readings from the sump probe. TODO What to do if a fault is detected?
             while monitor.has_data():
                 sump_reading_id, sump_reading_time, sump_reading, sump_reading_status = monitor.get_reading()
 
@@ -237,9 +244,14 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                 else:
                     #Write any new readings to the file and to stdout.
-                    logger.info("ID: "+sump_reading_id+" Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
-                    print("\nID: "+sump_reading_id+" Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
-                    file_handle.write("\nID: "+sump_reading_id+" Time: "+sump_reading_time+" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
+                    logger.info("ID: "+sump_reading_id+" Time: "+sump_reading_time
+                                +" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
+
+                    print("\nID: "+sump_reading_id+" Time: "+sump_reading_time
+                          +" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
+
+                    file_handle.write("\nID: "+sump_reading_id+" Time: "+sump_reading_time
+                                      +" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
 
                     #Set last sump reading to this reading.
                     last_sump_reading = sump_reading
@@ -257,8 +269,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                 if butts_reading == "":
                     #Client not ready, ignore this reading, but prevent errors.
                     #Assume the butts are full.
-                    logger.info("Client not ready for reading butts level. Assuming butts are full for now.")
-                    print("Client not ready for reading butts level. Assuming butts are full for now.")
+                    logger.info("Client not ready/connected. Assuming butts are full for now.")
+                    print("Client not ready/connected. Assuming butts are full for now.")
                     butts_reading = "Time: None State: True"
 
                 else:
@@ -271,19 +283,28 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                     else:
                         #Write any new readings to the file and to stdout.
-                        logger.info("ID: "+butts_reading_id+" Time: "+butts_reading_time+" Buttspi: "+butts_reading+" Status: "+butts_reading_status)
-                        print("\nID: "+butts_reading_id+" Time: "+butts_reading_time+" Buttspi: "+butts_reading+" Status: "+butts_reading_status)
-                        file_handle.write("\nID: "+butts_reading_id+" Time: "+butts_reading_time+" Buttspi: "+butts_reading+" Status: "+butts_reading_status)
+                        logger.info("ID: "+butts_reading_id+" Time: "+butts_reading_time
+                                    +" Buttspi: "+butts_reading+" Status: "+butts_reading_status)
 
-                        #Set last butts reading to this reading, if this reading is from the float switch. XXX Temporary solution.
+                        print("\nID: "+butts_reading_id+" Time: "+butts_reading_time
+                              +" Buttspi: "+butts_reading+" Status: "+butts_reading_status)
+
+                        file_handle.write("\nID: "+butts_reading_id+" Time: "+butts_reading_time
+                                          +" Buttspi: "+butts_reading+" Status: "
+                                          +butts_reading_status)
+
+                        #Set last butts reading to this reading, if this reading is from the float
+                        #switch. XXX Temporary solution.
                         if butts_reading_id == "G4:FS0":
                             last_butts_reading = butts_reading
 
                         else:
-                            #Otherwise ignore this reading because we don't want to make any decisions off it.
+                            #Otherwise ignore this reading because we don't want to make any
+                            #decisions off it.
                             butts_reading = last_butts_reading
             #Logic.
-            reading_interval = core_tools.do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, reading_interval)
+            reading_interval = core_tools.do_control_logic(sump_reading, butts_reading, butts_pump,
+                                                           monitor, socket, reading_interval)
 
             #Wait until it's time to check for another reading.
             time.sleep(reading_interval)
@@ -310,11 +331,11 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     GPIO.cleanup()
 
 if __name__ == "__main__":
-    #Import here to prevent errors when generating documentation on non-RPi systems.
-    import RPi.GPIO as GPIO
-
     logger = logging.getLogger('River System Control Software '+VERSION)
-    logging.basicConfig(filename='./rivercontrolsystem.log', format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
+    logging.basicConfig(filename='./rivercontrolsystem.log',
+                        format='%(asctime)s - %(name)s - %(levelname)s: %(message)s',
+                        datefmt='%d/%m/%Y %I:%M:%S %p')
+
     logger.setLevel(logging.INFO)
 
     #Catch any unexpected errors and log them so we know what happened.
@@ -322,5 +343,7 @@ if __name__ == "__main__":
         run_standalone()
 
     except:
-        logger.critical("Unexpected error \n\n"+str(traceback.format_exc())+"\n\nwhile running. Exiting...")
+        logger.critical("Unexpected error \n\n"+str(traceback.format_exc())
+                        +"\n\nwhile running. Exiting...")
+
         print("Unexpected error \n\n"+str(traceback.format_exc())+"\n\nwhile running. Exiting...")
