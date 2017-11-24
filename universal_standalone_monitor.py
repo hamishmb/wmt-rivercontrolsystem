@@ -43,6 +43,13 @@ from Tools import coretools as core_tools
 from Tools import sockettools as socket_tools
 from Tools.monitortools import Monitor
 
+try:
+    #Allow us to generate documentation on non-RPi systems.
+    import RPi.GPIO as GPIO
+
+except ImportError:
+    pass
+
 VERSION = "0.9.1"
 
 def usage():
@@ -120,7 +127,8 @@ def handle_cmdline_options():
 
     #Check all cmdline options are valid.
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "ht:f:i:c:n:", ["help", "type=", "file=", "id=", "controlleraddress=", "num="])
+        opts, args = getopt.getopt(sys.argv[1:], "ht:f:i:c:n:",
+                                   ["help", "type=", "file=", "id=", "controlleraddress=", "num="])
 
     except getopt.GetoptError as err:
         #Invalid option. Show the help message and then exit.
@@ -232,7 +240,8 @@ def run_standalone():
 
         probe, pins, reading_interval = config.DATA[_type]
 
-        #Generate an ID FIXME what if multiple types of same probe? TODO Make a separate function to generate unique IDs.
+        #Generate an ID FIXME what if multiple types of same probe?
+        #TODO Make a separate function to generate unique IDs.
         _id = _type
 
         if _type == "Hall Effect Probe":
@@ -265,11 +274,11 @@ def run_standalone():
     logger.info("You should begin to see readings now...")
 
     #Set to sensible defaults to avoid errors.
-    reading_time = reading_status = ""
-    last_reading = "No Reading"
     old_reading_interval = 0
 
-    #Keep tabs on its progress so we can write new readings to the file. TODO Sections of this code are duplicated w/ main.py, fix that. TODO Refactor while we're at it.
+    #Keep tabs on its progress so we can write new readings to the file.
+    #TODO Sections of this code are duplicated w/ main.py, fix that.
+    #TODO Refactor while we're at it.
     try:
         at_least_one_monitor_running = True
 
@@ -278,7 +287,8 @@ def run_standalone():
                 if monitor.is_running():
                     #Check for new readings. NOTE: Later on, use the readings returned from this
                     #for state history generation etc.
-                    core_tools.get_and_handle_new_reading(monitor, types[monitors.index(monitor)], file_handle, server_address, socket)
+                    core_tools.get_and_handle_new_reading(monitor, types[monitors.index(monitor)],
+                                                          file_handle, server_address, socket)
 
             #Wait until it's time to check for another reading.
             #I know we could use a long time.sleep(),
@@ -341,11 +351,11 @@ def run_standalone():
     GPIO.cleanup()
 
 if __name__ == "__main__":
-    #Import here to prevent errors when generating documentation on non-RPi systems.
-    import RPi.GPIO as GPIO
-
     logger = logging.getLogger('Universal Standalone Monitor '+VERSION)
-    logging.basicConfig(filename='./universalmonitor.log', format='%(asctime)s - %(name)s - %(levelname)s: %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
+    logging.basicConfig(filename='./universalmonitor.log',
+                        format='%(asctime)s - %(name)s - %(levelname)s: %(message)s',
+                        datefmt='%d/%m/%Y %I:%M:%S %p')
+
     logger.setLevel(logging.INFO)
 
     #Catch any unexpected errors and log them so we know what happened.
@@ -353,5 +363,7 @@ if __name__ == "__main__":
         run_standalone()
 
     except:
-        logger.critical("Unexpected error \n\n"+str(traceback.format_exc())+"\n\nwhile running. Exiting...")
+        logger.critical("Unexpected error \n\n"+str(traceback.format_exc())
+                        +"\n\nwhile running. Exiting...")
+
         print("Unexpected error \n\n"+str(traceback.format_exc())+"\n\nwhile running. Exiting...")

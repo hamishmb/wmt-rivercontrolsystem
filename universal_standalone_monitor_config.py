@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Universal Standalone Monitor Config for the River System Control and Monitoring Software Version 0.9.1
+# Universal Standalone Monitor Config for the River System Control
+# and Monitoring Software Version 0.9.1
 # Copyright (C) 2017 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
@@ -57,7 +58,6 @@ There are no classes or functions defined in this file.
 """
 
 import Tools
-from Tools import sensorobjects
 
 #FIXME: Pins MUST NOT conflict.
 
