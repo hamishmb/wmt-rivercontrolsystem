@@ -47,7 +47,7 @@ except ImportError:
 VERSION = "0.9.1"
 
 #Use logger here too.
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 class BaseDeviceClass:
