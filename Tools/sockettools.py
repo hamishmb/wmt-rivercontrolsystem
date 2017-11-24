@@ -344,7 +344,7 @@ class Sockets:
 
         except BaseException as err: #FIXME WHAT ERROR WOULD WE NEED TO CATCH?
             logger.critical("Sockets._create_and_connect(): Error connecting: "+str(err))
-            logger.critical("Socket._create_and_connect(): Retrying in 10 seconds...")
+            logger.critical("Sockets._create_and_connect(): Retrying in 10 seconds...")
 
             if self.verbose:
                 print("Connecting Failed: "+str(err)+". Retrying in 10 seconds...")
