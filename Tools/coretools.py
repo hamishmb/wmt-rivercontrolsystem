@@ -37,6 +37,7 @@ VERSION = "0.9.1"
 #Don't ask for a logger name, so this works with both main.py
 #and the universal monitor.
 logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 def greet_and_get_filename(module_name, file_name):
     """

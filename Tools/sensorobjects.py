@@ -47,7 +47,8 @@ except ImportError:
 VERSION = "0.9.1"
 
 #Use logger here too.
-logger = logging.getLogger('River System Control Software '+VERSION)
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 class BaseDeviceClass:
     """

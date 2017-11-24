@@ -49,6 +49,7 @@ import _pickle
 VERSION = "0.9.1"
 
 logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 # ---------- Sockets Class ----------
 class Sockets:
