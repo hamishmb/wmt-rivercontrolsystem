@@ -34,7 +34,9 @@ import logging
 
 VERSION = "0.9.1"
 
-logger = logging.getLogger('River System Control Software '+VERSION)
+#Don't ask for a logger name, so this works with both main.py
+#and the universal monitor.
+logger = logging.getLogger()
 
 def greet_and_get_filename(module_name, file_name):
     """

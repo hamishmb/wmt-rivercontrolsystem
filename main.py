@@ -54,7 +54,7 @@ from Tools import sockettools as socket_tools
 
 #Define global variables.
 VERSION = "0.9.1"
-RELEASEDATE = "18/11/2017"
+RELEASEDATE = "24/11/2017"
 
 def usage():
     """
