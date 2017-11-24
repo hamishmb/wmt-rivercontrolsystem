@@ -128,7 +128,7 @@ def get_and_handle_new_reading(monitor, _type, file_handle, server_address=None,
         file_handle (file):             A handle for the readings file.
 
     KWargs:
-        server_address (str):           The server address. Set to None if  
+        server_address (str):           The server address. Set to None if
                                         not specified.
 
         socket (Sockets):               The socket connected to the master pi.
@@ -169,9 +169,14 @@ def get_and_handle_new_reading(monitor, _type, file_handle, server_address=None,
 
         else:
             #Write any new readings to the file and to stdout.
-            logger.info("ID: "+reading_id+" Time: "+reading_time+" "+_type+": "+reading+" Status: "+reading_status)
-            print("\nID: "+reading_id+" Time: "+reading_time+" "+_type+": "+reading+" Status: "+reading_status)
-            file_handle.write("\nID: "+reading_id+" Time: "+reading_time+" "+_type+": "+reading+" Status: "+reading_status)
+            logger.info("ID: "+reading_id+" Time: "+reading_time+" "
+                        +_type+": "+reading+" Status: "+reading_status)
+
+            print("\nID: "+reading_id+" Time: "+reading_time+" "
+                  +_type+": "+reading+" Status: "+reading_status)
+
+            file_handle.write("\nID: "+reading_id+" Time: "+reading_time+" "
+                              +_type+": "+reading+" Status: "+reading_status)
 
         #Flush buffers.
         sys.stdout.flush()
@@ -227,7 +232,9 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, r
 
     Usage:
 
-        >>> reading_interval = do_control_logic(<asumpreading>, <abuttsreading>, <apumpobject>, <amonitorthreadobject, <asocketsobject>, <areadinginterval)
+        >>> reading_interval = do_control_logic(<asumpreading>, <abuttsreading>,
+        >>>                                     <apumpobject>, <amonitorthreadobject,
+        >>>                                     <asocketsobject>, <areadinginterval)
 
     """
 
@@ -247,8 +254,11 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, r
             print("Pumping water to the butts...")
             butts_pump.enable()
 
-            logger.warning("Changing reading interval to 30 seconds so we can keep a close eye on what's happening...")
-            print("Changing reading interval to 30 seconds so we can keep a close eye on what's happening...")
+            logger.warning("Changing reading interval to 30 seconds so we can "
+                           +"keep a close eye on what's happening...")
+
+            print("Changing reading interval to 30 seconds so we can keep a "
+                  +"close eye on what's happening...")
 
             reading_interval = 30
 
@@ -270,7 +280,7 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, r
         #^ Do NOT change the state of the pump.
         logger.info("Water level in the sump is 500mm. Doing nothing...")
         print("Water level in the sump is 500mm. Doing nothing...")
-        
+
     elif sump_reading == 400:
         #Level in the sump is good.
         #If the butts pump is on, turn it off.
@@ -289,10 +299,12 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, r
         butts_pump.disable()
 
         logger.warning("Water level in the sump is 300mm!")
-        logger.warning("Waiting for water to come back from the butts before requesting human intervention...")
+        logger.warning("Waiting for water to come back from the butts before "
+                       +"requesting human intervention...")
 
         print("Water level in the sump is 300mm!")
-        print("Waiting for water to come back from the butts before requesting human intervention...")
+        print("Waiting for water to come back from the butts before requesting "
+              +"human intervention...")
 
         logger.warning("Setting reading interval to 1 minute so we can monitor more closely...")
         print("Setting reading interval to 1 minute so we can monitor more closely...")
