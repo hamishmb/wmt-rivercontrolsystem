@@ -32,8 +32,6 @@ the rest of the program.
 
 """
 
-VERSION = "0.9.1"
-
 #Standard Imports.
 import time
 import logging
@@ -45,6 +43,8 @@ try:
 
 except ImportError:
     pass
+
+VERSION = "0.9.1"
 
 #Use logger here too.
 logger = logging.getLogger('River System Control Software '+VERSION)
@@ -323,13 +323,10 @@ class FloatSwitch(BaseDeviceClass):
         Use the constructor for this class the same way as for BaseDeviceClass.
 
     .. note::
-        Upon instantiaton, a FloatSwitch object is assumed to be active low.
-
-    .. warning::
-
-        At the moment, the active low/high logic has been deliberately inverted. I'm not sure
-        why I had to do this, but it could indicate a hardware problem. This means that True
-        temporarily means active low and vice versa.
+        Upon instantiaton, a FloatSwitch object is assumed to be active high.
+        This is because they are always pressed down unless the butts are full.
+        Hence, if the **hardware** is active low, the **software representation**
+        of it must be active high.
     """
 
     # ---------- CONSTRUCTORS ----------
@@ -339,7 +336,9 @@ class FloatSwitch(BaseDeviceClass):
         BaseDeviceClass.__init__(self, Name)
 
         #Set some semi-private variables.
-        self._active_state = True           #Active low by default. FIXME (hardware?) *** NOTE THIS WEIRD OVERRIDE ***
+        #Actually active low, but active high by default,
+        #because always pressed unless butts are full.
+        self._active_state = True
 
     # ---------- INFO SETTER METHODS ----------
     def set_active_state(self, state):
@@ -357,11 +356,6 @@ class FloatSwitch(BaseDeviceClass):
             OR
 
             >>> <FloatSwitch-Object>.set_active_state(False)    //Active low.
-
-        .. warning::
-            At the moment, the active low/high logic has been deliberately inverted. I'm not sure
-            why I had to do this, but it could indicate a hardware problem. This means that True
-            temporarily means active low and vice versa.
         """
 
         self._active_state = state
@@ -384,8 +378,8 @@ class FloatSwitch(BaseDeviceClass):
 
             bool: The status of the switch.
 
-                - True  -- Switch triggered.
-                - False -- Switch not triggered.
+                - True  -- Switch triggered - butts full.
+                - False -- Switch not triggered - butts not full.
 
             string: Fault checking status.
 
@@ -605,7 +599,7 @@ class ResistanceProbe(BaseDeviceClass):
         Checks for faults in the probe. Isn't capable of finding all faults,
         because it doesn't use data from past readings or from other probes;
         that would be done elsewhere.
-        
+
         Usage:
 
             >>> <ResistanceProbe-Object>.detect_faults(int highest_active_pin, status_text)
