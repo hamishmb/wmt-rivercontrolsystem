@@ -46,6 +46,9 @@ Install a distribution package for sphinx, like:
 
 on Ubuntu and derivatives.
 
+Note that the directory containing the source code **must**
+be called "rivercontrolsystem" for this to work.
+
 Then, using a terminal, change directory into the
 "docs" directory, then run:
 
