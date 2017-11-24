@@ -206,7 +206,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     print("Starting to take readings. Please stand by...")
 
     #Start the monitor thread. Take readings indefinitely.
-    monitor = monitor_tools.Monitor("Hall Effect Probe", sump_probe, 0, reading_interval, system_id)
+    monitor = monitor_tools.Monitor(sump_probe, 0, reading_interval, system_id)
 
     #Wait until the first reading has come in so we are synchronised.
     while not monitor.has_data():

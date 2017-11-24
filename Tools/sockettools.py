@@ -166,7 +166,8 @@ class Sockets:
         closes the socket, which makes it safe to exit the program.
 
         .. warning::
-            If you're about to exit the program, make sure the handler has exited before you run this!
+            If you're about to exit the program, make sure the handler has
+            exited before you run this!
 
         Usage:
 
@@ -260,7 +261,7 @@ class Sockets:
         This method can be used to check whether the handler has exited. Often useful
         when trying to detect and handle errors; the handler thread may exit if it
         encounters an error it can't recover from. Also useful if you, for some
-        reason, don't want to/can't use wait_for_handler_to_exit(). 
+        reason, don't want to/can't use wait_for_handler_to_exit().
 
         Usage:
 
@@ -460,7 +461,7 @@ class Sockets:
         to know if the peer got your message, but slower.
 
         .. note::
-            Do we want this here? This is here because it was in the    
+            Do we want this here? This is here because it was in the
             Stroodlr sockets C++ code, and this is a Python port of
             that, but the reply was never implemented.
 
@@ -613,7 +614,7 @@ class Sockets:
                     new_data = self.underlying_socket.recv(2048)
 
                     if new_data == "":
-                        logger.error("Sockets.__read_pending_messages(): Connection closed cleanly...")
+                        logger.error("Sockets._read_pending_messages(): Connection closed cleanly")
                         return -1 #Connection closed cleanly by peer.
 
                     data += new_data
@@ -725,7 +726,7 @@ class SocketHandlerThread(threading.Thread):
         #Keep sending and receiving messages until we're asked to exit.
         while not self.socket.requested_handler_exit:
             #Send any pending messages.
-            sent = self.socket._send_pending_messages()
+            self.socket._send_pending_messages()
 
             #Receive messages if there are any.
             read_result = self.socket._read_pending_messages()
@@ -737,7 +738,8 @@ class SocketHandlerThread(threading.Thread):
                 if self.socket.verbose:
                     print("Lost connection to peer. Reconnecting...")
 
-                #Wait for the socket to reconnect, unless the user ends the program (this allows us to exit cleanly if the peer is gone).
+                #Wait for the socket to reconnect, unless the user ends the program
+                #(this allows us to exit cleanly if the peer is gone).
                 while not self.socket.requested_handler_exit:
                     #Reset the socket. Also resets the status trackers.
                     logger.debug("Sockets.Handler(): Resetting socket...")

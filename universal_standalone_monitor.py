@@ -260,7 +260,7 @@ def run_standalone():
 
         #Start the monitor threads.
         #Keep references to these, but no need to with the probes.
-        monitors.append(Monitor(_type, probe, num_readings, reading_interval, system_id))
+        monitors.append(Monitor(probe, num_readings, reading_interval, system_id))
 
     print("Synchronising with monitor threads...")
 

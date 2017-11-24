@@ -233,12 +233,6 @@ class Monitor(BaseMonitorClass):
     Documentation for constructor for objects of type Monitor:
 
     Args:
-        Type (str):                 The type of probe we're to monitor.
-                                    Very specific names, defined in
-                                    universal_standalone_monitor_config.py.
-                                    No longer used; still required but
-                                    should be removed.
-
         probe (BaseDeviceClass):    As defined in BaseMonitorClass'
                                     constructor.
 
@@ -256,10 +250,10 @@ class Monitor(BaseMonitorClass):
         self.start() - starts the monitor thread.
 
     Usage:
-        >>> monitor = Monitor(<aString>, <aProbeObject>, <anInteger>, <aReadingInterval>)
+        >>> monitor = Monitor(<aProbeObject>, <anInteger>, <aReadingInterval>, <anID>)
     """
 
-    def __init__(self, Type, probe, num_readings, reading_interval, system_id):
+    def __init__(self, probe, num_readings, reading_interval, system_id):
         BaseMonitorClass.__init__(self, probe, num_readings, reading_interval, system_id)
 
         self.probe = probe
@@ -296,11 +290,12 @@ class Monitor(BaseMonitorClass):
         self.running = True
 
         try:
-            while ((not self.should_exit) and (self.num_readings == 0 or (num_readings_taken < self.num_readings))):
+            while (not self.should_exit) and (self.num_readings == 0 or (num_readings_taken < self.num_readings)):
                 the_reading, status_text = self.reading_func()
 
                 #Format: Time, reading, status.
-                self.queue.append([self.probe.get_name()+":"+self.system_id, str(datetime.datetime.now()), str(the_reading), status_text])
+                self.queue.append([self.system_id+":"+self.probe.get_name(),
+                                   str(datetime.datetime.now()), str(the_reading), status_text])
 
                 if self.num_readings != 0:
                     num_readings_taken += 1
