@@ -39,6 +39,131 @@ VERSION = "0.9.2"
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+class Reading:
+    """
+    This class is used to represent a reading. Each reading has an ID, a time,
+    a value, and a status. This is subject to change later on, but I shall try
+    to maintain backward compatibility if desired.
+
+    Documentation for the constructor for objects of type Reading:
+
+    Args:
+        self (Reading):             A self-reference. Only used when helping
+                                    construct a subclass. There are no
+                                    subclasses of Reading at this time.
+
+        reading_id (String):        The ID for the reading. Format: Two
+                                    characters to identify the group, followed
+                                    by a colon, followed by two more characters
+                                    to identify the probe. Example: "G4:M0".
+
+        reading_time (String):      The time of the reading. Format as returned
+                                    from running str(datetime.datetime.now()).
+
+        reading_value (String):     The value of the reading. Format differs
+                                    depending on probe type at the moment **FIXME**.
+                                    Ideally, these would all be values in mm like:
+                                    400mm.
+
+        reading_status (String):    The status of the probe at the time the reading
+                                    was taken. If there is no fault, this should be
+                                    "OK". Otherwise, it should be "FAULT DETECTED: "
+                                    followed by some sensor-dependant information
+                                    about the fault.
+
+    Usage:
+        The constructor for this class takes four arguments as specified above.
+
+        >>> my_reading = core_tools.Reading(<an_id>, <a_time>, <a_value>, <a_status>)
+        >>> my_reading = core_tools.Reading("G4:M0", str(datetime.datetime.now()), "500mm", "OK")
+
+    .. warning::
+        There is currently **absolutely no** check to see that each instance variable
+        actually has the correct format. This will come later.
+    """
+
+    # ---------- CONSTRUCTORS ----------
+    def __init__(self, reading_id, reading_time, reading_value, reading_status):
+        """This is the constructor as defined above"""
+        #Set some semi-private variables. TODO format checking.
+        self._id = reading_id
+        self._time = reading_time
+        self._value = reading_value
+        self._status = reading_status
+
+    # ---------- INFO GETTER METHODS ----------
+    def get_id(self):
+        """
+        This method returns the **full** ID for this reading, consisting of
+        the group ID, and then the sensor ID.
+
+        Usage:
+            >>> <Reading-Object>.get_id()
+            >>> "G4:FS0"
+        """
+
+        return self._id
+
+    def get_group_id(self):
+        """
+        This method returns the **group** ID for this reading.
+
+        Usage:
+            >>> <Reading-Object>.get_group_id()
+            >>> "G4"
+        """
+
+        return self._id.split(":")[0]
+
+    def get_sensor_id(self):
+        """
+        This method returns the **sensor** ID for this reading.
+
+        Usage:
+            >>> <Reading-Object>.get_sensor_id()
+            >>> "M0"
+        """
+
+        return self._id.split(":")[1]
+
+    def get_time(self):
+        """
+        This method returns the time when this reading was taken.
+
+        Usage:
+            >>> <Reading-Object>.get_time()
+            >>> "2018-04-11 21:51:36.821528"
+        """
+
+        return self._time
+
+    def get_value(self):
+        """
+        This method returns the value for this reading.
+
+        Usage:
+            >>> <Reading-Object>.get_value()
+            >>> "600mm"
+        """
+
+        return self._value
+
+    def get_status(self):
+        """
+        This method returns the status for this reading.
+
+        Usage:
+            >>> <Reading-Object>.get_status()
+            >>> "OK"                        //No faults.
+
+            OR:
+
+            >>> <Reading-Object>.get_status()
+            >>> "FAULT DETECTED: <detail>"  //Fault(s) detected.
+        """
+
+        return self._status
+
 def greet_and_get_filename(module_name, file_name):
     """
     This function greets the user and, if needed (not specified on the
