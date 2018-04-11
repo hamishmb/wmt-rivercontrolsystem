@@ -270,9 +270,9 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, r
             print("The water butts are full.")
             print("Allowing the sump to overflow.")
 
-            logger.warning("Setting reading interval to 5 minutes...")
-            print("Setting reading interval to 5 minutes...")
-            reading_interval = 300
+            logger.warning("Setting reading interval to 1 minute...")
+            print("Setting reading interval to 1 minute...")
+            reading_interval = 60
 
     elif sump_reading == 500:
         #Level is okay.
