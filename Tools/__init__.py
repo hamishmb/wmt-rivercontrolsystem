@@ -29,7 +29,12 @@ functions in here to refactor later though.
 Contains Functions:
 
 - greet_and_get_filename()
+- get_and_handle_new_reading()
 - do_control_logic()
+
+Contains Classes:
+
+- Reading
 
 monitortools.py
 ===============
