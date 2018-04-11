@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Sockets Class (server) test for the River System Control and Monitoring Software Version 0.9.1
+# Sockets Class (server) test for the River System Control and Monitoring Software Version 0.9.2
 # This file is part of the River System Control and Monitoring Software.
-# Copyright (C) 2017 Wimborne Model Town
+# Copyright (C) 2017-2018 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
 # at your option, any later version.

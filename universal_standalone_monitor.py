@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Universal Standalone Monitor for the River System Control and Monitoring Software Version 0.9.1
-# Copyright (C) 2017 Wimborne Model Town
+# Universal Standalone Monitor for the River System Control and Monitoring Software Version 0.9.2
+# Copyright (C) 2017-2018 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
 # at your option, any later version.
@@ -50,7 +50,7 @@ try:
 except ImportError:
     pass
 
-VERSION = "0.9.1"
+VERSION = "0.9.2"
 
 def usage():
     """
@@ -79,7 +79,7 @@ def usage():
     print("       -i, --id:                 Specify the ID of this instance of the")
     print("                                 software. eg \"SUMP\", or \"G4\"Mandatory.")
     print("universal_standalone_monitor.py is released under the GNU GPL Version 3")
-    print("Copyright (C) Wimborne Model Town 2017")
+    print("Copyright (C) Wimborne Model Town 2017-2018")
 
 def handle_cmdline_options():
     """

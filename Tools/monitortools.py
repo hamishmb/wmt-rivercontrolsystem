@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Monitoring Tools for the River System Control and Monitoring Software Version 0.9.1
-# Copyright (C) 2017 Wimborne Model Town
+# Monitoring Tools for the River System Control and Monitoring Software Version 0.9.2
+# Copyright (C) 2017-2018 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
 # at your option, any later version.
@@ -33,7 +33,7 @@ import time
 import datetime
 import threading
 
-VERSION = "0.9.1"
+VERSION = "0.9.2"
 
 # ---------- BASE CLASS ----------
 class BaseMonitorClass(threading.Thread):

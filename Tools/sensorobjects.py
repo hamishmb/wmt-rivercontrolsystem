@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Sensor classes for the River System Control and Monitoring Software Version 0.9.1
-# Copyright (C) 2017 Wimborne model Town
+# Sensor classes for the River System Control and Monitoring Software Version 0.9.2
+# Copyright (C) 2017-2018 Wimborne model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
 # at your option, any later version.
@@ -44,7 +44,7 @@ try:
 except ImportError:
     pass
 
-VERSION = "0.9.1"
+VERSION = "0.9.2"
 
 #Use logger here too.
 logger = logging.getLogger(__name__)
