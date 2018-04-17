@@ -312,18 +312,21 @@ def get_and_handle_new_reading(monitor, _type, file_handle, server_address=None,
 
     return reading_id, reading_time, reading, reading_status
 
-def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, reading_interval):
+def do_control_logic(sump_reading, butts_reading, butts_pump, main_pump, monitor, socket, reading_interval):
     """
     This function is used to decides what action to take based
-    on the readings it is passed. This only involves controlling
-    the butts pump at the moment. The pump is turned on when the
-    sump level >= 600mm, and turned off when it reaches 400mm. The
-    reading intervals at both the sumppi and the buttspi end are
-    controlled and set here as well.
+    on the readings it is passed.
+
+    The butts pump is turned on when the sump level >= 600mm, and
+    turned off when it reaches 400mm. The circulation pump is
+    turned on when the sump level >= 400, and otherwise the
+    circulation pump will be turned off.
+
+    The reading intervals at both the sumppi and the buttspi end
+    are controlled and set here as well.
 
     ..note::
-        At the moment, this is fine tuned for the
-        was-August-now-October test deployment.
+        Just added support for SSR 2 (circulation pump).
 
     Otherwise, nothing currently happens because there is nothing
     else we can take control of at the moment.
@@ -336,6 +339,10 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, r
 
         butts_pump (Motor):     A reference to a Motor object
                                 that represents the butts pump.
+
+        main_pump (Motor):      A refernece to a Motor object
+                                that represents the main circulation
+                                pump.
 
         monitor (Monitor):      A reference to a Monitor object
                                 that is used to monitor the sump
@@ -358,7 +365,8 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, r
     Usage:
 
         >>> reading_interval = do_control_logic(<asumpreading>, <abuttsreading>,
-        >>>                                     <apumpobject>, <amonitorthreadobject,
+        >>>                                     <apumpobject>, <apumpobject>,
+        >>>                                     <amonitorthreadobject,
         >>>                                     <asocketsobject>, <areadinginterval)
 
     """
@@ -368,11 +376,17 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, r
 
     if sump_reading >= 600:
         #Level in the sump is getting high.
-        #Pump some water to the butts if they aren't full.
-        #If they are full, do nothing and let the sump overflow.
         logger.warning("Water level in the sump ("+str(sump_reading)+") >= 600mm!")
         print("Water level in the sump ("+str(sump_reading)+") >= 600mm!")
 
+        #Make sure the main circulation pump is on.
+        logger.info("Turning the main circulation pump on, if it was off...")
+        print("Turning the main circulation pump on, if it was off...")
+
+        main_pump.enable()
+
+        #Pump some water to the butts if they aren't full.
+        #If they are full, do nothing and let the sump overflow.
         if butts_reading == "False":
             #Pump to the butts.
             logger.warning("Pumping water to the butts...")
@@ -402,9 +416,15 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, r
     elif sump_reading == 500:
         #Level is okay.
         #We might be pumping right now, or the level is increasing, but do nothing.
-        #^ Do NOT change the state of the pump.
-        logger.info("Water level in the sump is 500mm. Doing nothing...")
-        print("Water level in the sump is 500mm. Doing nothing...")
+        #^ Do NOT change the state of the butts pump.
+        logger.info("Water level in the sump is 500mm.")
+        print("Water level in the sump is 500mm.")
+
+        #Make sure the main circulation pump is on.
+        logger.info("Turning the main circulation pump on, if it was off...")
+        print("Turning the main circulation pump on, if it was off...")
+
+        main_pump.enable()
 
     elif sump_reading == 400:
         #Level in the sump is good.
@@ -413,6 +433,12 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, r
 
         logger.info("Water level in the sump is 400mm. Turned the butts pump off, if it was on.")
         print("Water level in the sump is 400mm. Turned the butts pump off, if it was on.")
+
+        #Make sure the main circulation pump is on.
+        logger.info("Turning the main circulation pump on, if it was off...")
+        print("Turning the main circulation pump on, if it was off...")
+
+        main_pump.enable()
 
         logger.info("Setting reading interval to 5 minutes...")
         print("Setting reading interval to 5 minutes...")
@@ -430,6 +456,12 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, r
         print("Water level in the sump is 300mm!")
         print("Waiting for water to come back from the butts before requesting "
               +"human intervention...")
+
+        #Make sure the main circulation pump is off.
+        logger.warning("Disabling the main circulation pump, if it was on...")
+        print("Disabling the main circulation pump, if it was on...")
+
+        main_pump.disable()
 
         logger.warning("Setting reading interval to 1 minute so we can monitor more closely...")
         print("Setting reading interval to 1 minute so we can monitor more closely...")
@@ -450,6 +482,12 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, r
         print("\n\n*** NOTICE ***: Water level in the sump is 200mm!")
         print("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
 
+        #Make sure the main circulation pump is off.
+        logger.warning("Disabling the main circulation pump, if it was on...")
+        print("Disabling the main circulation pump, if it was on...")
+
+        main_pump.disable()
+
         logger.warning("Setting reading interval to 30 seconds for close monitoring...")
         print("Setting reading interval to 30 seconds for close monitoring...")
 
@@ -462,11 +500,17 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, monitor, socket, r
 
         logger.critical("*** CRITICAL ***: Water level in the sump < 200mm!")
         logger.critical("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
-        logger.critical("*** CRITICAL ***: The pump might be running dry RIGHT NOW!")
+        logger.critical("*** INFO ***: The pump won't run dry; it has been temporarily disabled.")
 
         print("\n\n*** CRITICAL ***: Water level in the sump < 200mm!")
         print("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
-        print("*** CRITICAL ***: The pump might be running dry RIGHT NOW!")
+        print("*** INFO ***: The pump won't run dry; it has been temporarily disabled.")
+
+        #Make sure the main circulation pump is off.
+        logger.warning("Disabling the main circulation pump, if it was on...")
+        print("Disabling the main circulation pump, if it was on...")
+
+        main_pump.disable()
 
         logger.critical("Setting reading interval to 15 seconds for super close monitoring...")
         print("Setting reading interval to 15 seconds for super close monitoring...")

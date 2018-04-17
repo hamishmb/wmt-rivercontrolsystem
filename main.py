@@ -187,7 +187,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     #Create the devices.
     sump_probe = sensor_objects.HallEffectProbe("M0")
-    butts_pump = sensor_objects.Motor("P0 (Butts Pump)") #SSR.
+    butts_pump = sensor_objects.Motor("P0 (Butts Pump)") #SSR 1.
+    main_pump = sensor_objects.Motor("P1 (Circulation Pump") #SSR 2.
 
     #Set the devices up.
     sump_probe.set_pins((15, 17, 27, 22, 23, 24, 10, 9, 25, 11))
@@ -195,6 +196,10 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #Butts pump doesn't support PWM.
     butts_pump.set_pins(5, _input=False) #This is an output.
     butts_pump.set_pwm_available(False, -1)
+
+    #Main pump doen't support PWM (no hardware yet).
+    main_pump.set_pins(18, _input=False) #This is an output.
+    main_pump.set_pwm_available(False, -1)
 
     #Reading interval.
     reading_interval = 300
@@ -304,7 +309,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                             butts_reading = last_butts_reading
             #Logic.
             reading_interval = core_tools.do_control_logic(sump_reading, butts_reading, butts_pump,
-                                                           monitor, socket, reading_interval)
+                                                           main_pump, monitor, socket,
+                                                           reading_interval)
 
             #Wait until it's time to check for another reading.
             time.sleep(reading_interval)
