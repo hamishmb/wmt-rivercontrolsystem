@@ -325,7 +325,7 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, main_pump, monitor
     The reading intervals at both the sumppi and the buttspi end
     are controlled and set here as well.
 
-    ..note::
+    .. note::
         Just added support for SSR 2 (circulation pump).
 
     Otherwise, nothing currently happens because there is nothing
