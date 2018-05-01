@@ -440,9 +440,9 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, main_pump, monitor
 
         main_pump.enable()
 
-        logger.info("Setting reading interval to 5 minutes...")
-        print("Setting reading interval to 5 minutes...")
-        reading_interval = 300
+        logger.info("Setting reading interval to 1 minute...")
+        print("Setting reading interval to 1 minute...")
+        reading_interval = 60
 
     elif sump_reading == 300:
         #Level in the sump is getting low.
