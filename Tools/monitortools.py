@@ -33,7 +33,7 @@ import time
 import datetime
 import threading
 
-from coretools import Reading
+from . import coretools
 
 VERSION = "0.9.2"
 
@@ -292,9 +292,9 @@ class Monitor(BaseMonitorClass):
 
                 #Construct a Reading object to hold this info.
                 #Args in order: Time, Tick, ID, Value, Status
-                self.queue.append(Reading(str(datetime.datetime.now()), -1,
-                                          self.system_id+":"+self.probe.get_name(),
-                                          str(the_reading), status_text))
+                self.queue.append(coretools.Reading(str(datetime.datetime.now()), -1,
+                                                    self.system_id+":"+self.probe.get_name(),
+                                                    str(the_reading), status_text))
 
                 if self.num_readings != 0:
                     num_readings_taken += 1
