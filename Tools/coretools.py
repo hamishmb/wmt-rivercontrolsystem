@@ -379,30 +379,25 @@ def get_and_handle_new_reading(monitor, _type, file_handle, server_address=None,
                                         Set to None if not specified.
 
     Returns:
-        tuple(str reading_id, str reading_time, str reading, str reading_status).
+        A Reading object..
 
     Usage:
 
         >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, <aFile>)
-        >>> (<id>, <time>, "500", "OK")
 
         OR
 
         >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, <aFile>, "192.168.0.2")
-        >>> (<id>, <time>, "500", "OK")
 
         OR
 
         >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, <aFile>, "192.168.0.2", <Socket-Obj>)
-        >>> (<id>, <time>, "500", "OK")
     """
-
-    reading_id = reading_time = reading = reading_status = ""
 
     if monitor.has_data():
         last_reading = monitor.get_previous_reading()
 
-        reading_id, reading_time, reading, reading_status = monitor.get_reading()
+        reading = monitor.get_reading()
 
         #Check if the reading is different to the last reading.
         if reading == last_reading: #TODO What to do here if a fault is detected?
@@ -413,25 +408,22 @@ def get_and_handle_new_reading(monitor, _type, file_handle, server_address=None,
 
         else:
             #Write any new readings to the file and to stdout.
-            logger.info("ID: "+reading_id+" Time: "+reading_time+" "
-                        +_type+": "+reading+" Status: "+reading_status)
+            logger.info(str(reading))
 
-            print("\nID: "+reading_id+" Time: "+reading_time+" "
-                  +_type+": "+reading+" Status: "+reading_status)
+            print(reading)
 
-            file_handle.write("\nID: "+reading_id+" Time: "+reading_time+" "
-                              +_type+": "+reading+" Status: "+reading_status)
+            file_handle.write(reading.as_csv())
 
         #Flush buffers.
         sys.stdout.flush()
         file_handle.flush()
 
         if server_address is not None:
-            socket.write([reading_id, reading_time, reading, reading_status])
+            socket.write(reading)
 
-    return reading_id, reading_time, reading, reading_status
+    return reading
 
-def do_control_logic(sump_reading, butts_reading, butts_pump, main_pump, monitor, socket, reading_interval):
+def do_control_logic(sump_reading_obj, butts_reading_obj, butts_pump, main_pump, monitor, socket, reading_interval):
     """
     This function is used to decides what action to take based
     on the readings it is passed.
@@ -451,32 +443,32 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, main_pump, monitor
     else we can take control of at the moment.
 
     Args:
-        sump_reading (str):     The newest reading we have from
-                                the sump probe.
+        sump_reading_obj (Reading):     The newest reading we have from
+                                        the sump probe.
 
-        butts_reading (str):    As above, but for the butts.
+        butts_reading_obj (Reading):    As above, but for the butts.
 
-        butts_pump (Motor):     A reference to a Motor object
-                                that represents the butts pump.
+        butts_pump (Motor):             A reference to a Motor object
+                                        that represents the butts pump.
 
-        main_pump (Motor):      A refernece to a Motor object
-                                that represents the main circulation
-                                pump.
+        main_pump (Motor):              A refernece to a Motor object
+                                        that represents the main circulation
+                                        pump.
 
-        monitor (Monitor):      A reference to a Monitor object
-                                that is used to monitor the sump
-                                level. Passed here so we can
-                                control the reading interval at
-                                this end.
+        monitor (Monitor):              A reference to a Monitor object
+                                        that is used to monitor the sump
+                                        level. Passed here so we can
+                                        control the reading interval at
+                                        this end.
 
-        socket (Socket):        A reference to the Socket object
-                                that represents the data connection
-                                between sumppi and buttspi. Passed
-                                here so we can control the reading
-                                interval at that end.
+        socket (Socket):                A reference to the Socket object
+                                        that represents the data connection
+                                        between sumppi and buttspi. Passed
+                                        here so we can control the reading
+                                        interval at that end.
 
-        reading_interval (int): The current reading interval, in
-                                seconds.
+        reading_interval (int):     The current reading interval, in
+                                    seconds.
 
     Returns:
         int: The reading interval, in seconds.
@@ -490,8 +482,8 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, main_pump, monitor
 
     """
 
-    #Remove the 'mm' from the end of the reading and convert to int.
-    sump_reading = int(sump_reading.replace("m", ""))
+    #Remove the 'mm' from the end of the reading value and convert to int.
+    sump_reading = int(sump_reading_obj.get_value().replace("m", ""))
 
     if sump_reading >= 600:
         #Level in the sump is getting high.
@@ -506,7 +498,7 @@ def do_control_logic(sump_reading, butts_reading, butts_pump, main_pump, monitor
 
         #Pump some water to the butts if they aren't full.
         #If they are full, do nothing and let the sump overflow.
-        if butts_reading == "False":
+        if butts_reading_obj.get_value() == "False":
             #Pump to the butts.
             logger.warning("Pumping water to the butts...")
             print("Pumping water to the butts...")

@@ -223,13 +223,11 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     time.sleep(10)
 
     #Setup. Prevent errors.
-    butts_reading_id = butts_reading_time = butts_reading_status = ""
-    butts_reading = "Time: None State: True"
-    last_butts_reading = "No Reading"
+    butts_reading = None
+    last_butts_reading = None
 
-    sump_reading_id = sump_reading_time = sump_reading_status = ""
-    sump_reading = "Time: Empty Time Level: -1mm Pin states: 1111111111"
-    last_sump_reading = "No Reading"
+    sump_reading = None
+    last_sump_reading = None
 
     #Keep tabs on its progress so we can write new readings to the file.
     try:
@@ -240,7 +238,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
             #Check for new readings from the sump probe. TODO What to do if a fault is detected?
             while monitor.has_data():
-                sump_reading_id, sump_reading_time, sump_reading, sump_reading_status = monitor.get_reading()
+                sump_reading = monitor.get_reading()
 
                 #Check if the reading is different to the last reading.
                 if sump_reading == last_sump_reading:
@@ -251,14 +249,11 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                 else:
                     #Write any new readings to the file and to stdout.
-                    logger.info("ID: "+sump_reading_id+" Time: "+sump_reading_time
-                                +" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
+                    logger.info(str(sump_reading))
 
-                    print("\nID: "+sump_reading_id+" Time: "+sump_reading_time
-                          +" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
+                    print(sump_reading)
 
-                    file_handle.write("\nID: "+sump_reading_id+" Time: "+sump_reading_time
-                                      +" Sump Probe: "+sump_reading+" Status: "+sump_reading_status)
+                    file_handle.write(sump_reading.as_csv())
 
                     #Set last sump reading to this reading.
                     last_sump_reading = sump_reading
@@ -267,9 +262,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                 sys.stdout.flush()
                 file_handle.flush()
 
-            #Check for new readings from the float switch.
+            #Check for new readings from buttspi.
             while socket.has_data():
-                butts_reading_id, butts_reading_time, butts_reading, butts_reading_status = socket.read()
+                butts_reading = socket.read()
 
                 socket.pop()
 
@@ -290,19 +285,15 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                     else:
                         #Write any new readings to the file and to stdout.
-                        logger.info("ID: "+butts_reading_id+" Time: "+butts_reading_time
-                                    +" Buttspi: "+butts_reading+" Status: "+butts_reading_status)
+                        logger.info(str(butts_reading))
 
-                        print("\nID: "+butts_reading_id+" Time: "+butts_reading_time
-                              +" Buttspi: "+butts_reading+" Status: "+butts_reading_status)
+                        print(butts_reading)
 
-                        file_handle.write("\nID: "+butts_reading_id+" Time: "+butts_reading_time
-                                          +" Buttspi: "+butts_reading+" Status: "
-                                          +butts_reading_status)
+                        file_handle.write(butts_reading.as_csv())
 
                         #Set last butts reading to this reading, if this reading is from the float
                         #switch. XXX Temporary solution.
-                        if butts_reading_id == "G4:FS0":
+                        if butts_reading.get_id() == "G4:FS0":
                             last_butts_reading = butts_reading
 
                         else:

@@ -33,6 +33,8 @@ import time
 import datetime
 import threading
 
+from coretools import Reading
+
 VERSION = "0.9.2"
 
 # ---------- BASE CLASS ----------
@@ -144,16 +146,11 @@ class BaseMonitorClass(threading.Thread):
         The reading ID is a combination of the system ID and the
         sensor ID.
 
-        Reading Format:
-            tuple (str (reading_id), str (time), str (reading), str (status)).
-
-            For example:
-
-                >>> get_reading()
-                >>> ("2017-10-25 22:59:09.439380", "500", "OK")
+        Returns:
+            A Reading object (see coretools.Reading).
 
             .. note::
-                  The format of the "reading" section differs slightly
+                  The content of the value attribute differs slightly
                   between probe types, because they eg don't all measure
                   water depth in mm.
 
@@ -176,7 +173,7 @@ class BaseMonitorClass(threading.Thread):
         "500".
 
         Returns:
-            string. The reading.
+            A Reading object.
 
         Usage:
             >>> reading =  <BaseMonitorClassObject>.get_previous_reading()
@@ -293,9 +290,11 @@ class Monitor(BaseMonitorClass):
             while (not self.should_exit) and (self.num_readings == 0 or (num_readings_taken < self.num_readings)):
                 the_reading, status_text = self.reading_func()
 
-                #Format: Time, reading, status.
-                self.queue.append([self.system_id+":"+self.probe.get_name(),
-                                   str(datetime.datetime.now()), str(the_reading), status_text])
+                #Construct a Reading object to hold this info.
+                #Args in order: Time, Tick, ID, Value, Status
+                self.queue.append(Reading(str(datetime.datetime.now()), -1,
+                                          self.system_id+":"+self.probe.get_name(),
+                                          str(the_reading), status_text))
 
                 if self.num_readings != 0:
                     num_readings_taken += 1
