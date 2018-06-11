@@ -80,6 +80,17 @@ class Reading:
     .. warning::
         There is currently **absolutely no** check to see that each instance variable
         actually has the correct format. This will come later.
+
+    .. note::
+        Equality methods have been implemented for this class so you can do things like:
+
+        >>> reading_1 == reading_2
+
+        AND:
+
+        >>> reading_2 != reading_3
+
+        With ease.
     """
 
     # ---------- CONSTRUCTORS ----------
@@ -163,6 +174,64 @@ class Reading:
         """
 
         return self._status
+
+    # ---------- EQUALITY COMPARISON METHODS ----------
+    def __eq__(self, other):
+        """
+        This method is used to compare objects of type Reading.
+
+        Currently, objects are equal if all their attributes and values
+        are the same (ignoring the time), and neither object is None.
+
+        Usage:
+            >>> reading_1 == reading_2
+            >>> False
+
+            OR:
+
+            >>> reading_3 == reading_4
+            >>> True
+        """
+
+        #If the other object is None then it isn't equal.
+        if other is None:
+            return False
+
+        try:
+            #This will return True if all the attributes and values are equal,
+            #ignoring the time the reading was taken.
+            return (self._id == other._id
+                    and self._value == other._value
+                    and self._status == other._status)
+
+        except:
+            return False
+
+    def __ne__(self, other):
+        """
+        This method is used to compare objects of type Reading.
+
+        It simple does the same as the __eq__ method and then uses a
+        boolean NOT on it.
+
+        Usage:
+            >>> reading_1 != reading_2
+            >>> True
+
+            OR:
+
+            >>> reading_3 != reading_4
+            >>> False
+        """
+
+        return not self == other
+
+    # ---------- OTHER CONVENIENCE METHODS ----------
+    def __str__(self):
+        return ("Reading at time " + self._time
+                + ", from probe: " + self._id
+                + ", with value: " + self._value
+                + ", and status: " + self._status)
 
 def greet_and_get_filename(module_name, file_name):
     """
