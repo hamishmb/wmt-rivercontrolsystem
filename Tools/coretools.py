@@ -52,13 +52,16 @@ class Reading:
                                     construct a subclass. There are no
                                     subclasses of Reading at this time.
 
+        reading_time (String):      The time of the reading. Format as returned
+                                    from running str(datetime.datetime.now()).
+
+        reading_tick (int):         The system tick number at the time the reading
+                                    was taken. A positive integer.
+
         reading_id (String):        The ID for the reading. Format: Two
                                     characters to identify the group, followed
                                     by a colon, followed by two more characters
                                     to identify the probe. Example: "G4:M0".
-
-        reading_time (String):      The time of the reading. Format as returned
-                                    from running str(datetime.datetime.now()).
 
         reading_value (String):     The value of the reading. Format differs
                                     depending on probe type at the moment **FIXME**.
@@ -74,12 +77,17 @@ class Reading:
     Usage:
         The constructor for this class takes four arguments as specified above.
 
-        >>> my_reading = core_tools.Reading(<an_id>, <a_time>, <a_value>, <a_status>)
-        >>> my_reading = core_tools.Reading("G4:M0", str(datetime.datetime.now()), "500mm", "OK")
+        >>> my_reading = core_tools.Reading(<a_time>, <a_tick>, <an_id>, <a_value>, <a_status>)
+        >>> my_reading = core_tools.Reading(str(datetime.datetime.now()), 100, "G4:M0", "500mm", "OK")
 
     .. warning::
         There is currently **absolutely no** check to see that each instance variable
         actually has the correct format. This will come later.
+
+    .. warning::
+        System ticks have not yet been implemented. As such the value
+        for the tick passed here to the constructor is ignored, and
+        the attribute is set to -1.
 
     .. note::
         Equality methods have been implemented for this class so you can do things like:
@@ -94,11 +102,12 @@ class Reading:
     """
 
     # ---------- CONSTRUCTORS ----------
-    def __init__(self, reading_id, reading_time, reading_value, reading_status):
+    def __init__(self, reading_time, reading_tick, reading_id, reading_value, reading_status):
         """This is the constructor as defined above"""
         #Set some semi-private variables. TODO format checking.
-        self._id = reading_id
         self._time = reading_time
+        self._tick = reading_tick
+        self._id = reading_id
         self._value = reading_value
         self._status = reading_status
 
@@ -136,6 +145,17 @@ class Reading:
         """
 
         return self._id.split(":")[1]
+
+    def get_tick(self):
+        """
+        This method returns the tick when this reading was taken.
+
+        Usage:
+            >>> <Reading-Object>.get_tick()
+            >>> 101
+        """
+
+        return self._tick
 
     def get_time(self):
         """
@@ -181,7 +201,7 @@ class Reading:
         This method is used to compare objects of type Reading.
 
         Currently, objects are equal if all their attributes and values
-        are the same (ignoring the time), and neither object is None.
+        are the same (ignoring the time and tick), and neither object is None.
 
         Usage:
             >>> reading_1 == reading_2
@@ -199,7 +219,7 @@ class Reading:
 
         try:
             #This will return True if all the attributes and values are equal,
-            #ignoring the time the reading was taken.
+            #ignoring the time the reading was taken and the tick.
             return (self._id == other._id
                     and self._value == other._value
                     and self._status == other._status)
@@ -233,10 +253,11 @@ class Reading:
 
         Usage:
             >>> print(reading_1)
-            >>> Reading at time 2018, from probe: G4:M0, with value: 500, and status: FAULT DETECTED
+            >>> Reading at time 2018, and tick 101, from probe: G4:M0, with value: 500, and status: FAULT DETECTED
         """
 
         return ("Reading at time " + self._time
+                + ", and tick " + str(self._tick)
                 + ", from probe: " + self._id
                 + ", with value: " + self._value
                 + ", and status: " + self._status)
@@ -250,13 +271,14 @@ class Reading:
             A String - the comma-separated values.
 
             Format:
-                >>> TIME,FULL_ID,VALUE,STATUS
+                >>> TIME,TICK,FULL_ID,VALUE,STATUS
 
         Usage:
             >>> reading_1.as_csv()
-            >>> 2018-06-11 11:04:01.635548,G4:M0,500,OK
+            >>> 2018-06-11 11:04:01.635548,101,G4:M0,500,OK
         """
         return (self._time
+                + "," + str(self._tick)
                 + "," + self._id
                 + "," + self._value
                 + "," + self._status)
