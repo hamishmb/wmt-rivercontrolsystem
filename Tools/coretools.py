@@ -414,7 +414,7 @@ def get_and_handle_new_reading(monitor, _type, file_handle, server_address=None,
 
             print(reading)
 
-            file_handle.write(reading.as_csv())
+            file_handle.write("\n"+reading.as_csv())
 
         #Flush buffers.
         sys.stdout.flush()

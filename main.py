@@ -253,7 +253,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                     print(sump_reading)
 
-                    file_handle.write(sump_reading.as_csv())
+                    file_handle.write("\n"+sump_reading.as_csv())
 
                     #Set last sump reading to this reading.
                     last_sump_reading = sump_reading
