@@ -292,7 +292,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                         print(butts_reading)
 
-                        file_handle.write(butts_reading.as_csv())
+                        file_handle.write("\n"+butts_reading.as_csv())
 
                         #Set last butts reading to this reading, if this reading is from the float
                         #switch. XXX Temporary solution.
