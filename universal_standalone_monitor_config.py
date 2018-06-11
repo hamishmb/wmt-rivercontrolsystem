@@ -30,7 +30,7 @@ named "DATA" in the format:
 >>>     Probe Name2: (Probe Object2, Pin(s), Default Reading Interval),
 >>> }
 
-The probe name forms the key, and has configuration for:
+The probe name forms the key, and we have configuration for:
 
 - "Resistance Probe"
 - "Hall Effect" (water-wheel)

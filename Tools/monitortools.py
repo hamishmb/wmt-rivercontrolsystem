@@ -82,7 +82,7 @@ class BaseMonitorClass(threading.Thread):
     Usage:
         >>> monitor = BaseMonitorClass(<aProbeObject>, <anInteger>, <aReadingInterval>, <anID>)
 
-        ..note::
+        .. note::
                 This won't do anything helpful by itself;
                 you need to derive from it.
     """

@@ -200,6 +200,9 @@ class Motor(BaseDeviceClass):
         Use the constructor for this class the same way as for BaseDeviceClass.
 
     .. note::
+        Currently this class has no PWM support.
+
+    .. note::
         Upon instantiaton, a Motor object state is (off, no PWM support, no PWM pin).
     """
 
@@ -477,7 +480,7 @@ class ResistanceProbe(BaseDeviceClass):
     Usage:
         Use the constructor for this class the same way as for BaseDeviceClass.
 
-    Note:
+    .. note::
         Upon instantiation, a ResiatanceProbe object is assumed to be active low.
     """
 
@@ -627,6 +630,16 @@ class HallEffectDevice(BaseDeviceClass):
     This class is used to represent a hall effect device (as in what you may
     find in a water wheel).
 
+    .. note::
+        Currently, this class has no facility to check whether the water wheel
+        is going the right way - we haven't implemented the hardware for this yet,
+        and it may be an abandoned idea at this point anyway.
+
+    .. note::
+        Currently, this class has no facility to convert RPM into a flow rate.
+        This is because our prototype water wheel is not yet ready for full
+        deployment and we haven't yet (?) mapped RPM to water flow rate.
+ 
     Documentation for the constructor for objects of type HallEffectDevice:
 
     Usage:
