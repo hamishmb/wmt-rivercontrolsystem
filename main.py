@@ -63,7 +63,7 @@ except ImportError:
 
 #Define global variables.
 VERSION = "0.9.2"
-RELEASEDATE = "11/4/2018"
+RELEASEDATE = "11/6/2018"
 
 def usage():
     """

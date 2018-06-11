@@ -228,10 +228,38 @@ class Reading:
 
     # ---------- OTHER CONVENIENCE METHODS ----------
     def __str__(self):
+        """
+        Just like a Java toString() method.
+
+        Usage:
+            >>> print(reading_1)
+            >>> Reading at time 2018, from probe: G4:M0, with value: 500, and status: FAULT DETECTED
+        """
+
         return ("Reading at time " + self._time
                 + ", from probe: " + self._id
                 + ", with value: " + self._value
                 + ", and status: " + self._status)
+
+    def as_csv(self):
+        """
+        Returns a representation of the Reading object in CSV format.
+        (Comma-Separated Values).
+
+        Returns:
+            A String - the comma-separated values.
+
+            Format:
+                >>> TIME,FULL_ID,VALUE,STATUS
+
+        Usage:
+            >>> reading_1.as_csv()
+            >>> 2018-06-11 11:04:01.635548,G4:M0,500,OK
+        """
+        return (self._time
+                + "," + self._id
+                + "," + self._value
+                + "," + self._status)
 
 def greet_and_get_filename(module_name, file_name):
     """
