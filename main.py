@@ -212,6 +212,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     logger.info("Starting to take readings...")
     print("Starting to take readings. Please stand by...")
 
+    #Write the header for the CSV file.
+    file_handle.write("\nTIME,SYSTEM TICK,ID,VALUE,STATUS\n")
+
     #Start the monitor thread. Take readings indefinitely.
     monitor = monitor_tools.Monitor(sump_probe, 0, reading_interval, system_id)
 

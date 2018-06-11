@@ -273,6 +273,9 @@ def run_standalone():
 
     logger.info("You should begin to see readings now...")
 
+    #Write the header for the CSV file.
+    file_handle.write("\nTIME,SYSTEM TICK,ID,VALUE,STATUS\n")
+
     #Set to sensible defaults to avoid errors.
     old_reading_interval = 0
 
