@@ -394,6 +394,8 @@ def get_and_handle_new_reading(monitor, _type, file_handle, server_address=None,
         >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, <aFile>, "192.168.0.2", <Socket-Obj>)
     """
 
+    reading = None
+
     if monitor.has_data():
         last_reading = monitor.get_previous_reading()
 
