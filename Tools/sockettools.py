@@ -66,7 +66,7 @@ class Sockets:
     Usage:
         >>> my_socket = Sockets("Plug")
 
-    .. note:
+    .. note::
         On instantiation, messages to the commandline are enabled.
     """
 
