@@ -96,10 +96,37 @@ class BaseMonitorClass(threading.Thread):
         self.num_readings = num_readings
         self.reading_interval = reading_interval
         self.system_id = system_id
+
+        self.file_name = "/logs/"+self.system_id+":"+self.probe.get_name()
+        self.file_handle = None
+
         self.queue = deque()
         self.prev_reading = ""
         self.running = False
         self.should_exit = False
+
+    def create_file_handle(self):
+        """
+        This method is used to create / update the
+        file containing the readings for this probe.
+        The file will be opened in append mode, and
+        a CSV header and start time will be written.
+
+        The name for the file will be /logs/<system_id>:<probe_name>.csv
+
+        For example: /logs/G4:M0.csv
+
+        Usage:
+            >>> <BaseMonitorClassObject>.create_file_handle()
+
+        """
+
+        #TODO need a logger here and to catch exceptions.
+        self.file_handle = open(self.file_name, "a")
+
+        #Write the start time and the CSV header.
+        self.file_handle.write("Start Time: "+str(datetime.datetime.now())+"\n\n")
+        self.file_handle.write("\nTIME,SYSTEM TICK,ID,VALUE,STATUS\n")
 
     def is_running(self):
         """
@@ -292,9 +319,13 @@ class Monitor(BaseMonitorClass):
 
                 #Construct a Reading object to hold this info.
                 #Args in order: Time, Tick, ID, Value, Status
-                self.queue.append(coretools.Reading(str(datetime.datetime.now()), -1,
-                                                    self.system_id+":"+self.probe.get_name(),
-                                                    str(the_reading), status_text))
+                reading = coretools.Reading(str(datetime.datetime.now()), -1,
+                                            self.system_id+":"+self.probe.get_name(),
+                                            str(the_reading), status_text)
+
+                #Add it to the queue and write it to the readings file.
+                self.queue.append(reading)
+                self.file_handle.write("\n"+reading.as_csv())
 
                 if self.num_readings != 0:
                     num_readings_taken += 1
