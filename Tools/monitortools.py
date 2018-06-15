@@ -97,7 +97,7 @@ class BaseMonitorClass(threading.Thread):
         self.reading_interval = reading_interval
         self.system_id = system_id
 
-        self.file_name = "/logs/"+self.system_id+":"+self.probe.get_name()
+        self.file_name = "logs/"+self.system_id+":"+self.probe.get_name()+".csv"
         self.file_handle = None
 
         self.queue = deque()
@@ -115,9 +115,9 @@ class BaseMonitorClass(threading.Thread):
         The file will be opened in append mode, and
         a CSV header and start time will be written.
 
-        The name for the file will be /logs/<system_id>:<probe_name>.csv
+        The name for the file will be logs/<system_id>:<probe_name>.csv
 
-        For example: /logs/G4:M0.csv
+        For example: logs/G4:M0.csv
 
         Usage:
             >>> <BaseMonitorClassObject>.create_file_handle()
