@@ -105,9 +105,6 @@ class BaseMonitorClass(threading.Thread):
         self.running = False
         self.should_exit = False
 
-        #Set up the readings file.
-        self.create_file_handle()
-
     def create_file_handle(self):
         """
         This method is used to create / update the
@@ -315,6 +312,9 @@ class Monitor(BaseMonitorClass):
 
         num_readings_taken = 0
         self.running = True
+
+        #Set up the readings file.
+        self.create_file_handle()
 
         try:
             while (not self.should_exit) and (self.num_readings == 0 or (num_readings_taken < self.num_readings)):

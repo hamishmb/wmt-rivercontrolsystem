@@ -105,9 +105,6 @@ class BaseMonitorClass(threading.Thread):
         self.running = False
         self.should_exit = False
 
-        #Set up the readings file.
-        self.create_file_handle()
-
     def create_file_handle(self):
         """
         This method is used to create / update the
@@ -329,6 +326,7 @@ class Monitor(BaseMonitorClass):
                 #Add it to the queue and write it to the readings file.
                 self.queue.append(reading)
                 self.file_handle.write("\n"+reading.as_csv())
+                self.file_handle.flush()
 
                 if self.num_readings != 0:
                     num_readings_taken += 1
