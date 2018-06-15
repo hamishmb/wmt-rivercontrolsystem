@@ -377,7 +377,7 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, butts_pump, main_pump,
 
     The butts pump is turned on when the sump level >= 600mm, and
     turned off when it reaches 400mm. The circulation pump is
-    turned on when the sump level >= 400, and otherwise the
+    turned on when the sump level >= 300, and otherwise the
     circulation pump will be turned off.
 
     The reading intervals at both the sumppi and the buttspi end
@@ -515,11 +515,11 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, butts_pump, main_pump,
         print("Waiting for water to come back from the butts before requesting "
               +"human intervention...")
 
-        #Make sure the main circulation pump is off.
-        logger.warning("Disabling the main circulation pump, if it was on...")
-        print("Disabling the main circulation pump, if it was on...")
+        #Make sure the main circulation pump is on.
+        logger.info("Turning the main circulation pump on, if it was off...")
+        print("Turning the main circulation pump on, if it was off...")
 
-        main_pump.disable()
+        main_pump.enable()
 
         logger.warning("Setting reading interval to 1 minute so we can monitor more closely...")
         print("Setting reading interval to 1 minute so we can monitor more closely...")
