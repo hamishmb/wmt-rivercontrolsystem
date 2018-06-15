@@ -125,7 +125,7 @@ class BaseMonitorClass(threading.Thread):
         self.file_handle = open(self.file_name, "a")
 
         #Write the start time and the CSV header.
-        self.file_handle.write("Start Time: "+str(datetime.datetime.now())+"\n\n")
+        self.file_handle.write("\n\nStart Time: "+str(datetime.datetime.now())+"\n\n")
         self.file_handle.write("\nTIME,SYSTEM TICK,ID,VALUE,STATUS\n")
 
     def is_running(self):
@@ -349,5 +349,6 @@ class Monitor(BaseMonitorClass):
             #Ignore all errors. Generally bad practice :P
             print("\nCaught Exception: ", err)
 
+        self.file_handle.close()
         self.running = False
 

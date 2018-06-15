@@ -283,22 +283,13 @@ class Reading:
                 + "," + self._value
                 + "," + self._status)
 
-def greet_and_get_filename(module_name, file_name):
+def greet_user(module_name): #TODO do we need this.
     """
-    This function greets the user and, if needed (not specified on the
-    commandline), asks him/her for a file name to store readings in. It
-    then proceeds to check that the file is valid and writable.
+    This function greets the user.
 
     Args:
         module_name (str):  The program that has been started. Either
                             the main software or the universal monitor.
-
-        file_name (str):    The file name the program got from the
-                            commandline arguments. Prompt user to enter
-                            a name if this is "Unknown".
-
-    Returns:
-        tuple(str <file name>, file <file handle>)
 
     Raises:
         None, but will exit the program if a critical error is
@@ -306,7 +297,7 @@ def greet_and_get_filename(module_name, file_name):
 
     Usage:
 
-        >>> file_name, file_handle = greet_and_get_filename("AProgramName", "AFileName")
+        >>> greet_user("AProgramName")
 
     """
 
@@ -315,51 +306,9 @@ def greet_and_get_filename(module_name, file_name):
     print("Welcome. This program will quit automatically if you specified a number of readings.")
     print("otherwise quit by pressing CTRL-C when you wish.\n")
 
-    #Get filename, if one wasn't specified.
-    if file_name == "Unknown":
-        print("Please enter a filename to save the readings to.")
-        print("This isn't a log file. The log file will be created automatically")
-        print("and will store debugging information, whereas this file just stores")
-        print("Readings.\n")
-        print("The file will be appended to.")
-        print("Make sure it's somewhere where there's plenty of disk space.")
+    return
 
-        sys.stdout.write("Enter filename and press ENTER: ")
-
-        file_name = input()
-
-        print("\n\nSelected File: "+file_name)
-
-        if os.path.isfile(file_name):
-            print("*WARNING* This file already exists!")
-
-        print("Press CTRL-C if you are not happy with this choice.\n")
-
-        print("Press ENTER to continue...")
-
-        input() #Wait until user presses enter.
-
-    if os.path.isfile(file_name):
-        print("*WARNING* The file chosen already exists!")
-
-    try:
-        print("Opening file...")
-        recordings_file_handle = open(file_name, "a")
-
-    except BaseException as err:
-        #Bad practice :P
-        print("Error opening file. Do you have permission to write there?")
-        print("Exiting...")
-        sys.exit()
-
-    else:
-        recordings_file_handle.write("Start Time: "+str(datetime.datetime.now())+"\n\n")
-        recordings_file_handle.write("Starting to take readings...\n")
-        print("Successfully opened file. Continuing..")
-
-    return file_name, recordings_file_handle
-
-def get_and_handle_new_reading(monitor, _type, file_handle, server_address=None, socket=None):
+def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None):
     """
     This function is used to get, handle, and return new readings from the
     monitors. It checks each monitor to see if there is data, then prints
@@ -369,7 +318,6 @@ def get_and_handle_new_reading(monitor, _type, file_handle, server_address=None,
     Args:
         monitor (BaseMonitorClass):     The monitor we're checking.
         _type (str):                    The type of probe we're monitoring.
-        file_handle (file):             A handle for the readings file.
 
     KWargs:
         server_address (str):           The server address. Set to None if
@@ -379,19 +327,19 @@ def get_and_handle_new_reading(monitor, _type, file_handle, server_address=None,
                                         Set to None if not specified.
 
     Returns:
-        A Reading object..
+        A Reading object.
 
     Usage:
 
-        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, <aFile>)
+        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>)
 
         OR
 
-        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, <aFile>, "192.168.0.2")
+        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, "192.168.0.2")
 
         OR
 
-        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, <aFile>, "192.168.0.2", <Socket-Obj>)
+        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, "192.168.0.2", <Socket-Obj>)
     """
 
     reading = None
@@ -406,7 +354,6 @@ def get_and_handle_new_reading(monitor, _type, file_handle, server_address=None,
             #Write a . to each file.
             logger.info(".")
             print(".", end='') #Disable newline when printing this message.
-            file_handle.write(".")
 
         else:
             #Write any new readings to the file and to stdout.
@@ -414,11 +361,9 @@ def get_and_handle_new_reading(monitor, _type, file_handle, server_address=None,
 
             print(reading)
 
-            file_handle.write("\n"+reading.as_csv())
 
         #Flush buffers.
         sys.stdout.flush()
-        file_handle.flush()
 
         if server_address is not None:
             socket.write(reading)

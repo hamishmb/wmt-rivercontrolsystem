@@ -125,7 +125,7 @@ class BaseMonitorClass(threading.Thread):
         self.file_handle = open(self.file_name, "a")
 
         #Write the start time and the CSV header.
-        self.file_handle.write("Start Time: "+str(datetime.datetime.now())+"\n\n")
+        self.file_handle.write("\n\nStart Time: "+str(datetime.datetime.now())+"\n\n")
         self.file_handle.write("\nTIME,SYSTEM TICK,ID,VALUE,STATUS\n")
 
     def is_running(self):
@@ -312,6 +312,9 @@ class Monitor(BaseMonitorClass):
 
         num_readings_taken = 0
         self.running = True
+
+        #Set up the readings file.
+        self.create_file_handle()
 
         try:
             while (not self.should_exit) and (self.num_readings == 0 or (num_readings_taken < self.num_readings)):

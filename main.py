@@ -63,7 +63,7 @@ except ImportError:
 
 #Define global variables.
 VERSION = "0.9.2"
-RELEASEDATE = "11/6/2018"
+RELEASEDATE = "15/6/2018"
 
 def usage():
     """
@@ -78,8 +78,6 @@ def usage():
     print("\nUsage: main.py [OPTION]\n\n")
     print("Options:\n")
     print("       -h, --help:               Show this help message")
-    print("       -f, --file:               Specify file to write the recordings to.")
-    print("                                 If not specified: interactive.")
     print("       -i, --id:                 Specify the ID of this instance of the")
     print("                                 software. eg \"SUMP\", or \"G4\"Mandatory.")
     print("main.py is released under the GNU GPL Version 3")
@@ -92,29 +90,26 @@ def handle_cmdline_options():
 
     Valid commandline options to main.py:
         -h, --help         Calls the usage() function to display help information to the user.
-        -f, --file         Specifies file to write the recordings to. If not specified, the
-                           user is asked during execution in the greeting phase.
         -i, --id           Specify the ID name of this instance of the software. eg: 'SUMP', 'G4'
                            etc. Used to identify which reading is coming from which probe.
                            Mandatory.
 
     Returns:
-        tuple(string file_name, string system_id).
+        string system_id.
 
     Raises:
         AssertionError, if there are unhandled options, or if the ID isn't specified.
 
     Usage:
 
-    >>> filename = handle_cmdline_options()
+    >>> system_id = handle_cmdline_options()
     """
 
-    file_name = "Unknown"
     system_id = "Unknown"
 
     #Check all cmdline options are valid.
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hf:i:", ["help", "file=", "id="])
+        opts, args = getopt.getopt(sys.argv[1:], "hi:", ["help", "id="])
 
     except getopt.GetoptError as err:
         #Invalid option. Show the help message and then exit.
@@ -125,10 +120,7 @@ def handle_cmdline_options():
 
     #Do setup. o=option, a=argument.
     for o, a in opts:
-        if o in ["-f", "--file"]:
-            file_name = a
-
-        elif o in ("-i", "--id"):
+        if o in ("-i", "--id"):
             system_id = a
 
         elif o in ["-h", "--help"]:
@@ -142,7 +134,7 @@ def handle_cmdline_options():
     if system_id == "Unknown":
         assert False, "You must specify the ID."
 
-    return file_name, system_id
+    return system_id
 
 def run_standalone(): #TODO Refactor me into lots of smaller functions.
     """
@@ -174,7 +166,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     """
 
     #Handle cmdline options.
-    file_name, system_id = handle_cmdline_options()
+    system_id = handle_cmdline_options()
 
     #Provide a connection for clients to connect to.
     logger.info("Creating a socket for clients to connect to, please wait...")
@@ -184,8 +176,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     logger.debug("Done!")
 
-    #Greet and get filename.
-    file_name, file_handle = core_tools.greet_and_get_filename("River System Control and Monitoring Software", file_name)
+    #Greet user.
+    core_tools.greet_user("River System Control and Monitoring Software")
 
     #Create the devices.
     sump_probe = sensor_objects.HallEffectProbe("M0")
@@ -211,9 +203,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     logger.info("Starting to take readings...")
     print("Starting to take readings. Please stand by...")
-
-    #Write the header for the CSV file.
-    file_handle.write("\nTIME,SYSTEM TICK,ID,VALUE,STATUS\n")
 
     #Start the monitor thread. Take readings indefinitely.
     monitor = monitor_tools.Monitor(sump_probe, 0, reading_interval, system_id)
@@ -248,7 +237,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                     #Write a . to each file.
                     logger.info(".")
                     print(".", end='') #Disable newline when printing this message.
-                    file_handle.write(".")
 
                 else:
                     #Write any new readings to the file and to stdout.
@@ -256,14 +244,11 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                     print(sump_reading)
 
-                    file_handle.write("\n"+sump_reading.as_csv())
-
                     #Set last sump reading to this reading.
                     last_sump_reading = sump_reading
 
                 #Flush buffers.
                 sys.stdout.flush()
-                file_handle.flush()
 
             #Check for new readings from buttspi.
             while socket.has_data():
@@ -284,15 +269,12 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                         #Write a . to each file.
                         logger.info(".")
                         print(".", end='') #Disable newline when printing this message.
-                        file_handle.write(".")
 
                     else:
                         #Write any new readings to the file and to stdout.
                         logger.info(str(butts_reading))
 
                         print(butts_reading)
-
-                        file_handle.write("\n"+butts_reading.as_csv())
 
                         #Set last butts reading to this reading, if this reading is from the float
                         #switch. XXX Temporary solution. FIXME Do this properly and remove some
@@ -323,8 +305,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #Always clean up properly.
     logger.info("Cleaning up...")
     print("Cleaning up...")
-
-    file_handle.close()
 
     socket.request_handler_exit()
     socket.wait_for_handler_to_exit()

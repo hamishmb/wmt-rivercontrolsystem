@@ -69,8 +69,6 @@ def usage():
     print("                                 'Resistance Probe', 'Hall Effect', 'Hall Effect Probe',")
     print("                                 'Capacitive Probe', 'Float Switch'. Mandatory. Specify")
     print("                                 multiple times for multiple probes.")
-    print("       -f, --file:               Specify file to write the recordings to.")
-    print("                                 If not specified: interactive.")
     print("       -c, --controlleraddress:  Specify the DNS name/IP of the controlling server")
     print("                                 we want to send our level data to, if any.")
     print("       -n <int>, --num=<int>     Specify number of readings to take before exiting.")
@@ -93,9 +91,6 @@ def handle_cmdline_options():
                                             'Resistance Probe', 'Hall Effect', 'Hall Effect Probe'
                                             'Capacitive Probe', or 'Float Switch'. Mandatory.
                                             Specify multiple times for multiple probes.
-        -f, --file                          Specifies file to write the recordings to. If not
-                                            specified, the user is asked during execution in
-                                            the greeting phase.
         -c, --controlleraddress             Specify the DNS name/IP of the controlling server
                                             to which we want to send our level data to, if any.
         -n <int>, --num=<int>               Specify the number of readings to take before exiting.
@@ -106,7 +101,7 @@ def handle_cmdline_options():
                                             is coming from which probe. Mandatory.
 
     Returns:
-        tuple (list types, string file_name, string server_address, int num_readings).
+        tuple (list types, string server_address, int num_readings).
 
             This will be whatever arguments the user provided on the commandline.
             If any arguments were missing, default values will be provided instead
@@ -117,18 +112,17 @@ def handle_cmdline_options():
 
     Usage:
 
-    >>> types, file_name, system_id, server_address, num_readings = handle_cmdline_options()
+    >>> types, system_id, server_address, num_readings = handle_cmdline_options()
     """
 
     types = []
-    file_name = "Unknown"
     system_id = "Unknown"
     server_address = None
 
     #Check all cmdline options are valid.
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "ht:f:i:c:n:",
-                                   ["help", "type=", "file=", "id=", "controlleraddress=", "num="])
+        opts, args = getopt.getopt(sys.argv[1:], "ht:i:c:n:",
+                                   ["help", "type=", "id=", "controlleraddress=", "num="])
 
     except getopt.GetoptError as err:
         #Invalid option. Show the help message and then exit.
@@ -143,9 +137,6 @@ def handle_cmdline_options():
     for o, a in opts:
         if o in ["-t", "--type"]:
             types.append(a)
-
-        elif o in ["-f", "--file"]:
-            file_name = a
 
         elif o in ("-i", "--id"):
             system_id = a
@@ -170,7 +161,7 @@ def handle_cmdline_options():
     if system_id == "Unknown":
         assert False, "You must specify the ID."
 
-    return types, file_name, system_id, server_address, num_readings
+    return types, system_id, server_address, num_readings
 
 def run_standalone():
     """
@@ -202,7 +193,7 @@ def run_standalone():
     """
 
     #Handle cmdline options.
-    types, file_name, system_id, server_address, num_readings = handle_cmdline_options()
+    types, system_id, server_address, num_readings = handle_cmdline_options()
 
     if len(types) == 1:
         logger.debug("Running in "+types[0]+" mode...")
@@ -225,9 +216,8 @@ def run_standalone():
         print("Will connect to server as soon as it becomes available.")
 
     #Greet and get filename.
-    logger.info("Greeting user and asking for filename if required...")
-    file_name, file_handle = core_tools.greet_and_get_filename("Universal Monitor", file_name)
-    logger.info("File name: "+file_name+"...")
+    logger.info("Greeting user...")
+    core_tools.greet_user("Universal Monitor")
 
     #Get settings for each type of monitor from the config file.
     logger.info("Setting up the probes...")
@@ -273,9 +263,6 @@ def run_standalone():
 
     logger.info("You should begin to see readings now...")
 
-    #Write the header for the CSV file.
-    file_handle.write("\nTIME,SYSTEM TICK,ID,VALUE,STATUS\n")
-
     #Set to sensible defaults to avoid errors.
     old_reading_interval = 0
 
@@ -291,7 +278,7 @@ def run_standalone():
                     #Check for new readings. NOTE: Later on, use the readings returned from this
                     #for state history generation etc.
                     core_tools.get_and_handle_new_reading(monitor, types[monitors.index(monitor)],
-                                                          file_handle, server_address, socket)
+                                                          server_address, socket)
 
             #Wait until it's time to check for another reading.
             #I know we could use a long time.sleep(),
@@ -342,8 +329,6 @@ def run_standalone():
     #Always clean up properly.
     logger.info("Cleaning up...")
     print("Cleaning up...")
-
-    file_handle.close()
 
     if server_address is not None:
         socket.request_handler_exit()
