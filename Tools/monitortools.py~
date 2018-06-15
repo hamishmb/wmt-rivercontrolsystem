@@ -311,7 +311,10 @@ class Monitor(BaseMonitorClass):
         """
 
         num_readings_taken = 0
+        previous_reading = None #NB: Just to use here, rather then self.prev_reading,
+                                #which is for external users.
         self.running = True
+
 
         #Set up the readings file.
         self.create_file_handle()
@@ -326,9 +329,19 @@ class Monitor(BaseMonitorClass):
                                             self.system_id+":"+self.probe.get_name(),
                                             str(the_reading), status_text)
 
-                #Add it to the queue and write it to the readings file.
+                #Add it to the queue.
                 self.queue.append(reading)
-                self.file_handle.write("\n"+reading.as_csv())
+
+                if reading == previous_reading:
+                    #Write a . to the file.
+                    file_handle.write(".")
+
+                else:
+                    #Write it to the readings file.
+                    self.file_handle.write("\n"+reading.as_csv())
+
+                    previous_reading = reading
+
                 self.file_handle.flush()
 
                 if self.num_readings != 0:
@@ -349,5 +362,6 @@ class Monitor(BaseMonitorClass):
             #Ignore all errors. Generally bad practice :P
             print("\nCaught Exception: ", err)
 
+        self.file_handle.close()
         self.running = False
 
