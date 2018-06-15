@@ -105,6 +105,9 @@ class BaseMonitorClass(threading.Thread):
         self.running = False
         self.should_exit = False
 
+        #Set up the readings file.
+        self.create_file_handle()
+
     def create_file_handle(self):
         """
         This method is used to create / update the

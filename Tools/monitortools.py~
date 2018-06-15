@@ -324,7 +324,7 @@ class Monitor(BaseMonitorClass):
                                             str(the_reading), status_text)
 
                 #Add it to the queue and write it to the readings file.
-                self.queue.append()
+                self.queue.append(reading)
                 self.file_handle.write("\n"+reading.as_csv())
 
                 if self.num_readings != 0:
