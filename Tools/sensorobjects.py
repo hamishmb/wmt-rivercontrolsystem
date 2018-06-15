@@ -631,14 +631,8 @@ class HallEffectDevice(BaseDeviceClass):
     find in a water wheel).
 
     .. note::
-        Currently, this class has no facility to check whether the water wheel
-        is going the right way - we haven't implemented the hardware for this yet,
-        and it may be an abandoned idea at this point anyway.
-
-    .. note::
         Currently, this class has no facility to convert RPM into a flow rate.
-        This is because our prototype water wheel is not yet ready for full
-        deployment and we haven't yet (?) mapped RPM to water flow rate.
+        The data is available but this hasn't been implemented.
  
     Documentation for the constructor for objects of type HallEffectDevice:
 

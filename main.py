@@ -295,7 +295,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                         file_handle.write("\n"+butts_reading.as_csv())
 
                         #Set last butts reading to this reading, if this reading is from the float
-                        #switch. XXX Temporary solution.
+                        #switch. XXX Temporary solution. FIXME Do this properly and remove some
+                        #more of the duplication.
                         if butts_reading.get_id() == "G4:FS0":
                             last_butts_reading = butts_reading
 
