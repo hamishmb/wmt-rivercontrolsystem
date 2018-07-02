@@ -65,10 +65,6 @@ SUMP_SITE_ID = "SUMP"
 #ID for the butts site.
 WENDY_BUTTS_SITE_ID = "G4"
 
-
-
-
-
 #FIXME: Pins MUST NOT conflict.
 PROBE_SETTINGS = {
     #Probe Name: (Probe Object, Pin(s), Default Reading Interval)

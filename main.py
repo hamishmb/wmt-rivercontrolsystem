@@ -42,7 +42,6 @@ It communicates with buttspi over the network to gather float switch readings.
 
 import time
 import sys
-import getopt #Proper option handler.
 import logging
 import traceback
 
@@ -66,58 +65,6 @@ except ImportError:
 #Define global variables.
 VERSION = "0.9.2"
 RELEASEDATE = "2/7/2018"
-
-def usage():
-    """
-    This function is used to output help information to the standard output
-    if the user passes invalid/incorrect commandline arguments.
-
-    Usage:
-
-    >>> usage()
-    """
-
-    print("\nUsage: main.py [OPTION]\n\n")
-    print("Options:\n")
-    print("       -h, --help:               Show this help message")
-    print("main.py is released under the GNU GPL Version 3")
-    print("Copyright (C) Wimborne Model Town 2017-2018")
-
-def handle_cmdline_options():
-    """
-    This function is used to handle the commandline options passed
-    to main.py.
-
-    Valid commandline options to main.py:
-        -h, --help         Calls the usage() function to display help information to the user.
-
-    Raises:
-        AssertionError, if there are unhandled options.
-
-    Usage:
-
-    >>> handle_cmdline_options()
-    """
-
-    #Check all cmdline options are valid.
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], "h", ["help"])
-
-    except getopt.GetoptError as err:
-        #Invalid option. Show the help message and then exit.
-        #Show the error.
-        print(str(err))
-        usage()
-        sys.exit(2)
-
-    #Do setup. o=option, a=argument.
-    for o, a in opts:
-        if o in ["-h", "--help"]:
-            usage()
-            sys.exit()
-
-        else:
-            assert False, "unhandled option"
 
 def run_standalone(): #TODO Refactor me into lots of smaller functions.
     """
@@ -147,9 +94,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     Usage:
         As above.
     """
-
-    #Handle cmdline options.
-    handle_cmdline_options()
 
     #Get system ID from config.
     system_id = config.SUMP_SITE_ID
