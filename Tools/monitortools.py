@@ -127,6 +127,7 @@ class BaseMonitorClass(threading.Thread):
         #Write the start time and the CSV header.
         self.file_handle.write("\n\nStart Time: "+str(datetime.datetime.now())+"\n\n")
         self.file_handle.write("\nTIME,SYSTEM TICK,ID,VALUE,STATUS\n")
+        self.file_handle.flush()
 
     def is_running(self):
         """
@@ -315,7 +316,6 @@ class Monitor(BaseMonitorClass):
                                 #which is for external users.
         self.running = True
 
-
         #Set up the readings file.
         self.create_file_handle()
 
@@ -440,7 +440,6 @@ class SocketsMonitor(BaseMonitorClass):
         previous_reading = None #NB: Just to use here, rather then self.prev_reading,
                                 #which is for external users.
         self.running = True
-
 
         #Set up the readings file.
         self.create_file_handle()

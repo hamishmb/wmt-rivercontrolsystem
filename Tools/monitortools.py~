@@ -315,7 +315,6 @@ class Monitor(BaseMonitorClass):
                                 #which is for external users.
         self.running = True
 
-
         #Set up the readings file.
         self.create_file_handle()
 
@@ -441,16 +440,15 @@ class SocketsMonitor(BaseMonitorClass):
                                 #which is for external users.
         self.running = True
 
-
         #Set up the readings file.
         self.create_file_handle()
 
         try:
             while not self.should_exit:
                 if self.socket.has_data():
-                    the_reading = self.socket.read()
+                    reading = self.socket.read()
 
-                    if the_reading.get_sensor_id() == self.probe_id:
+                    if reading.get_sensor_id() == self.probe_id:
                         #Add it to the queue.
                         self.queue.append(reading)
 
