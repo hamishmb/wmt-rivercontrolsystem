@@ -56,7 +56,7 @@ from Tools import monitortools as monitor_tools
 from Tools import coretools as core_tools
 from Tools import sockettools as socket_toolsrom 
 
-from monitor_tools import SocketsMonitor
+from Tools.monitor_tools import SocketsMonitor
 
 try:
     #Allow us to generate documentation on non-RPi systems.
