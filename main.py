@@ -54,7 +54,7 @@ import Tools
 from Tools import sensorobjects as sensor_objects
 from Tools import monitortools as monitor_tools
 from Tools import coretools as core_tools
-from Tools import sockettools as socket_toolsrom 
+from Tools import sockettools as socket_tools 
 
 from Tools.monitortools import SocketsMonitor
 
