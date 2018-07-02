@@ -41,6 +41,7 @@ It communicates with buttspi over the network to gather float switch readings.
 """
 
 import time
+import datetime
 import sys
 import logging
 import traceback
@@ -53,7 +54,9 @@ import Tools
 from Tools import sensorobjects as sensor_objects
 from Tools import monitortools as monitor_tools
 from Tools import coretools as core_tools
-from Tools import sockettools as socket_tools
+from Tools import sockettools as socket_toolsrom 
+
+from monitor_tools import SocketsMonitor
 
 try:
     #Allow us to generate documentation on non-RPi systems.
@@ -137,6 +140,12 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #Start the monitor thread. Take readings indefinitely.
     monitor = monitor_tools.Monitor(sump_probe, 0, reading_interval, system_id)
 
+    #Start monitor threads for the socket (wendy house butts).
+    monitors = []
+
+    monitors.append(SocketsMonitor(socket, reading_interval, "G4", "FS0"))
+    monitors.append(SocketsMonitor(socket, reading_interval, "G4", "M0"))
+
     #Wait until the first reading has come in so we are synchronised.
     while not monitor.has_data():
         time.sleep(0.5)
@@ -145,10 +154,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     time.sleep(10)
 
     #Setup. Prevent errors.
-    butts_reading = None
-    last_butts_reading = None
-
     sump_reading = None
+    butts_reading = None
     last_sump_reading = None
 
     #Keep tabs on its progress so we can write new readings to the file.
@@ -181,41 +188,15 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                 sys.stdout.flush()
 
             #Check for new readings from buttspi.
-            while socket.has_data():
-                butts_reading = socket.read()
+            for wendy_butts_monitor in monitors:
+                if wendy_butts_monitor.is_running():
+                    #Check for new readings. NOTE: Later on, use the readings returned from this
+                    #for state history generation etc.
+                    reading = core_tools.get_and_handle_new_reading(wendy_butts_monitor, "test")
 
-                socket.pop()
-
-                if butts_reading == "":
-                    #Client not ready, ignore this reading, but prevent errors.
-                    #Assume the butts are full.
-                    logger.info("Client not ready/connected. Assuming butts are full for now.")
-                    print("Client not ready/connected. Assuming butts are full for now.")
-                    butts_reading = "Time: None State: True"
-
-                else:
-                    #Check if the reading is different to the last reading.
-                    if butts_reading == last_butts_reading:
-                        #Write a . to each file.
-                        logger.info(".")
-                        print(".", end='') #Disable newline when printing this message.
-
-                    else:
-                        #Write any new readings to the file and to stdout.
-                        logger.info(str(butts_reading))
-
-                        print(butts_reading)
-
-                        #Set last butts reading to this reading, if this reading is from the float
-                        #switch. XXX Temporary solution. FIXME Do this properly and remove some
-                        #more of the duplication.
-                        if butts_reading.get_id() == "G4:FS0":
-                            last_butts_reading = butts_reading
-
-                        else:
-                            #Otherwise ignore this reading because we don't want to make any
-                            #decisions off it.
-                            butts_reading = last_butts_reading
+                    if reading.get_id() == "G4:M0":
+                        butts_reading = reading
+                   
             #Logic.
             reading_interval = core_tools.do_control_logic(sump_reading, butts_reading, butts_pump,
                                                            main_pump, monitor, socket,
@@ -231,6 +212,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         print("This may take a little while, so please be patient...")
 
         monitor.request_exit(wait=True)
+
+        for wendy_butts_monitor in monitors:
+            wendy_butts_monitor.request_exit(wait=True)
 
     #Always clean up properly.
     logger.info("Cleaning up...")

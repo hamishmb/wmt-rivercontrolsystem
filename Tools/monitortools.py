@@ -365,3 +365,121 @@ class Monitor(BaseMonitorClass):
         self.file_handle.close()
         self.running = False
 
+# ---------- Universal Sockets Monitor ----------
+class SocketsMonitor(BaseMonitorClass):
+    """
+    This is the universal sockets monitor thread that is used to monitor all
+    probe types over a socket. It inherits from BaseMonitorClass. This is
+    also quite a simple class.
+
+    Documentation for constructor for objects of type SocketsMonitor:
+
+    Args:
+        socket (Sockets):           The socket to read readings from.
+
+        reading_interval (int):     As defined in BaseMonitorClass'
+                                    constructor.
+
+        system_id (str):            As defined in BaseMonitorClass'
+                                    constructor.
+
+        probe_id (str):             The ID of the probe we're looking for.
+
+    Invokes:
+        Constructor for BaseMonitorClass.
+        self.start() - starts the monitor thread.
+
+    Usage:
+        >>> monitor = Monitor(<aProbeObject>, <anInteger>, <aReadingInterval>, <anID>)
+    """
+
+    def __init__(self, socket, reading_interval, system_id, probe_id):
+        #TODO adjust BaseMonitorClass.
+        #BaseMonitorClass.__init__(self, probe, num_readings, reading_interval, system_id)
+
+        threading.Thread.__init__(self)
+        self.socket = socket
+        self.reading_interval = reading_interval
+        self.system_id = system_id
+        self.probe_id = probe_id
+
+        self.file_name = "readings/"+self.system_id+":"+self.probe_id+".csv"
+        self.file_handle = None
+
+        self.queue = deque()
+        self.prev_reading = ""
+        self.running = False
+        self.should_exit = False
+
+        self.start()
+
+    def run(self):
+        """
+        This method is the body of the thread. It does some setup and then
+        enters a monitor loop, where it checks for readings and adds them
+        to the queue at every interval of <reading_interval> seconds long.
+
+        The loop will continue to run until it is asked to exit.
+
+        Usage:
+
+            .. warning::
+                Only call me from within a constructor with start(). Do **NOT** call
+                me with run(), and **ABSOLUTELY DO NOT** call me outside a constructor
+                for objects of this type.
+
+            .. warning::
+                Doing the above could cause any number of strange and unstable
+                situations to occcur. Running self.start() is the only way (with the
+                threading library) to start a new thread.
+
+            >>> self.start()
+
+        """
+
+        previous_reading = None #NB: Just to use here, rather then self.prev_reading,
+                                #which is for external users.
+        self.running = True
+
+
+        #Set up the readings file.
+        self.create_file_handle()
+
+        try:
+            while not self.should_exit:
+                if self.socket.has_data():
+                    reading = self.socket.read()
+
+                    if reading.get_sensor_id() == self.probe_id:
+                        #Add it to the queue.
+                        self.queue.append(reading)
+
+                        if reading == previous_reading:
+                            #Write a . to the file.
+                            self.file_handle.write(".")
+
+                        else:
+                            #Write it to the readings file.
+                            self.file_handle.write("\n"+reading.as_csv())
+
+                            previous_reading = reading
+
+                        self.file_handle.flush()
+
+                #Take readings every however often it is.
+                #I know we could use a long time.sleep(),
+                #but this MUST be responsive to changes in the reading interval.
+                count = 0
+
+                while count < self.reading_interval:
+                    #This way, if our reading interval changes,
+                    #the code will respond to the change immediately.
+                    time.sleep(1)
+                    count += 1
+
+        except BaseException as err:
+            #Ignore all errors. Generally bad practice :P
+            print("\nCaught Exception: ", err)
+
+        self.file_handle.close()
+        self.running = False
