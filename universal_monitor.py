@@ -35,7 +35,7 @@ import sys
 import traceback
 
 #Do required imports.
-import universal_standalone_monitor_config as config
+import config
 
 import Tools
 
@@ -226,9 +226,9 @@ def run_standalone():
 
     for _type in types:
         logger.info("Asserting that the specified type is valid...")
-        assert _type in config.DATA, "Invalid Type Specified"
+        assert _type in config.PROBE_SETTINGS, "Invalid Type Specified"
 
-        probe, pins, reading_interval = config.DATA[_type]
+        probe, pins, reading_interval = config.PROBE_SETTINGS[_type]
 
         #Generate an ID FIXME what if multiple types of same probe?
         #TODO Make a separate function to generate unique IDs.

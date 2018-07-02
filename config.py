@@ -23,9 +23,9 @@ case means that this same program can be used for all of
 the probes this software framework supports.
 
 This essentially takes the form of a dictionary object
-named "DATA" in the format:
+named "PROBE_SETTINGS" in the format:
 
->>> DATA = {
+>>> PROBE_SETTINGS = {
 >>>     Probe Name: (Probe Object, Pin(s), Default Reading Interval),
 >>>     Probe Name2: (Probe Object2, Pin(s), Default Reading Interval),
 >>> }
@@ -61,7 +61,7 @@ import Tools
 
 #FIXME: Pins MUST NOT conflict.
 
-DATA = {
+PROBE_SETTINGS = {
     #Probe Name: (Probe Object, Pin(s), Default Reading Interval)
 
     "Resistance Probe": (Tools.sensorobjects.ResistanceProbe, (15, 17, 27, 22, 23, 24, 10, 9, 25, 11), 300),
