@@ -47,6 +47,8 @@ import logging
 import traceback
 
 #Do required imports.
+import config
+
 import Tools
 
 from Tools import sensorobjects as sensor_objects
@@ -63,7 +65,7 @@ except ImportError:
 
 #Define global variables.
 VERSION = "0.9.2"
-RELEASEDATE = "15/6/2018"
+RELEASEDATE = "2/7/2018"
 
 def usage():
     """
@@ -78,8 +80,6 @@ def usage():
     print("\nUsage: main.py [OPTION]\n\n")
     print("Options:\n")
     print("       -h, --help:               Show this help message")
-    print("       -i, --id:                 Specify the ID of this instance of the")
-    print("                                 software. eg \"SUMP\", or \"G4\"Mandatory.")
     print("main.py is released under the GNU GPL Version 3")
     print("Copyright (C) Wimborne Model Town 2017-2018")
 
@@ -90,26 +90,18 @@ def handle_cmdline_options():
 
     Valid commandline options to main.py:
         -h, --help         Calls the usage() function to display help information to the user.
-        -i, --id           Specify the ID name of this instance of the software. eg: 'SUMP', 'G4'
-                           etc. Used to identify which reading is coming from which probe.
-                           Mandatory.
-
-    Returns:
-        string system_id.
 
     Raises:
-        AssertionError, if there are unhandled options, or if the ID isn't specified.
+        AssertionError, if there are unhandled options.
 
     Usage:
 
-    >>> system_id = handle_cmdline_options()
+    >>> handle_cmdline_options()
     """
-
-    system_id = "Unknown"
 
     #Check all cmdline options are valid.
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hi:", ["help", "id="])
+        opts, args = getopt.getopt(sys.argv[1:], "h", ["help"])
 
     except getopt.GetoptError as err:
         #Invalid option. Show the help message and then exit.
@@ -120,21 +112,12 @@ def handle_cmdline_options():
 
     #Do setup. o=option, a=argument.
     for o, a in opts:
-        if o in ("-i", "--id"):
-            system_id = a
-
-        elif o in ["-h", "--help"]:
+        if o in ["-h", "--help"]:
             usage()
             sys.exit()
 
         else:
             assert False, "unhandled option"
-
-    #Fail if ID isn't set.
-    if system_id == "Unknown":
-        assert False, "You must specify the ID."
-
-    return system_id
 
 def run_standalone(): #TODO Refactor me into lots of smaller functions.
     """
@@ -166,7 +149,10 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     """
 
     #Handle cmdline options.
-    system_id = handle_cmdline_options()
+    handle_cmdline_options()
+
+    #Get system ID from config.
+    system_id = config.SUMP_SITE_ID
 
     #Provide a connection for clients to connect to.
     logger.info("Creating a socket for clients to connect to, please wait...")

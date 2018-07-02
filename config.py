@@ -59,8 +59,17 @@ There are no classes or functions defined in this file.
 
 import Tools
 
-#FIXME: Pins MUST NOT conflict.
+#ID for the sump site.
+SUMP_SITE_ID = "SUMP"
 
+#ID for the butts site.
+WENDY_BUTTS_SITE_ID = "G4"
+
+
+
+
+
+#FIXME: Pins MUST NOT conflict.
 PROBE_SETTINGS = {
     #Probe Name: (Probe Object, Pin(s), Default Reading Interval)
 
