@@ -446,12 +446,11 @@ class SocketsMonitor(BaseMonitorClass):
 
         try:
             while not self.should_exit:
-                print("hello from sockets monitor")
 
                 if self.socket.has_data():
                     reading = self.socket.read()
 
-                    print(reading)
+                    print(reading.get_sensor_id(), self.probe_id, reading.get_sensor_id() == self.probe_id)
 
                     if reading.get_sensor_id() == self.probe_id:
                         #Add it to the queue.
