@@ -65,7 +65,7 @@ SITE_SETTINGS = {
     "SUMP":
         {
             "ID": "SUMP",
-             "Monitors": "NYI"
+            "Monitors": "NYI"
         },
 
     #Settings for the G4 site (client pi at Wendy Street).

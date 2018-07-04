@@ -169,7 +169,7 @@ def run_standalone():
 
         >>> try:
         >>>     run_standalone()
-        >>> 
+        >>>
         >>> except:
         >>>     #Handle the error and put it in the log file for debugging purposes.
         >>>     #Write the error to the standard output.

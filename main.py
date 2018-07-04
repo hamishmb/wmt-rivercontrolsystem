@@ -54,7 +54,7 @@ import Tools
 from Tools import sensorobjects as sensor_objects
 from Tools import monitortools as monitor_tools
 from Tools import coretools as core_tools
-from Tools import sockettools as socket_tools 
+from Tools import sockettools as socket_tools
 
 from Tools.monitortools import SocketsMonitor
 from Tools.monitortools import Monitor
@@ -89,7 +89,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
         >>> try:
         >>>     run_standalone()
-        >>> 
+        >>>
         >>> except:
         >>>     #Handle the error and put it in the log file for debugging purposes.
         >>>     #Write the error to the standard output.
@@ -160,7 +160,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     sump_reading = core_tools.Reading(str(datetime.datetime.now()), -1,
                                       "SUMP:M0", "0mm", "OK")
     butts_reading = core_tools.Reading(str(datetime.datetime.now()), -1,
-                                      "G4:FS0", "True", "OK")
+                                       "G4:FS0", "True", "OK")
 
     #Keep tabs on its progress so we can write new readings to the file.
     try:
@@ -173,7 +173,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                     #Check for new readings. NOTE: Later on, use the readings returned from this
                     #for state history generation etc.
                     reading = core_tools.get_and_handle_new_reading(monitor, "test")
-                    
+
                     #Keep the G4:FS0 & SUMP:M0 readings (used in control logic).
                     if reading != None:
                         if reading.get_id() == "G4:FS0":
@@ -184,7 +184,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
             #Logic.
             reading_interval = core_tools.do_control_logic(sump_reading, butts_reading, butts_pump,
-                                                           main_pump, monitor, socket,
+                                                           main_pump, monitors[2], socket,
                                                            reading_interval)
 
             #Wait until it's time to check for another reading.
