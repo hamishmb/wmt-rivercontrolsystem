@@ -148,7 +148,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     monitors.append(SocketsMonitor(socket, "G4", "M0"))
 
     #And for our SUMP probe.
-    monitors.append(Monitor(sump_probe, 0, reading_interval, system_id)
+    monitors.append(Monitor(sump_probe, 0, reading_interval, system_id))
 
     #Wait until the first readings have come in so we are synchronised.
     #NB: Will now wait for client connection.
