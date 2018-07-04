@@ -159,49 +159,27 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #Setup. Prevent errors.
     sump_reading = None
     butts_reading = None
-    last_sump_reading = None
 
     #Keep tabs on its progress so we can write new readings to the file.
     try:
-        while True:
-            #Exit if the resistance probe monitor thread crashes for some reason.
-            if not monitor.is_running():
-                break
+        at_least_one_monitor_running = True
 
-            #Check for new readings from the sump probe. TODO What to do if a fault is detected?
-            while monitor.has_data():
-                sump_reading = monitor.get_reading()
-
-                #Check if the reading is different to the last reading.
-                if sump_reading == last_sump_reading:
-                    #Write a . to each file.
-                    logger.info(".")
-                    print(".", end='') #Disable newline when printing this message.
-
-                else:
-                    #Write any new readings to the file and to stdout.
-                    logger.info(str(sump_reading))
-
-                    print(sump_reading)
-
-                    #Set last sump reading to this reading.
-                    last_sump_reading = sump_reading
-
-                #Flush buffers.
-                sys.stdout.flush()
-
-            #Check for new readings from buttspi. FIXME not currently working.
-            for wendy_butts_monitor in monitors:
-                if wendy_butts_monitor.is_running():
+        while at_least_one_monitor_running:
+            #Check for new readings from all monitors.
+            for monitor in monitors:
+                if monitor.is_running():
                     #Check for new readings. NOTE: Later on, use the readings returned from this
                     #for state history generation etc.
-                    reading = core_tools.get_and_handle_new_reading(wendy_butts_monitor, "test")
-
-                    #Keep the G4:FS0 reading (used in control logic).
+                    reading = core_tools.get_and_handle_new_reading(monitor, "test")
+                    
+                    #Keep the G4:FS0 & SUMP:M0 readings (used in control logic).
                     if reading != None:
                         if reading.get_id() == "G4:FS0":
                             butts_reading = reading
-                   
+
+                        elif reading.get_id() == "G4:FS0":
+                            sump_reading = reading
+
             #Logic.
             reading_interval = core_tools.do_control_logic(sump_reading, butts_reading, butts_pump,
                                                            main_pump, monitor, socket,
@@ -210,16 +188,21 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             #Wait until it's time to check for another reading.
             time.sleep(reading_interval)
 
+            #Check if at least one monitor is running.
+            at_least_one_monitor_running = False
+
+            for monitor in monitors:
+                if monitor.is_running():
+                    at_least_one_monitor_running = True
+
     except KeyboardInterrupt:
-        #Ask the thread to exit.
-        logger.info("Caught keyboard interrupt. Asking monitor thread to exit...")
-        print("Caught keyboard interrupt. Asking monitor thread to exit.")
+        #Ask the threads to exit.
+        logger.info("Caught keyboard interrupt. Asking monitor threads to exit...")
+        print("Caught keyboard interrupt. Asking monitor threads to exit.")
         print("This may take a little while, so please be patient...")
 
-        monitor.request_exit(wait=True)
-
-        for wendy_butts_monitor in monitors:
-            wendy_butts_monitor.request_exit(wait=True)
+        for monitor in monitors:
+            monitor.request_exit(wait=True)
 
     #Always clean up properly.
     logger.info("Cleaning up...")
