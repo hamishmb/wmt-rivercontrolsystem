@@ -453,6 +453,9 @@ class SocketsMonitor(BaseMonitorClass):
                     print(reading.get_sensor_id(), self.probe_id, reading.get_sensor_id() == self.probe_id)
 
                     if reading.get_sensor_id() == self.probe_id:
+                        #Remove from socket.
+                        self.socket.pop()
+
                         #Add it to the queue.
                         self.queue.append(reading)
 
