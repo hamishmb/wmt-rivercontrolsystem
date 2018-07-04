@@ -194,6 +194,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                     #for state history generation etc.
                     reading = core_tools.get_and_handle_new_reading(wendy_butts_monitor, "test")
 
+                    
                     if reading != None:
                         if reading.get_id() == "G4:M0":
                             butts_reading = reading

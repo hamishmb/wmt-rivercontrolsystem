@@ -449,6 +449,8 @@ class SocketsMonitor(BaseMonitorClass):
                 if self.socket.has_data():
                     reading = self.socket.read()
 
+                    print(reading)
+
                     if reading.get_sensor_id() == self.probe_id:
                         #Add it to the queue.
                         self.queue.append(reading)

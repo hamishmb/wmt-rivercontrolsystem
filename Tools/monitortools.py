@@ -444,6 +444,8 @@ class SocketsMonitor(BaseMonitorClass):
         #Set up the readings file.
         self.create_file_handle()
 
+        print("hello from sockets monitor")
+
         try:
             while not self.should_exit:
                 if self.socket.has_data():
