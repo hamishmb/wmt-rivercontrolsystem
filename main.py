@@ -100,7 +100,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     """
 
     #Get system ID from config.
-    system_id = config.SUMP_SITE_ID
+    system_id = config.SITE_SETTINGS["SUMP"]["ID"]
 
     #Provide a connection for clients to connect to.
     logger.info("Creating a socket for clients to connect to, please wait...")

@@ -183,7 +183,7 @@ def run_standalone():
     types, server_address, num_readings = handle_cmdline_options()
 
     #Get system ID from config.
-    system_id = config.WENDY_BUTTS_SITE_ID
+    system_id = config.SITE_SETTINGS["G4"]["ID"]
 
     if len(types) == 1:
         logger.debug("Running in "+types[0]+" mode...")

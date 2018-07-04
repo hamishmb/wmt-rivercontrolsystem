@@ -59,12 +59,26 @@ There are no classes or functions defined in this file.
 
 import Tools
 
-#ID for the sump site.
-SUMP_SITE_ID = "SUMP"
+SITE_SETTINGS = {
 
-#ID for the butts site.
-WENDY_BUTTS_SITE_ID = "G4"
+    #Settings for the SUMP site (master pi).
+    "SUMP":
+        {
+            "ID": "SUMP",
+             "Monitors": "NYI"
+        },
 
+    #Settings for the G4 site (client pi at Wendy Street).
+    "G4":
+        {
+            "ID": "G4",
+            "Monitors": "NYI"
+        }
+
+}
+
+
+#Probe settings.
 #FIXME: Pins MUST NOT conflict.
 PROBE_SETTINGS = {
     #Probe Name: (Probe Object, Pin(s), Default Reading Interval)
