@@ -57,6 +57,7 @@ from Tools import coretools as core_tools
 from Tools import sockettools as socket_tools 
 
 from Tools.monitortools import SocketsMonitor
+from Tools.monitortools import Monitor
 
 try:
     #Allow us to generate documentation on non-RPi systems.
@@ -67,7 +68,7 @@ except ImportError:
 
 #Define global variables.
 VERSION = "0.9.2"
-RELEASEDATE = "2/7/2018"
+RELEASEDATE = "4/7/2018"
 
 def run_standalone(): #TODO Refactor me into lots of smaller functions.
     """
@@ -131,11 +132,11 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #Reading interval.
     reading_interval = 15
 
-    logger.info("The client(s) can connect whenever they're ready.")
-    print("The client(s) can connect whenever they're ready.")
-
     logger.info("Starting to take readings...")
     print("Starting to take readings. Please stand by...")
+
+    logger.info("Waiting for client(s) to connect...")
+    print("Waiting for client(s) to connect...")
 
     #Start the monitor thread. Take readings indefinitely.
     monitor = monitor_tools.Monitor(sump_probe, 0, reading_interval, system_id)
@@ -143,12 +144,17 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #Start monitor threads for the socket (wendy house butts).
     monitors = []
 
-    monitors.append(SocketsMonitor(socket, reading_interval, "G4", "FS0"))
-    monitors.append(SocketsMonitor(socket, reading_interval, "G4", "M0"))
+    monitors.append(SocketsMonitor(socket, "G4", "FS0"))
+    monitors.append(SocketsMonitor(socket, "G4", "M0"))
 
-    #Wait until the first reading has come in so we are synchronised.
-    while not monitor.has_data():
-        time.sleep(0.5)
+    #And for our SUMP probe.
+    monitors.append(Monitor(sump_probe, 0, reading_interval, system_id)
+
+    #Wait until the first readings have come in so we are synchronised.
+    #NB: Will now wait for client connection.
+    for each_monitor in monitors:
+        while not each_monitor.has_data():
+            time.sleep(0.5)
 
     #Sleep a few more seconds to make sure the client is ready.
     time.sleep(10)
@@ -194,9 +200,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                     #for state history generation etc.
                     reading = core_tools.get_and_handle_new_reading(wendy_butts_monitor, "test")
 
-                    
                     if reading != None:
                         if reading.get_id() == "G4:M0":
+                            print("M0 reading")
                             butts_reading = reading
                    
             #Logic.

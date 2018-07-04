@@ -393,13 +393,12 @@ class SocketsMonitor(BaseMonitorClass):
         >>> monitor = Monitor(<aProbeObject>, <anInteger>, <aReadingInterval>, <anID>)
     """
 
-    def __init__(self, socket, reading_interval, system_id, probe_id):
+    def __init__(self, socket, system_id, probe_id):
         #TODO adjust BaseMonitorClass.
         #BaseMonitorClass.__init__(self, probe, num_readings, reading_interval, system_id)
 
         threading.Thread.__init__(self)
         self.socket = socket
-        self.reading_interval = reading_interval
         self.system_id = system_id
         self.probe_id = probe_id
 
@@ -450,8 +449,8 @@ class SocketsMonitor(BaseMonitorClass):
                 if self.socket.has_data():
                     reading = self.socket.read()
 
-                    print(reading.get_sensor_id(), self.probe_id, reading.get_sensor_id() == self.probe_id)
-
+                    #Check the reading is from the right probe.
+                    #NB: Could check site ID, but we'll have a socket for each one, so a non-issue.
                     if reading.get_sensor_id() == self.probe_id:
                         #Remove from socket.
                         self.socket.pop()
@@ -471,16 +470,8 @@ class SocketsMonitor(BaseMonitorClass):
 
                         self.file_handle.flush()
 
-                #Take readings every however often it is.
-                #I know we could use a long time.sleep(),
-                #but this MUST be responsive to changes in the reading interval.
-                count = 0
-
-                while count < self.reading_interval:
-                    #This way, if our reading interval changes,
-                    #the code will respond to the change immediately.
-                    time.sleep(1)
-                    count += 1
+                #Check every 1 second (prevent delays in logging at sump pi end).
+                time.sleep(1)
 
         except BaseException as err:
             #Ignore all errors. Generally bad practice :P
