@@ -18,5 +18,5 @@ from __future__ import absolute_import
 
 from . import Tools
 from . import main
-from . import universal_standalone_monitor_config
-from . import universal_standalone_monitor
+from . import config
+from . import universal_monitor

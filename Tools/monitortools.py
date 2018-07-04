@@ -416,7 +416,7 @@ class SocketsMonitor(BaseMonitorClass):
         """
         This method is the body of the thread. It does some setup and then
         enters a monitor loop, where it checks for readings and adds them
-        to the queue at every interval of <reading_interval> seconds long.
+        to the queue every second (to avoid delays in logging over the network).
 
         The loop will continue to run until it is asked to exit.
 

@@ -20,7 +20,7 @@ universal monitor that is used on the slave/client pis.
 Universal in this case means that this same program can be
 used for all of the probes this software framework supports.
 
-.. module:: universal_standalone_monitor.py
+.. module:: universal_monitor.py
     :platform: Linux
     :synopsis: The secondary part of the control software.
 
