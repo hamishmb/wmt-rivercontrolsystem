@@ -300,6 +300,7 @@ class Monitor(BaseMonitorClass):
         """
 
         num_readings_taken = 0
+        last_write_was_dot = False
         previous_reading = None #NB: Just to use here, rather then self.prev_reading,
                                 #which is for external users.
         self.running = True
@@ -322,14 +323,24 @@ class Monitor(BaseMonitorClass):
 
                 if reading == previous_reading:
                     #Write a . to the file.
+                    #Couple of newlines if the last thing wasn't a dot.
+                    if not last_write_was_dot:
+                        self.file_handle.write("\n\n")
+
                     self.file_handle.write(".")
+
+                    last_write_was_dot = True
 
                 else:
                     #Write it to the readings file.
+                    #Newline if last thing was a dot.
+                    if last_write_was_dot:
+                        self.file_handle.write("\n")
+
                     self.file_handle.write("\n"+reading.as_csv())
 
                     previous_reading = reading
-
+                    last_write_was_dot = False
                 self.file_handle.flush()
 
                 if self.num_readings != 0:
@@ -411,6 +422,7 @@ class SocketsMonitor(BaseMonitorClass):
 
         """
 
+        last_write_was_dot = False
         previous_reading = None #NB: Just to use here, rather then self.prev_reading,
                                 #which is for external users.
         self.running = True
@@ -435,6 +447,10 @@ class SocketsMonitor(BaseMonitorClass):
 
                         if reading == previous_reading:
                             #Write a . to the file.
+                            #Couple of newlines if the last thing wasn't a dot.
+                            if not last_write_was_dot:
+                                self.file_handle.write("\n\n")
+
                             self.file_handle.write(".")
 
                         else:
