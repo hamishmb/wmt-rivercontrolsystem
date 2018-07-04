@@ -56,26 +56,10 @@ class BaseMonitorClass(threading.Thread):
     derived from.
 
     Args:
-        self (BaseMonitorClass):    A self-reference.
-                                    Only passed when
-                                    helping construct
-                                    a subclass.
-
-        probe (BaseDeviceClass):    A reference to a
-                                    probe object.
-
-        num_readings (int):         The number of
-                                    readings to take.
-                                    If 0, take readings
-                                    until requested to
-                                    exit.
-
-        reading_interval (int):     The initial reading
-                                    interval for the
-                                    monitor to use.
-
         system_id (str):            The ID of the pi/system
                                     this monitor is running on eg G4.
+
+        probe_id (str):             The ID of the probe we're looking for.
 
     Invokes:
         threading.Thread.__init__(self), to initialise
@@ -89,15 +73,13 @@ class BaseMonitorClass(threading.Thread):
                 you need to derive from it.
     """
 
-    def __init__(self, probe, num_readings, reading_interval, system_id):
+    def __init__(self, system_id, probe_id):
         """Constructor as documented above"""
         threading.Thread.__init__(self)
-        self.probe = probe
-        self.num_readings = num_readings
-        self.reading_interval = reading_interval
         self.system_id = system_id
+        self.probe_id = probe_id
 
-        self.file_name = "readings/"+self.system_id+":"+self.probe.get_name()+".csv"
+        self.file_name = "readings/"+self.system_id+":"+self.probe_id+".csv"
         self.file_handle = None
 
         self.queue = deque()
@@ -258,14 +240,18 @@ class Monitor(BaseMonitorClass):
     Documentation for constructor for objects of type Monitor:
 
     Args:
-        probe (BaseDeviceClass):    As defined in BaseMonitorClass'
-                                    constructor.
+        probe (BaseDeviceClass):    A reference to a
+                                    probe object.
 
-        num_readings (int):         As defined in BaseMonitorClass'
-                                    constructor.
+        num_readings (int):         The number of
+                                    readings to take.
+                                    If 0, take readings
+                                    until requested to
+                                    exit.
 
-        reading_interval (int):     As defined in BaseMonitorClass'
-                                    constructor.
+        reading_interval (int):     The initial reading
+                                    interval for the
+                                    monitor to use.
 
         system_id (str):            As defined in BaseMonitorClass'
                                     constructor.
@@ -279,9 +265,11 @@ class Monitor(BaseMonitorClass):
     """
 
     def __init__(self, probe, num_readings, reading_interval, system_id):
-        BaseMonitorClass.__init__(self, probe, num_readings, reading_interval, system_id)
+        BaseMonitorClass.__init__(self, system_id, probe.get_name())
 
         self.probe = probe
+        self.num_readings = num_readings
+        self.reading_interval = reading_interval
         self.reading_func = probe.get_reading
 
         self.start()
@@ -377,13 +365,11 @@ class SocketsMonitor(BaseMonitorClass):
     Args:
         socket (Sockets):           The socket to read readings from.
 
-        reading_interval (int):     As defined in BaseMonitorClass'
-                                    constructor.
-
         system_id (str):            As defined in BaseMonitorClass'
                                     constructor.
 
-        probe_id (str):             The ID of the probe we're looking for.
+        probe_id (str):             As defined in BaseMonitorClass'
+                                    constructor.
 
     Invokes:
         Constructor for BaseMonitorClass.
@@ -394,21 +380,10 @@ class SocketsMonitor(BaseMonitorClass):
     """
 
     def __init__(self, socket, system_id, probe_id):
-        #TODO adjust BaseMonitorClass.
-        #BaseMonitorClass.__init__(self, probe, num_readings, reading_interval, system_id)
+        BaseMonitorClass.__init__(self, system_id, probe_id)
 
-        threading.Thread.__init__(self)
         self.socket = socket
-        self.system_id = system_id
         self.probe_id = probe_id
-
-        self.file_name = "readings/"+self.system_id+":"+self.probe_id+".csv"
-        self.file_handle = None
-
-        self.queue = deque()
-        self.prev_reading = ""
-        self.running = False
-        self.should_exit = False
 
         self.start()
 
