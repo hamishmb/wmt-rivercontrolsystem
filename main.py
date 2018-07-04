@@ -187,7 +187,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                 #Flush buffers.
                 sys.stdout.flush()
 
-            #Check for new readings from buttspi.
+            #Check for new readings from buttspi. FIXME not currently working.
             for wendy_butts_monitor in monitors:
                 if wendy_butts_monitor.is_running():
                     #Check for new readings. NOTE: Later on, use the readings returned from this
