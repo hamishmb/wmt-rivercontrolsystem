@@ -129,7 +129,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     main_pump.set_pwm_available(False, -1)
 
     #Reading interval.
-    reading_interval = 300
+    reading_interval = 30
 
     logger.info("The client(s) can connect whenever they're ready.")
     print("The client(s) can connect whenever they're ready.")
