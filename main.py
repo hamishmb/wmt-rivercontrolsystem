@@ -157,8 +157,10 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     time.sleep(10)
 
     #Setup. Prevent errors.
-    sump_reading = None
-    butts_reading = None
+    sump_reading = core_tools.Reading(str(datetime.datetime.now()), -1,
+                                      "SUMP:M0", "0mm", "OK")
+    butts_reading = core_tools.Reading(str(datetime.datetime.now()), -1,
+                                      "G4:FS0", "True", "OK")
 
     #Keep tabs on its progress so we can write new readings to the file.
     try:
