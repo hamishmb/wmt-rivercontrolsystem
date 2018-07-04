@@ -143,7 +143,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #Start monitor threads for the socket (wendy house butts).
     monitors = []
 
-    monitors.append(SocketsMonitor(socket, reading_interval, "G4", "FS0"))
+    #monitors.append(SocketsMonitor(socket, reading_interval, "G4", "FS0"))
     monitors.append(SocketsMonitor(socket, reading_interval, "G4", "M0"))
 
     #Wait until the first reading has come in so we are synchronised.
