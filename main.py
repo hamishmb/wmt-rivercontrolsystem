@@ -138,9 +138,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     logger.info("Waiting for client(s) to connect...")
     print("Waiting for client(s) to connect...")
 
-    #Start the monitor thread. Take readings indefinitely.
-    monitor = monitor_tools.Monitor(sump_probe, 0, reading_interval, system_id)
-
     #Start monitor threads for the socket (wendy house butts).
     monitors = []
 
