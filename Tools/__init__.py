@@ -23,18 +23,19 @@ modules in here:
 coretools.py
 ============
 
-This is kind of superflous at the moment, but I might put some more
-functions in here to refactor later though.
+This module contins classes and functions used at both the master pi end,
+and the remote pis. More functions will likely be added here soon to
+reduce code duplication.
 
 Contains Functions:
 
-- greet_and_get_filename()
+- greet_user()
 - get_and_handle_new_reading()
 - do_control_logic()
 
 Contains Classes:
 
-- Reading
+- Reading - to represent readings from all probes.
 
 monitortools.py
 ===============
@@ -44,12 +45,14 @@ program. These take the form of classes that have methods executed
 as threads. This approach was decided because it stops the main
 program thread from blocking when taking readings, and allows us
 to take readings from many probes at once without any resulting
-delays/complexity.
+delays/complexity. SocketsMonitor allows simple monitoring of probes
+over a network.
 
 Contains Classes:
 
 - BaseMonitorClass
 - Monitor
+- SocketsMonitor
 
 sensorobjects.py
 ================
@@ -72,7 +75,7 @@ Contains Classes:
 - CapacitiveProbe
 - ResistanceProbe
 - HallEffectDevice (for water-wheels)
-- HallEffectProbe
+- HallEffectProbe (magnetic levels probe)
 
 sockettools.py
 ==============

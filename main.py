@@ -18,7 +18,7 @@
 This is the main part of the control software, and it currently manages
 balancing water between the butts and the sump using a magnetic probe and
 a solid state relay to control the butts pump. This software runs on sumppi.
-It communicates with buttspi over the network to gather float switch readings.
+It communicates with buttspi over the network to gather readings.
 
 .. note::
       This program currently has LIMITED FUNCTIONALITY.
@@ -68,7 +68,7 @@ except ImportError:
 
 #Define global variables.
 VERSION = "0.9.2"
-RELEASEDATE = "4/7/2018"
+RELEASEDATE = "9/7/2018"
 
 def run_standalone(): #TODO Refactor me into lots of smaller functions.
     """
