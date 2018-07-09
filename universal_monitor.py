@@ -92,7 +92,7 @@ def handle_cmdline_options():
                                             the program is terminated with CRTL-C.
 
     Returns:
-        tuple (list types, string server_address, int num_readings).
+        tuple (list types, int num_readings).
 
             This will be whatever arguments the user provided on the commandline.
             If any arguments were missing, default values will be provided instead
@@ -103,7 +103,7 @@ def handle_cmdline_options():
 
     Usage:
 
-    >>> types, server_address, num_readings = handle_cmdline_options()
+    >>> types, num_readings = handle_cmdline_options()
     """
 
     types = []
@@ -186,16 +186,15 @@ def run_standalone():
     #Connect to server, if any.
     socket = None
 
-    if server_address is not None:
-        logger.info("Initialising connection to server, please wait...")
-        print("Initialising connection to server, please wait...")
-        socket = socket_tools.Sockets("Plug")
-        socket.set_portnumber(config.SITE_SETTINGS["G4"]["ServerPort"])
-        socket.set_server_address(config.SITE_SETTINGS["G4"]["ServerAddress"])
-        socket.start_handler()
+    logger.info("Initialising connection to server, please wait...")
+    print("Initialising connection to server, please wait...")
+    socket = socket_tools.Sockets("Plug")
+    socket.set_portnumber(config.SITE_SETTINGS["G4"]["ServerPort"])
+    socket.set_server_address(config.SITE_SETTINGS["G4"]["ServerAddress"])
+    socket.start_handler()
 
-        logger.info("Will connect to server as soon as it becomes available.")
-        print("Will connect to server as soon as it becomes available.")
+    logger.info("Will connect to server as soon as it becomes available.")
+    print("Will connect to server as soon as it becomes available.")
 
     #Greet and get filename.
     logger.info("Greeting user...")
@@ -260,7 +259,7 @@ def run_standalone():
                     #Check for new readings. NOTE: Later on, use the readings returned from this
                     #for state history generation etc.
                     core_tools.get_and_handle_new_reading(monitor, types[monitors.index(monitor)],
-                                                          server_address, socket)
+                                                          config.SITE_SETTINGS["G4"]["ServerAddress"], socket)
 
             #Wait until it's time to check for another reading.
             #I know we could use a long time.sleep(),
@@ -271,7 +270,7 @@ def run_standalone():
                 #This way, if our reading interval changes,
                 #the code will respond to the change immediately.
                 #Check if we have a new reading interval.
-                if server_address is not None and socket.has_data():
+                if socket.has_data():
                     data = socket.read()
 
                     if "Reading Interval" in data:
@@ -312,10 +311,9 @@ def run_standalone():
     logger.info("Cleaning up...")
     print("Cleaning up...")
 
-    if server_address is not None:
-        socket.request_handler_exit()
-        socket.wait_for_handler_to_exit()
-        socket.reset()
+    socket.request_handler_exit()
+    socket.wait_for_handler_to_exit()
+    socket.reset()
 
     #Reset GPIO pins.
     GPIO.cleanup()
