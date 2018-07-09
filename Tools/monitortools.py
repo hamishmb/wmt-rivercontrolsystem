@@ -448,7 +448,7 @@ class SocketsMonitor(BaseMonitorClass):
         try:
             while not self.should_exit:
 
-                if self.socket.has_data():
+                while self.socket.has_data():
                     reading = self.socket.read()
 
                     #Check the reading is from the right probe.
