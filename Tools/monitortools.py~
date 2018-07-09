@@ -449,7 +449,11 @@ class SocketsMonitor(BaseMonitorClass):
             while not self.should_exit:
 
                 while self.socket.has_data():
-                    reading = self.socket.read()
+                    try:
+                        reading = self.socket.read()
+
+                    except IndexError:
+                        break
 
                     #Check the reading is from the right probe.
                     #NB: Could check site ID, but we'll have a socket for each one, so a non-issue.

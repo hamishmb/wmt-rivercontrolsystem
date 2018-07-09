@@ -44,11 +44,6 @@ class BaseMonitorClass(threading.Thread):
     inherit from. It contains common functionality and
     instance variables and is used to reduce code duplication.
 
-    It might be time to integrate this with Monitor and
-    remove it, because we no longer have separate monitors
-    for each type of probe, because the probe classes' API
-    is now standardised.
-
     Documentatation for constructor for objects of type BaseMonitorClass:
 
     Absolutely useless by itself, because this class
