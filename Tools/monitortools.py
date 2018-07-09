@@ -366,7 +366,7 @@ class Monitor(BaseMonitorClass):
                 #Check if it's time to rotate the readings file.
                 timediff = datetime.datetime.now() - self.file_creation_time
 
-                if timediff.seconds >= self.file_rotate_interval:
+                if timediff.days >= self.file_rotate_interval:
                     self.file_handle.close()
                     self.create_file_handle()
                     last_write_was_dot = False
