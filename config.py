@@ -73,6 +73,8 @@ SITE_SETTINGS = {
         {
             "ID": "G4",
             "Monitors": "NYI"
+            "ServerAddress": "192.168.0.2"
+            "ServerPort": 30000
         }
 
 }

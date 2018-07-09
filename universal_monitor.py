@@ -69,8 +69,6 @@ def usage():
     print("                                 'Resistance Probe', 'Hall Effect', 'Hall Effect Probe',")
     print("                                 'Capacitive Probe', 'Float Switch'. Mandatory. Specify")
     print("                                 multiple times for multiple probes.")
-    print("       -c, --controlleraddress:  Specify the DNS name/IP of the controlling server")
-    print("                                 we want to send our level data to, if any.")
     print("       -n <int>, --num=<int>     Specify number of readings to take before exiting.")
     print("                                 Without this option, readings will be taken until")
     print("                                 the program is terminated")
@@ -89,8 +87,6 @@ def handle_cmdline_options():
                                             'Resistance Probe', 'Hall Effect', 'Hall Effect Probe'
                                             'Capacitive Probe', or 'Float Switch'. Mandatory.
                                             Specify multiple times for multiple probes.
-        -c, --controlleraddress             Specify the DNS name/IP of the controlling server
-                                            to which we want to send our level data to, if any.
         -n <int>, --num=<int>               Specify the number of readings to take before exiting.
                                             if not specified, readings will be taken until
                                             the program is terminated with CRTL-C.
@@ -111,11 +107,10 @@ def handle_cmdline_options():
     """
 
     types = []
-    server_address = None
 
     #Check all cmdline options are valid.
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "ht:c:n:",
+        opts, args = getopt.getopt(sys.argv[1:], "ht:n:",
                                    ["help", "type=", "controlleraddress=", "num="])
 
     except getopt.GetoptError as err:
@@ -132,9 +127,6 @@ def handle_cmdline_options():
         if o in ["-t", "--type"]:
             types.append(a)
 
-        elif o in ["-c", "--controlleraddress"]:
-            server_address = a
-
         elif o in ["-n", "--num"]:
             num_readings = int(a)
 
@@ -148,7 +140,7 @@ def handle_cmdline_options():
     if types == []:
         assert False, "You must specify the type(s) of probe(s) you want to monitor."
 
-    return types, server_address, num_readings
+    return types, num_readings
 
 def run_standalone():
     """
@@ -180,7 +172,7 @@ def run_standalone():
     """
 
     #Handle cmdline options.
-    types, server_address, num_readings = handle_cmdline_options()
+    types, num_readings = handle_cmdline_options()
 
     #Get system ID from config.
     system_id = config.SITE_SETTINGS["G4"]["ID"]
@@ -198,8 +190,8 @@ def run_standalone():
         logger.info("Initialising connection to server, please wait...")
         print("Initialising connection to server, please wait...")
         socket = socket_tools.Sockets("Plug")
-        socket.set_portnumber(30000)
-        socket.set_server_address(server_address)
+        socket.set_portnumber(config.SITE_SETTINGS["G4"]["ServerPort"])
+        socket.set_server_address(config.SITE_SETTINGS["G4"]["ServerAddress"])
         socket.start_handler()
 
         logger.info("Will connect to server as soon as it becomes available.")
