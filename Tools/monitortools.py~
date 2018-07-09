@@ -106,14 +106,14 @@ class BaseMonitorClass(threading.Thread):
         """
 
         #TODO need a logger here and to catch exceptions.
-        self.file_handle = open(self.file_name+str(datetime.datetime.now())+".csv", "a")
+        self.file_handle = open(self.file_name+"-"+str(datetime.datetime.now())+".csv", "a")
 
         #Write the start time and the CSV header.
         self.file_handle.write("\n\nStart Time: "+str(datetime.datetime.now())+"\n\n")
         self.file_handle.write("\nTIME,SYSTEM TICK,ID,VALUE,STATUS\n")
         self.file_handle.flush()
 
-        #Set the file creation time so we can rotate logs.
+        #Set the file creation time so we can rotate readings files.
         self.file_creation_time = datetime.datetime.now()
 
     def is_running(self):

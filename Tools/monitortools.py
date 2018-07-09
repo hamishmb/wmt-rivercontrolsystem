@@ -106,7 +106,7 @@ class BaseMonitorClass(threading.Thread):
         """
 
         #TODO need a logger here and to catch exceptions.
-        self.file_handle = open(self.file_name+str(datetime.datetime.now())+".csv", "a")
+        self.file_handle = open(self.file_name+"-"+str(datetime.datetime.now())+".csv", "a")
 
         #Write the start time and the CSV header.
         self.file_handle.write("\n\nStart Time: "+str(datetime.datetime.now())+"\n\n")
@@ -369,6 +369,8 @@ class Monitor(BaseMonitorClass):
                 if timediff.seconds >= self.file_rotate_interval:
                     self.file_handle.close()
                     self.create_file_handle()
+                    last_write_was_dot = False
+                    previous_reading = None
 
         except BaseException as err:
             #Ignore all errors. Generally bad practice :P
@@ -490,6 +492,8 @@ class SocketsMonitor(BaseMonitorClass):
                 if timediff.seconds >= self.file_rotate_interval:
                     self.file_handle.close()
                     self.create_file_handle()
+                    last_write_was_dot = False
+                    previous_reading = None
 
         except BaseException as err:
             #Ignore all errors. Generally bad practice :P
