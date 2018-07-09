@@ -369,6 +369,8 @@ class Monitor(BaseMonitorClass):
                 if timediff.seconds >= self.file_rotate_interval:
                     self.file_handle.close()
                     self.create_file_handle()
+                    last_write_was_dot = False
+                    previous_reading = None
 
         except BaseException as err:
             #Ignore all errors. Generally bad practice :P
@@ -487,9 +489,11 @@ class SocketsMonitor(BaseMonitorClass):
                 #Check if it's time to rotate the readings file.
                 timediff = datetime.datetime.now() - self.file_creation_time
 
-                if timediff.seconds >= self.file_rotate_interval:
+                if timediff.days >= self.file_rotate_interval:
                     self.file_handle.close()
                     self.create_file_handle()
+                    last_write_was_dot = False
+                    previous_reading = None
 
         except BaseException as err:
             #Ignore all errors. Generally bad practice :P
