@@ -79,8 +79,10 @@ class BaseMonitorClass(threading.Thread):
         self.system_id = system_id
         self.probe_id = probe_id
 
-        self.file_name = "readings/"+self.system_id+":"+self.probe_id+".csv"
+        self.file_name = "readings/"+self.system_id+":"+self.probe_id
         self.file_handle = None
+        self.file_creation_time = None
+        self.file_rotate_interval = 120 #Seconds, for debugging.
 
         self.queue = deque()
         self.prev_reading = ""
@@ -104,12 +106,15 @@ class BaseMonitorClass(threading.Thread):
         """
 
         #TODO need a logger here and to catch exceptions.
-        self.file_handle = open(self.file_name, "a")
+        self.file_handle = open(self.file_name+str(datetime.datetime.now())+".csv", "a")
 
         #Write the start time and the CSV header.
         self.file_handle.write("\n\nStart Time: "+str(datetime.datetime.now())+"\n\n")
         self.file_handle.write("\nTIME,SYSTEM TICK,ID,VALUE,STATUS\n")
         self.file_handle.flush()
+
+        #Set the file creation time so we can rotate readings files.
+        self.file_creation_time = datetime.datetime.now()
 
     def is_running(self):
         """
@@ -358,6 +363,13 @@ class Monitor(BaseMonitorClass):
                     time.sleep(1)
                     count += 1
 
+                #Check if it's time to rotate the readings file.
+                timediff = datetime.datetime.now() - self.file_creation_time
+
+                if timediff.seconds >= self.file_rotate_interval:
+                    self.file_handle.close()
+                    self.create_file_handle()
+
         except BaseException as err:
             #Ignore all errors. Generally bad practice :P
             print("\nCaught Exception: ", err)
@@ -471,6 +483,13 @@ class SocketsMonitor(BaseMonitorClass):
 
                 #Check every 1 second (prevent delays in logging at sump pi end).
                 time.sleep(1)
+
+                #Check if it's time to rotate the readings file.
+                timediff = datetime.datetime.now() - self.file_creation_time
+
+                if timediff.seconds >= self.file_rotate_interval:
+                    self.file_handle.close()
+                    self.create_file_handle()
 
         except BaseException as err:
             #Ignore all errors. Generally bad practice :P
