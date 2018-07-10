@@ -68,7 +68,7 @@ except ImportError:
 
 #Define global variables.
 VERSION = "0.9.2"
-RELEASEDATE = "9/7/2018"
+RELEASEDATE = "10/7/2018"
 
 def run_standalone(): #TODO Refactor me into lots of smaller functions.
     """
@@ -179,7 +179,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                         if reading.get_id() == "G4:FS0":
                             butts_reading = reading
 
-                        elif reading.get_id() == "G4:FS0":
+                        elif reading.get_id() == "SUMP:M0":
                             sump_reading = reading
 
             #Logic.
