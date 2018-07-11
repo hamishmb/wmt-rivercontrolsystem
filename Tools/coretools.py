@@ -344,7 +344,7 @@ def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None)
 
     reading = None
 
-    if monitor.has_data():
+    while monitor.has_data():
         last_reading = monitor.get_previous_reading()
 
         reading = monitor.get_reading()
