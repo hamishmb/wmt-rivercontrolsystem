@@ -42,7 +42,6 @@ It communicates with buttspi over the network to gather readings.
 
 import time
 import datetime
-import sys
 import logging
 import traceback
 
@@ -51,7 +50,6 @@ import config
 
 import Tools
 
-from Tools import sensorobjects as sensor_objects
 from Tools import monitortools as monitor_tools
 from Tools import coretools as core_tools
 from Tools import sockettools as socket_tools
@@ -124,7 +122,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         pins = probe_settings["Pins"]
         reading_interval = probe_settings["Default Interval"]
 
-        probe = probe(system_id+":"+probe_id)
+        probe = probe(probe_id)
         probe.set_pins(pins)
         probes.append(probe)
 
@@ -138,7 +136,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         device = device_settings["Class"]
         pins = device_settings["Pins"]
 
-        device = device(system_id+":"+device_id)
+        device = device(device_id)
 
         #These are all pumps. FIXME make tidy later.
         #NB: PWM is implicitely disabled by default.
@@ -163,7 +161,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     #And for our SUMP probe.
     for probe in probes:
-        if probe.get_name() == "SUMP:M0":
+        if probe.get_name() == "M0": #FIXME make id methods like in Reading to fix this issue w/ many probes in diff systems.
             monitors.append(Monitor(probe, 0, reading_interval, system_id))
 
     #Wait until the first readings have come in so we are synchronised.
