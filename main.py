@@ -142,7 +142,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         #NB: PWM is implicitely disabled by default.
         device.set_pins(pins, _input=False)
 
-        devices.append(probe)
+        devices.append(device)
 
     #Reading interval.
     reading_interval = 15
