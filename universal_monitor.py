@@ -196,8 +196,6 @@ def run_standalone():
     #Get settings for each type of monitor from the config file.
     logger.info("Setting up the probes...")
 
-    print(system_id)
-
     for probe_id in config.SITE_SETTINGS[system_id]["Probes"]:
         probe_settings = config.SITE_SETTINGS[system_id]["Probes"][probe_id]
 
