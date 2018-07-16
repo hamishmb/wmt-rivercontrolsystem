@@ -370,7 +370,7 @@ def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None)
 
     return reading
 
-def do_control_logic(sump_reading_obj, butts_reading_obj, butts_pump, main_pump, monitor, socket, reading_interval):
+def do_control_logic(sump_reading_obj, butts_reading_obj, devices, monitors, socket, reading_interval):
     """
     This function is used to decides what action to take based
     on the readings it is passed.
@@ -395,18 +395,9 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, butts_pump, main_pump,
 
         butts_reading_obj (Reading):    As above, but for the butts.
 
-        butts_pump (Motor):             A reference to a Motor object
-                                        that represents the butts pump.
+        devices  (list):                A list of all master pi device objects.
 
-        main_pump (Motor):              A refernece to a Motor object
-                                        that represents the main circulation
-                                        pump.
-
-        monitor (Monitor):              A reference to a Monitor object
-                                        that is used to monitor the sump
-                                        level. Passed here so we can
-                                        control the reading interval at
-                                        this end.
+        monitors (list):                A list of all master pi monitor objects.
 
         socket (Socket):                A reference to the Socket object
                                         that represents the data connection
@@ -423,14 +414,27 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, butts_pump, main_pump,
     Usage:
 
         >>> reading_interval = do_control_logic(<asumpreading>, <abuttsreading>,
-        >>>                                     <apumpobject>, <apumpobject>,
-        >>>                                     <amonitorthreadobject,
+        >>>                                     <listofprobes>, <listofmonitors>,
         >>>                                     <asocketsobject>, <areadinginterval)
 
     """
 
     #Remove the 'mm' from the end of the reading value and convert to int.
     sump_reading = int(sump_reading_obj.get_value().replace("m", ""))
+
+    #Get a reference to both pumps.
+    main_pump = None
+    butts_pump = None
+
+    for device in devices:
+        if device.get_name() == "SUMP:P0":
+            butts_pump = device
+
+        elif device.get_name() == "SUMP:P1":
+            main_pump = device
+
+    assert main_pump is not None
+    assert butts_pump is not None
 
     if sump_reading >= 600:
         #Level in the sump is getting high.
@@ -575,8 +579,10 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, butts_pump, main_pump,
 
         reading_interval = 15
 
-    #Set the reading interval in the thread, and send it down the socket to the peer.
-    monitor.set_reading_interval(reading_interval)
+    #Set the reading interval in the monitors, and send it down the socket to the peer.
+    for monitor in monitors:
+        monitor.set_reading_interval(reading_interval)
+
     socket.write("Reading Interval: "+str(reading_interval))
 
     return reading_interval
