@@ -68,7 +68,7 @@ except ImportError:
 
 #Define global variables.
 VERSION = "0.9.2"
-RELEASEDATE = "10/7/2018"
+RELEASEDATE = "16/7/2018"
 
 def run_standalone(): #TODO Refactor me into lots of smaller functions.
     """
@@ -113,6 +113,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #Greet user.
     core_tools.greet_user("River System Control and Monitoring Software")
 
+    #Create the probe(s).
+    
     #Create the devices.
     sump_probe = sensor_objects.HallEffectProbe("M0")
     butts_pump = sensor_objects.Motor("P0 (Butts Pump)") #SSR 1.

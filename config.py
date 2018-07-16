@@ -65,14 +65,63 @@ SITE_SETTINGS = {
     "SUMP":
         {
             "ID": "SUMP",
-            "Monitors": "NYI"
+
+            #Local probes.
+            "Probes": 
+                {
+
+                    "M0":
+                    {
+                        "Type": "Hall Effect Probe",
+                        "ID":   "M0",
+                        "Name": "Sump Probe"
+                    }
+                }
+
+            #Devices to control.
+            "Devices":
+                {
+
+                    "P0":
+                    {
+                        "Type": "Motor",
+                        "ID":   "P0",
+                        "Name": "Butts Pump"
+                    },
+
+                    "P1":
+                    {
+                        "Type": "Motor",
+                        "ID":   "P1",
+                        "Name": "Circulation Pump"
+                    }
+                },
         },
 
     #Settings for the G4 site (client pi at Wendy Street).
     "G4":
         {
             "ID": "G4",
-            "Monitors": "NYI",
+
+            #Local probes.
+            "Probes": 
+                {
+
+                    "M0":
+                    {
+                        "Type": "Hall Effect Probe",
+                        "ID":   "M0",
+                        "Name": "Butts Probe"
+                    },
+
+                    "FS0":
+                    {
+                        "Type": "Float Switch",
+                        "ID":   "FS0",
+                        "Name": "Butts Switch"
+                    }
+                }
+
             "ServerAddress": "192.168.0.2",
             "ServerPort": 30000
         }
@@ -90,4 +139,12 @@ PROBE_SETTINGS = {
     "Hall Effect Probe": (Tools.sensorobjects.HallEffectProbe, (15, 17, 27, 22, 23, 24, 10, 9, 25, 11), 10),
     "Capacitive Probe": (Tools.sensorobjects.CapacitiveProbe, (15), 300),
     "Float Switch": (Tools.sensorobjects.FloatSwitch, (8), 30),
+}
+
+#Device settings.
+#FIXME: Pins MUST NOT conflict.
+DEVICE_SETTINGS = {
+    #Device Name: (Device Object, Pin(s))
+
+    "Motor": (Tools.sensorobjects.Motor, (8))
 }
