@@ -200,7 +200,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                             sump_reading = reading
 
             #Logic.
-            reading_interval = core_tools.do_control_logic(sump_reading, butts_reading, probes,
+            reading_interval = core_tools.do_control_logic(sump_reading, butts_reading, devices,
                                                            monitors, socket, reading_interval)
 
             #Wait until it's time to check for another reading.
