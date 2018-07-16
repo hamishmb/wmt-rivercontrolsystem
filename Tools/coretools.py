@@ -427,6 +427,8 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, devices, monitors, soc
     butts_pump = None
 
     for device in devices:
+        print(device.get_name())
+
         if device.get_name() == "P0":
             butts_pump = device
 
