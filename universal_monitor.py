@@ -170,7 +170,7 @@ def run_standalone():
     """
 
     #Handle cmdline options.
-    num_readings, system_id = handle_cmdline_options()
+    system_id, num_readings = handle_cmdline_options()
 
     #Connect to server, if any.
     socket = None
