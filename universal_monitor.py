@@ -64,10 +64,13 @@ def usage():
 
     print("\nUsage: universal_standalone_monitor.py [OPTION]\n\n")
     print("Options:\n")
-    print("       -h, --help:               Show this help message")
-    print("       -n <int>, --num=<int>     Specify number of readings to take before exiting.")
-    print("                                 Without this option, readings will be taken until")
-    print("                                 the program is terminated")
+    print("       -h, --help:                   Show this help message")
+    print("       -i <string>, --id=<string>    Specifiies the system ID eg \"G4\". If settings")
+    print("                                     for this site aren't found in config.py an")
+    print("                                     exception will be thrown. Mandatory..")
+    print("       -n <int>, --num=<int>         Specify number of readings to take before exiting.")
+    print("                                     Without this option, readings will be taken until")
+    print("                                     the program is terminated with CTRL-C")
     print("universal_standalone_monitor.py is released under the GNU GPL Version 3")
     print("Copyright (C) Wimborne Model Town 2017-2018")
 
@@ -79,27 +82,30 @@ def handle_cmdline_options():
     Valid commandline options to universal_standalone_monitor.py:
         -h, --help                          Calls the usage() function to display help information
                                             to the user.
+        -i <string>, --id=<string>          Specifies the system ID eg "G4". If settings for this
+                                            site aren't found in config.py an exception will be
+                                            thrown. Mandatory.
         -n <int>, --num=<int>               Specify the number of readings to take before exiting.
                                             if not specified, readings will be taken until
-                                            the program is terminated with CRTL-C.
+                                            the program is terminated with CTRL-C.
 
     Returns:
-        int num_readings.
+        tuple(string system_id, int num_readings).
 
-            The number of readings to take.
+            The system id and the number of readings to take.
 
     Raises:
         AssertionError, if there are unhandled options.
 
     Usage:
 
-    >>> num_readings = handle_cmdline_options()
+    >>> system_id, num_readings = handle_cmdline_options()
     """
 
     #Check all cmdline options are valid.
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "ht:n:",
-                                   ["help", "controlleraddress=", "num="])
+        opts, args = getopt.getopt(sys.argv[1:], "hi:n:",
+                                   ["help", "id=", "num="])
 
     except getopt.GetoptError as err:
         #Invalid option. Show the help message and then exit.
@@ -110,10 +116,14 @@ def handle_cmdline_options():
 
     #Do setup. o=option, a=argument.
     num_readings = 0 #Take readings indefinitely by default.
+    system_id = None
 
     for o, a in opts:
         if o in ["-n", "--num"]:
             num_readings = int(a)
+
+        elif o in ["-i", "--id"]:
+            system_id = a
 
         elif o in ["-h", "--help"]:
             usage()
@@ -122,7 +132,13 @@ def handle_cmdline_options():
         else:
             assert False, "unhandled option"
 
-    return num_readings
+    #Check system ID was specified.
+    assert system_id is not None, "You must specify the system ID"
+
+    #Check system ID is valid.
+    assert system_id in config.SITE_SETTINGS, "Invalid system ID"
+
+    return system_id, num_readings
 
 def run_standalone():
     """
@@ -154,10 +170,7 @@ def run_standalone():
     """
 
     #Handle cmdline options.
-    num_readings = handle_cmdline_options()
-
-    #Get system ID from config.
-    system_id = config.SITE_SETTINGS["G4"]["ID"]
+    num_readings, system_id = handle_cmdline_options()
 
     #Connect to server, if any.
     socket = None
