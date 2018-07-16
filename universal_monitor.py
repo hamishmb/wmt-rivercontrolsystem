@@ -65,10 +65,6 @@ def usage():
     print("\nUsage: universal_standalone_monitor.py [OPTION]\n\n")
     print("Options:\n")
     print("       -h, --help:               Show this help message")
-    print("       -t <str>, --type=<str>    Type of probe this monitor is for. Must be one of")
-    print("                                 'Resistance Probe', 'Hall Effect', 'Hall Effect Probe',")
-    print("                                 'Capacitive Probe', 'Float Switch'. Mandatory. Specify")
-    print("                                 multiple times for multiple probes.")
     print("       -n <int>, --num=<int>     Specify number of readings to take before exiting.")
     print("                                 Without this option, readings will be taken until")
     print("                                 the program is terminated")
@@ -83,35 +79,27 @@ def handle_cmdline_options():
     Valid commandline options to universal_standalone_monitor.py:
         -h, --help                          Calls the usage() function to display help information
                                             to the user.
-        -t <str>, --type=<str>              Type of probe this monitor is for. Must be one of
-                                            'Resistance Probe', 'Hall Effect', 'Hall Effect Probe'
-                                            'Capacitive Probe', or 'Float Switch'. Mandatory.
-                                            Specify multiple times for multiple probes.
         -n <int>, --num=<int>               Specify the number of readings to take before exiting.
                                             if not specified, readings will be taken until
                                             the program is terminated with CRTL-C.
 
     Returns:
-        tuple (list types, int num_readings).
+        int num_readings.
 
-            This will be whatever arguments the user provided on the commandline.
-            If any arguments were missing, default values will be provided instead
-            as discussed above.
+            The number of readings to take.
 
     Raises:
         AssertionError, if there are unhandled options.
 
     Usage:
 
-    >>> types, num_readings = handle_cmdline_options()
+    >>> num_readings = handle_cmdline_options()
     """
-
-    types = []
 
     #Check all cmdline options are valid.
     try:
         opts, args = getopt.getopt(sys.argv[1:], "ht:n:",
-                                   ["help", "type=", "controlleraddress=", "num="])
+                                   ["help", "controlleraddress=", "num="])
 
     except getopt.GetoptError as err:
         #Invalid option. Show the help message and then exit.
@@ -124,10 +112,7 @@ def handle_cmdline_options():
     num_readings = 0 #Take readings indefinitely by default.
 
     for o, a in opts:
-        if o in ["-t", "--type"]:
-            types.append(a)
-
-        elif o in ["-n", "--num"]:
+        if o in ["-n", "--num"]:
             num_readings = int(a)
 
         elif o in ["-h", "--help"]:
@@ -137,10 +122,7 @@ def handle_cmdline_options():
         else:
             assert False, "unhandled option"
 
-    if types == []:
-        assert False, "You must specify the type(s) of probe(s) you want to monitor."
-
-    return types, num_readings
+    return num_readings
 
 def run_standalone():
     """
