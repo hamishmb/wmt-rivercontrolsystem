@@ -154,16 +154,10 @@ def run_standalone():
     """
 
     #Handle cmdline options.
-    types, num_readings = handle_cmdline_options()
+    num_readings = handle_cmdline_options()
 
     #Get system ID from config.
     system_id = config.SITE_SETTINGS["G4"]["ID"]
-
-    if len(types) == 1:
-        logger.debug("Running in "+types[0]+" mode...")
-
-    else:
-        logger.debug("Monitoring multiple probes...")
 
     #Connect to server, if any.
     socket = None
@@ -230,7 +224,7 @@ def run_standalone():
                 if monitor.is_running():
                     #Check for new readings. NOTE: Later on, use the readings returned from this
                     #for state history generation etc.
-                    core_tools.get_and_handle_new_reading(monitor, types[monitors.index(monitor)],
+                    core_tools.get_and_handle_new_reading(monitor, "test",
                                                           config.SITE_SETTINGS["G4"]["ServerAddress"], socket)
 
             #Wait until it's time to check for another reading.
