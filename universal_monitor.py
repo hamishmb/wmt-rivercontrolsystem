@@ -200,37 +200,27 @@ def run_standalone():
     logger.info("Greeting user...")
     core_tools.greet_user("Universal Monitor")
 
+    #Create the probe(s).
+    probes = []
+    monitors = []
+
     #Get settings for each type of monitor from the config file.
     logger.info("Setting up the probes...")
 
-    monitors = []
+    for probe_id in config.SITE_SETTINGS[system_id]["Probes"]:
+        probe_settings = config.SITE_SETTINGS[system_id]["Probes"][probe_id]
 
-    for _type in types:
-        logger.info("Asserting that the specified type is valid...")
-        assert _type in config.PROBE_SETTINGS, "Invalid Type Specified"
+        _type = probe_settings["Type"]
+        probe = probe_settings["Class"]
+        pins = probe_settings["Pins"]
+        reading_interval = probe_settings["Default Interval"]
 
-        probe, pins, reading_interval = config.PROBE_SETTINGS[_type]
-
-        #Generate an ID FIXME what if multiple types of same probe?
-        #TODO Make a separate function to generate unique IDs.
-        _id = _type
-
-        if _type == "Hall Effect Probe":
-            _id = "M0"
-
-        elif _type == "Float Switch":
-            _id = "FS0"
-
-        #Create the probe object.
-        probe = probe(_id)
-
-        #Set the probe up.
+        probe = probe(probe_id)
         probe.set_pins(pins)
-
-        logger.info("Starting the monitor thread for "+_type+"...")
+        probes.append(probe)
 
         #Start the monitor threads.
-        #Keep references to these, but no need to with the probes.
+        logger.info("Starting the monitor thread for "+probe_id+"...")
         monitors.append(Monitor(probe, num_readings, reading_interval, system_id))
 
     print("Synchronising with monitor threads...")
