@@ -114,22 +114,37 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     core_tools.greet_user("River System Control and Monitoring Software")
 
     #Create the probe(s).
-    
-    #Create the devices.
-    sump_probe = sensor_objects.HallEffectProbe("M0")
-    butts_pump = sensor_objects.Motor("P0 (Butts Pump)") #SSR 1.
-    main_pump = sensor_objects.Motor("P1 (Circulation Pump") #SSR 2.
+    probes = []
 
-    #Set the devices up.
-    sump_probe.set_pins((15, 17, 27, 22, 23, 24, 10, 9, 25, 11))
+    for probe_id in config.SITE_SETTINGS["SUMP"]["Probes"]:
+        probe_settings = config.SITE_SETTINGS["SUMP"]["Probes"][probe_id]
 
-    #Butts pump doesn't support PWM.
-    butts_pump.set_pins(5, _input=False) #This is an output.
-    butts_pump.set_pwm_available(False, -1)
+        _type = probe_settings["Type"]
+        probe = probe_settings["Class"]
+        pins = probe_settings["Pins"]
+        reading_interval = probe_settings["Default Interval"]
 
-    #Main pump doen't support PWM (no hardware yet).
-    main_pump.set_pins(18, _input=False) #This is an output.
-    main_pump.set_pwm_available(False, -1)
+        probe = probe(system_id+":"+probe_id)
+        probe.set_pins(pins)
+        probes.append(probe)
+
+    #Create the device(s).
+    devices = []
+
+    for device_id in config.SITE_SETTINGS["SUMP"]["Devices"]:
+        device_settings = config.SITE_SETTINGS["SUMP"]["Devices"][device_id]
+
+        _type = device_settings["Type"]
+        device = device_settings["Class"]
+        pins = device_settings["Pins"]
+
+        device = device(system_id+":"+device_id)
+
+        #These are all pumps. FIXME make tidy later.
+        #NB: PWM is implicitely disabled by default.
+        device.set_pins(pins, _input=False)
+
+        devices.append(probe)
 
     #Reading interval.
     reading_interval = 15
@@ -147,7 +162,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     monitors.append(SocketsMonitor(socket, "G4", "M0"))
 
     #And for our SUMP probe.
-    monitors.append(Monitor(sump_probe, 0, reading_interval, system_id))
+    for probe in probes:
+        if probe.get_name() == "SUMP:M0":
+            monitors.append(Monitor(probe, 0, reading_interval, system_id))
 
     #Wait until the first readings have come in so we are synchronised.
     #NB: Will now wait for client connection.
@@ -185,9 +202,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                             sump_reading = reading
 
             #Logic.
-            reading_interval = core_tools.do_control_logic(sump_reading, butts_reading, butts_pump,
-                                                           main_pump, monitors[2], socket,
-                                                           reading_interval)
+            reading_interval = core_tools.do_control_logic(sump_reading, butts_reading, probes,
+                                                           monitors, socket, reading_interval)
 
             #Wait until it's time to check for another reading.
             time.sleep(reading_interval)

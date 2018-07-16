@@ -72,11 +72,14 @@ SITE_SETTINGS = {
 
                     "M0":
                     {
-                        "Type": "Hall Effect Probe",
-                        "ID":   "M0",
-                        "Name": "Sump Probe"
+                        "Type":             "Hall Effect Probe",
+                        "ID":               "M0",
+                        "Name":             "Sump Probe",
+                        "Class":            Tools.sensorobjects.HallEffectProbe,
+                        "Pins":             (15, 17, 27, 22, 23, 24, 10, 9, 25, 11),
+                        "Default Interval": 10
                     }
-                }
+                },
 
             #Devices to control.
             "Devices":
@@ -84,16 +87,20 @@ SITE_SETTINGS = {
 
                     "P0":
                     {
-                        "Type": "Motor",
-                        "ID":   "P0",
-                        "Name": "Butts Pump"
+                        "Type":  "Motor",
+                        "ID":    "P0",
+                        "Name":  "Butts Pump",
+                        "Class": Tools.sensorobjects.Motor,
+                        "Pins":  (5)
                     },
 
                     "P1":
                     {
                         "Type": "Motor",
                         "ID":   "P1",
-                        "Name": "Circulation Pump"
+                        "Name": "Circulation Pump",
+                        "Class": Tools.sensorobjects.Motor,
+                        "Pins":  (5)
                     }
                 },
         },
@@ -111,16 +118,22 @@ SITE_SETTINGS = {
                     {
                         "Type": "Hall Effect Probe",
                         "ID":   "M0",
-                        "Name": "Butts Probe"
+                        "Name": "Butts Probe",
+                        "Class": Tools.sensorobjects.HallEffectProbe,
+                        "Pins":  (15, 17, 27, 22, 23, 24, 10, 9, 25, 11),
+                        "Default Interval": 10
                     },
 
                     "FS0":
                     {
                         "Type": "Float Switch",
                         "ID":   "FS0",
-                        "Name": "Butts Switch"
+                        "Name": "Butts Switch",
+                        "Class": Tools.sensorobjects.FloatSwitch,
+                        "Pins":  (8),
+                        "Default Interval": 30
                     }
-                }
+                },
 
             "ServerAddress": "192.168.0.2",
             "ServerPort": 30000
@@ -128,6 +141,7 @@ SITE_SETTINGS = {
 
 }
 
+#The following are just for reference and are DEPRECATED.
 
 #Probe settings.
 #FIXME: Pins MUST NOT conflict.
@@ -146,5 +160,5 @@ PROBE_SETTINGS = {
 DEVICE_SETTINGS = {
     #Device Name: (Device Object, Pin(s))
 
-    "Motor": (Tools.sensorobjects.Motor, (8))
+    "Motor": (Tools.sensorobjects.Motor, (5))
 }
