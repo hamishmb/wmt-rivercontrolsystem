@@ -66,7 +66,7 @@ except ImportError:
 
 #Define global variables.
 VERSION = "0.9.2"
-RELEASEDATE = "16/7/2018"
+RELEASEDATE = "19/7/2018"
 
 def run_standalone(): #TODO Refactor me into lots of smaller functions.
     """

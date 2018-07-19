@@ -300,7 +300,6 @@ class Monitor(BaseMonitorClass):
         """
 
         num_readings_taken = 0
-        last_write_was_dot = False
         previous_reading = None #NB: Just to use here, rather then self.prev_reading,
                                 #which is for external users.
         self.running = True
@@ -323,24 +322,13 @@ class Monitor(BaseMonitorClass):
 
                 if reading == previous_reading:
                     #Write a . to the file.
-                    #Couple of newlines if the last thing wasn't a dot.
-                    if not last_write_was_dot:
-                        self.file_handle.write("\n\n")
-
                     self.file_handle.write(".")
-
-                    last_write_was_dot = True
 
                 else:
                     #Write it to the readings file.
-                    #Newline if last thing was a dot.
-                    if last_write_was_dot:
-                        self.file_handle.write("\n")
-
                     self.file_handle.write("\n"+reading.as_csv())
 
                     previous_reading = reading
-                    last_write_was_dot = False
 
                 self.file_handle.flush()
 
@@ -364,7 +352,6 @@ class Monitor(BaseMonitorClass):
                 if timediff.days >= self.file_rotate_interval:
                     self.file_handle.close()
                     self.create_file_handle()
-                    last_write_was_dot = False
                     previous_reading = None
 
         except BaseException as err:
@@ -432,7 +419,6 @@ class SocketsMonitor(BaseMonitorClass):
 
         """
 
-        last_write_was_dot = False
         previous_reading = None #NB: Just to use here, rather then self.prev_reading,
                                 #which is for external users.
         self.running = True
@@ -461,24 +447,13 @@ class SocketsMonitor(BaseMonitorClass):
 
                         if reading == previous_reading:
                             #Write a . to the file.
-                            #Couple of newlines if the last thing wasn't a dot.
-                            if not last_write_was_dot:
-                                self.file_handle.write("\n\n")
-
                             self.file_handle.write(".")
-
-                            last_write_was_dot = True
 
                         else:
                             #Write it to the readings file.
-                            #Newline if last thing was a dot.
-                            if last_write_was_dot:
-                                self.file_handle.write("\n")
-
                             self.file_handle.write("\n"+reading.as_csv())
 
                             previous_reading = reading
-                            last_write_was_dot = False
 
                         self.file_handle.flush()
 
@@ -491,7 +466,6 @@ class SocketsMonitor(BaseMonitorClass):
                 if timediff.days >= self.file_rotate_interval:
                     self.file_handle.close()
                     self.create_file_handle()
-                    last_write_was_dot = False
                     previous_reading = None
 
         except BaseException as err:
