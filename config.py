@@ -83,10 +83,10 @@ SITE_SETTINGS = {
             "Probes": 
                 {
 
-                    "M0":
+                    "SUMP:M0":
                     {
                         "Type":             "Hall Effect Probe",
-                        "ID":               "M0",
+                        "ID":               "SUMP:M0",
                         "Name":             "Sump Probe",
                         "Class":            Tools.sensorobjects.HallEffectProbe,
                         "Pins":             (15, 17, 27, 22, 23, 24, 10, 9, 25, 11),
@@ -98,19 +98,19 @@ SITE_SETTINGS = {
             "Devices":
                 {
 
-                    "P0":
+                    "SUMP:P0":
                     {
                         "Type":  "Motor",
-                        "ID":    "P0",
+                        "ID":    "SUMP:P0",
                         "Name":  "Butts Pump",
                         "Class": Tools.sensorobjects.Motor,
                         "Pins":  (5)
                     },
 
-                    "P1":
+                    "SUMP:P1":
                     {
                         "Type": "Motor",
-                        "ID":   "P1",
+                        "ID":   "SUMP:P1",
                         "Name": "Circulation Pump",
                         "Class": Tools.sensorobjects.Motor,
                         "Pins":  (5)
@@ -127,20 +127,20 @@ SITE_SETTINGS = {
             "Probes": 
                 {
 
-                    "M0":
+                    "G4:M0":
                     {
                         "Type": "Hall Effect Probe",
-                        "ID":   "M0",
+                        "ID":   "G4:M0",
                         "Name": "Butts Probe",
                         "Class": Tools.sensorobjects.HallEffectProbe,
                         "Pins":  (15, 17, 27, 22, 23, 24, 10, 9, 25, 11),
                         "Default Interval": 10
                     },
 
-                    "FS0":
+                    "G4:FS0":
                     {
                         "Type": "Float Switch",
-                        "ID":   "FS0",
+                        "ID":   "G4:FS0",
                         "Name": "Butts Switch",
                         "Class": Tools.sensorobjects.FloatSwitch,
                         "Pins":  (8),

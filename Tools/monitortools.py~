@@ -44,11 +44,6 @@ class BaseMonitorClass(threading.Thread):
     inherit from. It contains common functionality and
     instance variables and is used to reduce code duplication.
 
-    It might be time to integrate this with Monitor and
-    remove it, because we no longer have separate monitors
-    for each type of probe, because the probe classes' API
-    is now standardised.
-
     Documentatation for constructor for objects of type BaseMonitorClass:
 
     Absolutely useless by itself, because this class
@@ -270,7 +265,7 @@ class Monitor(BaseMonitorClass):
     """
 
     def __init__(self, probe, num_readings, reading_interval, system_id):
-        BaseMonitorClass.__init__(self, system_id, probe.get_name())
+        BaseMonitorClass.__init__(self, system_id, probe.get_probe_id())
 
         self.probe = probe
         self.num_readings = num_readings
@@ -305,7 +300,6 @@ class Monitor(BaseMonitorClass):
         """
 
         num_readings_taken = 0
-        last_write_was_dot = False
         previous_reading = None #NB: Just to use here, rather then self.prev_reading,
                                 #which is for external users.
         self.running = True
@@ -328,24 +322,13 @@ class Monitor(BaseMonitorClass):
 
                 if reading == previous_reading:
                     #Write a . to the file.
-                    #Couple of newlines if the last thing wasn't a dot.
-                    if not last_write_was_dot:
-                        self.file_handle.write("\n\n")
-
                     self.file_handle.write(".")
-
-                    last_write_was_dot = True
 
                 else:
                     #Write it to the readings file.
-                    #Newline if last thing was a dot.
-                    if last_write_was_dot:
-                        self.file_handle.write("\n")
-
                     self.file_handle.write("\n"+reading.as_csv())
 
                     previous_reading = reading
-                    last_write_was_dot = False
 
                 self.file_handle.flush()
 
@@ -369,7 +352,6 @@ class Monitor(BaseMonitorClass):
                 if timediff.days >= self.file_rotate_interval:
                     self.file_handle.close()
                     self.create_file_handle()
-                    last_write_was_dot = False
                     previous_reading = None
 
         except BaseException as err:
@@ -437,7 +419,6 @@ class SocketsMonitor(BaseMonitorClass):
 
         """
 
-        last_write_was_dot = False
         previous_reading = None #NB: Just to use here, rather then self.prev_reading,
                                 #which is for external users.
         self.running = True
@@ -466,24 +447,13 @@ class SocketsMonitor(BaseMonitorClass):
 
                         if reading == previous_reading:
                             #Write a . to the file.
-                            #Couple of newlines if the last thing wasn't a dot.
-                            if not last_write_was_dot:
-                                self.file_handle.write("\n\n")
-
                             self.file_handle.write(".")
-
-                            last_write_was_dot = True
 
                         else:
                             #Write it to the readings file.
-                            #Newline if last thing was a dot.
-                            if last_write_was_dot:
-                                self.file_handle.write("\n")
-
                             self.file_handle.write("\n"+reading.as_csv())
 
                             previous_reading = reading
-                            last_write_was_dot = False
 
                         self.file_handle.flush()
 
@@ -496,7 +466,6 @@ class SocketsMonitor(BaseMonitorClass):
                 if timediff.days >= self.file_rotate_interval:
                     self.file_handle.close()
                     self.create_file_handle()
-                    last_write_was_dot = False
                     previous_reading = None
 
         except BaseException as err:

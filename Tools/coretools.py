@@ -426,10 +426,10 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, devices, monitors, soc
     butts_pump = None
 
     for device in devices:
-        if device.get_name() == "P0":
+        if device.get_id() == "SUMP:P0":
             butts_pump = device
 
-        elif device.get_name() == "P1":
+        elif device.get_id() == "SUMP:P1":
             main_pump = device
 
     assert main_pump is not None

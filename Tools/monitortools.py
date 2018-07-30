@@ -265,7 +265,7 @@ class Monitor(BaseMonitorClass):
     """
 
     def __init__(self, probe, num_readings, reading_interval, system_id):
-        BaseMonitorClass.__init__(self, system_id, probe.get_name())
+        BaseMonitorClass.__init__(self, system_id, probe.get_probe_id())
 
         self.probe = probe
         self.num_readings = num_readings
@@ -314,7 +314,7 @@ class Monitor(BaseMonitorClass):
                 #Construct a Reading object to hold this info.
                 #Args in order: Time, Tick, ID, Value, Status
                 reading = coretools.Reading(str(datetime.datetime.now()), -1,
-                                            self.system_id+":"+self.probe.get_name(),
+                                            self.probe.get_id(),
                                             str(the_reading), status_text)
 
                 #Add it to the queue.

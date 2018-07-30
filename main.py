@@ -166,7 +166,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     #And for our SUMP probe.
     for probe in probes:
-        if probe.get_name() == "M0": #FIXME make id methods like in Reading to fix this issue w/ many probes in diff systems.
+        if probe.get_id() == "SUMP:M0":
             monitors.append(Monitor(probe, 0, reading_interval, system_id))
 
     #Wait until the first readings have come in so we are synchronised.

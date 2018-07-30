@@ -73,10 +73,9 @@ class BaseDeviceClass:
                                     helping construct
                                     a subclass.
 
-        Name (string):              The probe's name.
-                                    Can be used in
-                                    logging messages
-                                    for extra clarity.
+        _id (string):                The probe's full ID.
+                                    Used to identify the
+                                    probe. eg "G4:FS0"
 
     Usage:
         >>> probe = BaseDeivceClass("myProbe")
@@ -86,10 +85,10 @@ class BaseDeviceClass:
     """
 
     # ---------- CONSTRUCTOR ----------
-    def __init__(self, Name):
+    def __init__(self, _id):
         """Constructor as documented above"""
         #Set some semi-private variables.
-        self._name = Name                   #Just a label.
+        self._id = _id                      #A unique full ID eg "G4:FS0".
         self._pin = -1                      #Needs to be set/deleted.
         self._pins = []                     #Needs to be set/deleted.
         self._reverse_pins = []             #Needs to be set/deleted.
@@ -160,19 +159,47 @@ class BaseDeviceClass:
             self._pin = self._pins[0]
 
     # ---------- INFO GETTER METHODS ----------
-    def get_name(self):
+    def get_probe_id(self):
         """
-        This method returns this object's name.
+        This method returns this probe's probe-id eg "FS0".
 
         Returns:
-            string. The object's name.
+            string. The probes's ID.
 
         Usage:
 
-            >>> a_name = <Device-Object>.get_name()
+            >>> a_name = <Device-Object>.get_probe_id()
         """
 
-        return self._name
+        return self._id.split(":")[1]
+
+    def get_system_id(self):
+        """
+        This method returns this probe's system-id eg "G4".
+
+        Returns:
+            string. The prob's system id.
+
+        Usage:
+
+            >>> a_name = <Device-Object>.get_system_id()
+        """
+
+        return self._id.split(":")[0]
+
+    def get_id(self):
+        """
+        This method returns this probes's full ID eg "G4:FS0".
+
+        Returns:
+            string. The probe's full id.
+
+        Usage:
+
+            >>> a_name = <Device-Object>.get_id()
+        """
+
+        return self._id
 
     def get_pins(self):
         """
@@ -285,7 +312,7 @@ class Motor(BaseDeviceClass):
         GPIO.output(self._pin, True)
 
         #Log it.
-        logger.info("Motor "+self._name+": Enabled.")
+        logger.info("Motor "+self._id+": Enabled.")
 
         return True
 
@@ -311,7 +338,7 @@ class Motor(BaseDeviceClass):
         GPIO.output(self._pin, False)
 
         #Log it.
-        logger.info("Motor "+self._name+": Disabled.")
+        logger.info("Motor "+self._id+": Disabled.")
 
         return True
 
