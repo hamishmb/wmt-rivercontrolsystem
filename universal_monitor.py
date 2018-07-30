@@ -37,8 +37,6 @@ import traceback
 #Do required imports.
 import config
 
-import Tools
-
 from Tools import coretools as core_tools
 from Tools import sockettools as socket_tools
 from Tools.monitortools import Monitor
@@ -104,8 +102,8 @@ def handle_cmdline_options():
 
     #Check all cmdline options are valid.
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hi:n:",
-                                   ["help", "id=", "num="])
+        opts = getopt.getopt(sys.argv[1:], "hi:n:",
+                             ["help", "id=", "num="])[0]
 
     except getopt.GetoptError as err:
         #Invalid option. Show the help message and then exit.
@@ -118,14 +116,14 @@ def handle_cmdline_options():
     num_readings = 0 #Take readings indefinitely by default.
     system_id = None
 
-    for o, a in opts:
-        if o in ["-n", "--num"]:
-            num_readings = int(a)
+    for opt, arg in opts:
+        if opt in ["-n", "--num"]:
+            num_readings = int(arg)
 
-        elif o in ["-i", "--id"]:
-            system_id = a
+        elif opt in ["-i", "--id"]:
+            system_id = arg
 
-        elif o in ["-h", "--help"]:
+        elif opt in ["-h", "--help"]:
             usage()
             sys.exit()
 
@@ -227,8 +225,6 @@ def run_standalone():
     old_reading_interval = 0
 
     #Keep tabs on its progress so we can write new readings to the file.
-    #TODO Sections of this code are duplicated w/ main.py, fix that.
-    #TODO Refactor while we're at it.
     try:
         at_least_one_monitor_running = True
 
@@ -238,7 +234,8 @@ def run_standalone():
                     #Check for new readings. NOTE: Later on, use the readings returned from this
                     #for state history generation etc.
                     core_tools.get_and_handle_new_reading(monitor, "test",
-                                                          config.SITE_SETTINGS["G4"]["ServerAddress"], socket)
+                                                          config.SITE_SETTINGS
+                                                          ["G4"]["ServerAddress"], socket)
 
             #Wait until it's time to check for another reading.
             #I know we could use a long time.sleep(),

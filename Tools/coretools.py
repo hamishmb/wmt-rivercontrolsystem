@@ -29,7 +29,6 @@ functions in here to reduce code duplication.
 
 import datetime
 import sys
-import os
 import logging
 
 VERSION = "0.9.2"
@@ -78,7 +77,6 @@ class Reading:
         The constructor for this class takes four arguments as specified above.
 
         >>> my_reading = core_tools.Reading(<a_time>, <a_tick>, <an_id>, <a_value>, <a_status>)
-        >>> my_reading = core_tools.Reading(str(datetime.datetime.now()), 100, "G4:M0", "500mm", "OK")
 
     .. warning::
         There is currently **absolutely no** check to see that each instance variable
@@ -220,9 +218,9 @@ class Reading:
         try:
             #This will return True if all the attributes and values are equal,
             #ignoring the time the reading was taken and the tick.
-            return (self._id == other._id
-                    and self._value == other._value
-                    and self._status == other._status)
+            return (self._id == other.get_id()
+                    and self._value == other.get_value()
+                    and self._status == other.get_status())
 
         except:
             return False
@@ -370,7 +368,8 @@ def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None)
 
     return reading
 
-def do_control_logic(sump_reading_obj, butts_reading_obj, devices, monitors, sockets, reading_interval):
+def do_control_logic(sump_reading_obj, butts_reading_obj, devices, monitors, sockets,
+                     reading_interval):
     """
     This function is used to decides what action to take based
     on the readings it is passed.
@@ -560,7 +559,7 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, devices, monitors, soc
         butts_pump.disable()
 
         logger.critical("*** CRITICAL ***: Water level in the sump < 200mm!")
-        logger.critical("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
+        logger.critical("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to system.")
         logger.critical("*** INFO ***: The pump won't run dry; it has been temporarily disabled.")
 
         print("\n\n*** CRITICAL ***: Water level in the sump < 200mm!")

@@ -79,6 +79,7 @@ class BaseMonitorClass(threading.Thread):
         self.file_creation_time = None
         self.file_rotate_interval = 7 #Days.
 
+        self.reading_interval = 0
         self.queue = deque()
         self.prev_reading = ""
         self.running = False
@@ -308,7 +309,8 @@ class Monitor(BaseMonitorClass):
         self.create_file_handle()
 
         try:
-            while (not self.should_exit) and (self.num_readings == 0 or (num_readings_taken < self.num_readings)):
+            while ((not self.should_exit)
+                   and (self.num_readings == 0 or (num_readings_taken < self.num_readings))):
                 the_reading, status_text = self.reading_func()
 
                 #Construct a Reading object to hold this info.

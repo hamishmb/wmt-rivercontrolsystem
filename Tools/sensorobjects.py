@@ -660,7 +660,7 @@ class HallEffectDevice(BaseDeviceClass):
     .. note::
         Currently, this class has no facility to convert RPM into a flow rate.
         The data is available but this hasn't been implemented.
- 
+
     Documentation for the constructor for objects of type HallEffectDevice:
 
     Usage:

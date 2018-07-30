@@ -48,9 +48,6 @@ import traceback
 #Do required imports.
 import config
 
-import Tools
-
-from Tools import monitortools as monitor_tools
 from Tools import coretools as core_tools
 from Tools import sockettools as socket_tools
 

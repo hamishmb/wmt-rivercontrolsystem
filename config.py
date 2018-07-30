@@ -22,6 +22,8 @@ that is used on the slave/client pis. Universal in this
 case means that this same program can be used for all of
 the probes this software framework supports.
 
+TODO UPDATE THIS.
+
 This essentially takes the form of a dictionary object
 named "PROBE_SETTINGS" in the format:
 
@@ -80,7 +82,7 @@ SITE_SETTINGS = {
                 },
 
             #Local probes.
-            "Probes": 
+            "Probes":
                 {
 
                     "SUMP:M0":
@@ -124,7 +126,7 @@ SITE_SETTINGS = {
             "ID": "G4",
 
             #Local probes.
-            "Probes": 
+            "Probes":
                 {
 
                     "G4:M0":
