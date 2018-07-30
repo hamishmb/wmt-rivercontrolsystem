@@ -370,7 +370,7 @@ def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None)
 
     return reading
 
-def do_control_logic(sump_reading_obj, butts_reading_obj, devices, monitors, socket, reading_interval):
+def do_control_logic(sump_reading_obj, butts_reading_obj, devices, monitors, sockets, reading_interval):
     """
     This function is used to decides what action to take based
     on the readings it is passed.
@@ -399,9 +399,8 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, devices, monitors, soc
 
         monitors (list):                A list of all master pi monitor objects.
 
-        socket (Socket):                A reference to the Socket object
-                                        that represents the data connection
-                                        between sumppi and buttspi. Passed
+        sockets (list of Socket):       A list of Socket objects that represent
+                                        the data connections between pis. Passed
                                         here so we can control the reading
                                         interval at that end.
 
@@ -415,7 +414,7 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, devices, monitors, soc
 
         >>> reading_interval = do_control_logic(<asumpreading>, <abuttsreading>,
         >>>                                     <listofprobes>, <listofmonitors>,
-        >>>                                     <asocketsobject>, <areadinginterval)
+        >>>                                     <listofsockets>, <areadinginterval)
 
     """
 
@@ -579,10 +578,11 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, devices, monitors, soc
 
         reading_interval = 15
 
-    #Set the reading interval in the monitors, and send it down the socket to the peer.
+    #Set the reading interval in the monitors, and send it down the sockets to the peers.
     for monitor in monitors:
         monitor.set_reading_interval(reading_interval)
 
-    socket.write("Reading Interval: "+str(reading_interval))
+    for each_socket in sockets.values():
+        each_socket.write("Reading Interval: "+str(reading_interval))
 
     return reading_interval

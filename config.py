@@ -66,6 +66,19 @@ SITE_SETTINGS = {
         {
             "ID": "SUMP",
 
+            #Sockets to host.
+            "Sockets":
+                {
+
+                    #For connection to butts pi.
+                    "Buttspi Socket":
+                        {
+                            "ID":           "SOCK0",
+                            "Name":         "Buttspi Socket",
+                            "PortNumber":   30000
+                        }
+                },
+
             #Local probes.
             "Probes": 
                 {

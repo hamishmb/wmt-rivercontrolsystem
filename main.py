@@ -66,7 +66,7 @@ except ImportError:
 
 #Define global variables.
 VERSION = "0.9.2"
-RELEASEDATE = "19/7/2018"
+RELEASEDATE = "30/7/2018"
 
 def run_standalone(): #TODO Refactor me into lots of smaller functions.
     """
@@ -100,11 +100,16 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #Get system ID from config.
     system_id = config.SITE_SETTINGS["SUMP"]["ID"]
 
-    #Provide a connection for clients to connect to.
-    logger.info("Creating a socket for clients to connect to, please wait...")
-    socket = socket_tools.Sockets("Socket")
-    socket.set_portnumber(30000)
-    socket.start_handler()
+    #Create all sockets.
+    logger.info("Creating sockets...")
+    sockets = {}
+
+    for each_socket in config.SITE_SETTINGS["SUMP"]["Sockets"].values():
+        socket = socket_tools.Sockets("Socket")
+        socket.set_portnumber(each_socket["PortNumber"])
+        sockets[each_socket["ID"]] = socket
+
+        socket.start_handler()
 
     logger.debug("Done!")
 
@@ -156,8 +161,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #Start monitor threads for the socket (wendy house butts).
     monitors = []
 
-    monitors.append(SocketsMonitor(socket, "G4", "FS0"))
-    monitors.append(SocketsMonitor(socket, "G4", "M0"))
+    monitors.append(SocketsMonitor(sockets["SOCK0"], "G4", "FS0"))
+    monitors.append(SocketsMonitor(sockets["SOCK0"], "G4", "M0"))
 
     #And for our SUMP probe.
     for probe in probes:
@@ -201,7 +206,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
             #Logic.
             reading_interval = core_tools.do_control_logic(sump_reading, butts_reading, devices,
-                                                           monitors, socket, reading_interval)
+                                                           monitors, sockets, reading_interval)
 
             #Wait until it's time to check for another reading.
             time.sleep(reading_interval)
@@ -226,9 +231,10 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     logger.info("Cleaning up...")
     print("Cleaning up...")
 
-    socket.request_handler_exit()
-    socket.wait_for_handler_to_exit()
-    socket.reset()
+    for each_socket in sockets.values():
+        each_socket.request_handler_exit()
+        each_socket.wait_for_handler_to_exit()
+        each_socket.reset()
 
     #Reset GPIO pins.
     GPIO.cleanup()
