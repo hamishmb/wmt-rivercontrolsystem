@@ -115,7 +115,7 @@ SITE_SETTINGS = {
                         "ID":   "SUMP:P1",
                         "Name": "Circulation Pump",
                         "Class": Tools.sensorobjects.Motor,
-                        "Pins":  (5)
+                        "Pins":  (18)
                     }
                 },
         },
