@@ -101,6 +101,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     logger.info("Creating sockets...")
     sockets = {}
 
+    #FIXME NOW: Works at home, but seems to crash on laptop: why?
     for each_socket in config.SITE_SETTINGS["SUMP"]["Sockets"].values():
         socket = socket_tools.Sockets("Socket")
         socket.set_portnumber(each_socket["PortNumber"])
