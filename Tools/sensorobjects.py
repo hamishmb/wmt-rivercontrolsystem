@@ -782,42 +782,52 @@ class HallEffectProbe(BaseDeviceClass):
     def _level0(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 0
+        logging.debug(self._id+" 0mm level detected.")
 
     def _level1(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 100
+        logging.debug(self._id+" 100mm level detected.")
 
     def _level2(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 200
+        logging.debug(self._id+" 200mm level detected.")
 
     def _level3(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 300
+        logging.debug(self._id+" 300mm level detected.")
 
     def _level4(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 400
+        logging.debug(self._id+" 400mm level detected.")
 
     def _level5(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 500
+        logging.debug(self._id+" 500mm level detected.")
 
     def _level6(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 600
+        logging.debug(self._id+" 600mm level detected.")
 
     def _level7(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 700
+        logging.debug(self._id+" 700mm level detected.")
 
     def _level8(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 800
+        logging.debug(self._id+" 800mm level detected.")
 
     def _level9(self, channel):
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 900
+        logging.debug(self._id+" 900mm level detected.")
 
     # ---------- CONTROL METHODS ----------
     def get_reading(self):

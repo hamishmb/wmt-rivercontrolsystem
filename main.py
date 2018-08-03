@@ -63,7 +63,7 @@ except ImportError:
 
 #Define global variables.
 VERSION = "0.9.2"
-RELEASEDATE = "31/7/2018"
+RELEASEDATE = "3/8/2018"
 
 def run_standalone(): #TODO Refactor me into lots of smaller functions.
     """
@@ -101,7 +101,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     logger.info("Creating sockets...")
     sockets = {}
 
-    #FIXME NOW: Works at home, but seems to crash on laptop: why?
+    #FIXME: See what happens at WMT, works at some.
     for each_socket in config.SITE_SETTINGS["SUMP"]["Sockets"].values():
         socket = socket_tools.Sockets("Socket")
         socket.set_portnumber(each_socket["PortNumber"])
