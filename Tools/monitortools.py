@@ -102,14 +102,18 @@ class BaseMonitorClass(threading.Thread):
         """
 
         #TODO need a logger here and to catch exceptions.
-        self.file_handle = open(self.file_name+"-"+str(datetime.datetime.now())+".csv", "a")
+        #Time format: yyyy-mm-dd hh:mm:ss
+        the_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+
+        self.file_handle = open(self.file_name+"-"+the_time+".csv", "a")
 
         #Write the start time and the CSV header.
-        self.file_handle.write("\n\nStart Time: "+str(datetime.datetime.now())+"\n\n")
+        self.file_handle.write("\n\nStart Time: "+the_time+"\n\n")
         self.file_handle.write("\nTIME,SYSTEM TICK,ID,VALUE,STATUS\n")
         self.file_handle.flush()
 
         #Set the file creation time so we can rotate readings files.
+        #This uses the datetime class cos it's easier to compare times that way.
         self.file_creation_time = datetime.datetime.now()
 
     def is_running(self):
@@ -315,7 +319,8 @@ class Monitor(BaseMonitorClass):
 
                 #Construct a Reading object to hold this info.
                 #Args in order: Time, Tick, ID, Value, Status
-                reading = coretools.Reading(str(datetime.datetime.now()), -1,
+                reading = coretools.Reading(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+                                            -1,
                                             self.probe.get_id(),
                                             str(the_reading), status_text)
 
