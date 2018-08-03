@@ -16,44 +16,34 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-This is the configuration for the secondary part of the
-software. It forms the config for the universal monitor
-that is used on the slave/client pis. Universal in this
-case means that this same program can be used for all of
-the probes this software framework supports.
+This is the configuration for all pis. These dictionaries
+(key-value base data) provide all the configuration for each
+site in a centralised, easy-to-change file.
 
-TODO UPDATE THIS.
+This takes the form of a dictionary object
+named "SITE_SETTINGS". This object has detailed configuration
+for each site, namely the ID, sockets to host (if any), (local)
+probes to monitor, and devices to control.
 
-This essentially takes the form of a dictionary object
-named "PROBE_SETTINGS" in the format:
+NB: Remote probes are monitored using the configuraation too -
+the master pi (sumppi) just reads the configuraation for the
+other pis to set this up. No extra configuration is needed.
 
->>> PROBE_SETTINGS = {
->>>     Probe Name: (Probe Object, Pin(s), Default Reading Interval),
->>>     Probe Name2: (Probe Object2, Pin(s), Default Reading Interval),
->>> }
+NB 2: Any section of the configuration can be omitted if, for
+example, there are no devices to control at a particular site
+(like the G4 site). This is accepted and will "just work".
 
-The probe name forms the key, and we have configuration for:
-
-- "Resistance Probe"
-- "Hall Effect" (water-wheel)
-- "Hall Effect Probe"
-- "Capacitive Probe"
-- "Float Switch"
-
-So, if you want configuration for
-a capacitive probe, you can run:
-
->>> probe, pins, reading_interval = config.DATA["Capactive Probe"]
-
-and for a hall effect device (NOT the probe), run:
-
->>> probe, pins, reading_interval = config.DATA["Hall Effect"]
+NB 3: The code to actually make decisions and decide what to do
+with the devices to control is not here - it's in coretools.py.
+At the moment. only sumppi controls anything, so the method is called
+do_control_logic(), but later on there will be methods for each site,
+and they will be mapped to each site here in this config file.
 
 There are no classes or functions defined in this file.
 
-.. module:: universal_standalone_monitor_config.py
+.. module:: config.py
     :platform: Linux
-    :synopsis: The configuration for the secondary part of the control software.
+    :synopsis: The configuration for the control software.
 
 .. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
 
