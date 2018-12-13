@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Universal Standalone Monitor Config for the River System Control
-# and Monitoring Software Version 0.9.2
+# Configuration for the River System Control and Monitoring Software
 # Copyright (C) 2017-2018 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
@@ -16,28 +15,89 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-This is the configuration for all pis. These dictionaries
-(key-value base data) provide all the configuration for each
-site in a centralised, easy-to-change file.
+This is the configuration for all pis. These dictionaries (key-value
+base data) provide the configuration for each site in a centralised,
+easy-to-change file.
 
-This takes the form of a dictionary object
-named "SITE_SETTINGS". This object has detailed configuration
-for each site, namely the ID, sockets to host (if any), (local)
-probes to monitor, and devices to control.
+This takes the form of a dictionary object named "SITE_SETTINGS".
+This object has detailed configuration for each site, namely the ID,
+sockets to host (if any), (local) probes to monitor, and devices to
+control.
 
-NB: Remote probes are monitored using the configuraation too -
-the master pi (sumppi) just reads the configuraation for the
-other pis to set this up. No extra configuration is needed.
+In the dictionary, devices are identified according to their location
+and type the following key, eg:
+.. Sump Pi                        - SUMP
+.... Hall Effect (magnetic) Probe -     M0
+.... Main circulation Pump        -     P1
+.... Butts Return Pump            -     P0
 
-NB 2: Any section of the configuration can be omitted if, for
-example, there are no devices to control at a particular site
-(like the G4 site). This is accepted and will "just work".
+.. Wendy Street Pi                - G4
+.... Hall Effect (magnetic) Probe -     M0
+.... Float Switch                 -     FS0
 
-NB 3: The code to actually make decisions and decide what to do
-with the devices to control is not here - it's in coretools.py.
-At the moment. only sumppi controls anything, so the method is called
+.. Gate Valve                     - V4
+
+Full List of Devices and their ID Data and IP Addresses where applicable:
+.. Sump Pi                                 - SUMP, 192.168.1.1
+.... Hall Effect (magnetic) Probe          -     SUMP:M0
+.... Other Probe (TBD)                     -     SUMP:TBD0
+.... Main circulation Pump                 -     SUMP:P1
+.... Butts Return Pump                     -     SUMP:P0
+.. Railway Room Butts Pi                   - GR, 192.168.1.3
+.... Hall Effect (magnetic) Probe          -     G1:M0
+.... Other Probe (TBD)                     -     G1:TBD0
+.... Float Switch                          -     G1:FS0
+.... Hall Effect (magnetic) Probe          -     G2:M0
+.... Other Probe (TBD)                     -     G2:TBD0
+.... Float Switch                          -     G2:FS0
+.... Hall Effect (magnetic) Probe          -     G3:M0
+.... Other Probe (TBD)                     -     G3:TBD0
+.... Float Switch                          -     G3:FS0
+.. Wendy Street Butts Pi                   - G4, 192.168.1.4
+.... Hall Effect (magnetic) Probe          -     G4:M0
+.... Other Probe (TBD)                     -     G4:TBD0
+.... Float Switch                          -     G4:FS0
+.. Gazebo Butts Pi                         - G5, 192.168.1.5
+.... Hall Effect (magnetic) Probe          -     G5:M0
+.... Other Probe (TBD)                     -     G5:TBD0
+.... Float Switch                          -     G5:FS0
+.. Railway Room G1 Butts Group Gate Valve  - V1, 192.168.1.11
+.. Railway Room G2 Butts Group Gate Valve  - V2, 192.168.1.12
+.. Railway Room G3 Butts Group Gate Valve  - V3, 192.168.1.13
+.. Wendy Street G4 Butts Group Gate Valve  - V4, 192.168.1.14
+.. Gazebo G5 Butts Group Gate Valve        - V5, 192.168.1.15
+.. Matrix Pump V6 Gate Valve               - V6, 192.168.1.16
+.. Matrix Pump V7 Gate Valve               - V7, 192.168.1.17
+.. Matrix Pump V8 Gate Valve               - V8, 192.168.1.18
+.. Matrix Pump V9 Gate Valve               - V9, 192.168.1.19
+.. TBD Gate Valve                          - V10, 192.168.1.20
+.. TBD Loctn Gardeners Supply Gate Valve   - V11, 192.168.1.21
+.. Stage Buts Group G6 Gate Valve          - V12, 192.168.1.22
+
+.. Staff & Visitor GUI Pi                  - GUI, 192.168.1.9
+
+.. Webserver Pi                            - WMT_Webserver, 192.168.1.10
+
+Notes:
+
+1.  Remote probes are monitored using the configuration too - the
+master pi (sumppi) just reads the configuration for the other pis
+to set this up. No extra configuration is needed.
+
+2.  Any section of the configuration can be omitted if, for example,
+there are no devices to control at a particular site (like the G4 site).
+This is accepted and will "just work".
+
+3.  The code to actually make decisions and decide what to do with
+the devices to control is not here - it's in coretools.py.  At the
+moment. only sumppi controls anything, so the method is called
 do_control_logic(), but later on there will be methods for each site,
 and they will be mapped to each site here in this config file.
+
+4.  The Webserver Pi is not a part of the River System, but shares an
+Ethernet network.  It has therefore been allocated an IP Address that
+will not conflict with the system.  It is expected that it will serve
+the Visitor & Staff GUI.
 
 There are no classes or functions defined in this file.
 
@@ -46,6 +106,7 @@ There are no classes or functions defined in this file.
     :synopsis: The configuration for the control software.
 
 .. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
+.. and Terry Coles <wmt@hadrian-way.co.uk>
 
 """
 
@@ -69,7 +130,14 @@ SITE_SETTINGS = {
                             "Name":         "Buttspi Socket",
                             "PortNumber":   30000
                         }
-                },
+                    #For connection to butts pi Gate Valve.
+                    "Buttspi Gate Valve Socket":
+                        {
+                            "ID":           "SOCK1",
+                            "Name":         "Buttspi Gate Valve V4 Socket",
+                            "PortNumber":   30001
+                        }
+                 },
 
             #Local probes.
             "Probes":
@@ -80,7 +148,7 @@ SITE_SETTINGS = {
                         "Type":             "Hall Effect Probe",
                         "ID":               "SUMP:M0",
                         "Name":             "Sump Probe",
-                        "Class":            Tools.sensorobjects.HallEffectProbe,
+                        "Class":            Tools.deviceobjects.HallEffectProbe,
                         "Pins":             (15, 17, 27, 22, 23, 24, 10, 9, 25, 11),
                         "Default Interval": 10
                     }
@@ -95,7 +163,7 @@ SITE_SETTINGS = {
                         "Type":  "Motor",
                         "ID":    "SUMP:P0",
                         "Name":  "Butts Pump",
-                        "Class": Tools.sensorobjects.Motor,
+                        "Class": Tools.deviceobjects.Motor,
                         "Pins":  (5)
                     },
 
@@ -104,7 +172,7 @@ SITE_SETTINGS = {
                         "Type": "Motor",
                         "ID":   "SUMP:P1",
                         "Name": "Circulation Pump",
-                        "Class": Tools.sensorobjects.Motor,
+                        "Class": Tools.deviceobjects.Motor,
                         "Pins":  (18)
                     }
                 },
@@ -123,8 +191,8 @@ SITE_SETTINGS = {
                     {
                         "Type": "Hall Effect Probe",
                         "ID":   "G4:M0",
-                        "Name": "Butts Probe",
-                        "Class": Tools.sensorobjects.HallEffectProbe,
+                        "Name": "Wendy Street Butts Probe",
+                        "Class": Tools.deviceobjects.HallEffectProbe,
                         "Pins":  (15, 17, 27, 22, 23, 24, 10, 9, 25, 11),
                         "Default Interval": 10
                     },
@@ -133,15 +201,37 @@ SITE_SETTINGS = {
                     {
                         "Type": "Float Switch",
                         "ID":   "G4:FS0",
-                        "Name": "Butts Switch",
-                        "Class": Tools.sensorobjects.FloatSwitch,
+                        "Name": "Wendy Street Butts Switch",
+                        "Class": Tools.deviceobjects.FloatSwitch,
                         "Pins":  (8),
                         "Default Interval": 30
                     }
                 },
+            
+        },
 
-            "ServerAddress": "192.168.0.2",
+            "ServerAddress": "192.168.0.4",
             "ServerPort": 30000
+        }
+
+    #Gate Valves.
+    "Gate Valves":
+        {
+
+            "V4":
+            {
+                "Type": "Gate Valve",
+                "ID":   "V4",
+                "Name": "Butts Farm Gate Valve",
+                "Class": Tools.deviceobjects.GateValve,
+                "Pins":  (17, 27, 19),
+                "Default Interval": 10
+            },
+
+        },
+
+            "ServerAddress": "192.168.0.11",
+            "ServerPort": 30001
         }
 
 }

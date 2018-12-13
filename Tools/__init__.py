@@ -54,12 +54,12 @@ Contains Classes:
 - Monitor
 - SocketsMonitor
 
-sensorobjects.py
+deviceobjects.py
 ================
 
-This module contains all of the classes that are used to represent
-probes and other sensors in the rest of the program. These classes
-all inherit from a common base sensor class that has useful methods
+This module contains all of the classes that are used to represent controls, 
+probes and other devices in the rest of the program. These classes
+all inherit from a common base device class that has useful methods
 and attributes. Each individual class implements its own reading
 mechanism, and has several other public methods if needed.
 
@@ -109,4 +109,4 @@ from __future__ import absolute_import
 from . import coretools
 from . import monitortools
 from . import sockettools
-from . import sensorobjects
+from . import deviceobjects
