@@ -270,7 +270,7 @@ class Monitor(BaseMonitorClass):
     """
 
     def __init__(self, probe, num_readings, reading_interval, system_id):
-        BaseMonitorClass.__init__(self, system_id, probe.get_probe_id())
+        BaseMonitorClass.__init__(self, system_id, probe.get_device_id())
 
         self.probe = probe
         self.num_readings = num_readings
