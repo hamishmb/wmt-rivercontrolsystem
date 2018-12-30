@@ -16,10 +16,10 @@
 
 #TODO
 """
-This is the secondary part of the software. It forms the
-universal monitor that is used on the slave/client pis.
+This is the secondary part of the software. It forms the universal
+controller & monitor that is used on the gate valve pis.
 Universal in this case means that this same program can be
-used for all of the probes this software framework supports.
+used for all of the gate valves this software framework supports.
 
 .. module:: gate_valve.py
     :platform: Linux
@@ -76,9 +76,9 @@ def usage():
 def handle_cmdline_options():
     """
     This function is used to handle the commandline options passed
-    to universal_monitor.py.
+    to gate_valve.py.
 
-    Valid commandline options to universal_standalone_monitor.py:
+    Valid commandline options to gate_valve.py:
         -h, --help                          Calls the usage() function to display help information
                                             to the user.
         -i <string>, --id=<string>          Specifies the system ID eg "V4". If settings for this
@@ -296,8 +296,8 @@ def run_standalone():
     GPIO.cleanup()
 
 if __name__ == "__main__":
-    logger = logging.getLogger('Universal Standalone Monitor '+VERSION)
-    logging.basicConfig(filename='./logs/universalmonitor.log',
+    logger = logging.getLogger('Universal Gate Valve Monitor '+VERSION)
+    logging.basicConfig(filename='./logs/gatevalvemonitor.log',
                         format='%(asctime)s - %(name)s - %(levelname)s: %(message)s',
                         datefmt='%d/%m/%Y %I:%M:%S %p')
 
