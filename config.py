@@ -37,13 +37,17 @@ and type the following key, eg:
 
 .. Gate Valve                     - V4
 
-Full List of Devices and their ID Data and IP Addresses where applicable:
-.. Sump Pi                                 - SUMP, 192.168.1.1
+Full List of Devices and their ID Data, IP Addresses, Master Pi server Port and
+Socket Numbers where applicable:
+        "ServerAddress": "192.168.0.2",
+        "ServerPort": 30014
+
+.. Sump Pi                                 - SUMP, 192.168.0.2
 .... Hall Effect (magnetic) Probe          -     SUMP:M0
 .... Other Probe (TBD)                     -     SUMP:TBD0
 .... Main circulation Pump                 -     SUMP:P1
 .... Butts Return Pump                     -     SUMP:P0
-.. Railway Room Butts Pi                   - GR, 192.168.1.3
+.. Railway Room Butts Pi                   - GR, 192.168.0.3, 30003, SOCK3
 .... Hall Effect (magnetic) Probe          -     G1:M0
 .... Other Probe (TBD)                     -     G1:TBD0
 .... Float Switch                          -     G1:FS0
@@ -53,32 +57,38 @@ Full List of Devices and their ID Data and IP Addresses where applicable:
 .... Hall Effect (magnetic) Probe          -     G3:M0
 .... Other Probe (TBD)                     -     G3:TBD0
 .... Float Switch                          -     G3:FS0
-.. Wendy Street Butts Pi                   - G4, 192.168.1.4
+.. Wendy Street Butts Pi                   - G4, 192.168.0.4, 30004, SOCK4
 .... Hall Effect (magnetic) Probe          -     G4:M0
 .... Other Probe (TBD)                     -     G4:TBD0
 .... Float Switch                          -     G4:FS0
-.. Gazebo Butts Pi                         - G5, 192.168.1.5
+.. Gazebo Butts Pi                         - G5, 192.168.0.5, 30005, SOCK5
 .... Hall Effect (magnetic) Probe          -     G5:M0
 .... Other Probe (TBD)                     -     G5:TBD0
 .... Float Switch                          -     G5:FS0
-.. Railway Room G1 Butts Group Gate Valve  - V1, 192.168.1.11
-.. Railway Room G2 Butts Group Gate Valve  - V2, 192.168.1.12
-.. Railway Room G3 Butts Group Gate Valve  - V3, 192.168.1.13
-.. Wendy Street G4 Butts Group Gate Valve  - V4, 192.168.1.14
-.. Gazebo G5 Butts Group Gate Valve        - V5, 192.168.1.15
-.. Matrix Pump V6 Gate Valve               - V6, 192.168.1.16
-.. Matrix Pump V7 Gate Valve               - V7, 192.168.1.17
-.. Matrix Pump V8 Gate Valve               - V8, 192.168.1.18
-.. Matrix Pump V9 Gate Valve               - V9, 192.168.1.19
-.. TBD Gate Valve                          - V10, 192.168.1.20
-.. TBD Loctn Gardeners Supply Gate Valve   - V11, 192.168.1.21
-.. Stage Buts Group G6 Gate Valve          - V12, 192.168.1.22
+.. Railway Room G1 Butts Group Gate Valve  - V1, 192.168.0.11, 30011, SOCK11
+.. Railway Room G2 Butts Group Gate Valve  - V2, 192.168.0.12, 30012, SOCK12
+.. Railway Room G3 Butts Group Gate Valve  - V3, 192.168.0.13, 30013, SOCK13
+.. Wendy Street G4 Butts Group Gate Valve  - V4, 192.168.0.14, 30014, SOCK14
+.. Gazebo G5 Butts Group Gate Valve        - V5, 192.168.0.15, 30015, SOCK15
+.. Matrix Pump V6 Gate Valve               - V6, 192.168.0.16, 30016, SOCK16
+.. Matrix Pump V7 Gate Valve               - V7, 192.168.0.17, 30017, SOCK17
+.. Matrix Pump V8 Gate Valve               - V8, 192.168.0.18, 30018, SOCK18
+.. Matrix Pump V9 Gate Valve               - V9, 192.168.0.19, 30019, SOCK19
+.. TBD Gate Valve                          - V10, 192.168.0.20, 30020, SOCK20
+.. TBD Loctn Gardeners Supply Gate Valve   - V11, 192.168.0.21, 30021, SOCK21
+.. Stage Buts Group G6 Gate Valve          - V12, 192.168.0.22, 30022, SOCK22
 
-.. Staff & Visitor GUI Pi                  - GUI, 192.168.1.9
+.. Staff & Visitor GUI Pi                  - GUI, 192.168.0.9
 
-.. Webserver Pi                            - WMT_Webserver, 192.168.1.10
+.. Webserver Pi                            - WMT_Webserver, 192.168.0.1
+
+        "ServerAddress": "192.168.0.2",
+        "ServerPort": 30014
 
 Notes:
+
+        "ServerAddress": "192.168.0.2",
+        "ServerPort": 30014
 
 1.  Remote probes are monitored using the configuration too - the
 master pi (sumppi) just reads the configuration for the other pis
@@ -107,6 +117,9 @@ There are no classes or functions defined in this file.
 
 .. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
 .. and Terry Coles <wmt@hadrian-way.co.uk>
+        "ServerAddress": "192.168.0.2",
+        "ServerPort": 30014
+
 
 """
 
@@ -123,19 +136,19 @@ SITE_SETTINGS = {
             "Sockets":
                 {
 
-                    #For connection to butts pi.
-                    "Buttspi Socket":
+                    #For connection to Wendy Street Butts Pi.
+                    "Wendy Street Buttspi Socket":
                         {
-                            "ID":           "SOCK0",
+                            "ID":           "SOCK4",
                             "Name":         "Buttspi Socket",
-                            "PortNumber":   30000
+                            "PortNumber":   30004
                         }
-                    #For connection to butts pi Gate Valve.
-                    "Buttspi Gate Valve Socket":
+                    #For connection to Wendy Street Butts Pi Gate Valve.
+                    "Buttspi Gate Valve Socket V4":
                         {
-                            "ID":           "SOCK1",
+                            "ID":           "SOCK14",
                             "Name":         "Buttspi Gate Valve V4 Socket",
-                            "PortNumber":   30001
+                            "PortNumber":   30014
                         }
                  },
 
@@ -162,8 +175,14 @@ SITE_SETTINGS = {
                     {
                         "Type":  "Motor",
                         "ID":    "SUMP:P0",
-                        "Name":  "Butts Pump",
-                        "Class": Tools.deviceobjects.Motor,
+        "ServerAddress": "192.168.0.2",
+        "ServerPort": 30014
+
+                        "Name":  "Sump to Butts Pump",
+                        "Class": Tools.deviceobjects
+        "ServerAddress": "192.168.0.2",
+        "ServerPort": 30014
+.Motor,
                         "Pins":  (5)
                     },
 
@@ -171,7 +190,7 @@ SITE_SETTINGS = {
                     {
                         "Type": "Motor",
                         "ID":   "SUMP:P1",
-                        "Name": "Circulation Pump",
+                        "Name": "Sump Circulation Pump",
                         "Class": Tools.deviceobjects.Motor,
                         "Pins":  (18)
                     }
@@ -210,28 +229,28 @@ SITE_SETTINGS = {
             
         },
 
-            "ServerAddress": "192.168.0.4",
-            "ServerPort": 30000
+            "ServerAddress": "192.168.0.2",
+            "ServerPort": 30004
         }
 
     #Gate Valves.
-    "Gate Valves":
-        {
+    "V4":
+    {
+        "Type": "Gate Valve",
+        "ID":   "V4",
+        "Name": "Butts Farm Gate Valve",
+        "Class": Tools.deviceobjects.GateValve,
 
-            "V4":
-            {
-                "Type": "Gate Valve",
-                "ID":   "V4",
-                "Name": "Butts Farm Gate Valve",
-                "Class": Tools.deviceobjects.GateValve,
-                "Pins":  (17, 27, 19),
-                "Default Interval": 10
-            },
+        "Pins":  (17, 27, 19),
+        "posTolerance": 1,
+        "maxOpen": 99,
+        "minOpen": 1,
+        "refVoltage": 3.3,
+        "Default Interval": 10
 
-        },
-
-            "ServerAddress": "192.168.0.11",
-            "ServerPort": 30001
-        }
+        #Config for server connection.
+        "ServerAddress": "192.168.0.2",
+        "ServerPort": 30014
+    }
 
 }

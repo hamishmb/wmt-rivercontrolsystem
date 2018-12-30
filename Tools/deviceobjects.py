@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Sensor classes for the River System Control and Monitoring Software Version 0.9.2
-# Copyright (C) 2017-2018 Wimborne model Town
+# Device classes for the River System Control and Monitoring Software Version 0.9.2
+# Copyright (C) 2017-2019 Wimborne model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
 # at your option, any later version.
@@ -19,22 +19,25 @@
 """
 This is the part of the software framework that contains the control/
 sensor/probe classes. These represent the control devices and probes/sensors that
-we're interfacing with. These classes provide a common API to
-get readings (the get_reading() method), and also draw the
-implementation details for how each probe is managed away from
-the rest of the program.
+we're interfacing with. These classes provide a common API to get readings (the
+get_reading() method), and also draw the implementation details for how each probe
+is managed away from the rest of the program.
 
 .. module:: deviceobjects.py
     :platform: Linux
     :synopsis: The part of the framework that contains the control/probe/sensor classes.
 
-.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
+.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk> and Terry Coles <WMT@hadrian-way.co.uk
 
 """
 
 #Standard Imports.
+import threading
 import time
 import logging
+
+#Import modules.
+from . import coretools as core_tools
 
 try:
     #Allow us to generate documentation on non-RPi systems.
@@ -100,7 +103,7 @@ class BaseDeviceClass:
         #TODO?: Currently cannot specify both input and output pins.
         """
         This method is used to specify the pins this probe will use. This can be a
-        single pin, or multiple pins (eg in the case of a resistance probe). Can also
+        single pin, or multiple pins (eg in the case of a magnetic probe). Can also
         be used to specify one or more output pins. Cannot currently specify both
         input and output pins. Uses RPi BCM pins.
 
@@ -159,23 +162,23 @@ class BaseDeviceClass:
             self._pin = self._pins[0]
 
     # ---------- INFO GETTER METHODS ----------
-    def get_probe_id(self):
+    def get_device_id(self):
         """
-        This method returns this probe's probe-id eg "FS0".
+        This method returns this devices' device-id eg "FS0".
 
         Returns:
-            string. The probes's ID.
+            string. The devices' ID.
 
         Usage:
 
-            >>> a_name = <Device-Object>.get_probe_id()
+            >>> a_name = <Device-Object>.get_device_id()
         """
 
         return self._id.split(":")[1]
 
     def get_system_id(self):
         """
-        This method returns this probe's system-id eg "G4".
+        This method returns this devices' system-id eg "G4".
 
         Returns:
             string. The prob's system id.
@@ -189,7 +192,7 @@ class BaseDeviceClass:
 
     def get_id(self):
         """
-        This method returns this probes's full ID eg "G4:FS0".
+        This method returns this devices' full ID eg "G4:FS0".
 
         Returns:
             string. The probe's full id.
@@ -214,6 +217,8 @@ class BaseDeviceClass:
         """
 
         return self._pins
+
+# ---------------------------------- MOTOR OBJECTS -----------------------------------------
 
 class Motor(BaseDeviceClass):
     """
@@ -342,7 +347,7 @@ class Motor(BaseDeviceClass):
 
         return True
 
-# -------------------- SENSOR PROBES --------------------
+# ---------------------------------- SENSOR OBJECTS -----------------------------------------
 
 class FloatSwitch(BaseDeviceClass):
     """
@@ -422,236 +427,6 @@ class FloatSwitch(BaseDeviceClass):
         """
 
         return bool(GPIO.input(self._pin) == self._active_state), "OK" #TODO Actual fault checking.
-
-class CapacitiveProbe(BaseDeviceClass):
-    """
-    This class is used to represent a capacitive probe.
-
-    Documentation for the constructor for objects of type CapacitiveProbe:
-
-    Usage:
-        Use the constructor for this class the same way as for BaseDeviceClass.
-    """
-
-    # ---------- CONSTRUCTORS ----------
-    def __init__(self, Name):
-        """This is the constructor, as documented above."""
-        #Call the base class constructor.
-        BaseDeviceClass.__init__(self, Name)
-
-        #Set some semi-private variables.
-        self._num_detections = 0                #Internal use only.
-
-    # ---------- PRIVATE METHODS ----------
-    def _increment_num_detections(self, channel):
-        """
-        PRIVATE, implementation detail.
-
-        Called when a falling edge is detected. Adds 1 to the number of falling edges detected
-        """
-
-        self._num_detections += 1
-
-    # ---------- CONTROL METHODS ----------
-    def get_reading(self):
-        """
-        This method returns the level of water. Takes readings for 5 seconds for accuracy,
-        then averages the result.
-
-        .. warning::
-            Currently returns the frequency rather than a level in mm, because our
-            prototypes haven't yet advanced to the point where we can map frequency to
-            mm.
-
-        .. note::
-            Currently no fault checking is performed, so the string part of the return value
-            is always "OK".
-
-        Returns:
-            tuple(int, string).
-
-            int:
-                The frequency, in Hz.
-
-            string:
-                The fault checking status.
-
-                OK -- Everything is fine.
-
-        Usage:
-
-            int <CapacitiveProbe-Object>.get_reading()
-        """
-
-        self._num_detections = 0
-
-        #Automatically call our function when a falling edge is detected.
-        GPIO.add_event_detect(self._pin, GPIO.FALLING, callback=self._increment_num_detections)
-
-        time.sleep(5)
-
-        #Stop calling our function.
-        GPIO.remove_event_detect(self._pin)
-
-        #Use integer divison '//' because it's fast.
-        freq = self._num_detections // 5 #Take the mean average over 5 seconds.
-
-        return freq, "OK" #TODO Actual fault checking.
-
-class ResistanceProbe(BaseDeviceClass):
-    """
-    This class is used to represent a resistance probe.
-
-    Documentation for the constructor for objects of type ResistanceProbe:
-
-    Usage:
-        Use the constructor for this class the same way as for BaseDeviceClass.
-
-    .. note::
-        Upon instantiation, a ResiatanceProbe object is assumed to be active low.
-    """
-
-    # ---------- CONSTRUCTORS ----------
-    def __init__(self, Name):
-        """This is the constructor, as dcumented above."""
-        #Call the base class constructor.
-        BaseDeviceClass.__init__(self, Name)
-
-        #Set some semi-private variables.
-        self._active_state = False           #Active low by default.
-
-    # ---------- INFO SETTER METHODS ----------
-    def set_active_state(self, state):
-        """
-        This method sets the active state for the pins.
-
-        Args:
-            State:          The active state for the pins. True for active high, False for
-                            active low.
-
-        Usage:
-
-            >>> <ResistanceProbe-Object>.set_active_state(True)     //Active high.
-
-            OR
-
-            >>> <ResistanceProbe-Object>.set_active_state(False)    //Active low.
-        """
-
-        self._active_state = state
-
-    # ---------- INFO GETTER METHODS ----------
-    def get_active_state(self):
-        """
-        This method returns the active state for the pins.
-
-        Returns:
-            bool. The active state.
-
-                True  -- Active high.
-                False -- Active low.
-
-        Usage:
-
-            >>> <ResistanceProbe-Object>.get_active_state()
-            >>> False
-
-        """
-
-        return self._active_state
-
-    # ---------- CONTROL METHODS ----------
-    def get_reading(self):
-        """
-        This method gets the level of the water in the probe or the postion of the gate in a
-        Gate Valve. It also does basic fault checking and reports back if any faults were found.
-
-        Returns:
-            tuple(int, string).
-
-            int:
-                The level of water in the probe, in mm.
-                The position of the Gate Valve, in %
-
-            string:
-                The fault checking status.
-
-                Pin states for debugging eg "1111111111 ",
-                and message if any fault was detected.
-
-                Examples:
-
-                    1110000000                  -- Fine, 200mm.
-                    1111110000                  -- Fine, 500mm.
-                    1110011110 FAULT DETECTED   -- Bad; could be anything, but probably 900mm.
-
-        .. warning::
-            We **CANNOT** detect all faults in this manner. For example, if the pin states were:
-
-                1110000000
-
-            The level could actually be 500mm, instead of 200mm, but the 300, 400 and 500mm
-            sensors could be broken. Essentially, extra checks based on history and the
-            readings from other sensors need to be performed.
-
-        Usage:
-
-            >>> <ResistanceProbe-Object>.get_reading()
-            >>> (300, 1111000000)
-
-        """
-
-        for pin in self._reverse_pins:
-            #Ignore pins until we find one that is in the active state.
-            if GPIO.input(pin) != self._active_state:
-                continue
-
-            #This pin must be active.
-            index = self._pins.index(pin)
-
-            #Log the states of all the pins.
-            status_text = ""
-
-            for pin in self._pins:
-                status_text += str(GPIO.input(pin))
-
-            #Check for faults.
-            status_text = self._detect_faults(index, status_text)
-
-            #Return the level, assume pin 0 is at 0mm. Also return fault_text
-            return index*100, status_text
-
-        #No pins were high.
-        return -1, "1111111111"
-
-    def _detect_faults(self, highest_active_pin, status_text):
-        """
-        PRIVATE, implementation detail.
-
-        Checks for faults in the probe. Isn't capable of finding all faults,
-        because it doesn't use data from past readings or from other probes;
-        that would be done elsewhere.
-
-        Usage:
-
-            >>> <ResistanceProbe-Object>.detect_faults(int highest_active_pin, status_text)
-            >>> <status_text> + " FAULT DETECTED"
-        """
-
-        #Must convert string to int first, because any string except "" evals to boolean True.
-        fault_text = ""
-
-        #All pins before this one should be active.
-        for pin in status_text[:highest_active_pin]:
-            if bool(int(pin)) != self._active_state:
-                fault_text = "FAULT DETECTED"
-
-        #All pins after this one should be inactive.
-        for pin in status_text[highest_active_pin+1:]:
-            if bool(int(pin)) == self._active_state:
-                fault_text = "FAULT DETECTED"
-
-        return status_text+" "+fault_text
 
 class HallEffectDevice(BaseDeviceClass):
     """
@@ -836,7 +611,7 @@ class HallEffectProbe(BaseDeviceClass):
         This method returns the rate at which the float is bobbing
         about.
 
-        .. note::
+        .. note::universal_monitor
 
             Currently no fault checking is performed, so the string part of the return value
             is always "OK".
@@ -863,3 +638,60 @@ class HallEffectProbe(BaseDeviceClass):
             self._post_init()
 
         return self._current_reading, "OK" #TODO Actual fault checking.
+
+# ---------------------------------- HYBRID OBJECTS -----------------------------------------
+# (Objects that contain both controlled devices and sendors
+class GateValve(BaseDeviceClass):
+    def __init__(self, _id, pins, pos_tolerance, max_open, min_open, ref_voltage):
+        """This is the constructor"""
+        BaseDeviceClass.__init__(self, _id)
+
+        #Start the thread so we can control the gate valve.
+        self.control_thread = core_tools.ActuatorPosition(pins, pos_tolerance, max_open, min_open, ref_voltage)
+
+    def set_position(self, percentage):
+        """
+        This method sets the position of the gate valve to the given percentage.
+
+        If a value less than 0 is specified, the position is set to 0 (or any defined minimum value - currently 1).
+        If a value greater than 100 is specified, the position is set to 100 (or any defined maximum value - currently 99).
+        Usage:
+
+            >>> <GateValve-Object>.set_position(100)
+
+        """
+        
+        self.control_thread.set_position(percentage)
+
+    def get_reading(self):
+        """
+        This method returns the current position of the gate valve as a percentage.
+        0% - fully closed.
+        100% - fully open.
+
+        .. note::universal_monitor
+
+            Currently no fault checking is performed, so the string part of the return value
+            is always "OK".
+
+        Returns:
+
+            tuple(int, string)
+
+            int:
+                The percentage (0 - 100) position of the valve..
+
+            string:
+                Fault checking status.
+
+                "OK" -- Everything is fine.
+
+        Usage:
+
+            >>> <GateValve-Object>.get_reading()
+            >>> (60, "OK")
+
+        """
+
+        return (self.control_thread.get_position(), "OK")
+

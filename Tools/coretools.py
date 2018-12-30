@@ -28,8 +28,29 @@ functions in here to reduce code duplication.
 """
 
 import datetime
+import time
 import sys
+import threading
 import logging
+
+try:
+    #Allow us to generate documentation on non-RPi systems.
+    import RPi.GPIO as GPIO
+    GPIO.setmode(GPIO.BCM)
+
+    #Setup for ADS1115 (A2D converter).
+    import board
+    import busio
+    from adafruit_ads1x15.single_ended import ADS1115
+
+    # Create the I2C bus
+    i2c = busio.I2C(board.SCL, board.SDA)
+
+    # Create the ADC object using the I2C bus
+    adc = ADS1115(i2c)
+
+except ImportError:
+    pass
 
 VERSION = "0.9.2"
 
@@ -281,6 +302,102 @@ class Reading:
                 + "," + self._value
                 + "," + self._status)
 
+# ---------------------------------- HYBRID OBJECTS -----------------------------------------
+# (Objects that contain both controlled devices and sendors
+class ActuatorPosition(threading.Thread):
+    """
+    This class is used to energise and position the Actuator Motor that drives a Gate Valve
+    to control the flow of water in the system.
+
+    Documentation for the constructor for objects of type ActuatorPosition:
+
+    Usage:
+        Use the constructor for this class the same way as for BaseDeviceClass.
+
+    """
+
+    def __init__(self, pins, pos_tolerance, max_open, min_open, ref_voltage):
+        """The constructor, set up some basic threading stuff."""
+        self.forward_pin = pins[0]                          # The pin to set the motor direction to forwards (opening gate).
+        self.reverse_pin = pins[1]                          # The pin to set the motor direction to backwards (closing gate).
+        self.clutch_pin = pins[2]                           # The pin to engage the clutch.
+
+        self.pos_tolerance = pos_tolerance                    # Positional Tolerance in percent
+        self.max_open = max_open                              # Upper limmit of valve position in percent
+        self.min_open = min_open                              # Lower limmit of valve position in percent
+        self.ref_voltage = ref_voltage                        # Voltage at the top of the position pot
+        self._exit = False
+
+        self.percentage = 0                                 # Set the valve closed initially.
+        self.actual_position = 0                             # Used to store the measured position of the valve.
+        self.high_limit = 5                                         # Initial value. Calculated from the percetage requested.
+        self.low_limit = 1                                         # Initial value. Calculated from the percetage requested.
+                
+        self.calculate_limits()
+        
+        threading.Thread.__init__(self)
+
+        self.start()
+
+    def run(self):
+        """This is the part of the code that runs in the thread"""
+        self.clutch_engage()                         # Enable the motor
+
+        while not self._exit:
+            self.actual_position = self.get_position()
+
+            if(self.actual_position <= self.high_limit and self.actual_position >= self.low_limit):
+                print("Hold at ", self.actual_position)
+                GPIO.output(self.forward_pin, GPIO.LOW)              # Hold current position
+                GPIO.output(self.reverse_pin, GPIO.LOW)
+                time.sleep(10)
+
+            if(self.actual_position < self.low_limit):
+                print("Open Valve a bit.")
+                GPIO.output(self.forward_pin, GPIO.HIGH)             # Open the valve
+                GPIO.output(self.reverse_pin, GPIO.LOW)
+
+            if(self.actual_position > self.high_limit):
+                print("Close Valve a bit.")
+                GPIO.output(self.forward_pin, GPIO.LOW)              # Close the valve
+                GPIO.output(self.reverse_pin, GPIO.HIGH)
+
+    def clutch_engage(self):
+        GPIO.output(self.clutch_pin, GPIO.HIGH)
+
+    def clutch_disengage(self):
+        GPIO.output(self.clutch_pin, GPIO.LOW)
+
+    def get_position(self):                      # Read A/D Converter for i iterations
+        v0 = adc[0].volts                   # Get voltage reading for channel 0 (the position pot slider)
+        self.actual_position = int((v0/self.ref_voltage*100))       # Actual position as a percentage at the time of reading
+        return self.actual_position
+
+    def set_position(self, new_percentage):
+        """Sets self.percentage to new_percentage."""
+        self.percentage = new_percentage
+        self.calculate_limits()
+
+    def calculate_limits(self):
+        self.actual_position = self.get_position()        
+        if (self.actual_position) != self.percentage:
+            if (self.percentage + self.pos_tolerance > self.max_open):
+                self.high_limit = self.max_open
+                self.low_limit = self.max_open - (2 * self.pos_tolerance)
+
+            elif (self.percentage - self.pos_tolerance < self.min_open):
+                self.low_limit = self.min_open
+                self.high_limit = self.min_open + (2 * self.pos_tolerance)
+
+            else:
+                self.high_limit = self.percentage + self.pos_tolerance        # Set the High Limit to the required percentage
+                self.low_limit = self.percentage - self.pos_tolerance        # Set the Low Limit to the required percentage
+
+    def stop(self):
+        """Stops the thread."""
+        self._exit = True
+        self.clutch_disengage()
+
 def greet_user(module_name): #TODO do we need this.
     """
     This function greets the user.
@@ -518,7 +635,7 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, devices, monitors, soc
               +"human intervention...")
 
         #Make sure the main circulation pump is on.
-        logger.info("Turning the main circulation pump on, if it was off...")
+        logger.info("Turning the main circuactualation pump on, if it was off...")
         print("Turning the main circulation pump on, if it was off...")
 
         main_pump.enable()
@@ -555,7 +672,7 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, devices, monitors, soc
 
     else:
         #Level in the sump is critically low!
-        #If the butts pump is on, turn it off.
+        #If the butts pump is on, turn it oactuaff.
         butts_pump.disable()
 
         logger.critical("*** CRITICAL ***: Water level in the sump < 200mm!")
