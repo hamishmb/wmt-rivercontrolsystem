@@ -39,8 +39,6 @@ and type the following key, eg:
 
 Full List of Devices and their ID Data, IP Addresses, Master Pi server Port and
 Socket Numbers where applicable:
-        "ServerAddress": "192.168.0.2",
-        "ServerPort": 30014
 
 .. Sump Pi                                 - SUMP, 192.168.0.2
 .... Hall Effect (magnetic) Probe          -     SUMP:M0
@@ -82,13 +80,7 @@ Socket Numbers where applicable:
 
 .. Webserver Pi                            - WMT_Webserver, 192.168.0.1
 
-        "ServerAddress": "192.168.0.2",
-        "ServerPort": 30014
-
 Notes:
-
-        "ServerAddress": "192.168.0.2",
-        "ServerPort": 30014
 
 1.  Remote probes are monitored using the configuration too - the
 master pi (sumppi) just reads the configuration for the other pis
@@ -117,8 +109,6 @@ There are no classes or functions defined in this file.
 
 .. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
 .. and Terry Coles <wmt@hadrian-way.co.uk>
-        "ServerAddress": "192.168.0.2",
-        "ServerPort": 30014
 
 
 """
