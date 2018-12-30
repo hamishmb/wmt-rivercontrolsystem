@@ -180,7 +180,7 @@ SITE_SETTINGS = {
                         "ServerPort": 30014,
 
                         "Name":  "Sump to Butts Pump",
-                        "Class": Tools.deviceobjects,
+                        "Class": Tools.deviceobjects.Motor,
                         "Pins":  (5)
                     },
 
