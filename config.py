@@ -39,8 +39,6 @@ and type the following key, eg:
 
 Full List of Devices and their ID Data, IP Addresses, Master Pi server Port and
 Socket Numbers where applicable:
-        "ServerAddress": "192.168.0.2",
-        "ServerPort": 30014
 
 .. Sump Pi                                 - SUMP, 192.168.0.2
 .... Hall Effect (magnetic) Probe          -     SUMP:M0
@@ -82,13 +80,7 @@ Socket Numbers where applicable:
 
 .. Webserver Pi                            - WMT_Webserver, 192.168.0.1
 
-        "ServerAddress": "192.168.0.2",
-        "ServerPort": 30014
-
 Notes:
-
-        "ServerAddress": "192.168.0.2",
-        "ServerPort": 30014
 
 1.  Remote probes are monitored using the configuration too - the
 master pi (sumppi) just reads the configuration for the other pis
@@ -117,8 +109,6 @@ There are no classes or functions defined in this file.
 
 .. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
 .. and Terry Coles <wmt@hadrian-way.co.uk>
-        "ServerAddress": "192.168.0.2",
-        "ServerPort": 30014
 
 
 """
@@ -142,7 +132,8 @@ SITE_SETTINGS = {
                             "ID":           "SOCK4",
                             "Name":         "Buttspi Socket",
                             "PortNumber":   30004
-                        }
+                        },
+
                     #For connection to Wendy Street Butts Pi Gate Valve.
                     "Buttspi Gate Valve Socket V4":
                         {
@@ -150,7 +141,7 @@ SITE_SETTINGS = {
                             "Name":         "Buttspi Gate Valve V4 Socket",
                             "PortNumber":   30014
                         }
-                 },
+                },
 
             #Local probes.
             "Probes":
@@ -175,14 +166,11 @@ SITE_SETTINGS = {
                     {
                         "Type":  "Motor",
                         "ID":    "SUMP:P0",
-        "ServerAddress": "192.168.0.2",
-        "ServerPort": 30014
+                        "ServerAddress": "192.168.0.2",
+                        "ServerPort": 30014,
 
                         "Name":  "Sump to Butts Pump",
-                        "Class": Tools.deviceobjects
-        "ServerAddress": "192.168.0.2",
-        "ServerPort": 30014
-.Motor,
+                        "Class": Tools.deviceobjects.Motor,
                         "Pins":  (5)
                     },
 
@@ -226,31 +214,29 @@ SITE_SETTINGS = {
                         "Default Interval": 30
                     }
                 },
-            
-        },
 
             "ServerAddress": "192.168.0.2",
             "ServerPort": 30004
-        }
+        },
 
     #Gate Valves.
     "V4":
-    {
-        "Type": "Gate Valve",
-        "ID":   "V4",
-        "Name": "Butts Farm Gate Valve",
-        "Class": Tools.deviceobjects.GateValve,
+        {
+            "Type": "Gate Valve",
+            "ID":   "V4",
+            "Name": "Butts Farm Gate Valve",
+            "Class": Tools.deviceobjects.GateValve,
 
-        "Pins":  (17, 27, 19),
-        "posTolerance": 1,
-        "maxOpen": 99,
-        "minOpen": 1,
-        "refVoltage": 3.3,
-        "Default Interval": 10
+            "Pins":  (17, 27, 19),
+            "posTolerance": 1,
+            "maxOpen": 99,
+            "minOpen": 1,
+            "refVoltage": 3.3,
+            "Default Interval": 10,
 
-        #Config for server connection.
-        "ServerAddress": "192.168.0.2",
-        "ServerPort": 30014
-    }
+            #Config for server connection.
+            "ServerAddress": "192.168.0.2",
+            "ServerPort": 30014
+        }
 
 }

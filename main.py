@@ -159,8 +159,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #Start monitor threads for the socket (wendy house butts).
     monitors = []
 
-    monitors.append(SocketsMonitor(sockets["SOCK0"], "G4", "FS0"))
-    monitors.append(SocketsMonitor(sockets["SOCK0"], "G4", "M0"))
+    monitors.append(SocketsMonitor(sockets["SOCK4"], "G4", "FS0"))
+    monitors.append(SocketsMonitor(sockets["SOCK4"], "G4", "M0"))
 
     #And for our SUMP probe.
     for probe in probes:

@@ -41,6 +41,8 @@ try:
     #Setup for ADS1115 (A2D converter).
     import board
     import busio
+
+    #TODO: This is a deprecated library - replace with a newer one at some point?
     from adafruit_ads1x15.single_ended import ADS1115
 
     # Create the I2C bus
