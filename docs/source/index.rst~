@@ -13,7 +13,7 @@ Contents:
 
     main_control_software
     universal_monitor
-    universal_monitor_config
+    config
     tools
     coretools
     monitortools
