@@ -644,7 +644,13 @@ class HallEffectProbe(BaseDeviceClass):
 class GateValve(BaseDeviceClass):
     def __init__(self, _id, pins, pos_tolerance, max_open, min_open, ref_voltage):
         """This is the constructor"""
-        BaseDeviceClass.__init__(self, _id)
+        #NB: ID will be repeated eg "V4:V4" so that BaseDeviceClass and the
+        #rest of the software functions properly.
+        BaseDeviceClass.__init__(self, _id+":"+_id)
+
+        #Set all pins as outputs.
+        for pin in pins:
+            GPIO.setup(pin, GPIO.OUT)
 
         #Start the thread so we can control the gate valve.
         self.control_thread = core_tools.ActuatorPosition(pins, pos_tolerance, max_open, min_open, ref_voltage)
