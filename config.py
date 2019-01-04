@@ -14,6 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#TODO The way the lists are done here confuses Sphinx.
+#is there a list syntax that can be used instead - the generated
+#docs are not displaying nicely.
+
 """
 This is the configuration for all pis. These dictionaries (key-value
 base data) provide the configuration for each site in a centralised,
