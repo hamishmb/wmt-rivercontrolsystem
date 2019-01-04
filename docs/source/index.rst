@@ -18,7 +18,7 @@ Contents:
     tools
     coretools
     monitortools
-    sensorobjects
+    deviceobjects
     sockettools
 
 

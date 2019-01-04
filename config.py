@@ -26,59 +26,59 @@ control.
 
 In the dictionary, devices are identified according to their location
 and type the following key, eg:
-.. Sump Pi                        - SUMP
-.... Hall Effect (magnetic) Probe -     M0
-.... Main circulation Pump        -     P1
-.... Butts Return Pump            -     P0
+    Sump Pi                        - SUMP
+        Hall Effect (magnetic) Probe -     M0
+        Main circulation Pump        -     P1
+        Butts Return Pump            -     P0
 
-.. Wendy Street Pi                - G4
-.... Hall Effect (magnetic) Probe -     M0
-.... Float Switch                 -     FS0
+    Wendy Street Pi                - G4
+        Hall Effect (magnetic) Probe -     M0
+        Float Switch                 -     FS0
 
-.. Gate Valve                     - V4
+    Gate Valve                     - V4
 
 Full List of Devices and their ID Data, IP Addresses, Master Pi server Port and
 Socket Numbers where applicable:
 
-.. Sump Pi                                 - SUMP, 192.168.0.2
-.... Hall Effect (magnetic) Probe          -     SUMP:M0
-.... Other Probe (TBD)                     -     SUMP:TBD0
-.... Main circulation Pump                 -     SUMP:P1
-.... Butts Return Pump                     -     SUMP:P0
-.. Railway Room Butts Pi                   - GR, 192.168.0.3, 30003, SOCK3
-.... Hall Effect (magnetic) Probe          -     G1:M0
-.... Other Probe (TBD)                     -     G1:TBD0
-.... Float Switch                          -     G1:FS0
-.... Hall Effect (magnetic) Probe          -     G2:M0
-.... Other Probe (TBD)                     -     G2:TBD0
-.... Float Switch                          -     G2:FS0
-.... Hall Effect (magnetic) Probe          -     G3:M0
-.... Other Probe (TBD)                     -     G3:TBD0
-.... Float Switch                          -     G3:FS0
-.. Wendy Street Butts Pi                   - G4, 192.168.0.4, 30004, SOCK4
-.... Hall Effect (magnetic) Probe          -     G4:M0
-.... Other Probe (TBD)                     -     G4:TBD0
-.... Float Switch                          -     G4:FS0
-.. Gazebo Butts Pi                         - G5, 192.168.0.5, 30005, SOCK5
-.... Hall Effect (magnetic) Probe          -     G5:M0
-.... Other Probe (TBD)                     -     G5:TBD0
-.... Float Switch                          -     G5:FS0
-.. Railway Room G1 Butts Group Gate Valve  - V1, 192.168.0.11, 30011, SOCK11
-.. Railway Room G2 Butts Group Gate Valve  - V2, 192.168.0.12, 30012, SOCK12
-.. Railway Room G3 Butts Group Gate Valve  - V3, 192.168.0.13, 30013, SOCK13
-.. Wendy Street G4 Butts Group Gate Valve  - V4, 192.168.0.14, 30014, SOCK14
-.. Gazebo G5 Butts Group Gate Valve        - V5, 192.168.0.15, 30015, SOCK15
-.. Matrix Pump V6 Gate Valve               - V6, 192.168.0.16, 30016, SOCK16
-.. Matrix Pump V7 Gate Valve               - V7, 192.168.0.17, 30017, SOCK17
-.. Matrix Pump V8 Gate Valve               - V8, 192.168.0.18, 30018, SOCK18
-.. Matrix Pump V9 Gate Valve               - V9, 192.168.0.19, 30019, SOCK19
-.. TBD Gate Valve                          - V10, 192.168.0.20, 30020, SOCK20
-.. TBD Loctn Gardeners Supply Gate Valve   - V11, 192.168.0.21, 30021, SOCK21
-.. Stage Buts Group G6 Gate Valve          - V12, 192.168.0.22, 30022, SOCK22
+    Sump Pi                                 - SUMP, 192.168.0.2
+        Hall Effect (magnetic) Probe          -     SUMP:M0
+        Other Probe (TBD)                     -     SUMP:TBD0
+        Main circulation Pump                 -     SUMP:P1
+        Butts Return Pump                     -     SUMP:P0
+    Railway Room Butts Pi                   - GR, 192.168.0.3, 30003, SOCK3
+        Hall Effect (magnetic) Probe          -     G1:M0
+        Other Probe (TBD)                     -     G1:TBD0
+        Float Switch                          -     G1:FS0
+        Hall Effect (magnetic) Probe          -     G2:M0
+        Other Probe (TBD)                     -     G2:TBD0
+        Float Switch                          -     G2:FS0
+        Hall Effect (magnetic) Probe          -     G3:M0
+        Other Probe (TBD)                     -     G3:TBD0
+        Float Switch                          -     G3:FS0
+    Wendy Street Butts Pi                   - G4, 192.168.0.4, 30004, SOCK4
+        Hall Effect (magnetic) Probe          -     G4:M0
+        Other Probe (TBD)                     -     G4:TBD0
+        Float Switch                          -     G4:FS0
+    Gazebo Butts Pi                         - G5, 192.168.0.5, 30005, SOCK5
+        Hall Effect (magnetic) Probe          -     G5:M0
+        Other Probe (TBD)                     -     G5:TBD0
+        Float Switch                          -     G5:FS0
+    Railway Room G1 Butts Group Gate Valve  - V1, 192.168.0.11, 30011, SOCK11
+    Railway Room G2 Butts Group Gate Valve  - V2, 192.168.0.12, 30012, SOCK12
+    Railway Room G3 Butts Group Gate Valve  - V3, 192.168.0.13, 30013, SOCK13
+    Wendy Street G4 Butts Group Gate Valve  - V4, 192.168.0.14, 30014, SOCK14
+    Gazebo G5 Butts Group Gate Valve        - V5, 192.168.0.15, 30015, SOCK15
+    Matrix Pump V6 Gate Valve               - V6, 192.168.0.16, 30016, SOCK16
+    Matrix Pump V7 Gate Valve               - V7, 192.168.0.17, 30017, SOCK17
+    Matrix Pump V8 Gate Valve               - V8, 192.168.0.18, 30018, SOCK18
+    Matrix Pump V9 Gate Valve               - V9, 192.168.0.19, 30019, SOCK19
+    TBD Gate Valve                          - V10, 192.168.0.20, 30020, SOCK20
+    TBD Loctn Gardeners Supply Gate Valve   - V11, 192.168.0.21, 30021, SOCK21
+    Stage Buts Group G6 Gate Valve          - V12, 192.168.0.22, 30022, SOCK22
 
-.. Staff & Visitor GUI Pi                  - GUI, 192.168.0.9
+    Staff & Visitor GUI Pi                  - GUI, 192.168.0.9
 
-.. Webserver Pi                            - WMT_Webserver, 192.168.0.1
+    Webserver Pi                            - WMT_Webserver, 192.168.0.1
 
 Notes:
 

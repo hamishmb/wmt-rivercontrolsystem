@@ -12,6 +12,7 @@ Contents:
     :maxdepth: 2
 
     main_control_software
+    gate_valve
     universal_monitor
     config
     tools
