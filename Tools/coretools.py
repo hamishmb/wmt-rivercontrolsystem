@@ -487,7 +487,7 @@ def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None)
 
     return reading
 
-def do_control_logic(sump_reading_obj, butts_reading_obj, devices, monitors, sockets,
+def do_control_logic(sump_reading_obj, butts_reading_obj, butts_float_reading, devices, monitors, sockets,
                      reading_interval):
     """
     This function is used to decides what action to take based
@@ -512,6 +512,8 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, devices, monitors, soc
                                         the sump probe.
 
         butts_reading_obj (Reading):    As above, but for the butts.
+
+        butts_float_reading (Reading):  As above, for the butts float switch.
 
         devices  (list):                A list of all master pi device objects.
 
@@ -538,6 +540,7 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, devices, monitors, soc
 
     #Remove the 'mm' from the end of the reading value and convert to int.
     sump_reading = int(sump_reading_obj.get_value().replace("m", ""))
+    butts_reading = int(butts_reading_obj.get_value().replace("m", ""))
 
     #Get a reference to both pumps.
     main_pump = None
@@ -562,11 +565,17 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, devices, monitors, soc
         logger.info("Turning the main circulation pump on, if it was off...")
         print("Turning the main circulation pump on, if it was off...")
 
+
+        #Close the wendy butts gate valve.
+        logger.info("Closing the wendy butts gate valve...")
+        print("Closing the wendy butts gate valve...")
+        sockets["SOCK14"].write("Valve Position 0")
+
         main_pump.enable()
 
         #Pump some water to the butts if they aren't full.
         #If they are full, do nothing and let the sump overflow.
-        if butts_reading_obj.get_value() == "False":
+        if butts_float_reading.get_value() == "False":
             #Pump to the butts.
             logger.warning("Pumping water to the butts...")
             print("Pumping water to the butts...")
@@ -603,6 +612,11 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, devices, monitors, soc
         logger.info("Turning the main circulation pump on, if it was off...")
         print("Turning the main circulation pump on, if it was off...")
 
+        #Close gate valve.
+        logger.info("Closing wendy butts gate valve...")
+        print("Closing wendy butts gate valve...")
+        sockets["SOCK14"].write("Valve Position 0")
+
         main_pump.enable()
 
     elif sump_reading == 400:
@@ -617,6 +631,11 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, devices, monitors, soc
         logger.info("Turning the main circulation pump on, if it was off...")
         print("Turning the main circulation pump on, if it was off...")
 
+        #Close gate valve.
+        logger.info("Closing wendy butts gate valve...")
+        print("Closing wendy butts gate valve...")
+        sockets["SOCK14"].write("Valve Position 0")
+
         main_pump.enable()
 
         logger.info("Setting reading interval to 1 minute...")
@@ -629,15 +648,22 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, devices, monitors, soc
         butts_pump.disable()
 
         logger.warning("Water level in the sump is 300mm!")
-        logger.warning("Waiting for water to come back from the butts before "
-                       +"requesting human intervention...")
+        logger.warning("Opening wendy butts gate valve to 25%...")
 
         print("Water level in the sump is 300mm!")
-        print("Waiting for water to come back from the butts before requesting "
-              +"human intervention...")
+
+        if (butts_reading >= 300):
+            logger.info("Opening wendy butts gate valve to 25%...")
+            print("Opening wendy butts gate valve to 25%...")
+            sockets["SOCK14"].write("Valve Position 25")
+
+        else:
+            logger.warning("Insufficient water in wendy butts...")
+            print("Insufficient water in wendy butts...")
+            sockets["SOCK14"].write("Valve Position 0")
 
         #Make sure the main circulation pump is on.
-        logger.info("Turning the main circuactualation pump on, if it was off...")
+        logger.info("Turning the main cirulation pump on, if it was off...")
         print("Turning the main circulation pump on, if it was off...")
 
         main_pump.enable()
@@ -647,19 +673,26 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, devices, monitors, soc
 
         reading_interval = 60
 
-        #We have no choice here but to wait for water to come back from the butts and warn the user.
-        #^ Tap is left half-open.
-
     elif sump_reading == 200:
         #Level in the sump is very low!
         #If the butts pump is on, turn it off.
         butts_pump.disable()
 
-        logger.error("*** NOTICE ***: Water level in the sump is 200mm!")
-        logger.error("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
+        if (butts_reading >= 300):
+            logger.info("Opening wendy butts gate valve to 50%...")
+            print("Opening wendy butts gate valve to 50%...")
+            sockets["SOCK14"].write("Valve Position 50")
 
-        print("\n\n*** NOTICE ***: Water level in the sump is 200mm!")
-        print("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
+        else:
+            logger.error("Insufficient water in wendy butts...")
+            print("Insufficient water in wendy butts...")
+            sockets["SOCK14"].write("Valve Position 0")
+
+            logger.error("*** NOTICE ***: Water level in the sump is 200mm!")
+            logger.error("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
+
+            print("\n\n*** NOTICE ***: Water level in the sump is 200mm!")
+            print("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
 
         #Make sure the main circulation pump is off.
         logger.warning("Disabling the main circulation pump, if it was on...")
@@ -677,13 +710,23 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, devices, monitors, soc
         #If the butts pump is on, turn it oactuaff.
         butts_pump.disable()
 
-        logger.critical("*** CRITICAL ***: Water level in the sump < 200mm!")
-        logger.critical("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to system.")
-        logger.critical("*** INFO ***: The pump won't run dry; it has been temporarily disabled.")
+        if (butts_reading >= 300):
+            logger.info("Opening wendy butts gate valve to 100%...")
+            print("Opening wendy butts gate valve to 100%...")
+            sockets["SOCK14"].write("Valve Position 100")
 
-        print("\n\n*** CRITICAL ***: Water level in the sump < 200mm!")
-        print("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
-        print("*** INFO ***: The pump won't run dry; it has been temporarily disabled.")
+        else:
+            logger.warning("Insufficient water in wendy butts...")
+            print("Insufficient water in wendy butts...")
+            sockets["SOCK14"].write("Valve Position 0")
+
+            logger.critical("*** CRITICAL ***: Water level in the sump < 200mm!")
+            logger.critical("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to system.")
+            logger.critical("*** INFO ***: The pump won't run dry; it has been temporarily disabled.")
+
+            print("\n\n*** CRITICAL ***: Water level in the sump < 200mm!")
+            print("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
+            print("*** INFO ***: The pump won't run dry; it has been temporarily disabled.")
 
         #Make sure the main circulation pump is off.
         logger.warning("Disabling the main circulation pump, if it was on...")

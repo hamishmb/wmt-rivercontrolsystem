@@ -263,6 +263,11 @@ def run_standalone():
                             for monitor in monitors:
                                 monitor.set_reading_interval(reading_interval)
 
+                    elif "Valve Position" in data:
+                        valve_position = int(data.split()[-1])
+
+                        valve.set_position(valve_position)
+
                     socket.pop()
 
                 time.sleep(1)

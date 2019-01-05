@@ -201,13 +201,16 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                     #Keep the G4:FS0 & SUMP:M0 readings (used in control logic).
                     if reading != None:
                         if reading.get_id() == "G4:FS0":
+                            butts_float_reading = reading
+
+                        elif reading.get_id() == "G4:M0":
                             butts_reading = reading
 
                         elif reading.get_id() == "SUMP:M0":
                             sump_reading = reading
 
             #Logic.
-            reading_interval = core_tools.do_control_logic(sump_reading, butts_reading, devices,
+            reading_interval = core_tools.do_control_logic(sump_reading, butts_reading, butts_float_reading, devices,
                                                            monitors, sockets, reading_interval)
 
             #Wait until it's time to check for another reading.
