@@ -105,6 +105,49 @@ class BaseDeviceClass:
         self._pins = []                     #Needs to be set/deleted.
         self._reverse_pins = []             #Needs to be set/deleted.
 
+    # ---------- INFO GETTER METHODS ----------
+    def get_device_id(self):
+        """
+        This method returns this devices' device-id eg "FS0".
+
+        Returns:
+            string. The devices' ID.
+
+        Usage:
+
+            >>> a_name = <Device-Object>.get_device_id()
+        """
+
+        return self._id.split(":")[1]
+
+    def get_system_id(self):
+        """
+        This method returns this devices' system-id eg "G4".
+
+        Returns:
+            string. The prob's system id.
+
+        Usage:
+
+            >>> a_name = <Device-Object>.get_system_id()
+        """
+
+        return self._id.split(":")[0]
+
+    def get_id(self):
+        """
+        This method returns this devices' full ID eg "G4:FS0".
+
+        Returns:
+            string. The probe's full id.
+
+        Usage:
+
+            >>> a_name = <Device-Object>.get_id()
+        """
+
+        return self._id
+
     # ---------- INFO SETTER METHODS ----------
     def set_pins(self, pins, _input=True):
         #FIXME: Check if these pins are already in use.
@@ -592,7 +635,7 @@ class HallEffectProbe(BaseDeviceClass):
 
         return self._current_reading, "OK" #TODO Actual fault checking.
 
-class HallEffectProbe2():
+class HallEffectProbe2(BaseDeviceClass):
     """
     This class is used to represent the new type of magnetic probe.  This probe
     encodes the water level as four voltages at 100 mm intervals.  Each of the four voltage
@@ -603,7 +646,7 @@ class HallEffectProbe2():
     Documentation for the constructor for objects of type HallEffectProbe2:
 
     Usage:
-        >>> depth = deviceobjects.HallEffectProbe2(<a_time>, <a_tick>, <an_id>, <a_value>, <a_status>)
+        >>> probe = deviceobjects.HallEffectProbe2(<a_time>, <a_tick>, <an_id>, <a_value>, <a_status>)
 
     .. warning::
         There is currently **absolutely no** check to see that each instance variable
@@ -637,10 +680,13 @@ class HallEffectProbe2():
         self._post_init_called = False             #Internal use only.
 
         # Create four single-ended inputs on channels 0 to 3
-        chan0 = AnalogIn(ads, ADS.P0)
-        chan1 = AnalogIn(ads, ADS.P1)
-        chan2 = AnalogIn(ads, ADS.P2)
-        chan3 = AnalogIn(ads, ADS.P3)
+        self.chan0 = AnalogIn(ads, ADS.P0)
+        self.chan1 = AnalogIn(ads, ADS.P1)
+        self.chan2 = AnalogIn(ads, ADS.P2)
+        self.chan3 = AnalogIn(ads, ADS.P3)
+
+        #Set a timer to start recording values.
+        threading.Timer(0.5, self.poll)
 
     def set_limits(self, high_limits, low_limits):
         """
@@ -656,9 +702,8 @@ class HallEffectProbe2():
 
         """
 
-        high_limits = [high_limits]
-        low_limits = [low_limits]
-
+        self.high_limits = [high_limits]
+        self.low_limits = [low_limits]
 
     def set_depths(self, depths):
         """
@@ -674,65 +719,23 @@ class HallEffectProbe2():
 
         """
 
-        depths = [depths]
+        self.depths = [depths]
+        self.length = len(depths)
 
-    # ---------- INFO GETTER METHODS ----------
-    def get_device_id(self):
-        """
-        This method returns this devices' device-id eg "FS0".
-
-        Returns:
-            string. The devices' ID.
-
-        Usage:
-
-            >>> a_name = <Device-Object>.get_device_id()
-        """
-
-        return self._id.split(":")[1]
-
-    def get_system_id(self):
-        """
-        This method returns this devices' system-id eg "G4".
-
-        Returns:
-            string. The prob's system id.
-
-        Usage:
-
-            >>> a_name = <Device-Object>.get_system_id()
-        """
-
-        return self._id.split(":")[0]
-
-    def get_id(self):
-        """
-        This method returns this devices' full ID eg "G4:FS0".
-
-        Returns:
-            string. The probe's full id.
-
-        Usage:
-
-            >>> a_name = <Device-Object>.get_id()
-        """
-
-        return self._id
-
-    def get_compensated_probe_voltages():
+    def get_compensated_probe_voltages(self):
         """This function performs the measurement of the four voltages and applies the compensation
         to take out errors caused by the varying output impedance of the probe
         """
          # Initialise Lists and variables to hold the working values in each column
-        Vmeas = [0.0,0.0,0.0,0.0]                                      # Actual voltages
-        Vcomp = [0.0,0.0,0.0,0.0]                                      # Compensated values
-        result =[0.0,0]                                                # Measured value and column
+        Vmeas = list()                                      # Actual voltages
+        Vcomp = list()                                      # Compensated values
+        result = list()                                                # Measured value and column
 
         # Measure the voltage in each chain 
-        Vmeas[0] = chan0.voltage
-        Vmeas[1] = chan1.voltage
-        Vmeas[2] = chan2.voltage
-        Vmeas[3] = chan3.voltage
+        Vmeas[0] = self.chan0.voltage
+        Vmeas[1] = self.chan1.voltage
+        Vmeas[2] = self.chan2.voltage
+        Vmeas[3] = self.chan3.voltage
 
         # Find the minimum value
         Vmin = min(Vmeas)
@@ -762,41 +765,44 @@ class HallEffectProbe2():
             
         print("Dip Value = " + str(Vcomp[min_column]))
 
-        result = Vcomp,min_column
+        result = Vcomp, min_column
 
         return result
 
-    def test_levels():
+    def test_levels(self):
         count = 0
         level = 1000                                              # Value to return
 
-        while count < length:
+        while count < self.length:
             print("")
             print("Count Number = " + str(count))
 
-            Vcomp, min_column = get_compensated_probe_voltages()
+            Vcomp, min_column = self.get_compensated_probe_voltages()
 
             # Now test the channel with the dip to see if any of the sensors are triggered
-            if ((Vcomp[min_column] <= high_limit[count]) and (Vcomp[min_column] >= low_limit[count])):
-                level = depth[min_column][count]
+            if ((Vcomp[min_column] <= self.high_limits[count]) and (Vcomp[min_column] >= self.low_limits[count])):
+                level = self.depths[min_column][count]
                 print ("Depth = " + str(level))
             elif level == 1000:
                 print("Between Sensors at this Depth")
 
             count += 1
-            time.sleep(2)
 
         return level
 
-    def loop():
-        while True:
-            self._current_reading = test_levels()
-            if depth == 1000:
-                print("No Sensors Triggered")
-            else:
-                print("Depth = " + str(depth))
-    
+    def poll(self):
+        self._current_reading = self.test_levels()
 
+        if self._current_reading == 1000:
+            print("No Sensors Triggered")
+
+        else:
+            print("Depth = " + str(self._current_reading))
+
+        #Set the timer again.
+        #TODO This may break program shutdown.
+        threading.Timer(0.5, self.poll)
+    
     # ---------- CONTROL METHODS ----------
     def get_reading(self):
         """

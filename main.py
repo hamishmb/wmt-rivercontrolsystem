@@ -127,6 +127,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         probe = probe_settings["Class"]
         reading_interval = probe_settings["Default Interval"]
         probe = probe(probe_id)
+
         if _type == "Hall Effect Probe2":
             high_limits = probe_settings["HighLimits"]
             low_limits = probe_settings["LowLimits"]
@@ -135,10 +136,14 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             depths.append(probe_settings["Depths25s"])
             depths.append(probe_settings["Depths50s"])
             depths.append(probe_settings["Depths75s"])
+
+            probe.set_limits(high_limits, low_limits)
+            probe.set_depths(depths)
             
         else:
             pins = probe_settings["Pins"]
             probe.set_pins(pins)
+
         probes.append(probe)
 
     #Create the device(s).
@@ -169,6 +174,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     print("Waiting for client(s) to connect...")
 
     #Start monitor threads for the socket (wendy house butts).
+    #FIXME Figure out what to do based on what is in config.py, rather
+    #than hardcoding it.
     monitors = []
 
     #Wendy house butts.
@@ -176,7 +183,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     monitors.append(SocketsMonitor(sockets["SOCK4"], "G4", "M0"))
 
     #Gate valve.
-    monitors.append(SocketsMonitor(sockets["SOCK14"], "V4", "V4"))
+    #TODO This is disabled.
+    #monitors.append(SocketsMonitor(sockets["SOCK14"], "V4", "V4"))
 
     #And for our SUMP probe.
     for probe in probes:
