@@ -39,7 +39,7 @@ and type the following key, eg:
         Hall Effect (magnetic) Probe -     M0
         Float Switch                 -     FS0
 
-    Gate Valve                     - V4
+    Gate Valve                     - V4 (Commented out in theis version)
 
 Full List of Devices and their ID Data, IP Addresses, Master Pi server Port and
 Socket Numbers where applicable:
@@ -153,11 +153,16 @@ SITE_SETTINGS = {
 
                     "SUMP:M0":
                     {
-                        "Type":             "Hall Effect Probe",
+                        "Type":             "Hall Effect Probe2",
                         "ID":               "SUMP:M0",
                         "Name":             "Sump Probe",
-                        "Class":            Tools.deviceobjects.HallEffectProbe,
-                        "Pins":             (15, 17, 27, 22, 23, 24, 10, 9, 25, 11),
+                        "Class":            Tools.deviceobjects.HallEffectProbe2,
+                        "HighLimits":       (0.07,0.17,0.35,0.56,0.73,0.92,1.22,1.54,2.1,2.45),
+                        "LowLimits":        (0.05,0.15,0.33,0.53,0.7,0.88,1.18,1.5,2,2.4),
+                        "Depths100s":       (0,100,200,300,400,500,600,700,800,900),
+                        "Depths25s":        (25,125,225,325,425,525,625,725,825,925),
+                        "Depths50s":        (50,150,250,350,450,550,650,750,850,950),
+                        "Depths75s":        (75,175,275,375,475,575,675,775,875,975),
                         "Default Interval": 10
                     }
                 },
@@ -224,23 +229,23 @@ SITE_SETTINGS = {
         },
 
     #Gate Valves.
-    "V4":
-        {
-            "Type": "Gate Valve",
-            "ID":   "V4",
-            "Name": "Butts Farm Gate Valve",
-            "Class": Tools.deviceobjects.GateValve,
-
-            "Pins":  (17, 27, 19),
-            "posTolerance": 1,
-            "maxOpen": 99,
-            "minOpen": 1,
-            "refVoltage": 3.3,
-            "Default Interval": 10,
-
-            #Config for server connection.
-            "ServerAddress": "192.168.0.2",
-            "ServerPort": 30014
-        }
+#    "V4":
+#        {
+#            "Type": "Gate Valve",
+#            "ID":   "V4",
+#            "Name": "Butts Farm Gate Valve",
+#            "Class": Tools.deviceobjects.GateValve,
+#
+#            "Pins":  (17, 27, 19),
+#            "posTolerance": 1,
+#            "maxOpen": 99,
+#            "minOpen": 1,
+#            "refVoltage": 3.3,
+#            "Default Interval": 10,
+#
+#            #Config for server connection.
+#            "ServerAddress": "192.168.0.2",
+#            "ServerPort": 30014
+#        }
 
 }

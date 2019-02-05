@@ -17,11 +17,11 @@
 #TODO: Throw errors if setup hasn't been completed properly.
 
 """
-This is the part of the software framework that contains the control/
-sensor/probe classes. These represent the control devices and probes/sensors that
-we're interfacing with. These classes provide a common API to get readings (the
-get_reading() method), and also draw the implementation details for how each probe
-is managed away from the rest of the program.
+This is the part of the software framework that contains the control, sensor and
+probe classes. These represent the control devices and probes/sensors that we're
+interfacing with. These classes provide a common API to get readings (the get_reading()
+method), and also draw the implementation details for how each probe is managed away
+from the rest of the program.
 
 .. module:: deviceobjects.py
     :platform: Linux
@@ -41,8 +41,17 @@ from . import coretools as core_tools
 
 try:
     #Allow us to generate documentation on non-RPi systems.
-    import RPi.GPIO as GPIO
+    import RPi.GPIO as GPIO                             # GPIO imports and setups
     GPIO.setmode(GPIO.BCM)
+
+    import board                                        # Imports for A/D Converter
+    import busio
+    import adafruit_ads1x15.ads1015 as ADS
+    from adafruit_ads1x15.analog_in import AnalogIn
+
+    i2c = busio.I2C(board.SCL, board.SDA)               # Create the I2C bus
+
+    ads = ADS.ADS1015(i2c)                              # Create the ADC object using the I2C bus
 
 except ImportError:
     pass
@@ -81,7 +90,7 @@ class BaseDeviceClass:
                                     probe. eg "G4:FS0"
 
     Usage:
-        >>> probe = BaseDeivceClass("myProbe")
+        >>> probe = BaseDeviceClass("myProbe")
 
         .. note::
             Not useful unless you derive from it.
@@ -160,63 +169,6 @@ class BaseDeviceClass:
         #Set self._pin if required.
         if len(self._pins) == 1:
             self._pin = self._pins[0]
-
-    # ---------- INFO GETTER METHODS ----------
-    def get_device_id(self):
-        """
-        This method returns this devices' device-id eg "FS0".
-
-        Returns:
-            string. The devices' ID.
-
-        Usage:
-
-            >>> a_name = <Device-Object>.get_device_id()
-        """
-
-        return self._id.split(":")[1]
-
-    def get_system_id(self):
-        """
-        This method returns this devices' system-id eg "G4".
-
-        Returns:
-            string. The prob's system id.
-
-        Usage:
-
-            >>> a_name = <Device-Object>.get_system_id()
-        """
-
-        return self._id.split(":")[0]
-
-    def get_id(self):
-        """
-        This method returns this devices' full ID eg "G4:FS0".
-
-        Returns:
-            string. The probe's full id.
-
-        Usage:
-
-            >>> a_name = <Device-Object>.get_id()
-        """
-
-        return self._id
-
-    def get_pins(self):
-        """
-        This method returns this object's BCM pin numbers.
-
-        Returns:
-            tuple. The BCM pins.
-
-        Usage:
-
-            >>> my_pins = <Device-Object>.get_pins()
-        """
-
-        return self._pins
 
 # ---------------------------------- MOTOR OBJECTS -----------------------------------------
 
@@ -314,7 +266,7 @@ class Motor(BaseDeviceClass):
             return False
 
         #Turn the pin on.
-        GPIO.output(self._pin, True)
+        GPIO.output(self._pin, False)
 
         #Log it.
         logger.info("Motor "+self._id+": Enabled.")
@@ -340,7 +292,7 @@ class Motor(BaseDeviceClass):
             return False
 
         #Turn the pin off.
-        GPIO.output(self._pin, False)
+        GPIO.output(self._pin, True)
 
         #Log it.
         logger.info("Motor "+self._id+": Disabled.")
@@ -514,7 +466,8 @@ class HallEffectDevice(BaseDeviceClass):
 
 class HallEffectProbe(BaseDeviceClass):
     """
-    This class is used to represent a magnetic probe.
+    This class is used to represent a magnetic probe of the old type that sets 10 pins to represent
+    the level; one pin for each level.  It is now obsolecent and so this clas will ultimately be removed
 
     Documentation for the constructor for objects of type HallEffectProbe:
 
@@ -636,6 +589,243 @@ class HallEffectProbe(BaseDeviceClass):
         """
         if not self._post_init_called:
             self._post_init()
+
+        return self._current_reading, "OK" #TODO Actual fault checking.
+
+class HallEffectProbe2():
+    """
+    This class is used to represent the new type of magnetic probe.  This probe
+    encodes the water level as four voltages at 100 mm intervals.  Each of the four voltage
+    O/Ps provides levels at one of 100 mm, 25 mm, 50 mm and 75 mm levels and the Interface
+    Board converts these voltages to four values, which this class then converts to depth.
+    It has higher precision than the old type but only needs 6 wires to carry the signals.
+
+    Documentation for the constructor for objects of type HallEffectProbe2:
+
+    Usage:
+        >>> depth = deviceobjects.HallEffectProbe2(<a_time>, <a_tick>, <an_id>, <a_value>, <a_status>)
+
+    .. warning::
+        There is currently **absolutely no** check to see that each instance variable
+        actually has the correct format. This will come later.
+
+    .. warning::
+        System ticks have not yet been implemented. As such the value
+        for the tick passed here to the constructor is ignored, and
+        the attribute is set to -1.
+
+    .. note::
+        Equality methods have been implemented for this class so you can do things like:
+
+        >>> reading_1 == reading_2
+
+        AND:
+
+        >>> reading_2 != reading_3
+
+        With ease.
+    """
+    # ---------- CONSTRUCTORS ----------
+    def __init__(self, Name):
+        """This is the constructor, as documented above"""
+
+        #Call the base class constructor.
+        BaseDeviceClass.__init__(self, Name)
+
+        #Set some semi-private variables.
+        self._current_reading = 0                  #Internal use only.
+        self._post_init_called = False             #Internal use only.
+
+        # Create four single-ended inputs on channels 0 to 3
+        chan0 = AnalogIn(ads, ADS.P0)
+        chan1 = AnalogIn(ads, ADS.P1)
+        chan2 = AnalogIn(ads, ADS.P2)
+        chan3 = AnalogIn(ads, ADS.P3)
+
+    def set_limits(self, high_limits, low_limits):
+        """
+        This method is used to import the limits this probe will use. The calling code must
+        already have established these from config.py
+
+        Args:
+            high_limits (list(float):          The high limits to be used with this probe.
+            low_limits (list(float)):          The high limits to be used with this probe.
+
+        Usage:
+            >>> <Device-Object>.set_limits(<list(float)>, <list(float)>)
+
+        """
+
+        high_limits = [high_limits]
+        low_limits = [low_limits]
+
+
+    def set_depths(self, depths):
+        """
+        This method is used to import the depth precision values this probe support. The
+        calling code must already have established these from config.py
+
+        Args:
+            depths (list(int):              The multidimensionl list of four rows of depths
+                                            to be used with this probe.
+
+        Usage:
+            >>> <Device-Object>.set_limits(<list(int)>)
+
+        """
+
+        depths = [depths]
+
+    # ---------- INFO GETTER METHODS ----------
+    def get_device_id(self):
+        """
+        This method returns this devices' device-id eg "FS0".
+
+        Returns:
+            string. The devices' ID.
+
+        Usage:
+
+            >>> a_name = <Device-Object>.get_device_id()
+        """
+
+        return self._id.split(":")[1]
+
+    def get_system_id(self):
+        """
+        This method returns this devices' system-id eg "G4".
+
+        Returns:
+            string. The prob's system id.
+
+        Usage:
+
+            >>> a_name = <Device-Object>.get_system_id()
+        """
+
+        return self._id.split(":")[0]
+
+    def get_id(self):
+        """
+        This method returns this devices' full ID eg "G4:FS0".
+
+        Returns:
+            string. The probe's full id.
+
+        Usage:
+
+            >>> a_name = <Device-Object>.get_id()
+        """
+
+        return self._id
+
+    def get_compensated_probe_voltages():
+        """This function performs the measurement of the four voltages and applies the compensation
+        to take out errors caused by the varying output impedance of the probe
+        """
+         # Initialise Lists and variables to hold the working values in each column
+        Vmeas = [0.0,0.0,0.0,0.0]                                      # Actual voltages
+        Vcomp = [0.0,0.0,0.0,0.0]                                      # Compensated values
+        result =[0.0,0]                                                # Measured value and column
+
+        # Measure the voltage in each chain 
+        Vmeas[0] = chan0.voltage
+        Vmeas[1] = chan1.voltage
+        Vmeas[2] = chan2.voltage
+        Vmeas[3] = chan3.voltage
+
+        # Find the minimum value
+        Vmin = min(Vmeas)
+
+        # Find the column that the minimum value is in
+        min_column = Vmeas.index(min(Vmeas))
+        print("Column containing the minimum value = " + str(min_column))
+        
+        # Work out the average of the three highest measurements (thus ignoring the 'dipped' channel.
+        Vtot = Vmeas[0] + Vmeas[1] + Vmeas[2] + Vmeas[3]
+        Vav = (Vtot - Vmin)/3
+
+        # Calculate the compensated value for each channel. 
+        if Vmin >= 3.0:                                          # Take a shortcut when the magnet is between sensors
+            Vcomp[0] = Vcomp[1] = Vcomp[2] = Vcomp[3] = Vav - Vmin
+        else:
+            if min_column == 0:
+                Vcomp[min_column] = Vav - Vmin
+            elif min_column == 1:
+                Vcomp[min_column] = Vav - Vmin
+            elif min_column == 2:
+                Vcomp[min_column] = Vav - Vmin
+            elif min_column == 3:
+                Vcomp[min_column] = Vav - Vmin
+            else:
+                Vcomp[min_column] = Vav
+            
+        print("Dip Value = " + str(Vcomp[min_column]))
+
+        result = Vcomp,min_column
+
+        return result
+
+    def test_levels():
+        count = 0
+        level = 1000                                              # Value to return
+
+        while count < length:
+            print("")
+            print("Count Number = " + str(count))
+
+            Vcomp, min_column = get_compensated_probe_voltages()
+
+            # Now test the channel with the dip to see if any of the sensors are triggered
+            if ((Vcomp[min_column] <= high_limit[count]) and (Vcomp[min_column] >= low_limit[count])):
+                level = depth[min_column][count]
+                print ("Depth = " + str(level))
+            elif level == 1000:
+                print("Between Sensors at this Depth")
+
+            count += 1
+            time.sleep(2)
+
+        return level
+
+    def loop():
+        while True:
+            self._current_reading = test_levels()
+            if depth == 1000:
+                print("No Sensors Triggered")
+            else:
+                print("Depth = " + str(depth))
+    
+
+    # ---------- CONTROL METHODS ----------
+    def get_reading(self):
+        """
+        This method returns the rate at which the float is bobbing
+        about.
+
+        .. note::universal_monitor
+
+            Currently no fault checking is performed, so the string part of the return value
+            is always "OK".
+
+        Returns:
+
+            tuple(int, string)
+
+            int:
+                The level of the float.
+
+            string:
+                Fault checking status.
+
+                "OK" -- Everything is fine.
+
+        Usage:
+
+            >>> <HallEffectProbe2-Object>.get_reading()
+            >>> (500, "OK")
+
+        """
 
         return self._current_reading, "OK" #TODO Actual fault checking.
 

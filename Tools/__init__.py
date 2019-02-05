@@ -76,6 +76,7 @@ Contains Classes:
 - ResistanceProbe
 - HallEffectDevice (for water-wheels)
 - HallEffectProbe (magnetic levels probe)
+- HallEffectProbe2 (new magnetic levels probe)
 
 sockettools.py
 ==============
