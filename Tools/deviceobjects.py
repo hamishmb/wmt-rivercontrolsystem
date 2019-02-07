@@ -636,7 +636,7 @@ class HallEffectProbe(BaseDeviceClass):
 
         return self._current_reading, "OK" #TODO Actual fault checking.
 
-class HallEffectProbe2(BaseDeviceClass):
+class HallEffectProbe2(BaseDeviceClass, threading.Thread):
     """
     This class is used to represent the new type of magnetic probe.  This probe
     encodes the water level as four voltages at 100 mm intervals.  Each of the four voltage
@@ -658,6 +658,9 @@ class HallEffectProbe2(BaseDeviceClass):
         #Call the base class constructor.
         BaseDeviceClass.__init__(self, Name)
 
+        #Initialise the thread.
+        threading.Thread.__init__(self)
+
         #Set some semi-private variables.
         self._current_reading = 0                  #Internal use only.
         self._post_init_called = False             #Internal use only.
@@ -668,8 +671,8 @@ class HallEffectProbe2(BaseDeviceClass):
         self.chan2 = AnalogIn(ads, ADS.P2)
         self.chan3 = AnalogIn(ads, ADS.P3)
 
-        #Set a timer to start recording values.
-        threading.Timer(0.5, self.poll)
+        #Start the thread to keep polling the probe.
+        self.start()
 
     def set_limits(self, high_limits, low_limits):
         """
@@ -776,7 +779,10 @@ class HallEffectProbe2(BaseDeviceClass):
 
         return level
 
-    def poll(self):
+    def run(self):
+        """The main body of the monitor thread for this probe"""
+        #FIXME We need a way of exiting from this cleanly on
+        #program shutdown.
         self._current_reading = self.test_levels()
 
         if self._current_reading == 1000:
@@ -785,9 +791,7 @@ class HallEffectProbe2(BaseDeviceClass):
         else:
             print("Depth = " + str(self._current_reading))
 
-        #Set the timer again.
-        #TODO This may break program shutdown.
-        threading.Timer(0.5, self.poll)
+        time.sleep(0.5)
 
     # ---------- CONTROL METHODS ----------
     def get_reading(self):
