@@ -131,7 +131,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         if _type == "Hall Effect Probe2":
             high_limits = probe_settings["HighLimits"]
             low_limits = probe_settings["LowLimits"]
-            
+
             depths.append(probe_settings["Depths100s"])
             depths.append(probe_settings["Depths25s"])
             depths.append(probe_settings["Depths50s"])
@@ -139,7 +139,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
             probe.set_limits(high_limits, low_limits)
             probe.set_depths(depths)
-            
+
         else:
             pins = probe_settings["Pins"]
             probe.set_pins(pins)
@@ -203,6 +203,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #Setup. Prevent errors.
     sump_reading = core_tools.Reading(str(datetime.datetime.now()), -1,
                                       "SUMP:M0", "0mm", "OK")
+
     butts_reading = core_tools.Reading(str(datetime.datetime.now()), -1,
                                        "G4:FS0", "True", "OK")
 

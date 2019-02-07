@@ -334,9 +334,9 @@ class ActuatorPosition(threading.Thread):
         self.actual_position = 0                             # Used to store the measured position of the valve.
         self.high_limit = 5                                         # Initial value. Calculated from the percetage requested.
         self.low_limit = 1                                         # Initial value. Calculated from the percetage requested.
-                
+
         self.calculate_limits()
-        
+
         threading.Thread.__init__(self)
 
         self.start()
@@ -348,18 +348,18 @@ class ActuatorPosition(threading.Thread):
         while not self._exit:
             self.actual_position = self.get_position()
 
-            if(self.actual_position <= self.high_limit and self.actual_position >= self.low_limit):
+            if (self.actual_position <= self.high_limit and self.actual_position >= self.low_limit):
                 print("Hold at ", self.actual_position)
                 GPIO.output(self.forward_pin, GPIO.LOW)              # Hold current position
                 GPIO.output(self.reverse_pin, GPIO.LOW)
                 time.sleep(10)
 
-            if(self.actual_position < self.low_limit):
+            if (self.actual_position < self.low_limit):
                 print("Open Valve a bit.")
                 GPIO.output(self.forward_pin, GPIO.HIGH)             # Open the valve
                 GPIO.output(self.reverse_pin, GPIO.LOW)
 
-            if(self.actual_position > self.high_limit):
+            if (self.actual_position > self.high_limit):
                 print("Close Valve a bit.")
                 GPIO.output(self.forward_pin, GPIO.LOW)              # Close the valve
                 GPIO.output(self.reverse_pin, GPIO.HIGH)
@@ -381,7 +381,7 @@ class ActuatorPosition(threading.Thread):
         self.calculate_limits()
 
     def calculate_limits(self):
-        self.actual_position = self.get_position()        
+        self.actual_position = self.get_position()
         if (self.actual_position) != self.percentage:
             if (self.percentage + self.pos_tolerance > self.max_open):
                 self.high_limit = self.max_open

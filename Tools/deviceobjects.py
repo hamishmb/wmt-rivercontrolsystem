@@ -510,7 +510,8 @@ class HallEffectDevice(BaseDeviceClass):
 class HallEffectProbe(BaseDeviceClass):
     """
     This class is used to represent a magnetic probe of the old type that sets 10 pins to represent
-    the level; one pin for each level.  It is now obsolecent and so this clas will ultimately be removed
+    the level; one pin for each level.  It is now obsolecent and so this class
+    will ultimately be removed.
 
     Documentation for the constructor for objects of type HallEffectProbe:
 
@@ -648,26 +649,8 @@ class HallEffectProbe2(BaseDeviceClass):
     Usage:
         >>> probe = deviceobjects.HallEffectProbe2(<a_time>, <a_tick>, <an_id>, <a_value>, <a_status>)
 
-    .. warning::
-        There is currently **absolutely no** check to see that each instance variable
-        actually has the correct format. This will come later.
-
-    .. warning::
-        System ticks have not yet been implemented. As such the value
-        for the tick passed here to the constructor is ignored, and
-        the attribute is set to -1.
-
-    .. note::
-        Equality methods have been implemented for this class so you can do things like:
-
-        >>> reading_1 == reading_2
-
-        AND:
-
-        >>> reading_2 != reading_3
-
-        With ease.
     """
+
     # ---------- CONSTRUCTORS ----------
     def __init__(self, Name):
         """This is the constructor, as documented above"""
@@ -731,7 +714,7 @@ class HallEffectProbe2(BaseDeviceClass):
         Vcomp = list()                                      # Compensated values
         result = list()                                                # Measured value and column
 
-        # Measure the voltage in each chain 
+        # Measure the voltage in each chain
         Vmeas[0] = self.chan0.voltage
         Vmeas[1] = self.chan1.voltage
         Vmeas[2] = self.chan2.voltage
@@ -743,14 +726,16 @@ class HallEffectProbe2(BaseDeviceClass):
         # Find the column that the minimum value is in
         min_column = Vmeas.index(min(Vmeas))
         print("Column containing the minimum value = " + str(min_column))
-        
+
         # Work out the average of the three highest measurements (thus ignoring the 'dipped' channel.
         Vtot = Vmeas[0] + Vmeas[1] + Vmeas[2] + Vmeas[3]
         Vav = (Vtot - Vmin)/3
 
-        # Calculate the compensated value for each channel. 
-        if Vmin >= 3.0:                                          # Take a shortcut when the magnet is between sensors
+        # Calculate the compensated value for each channel.
+        if Vmin >= 3.0:
+            # Take a shortcut when the magnet is between sensors
             Vcomp[0] = Vcomp[1] = Vcomp[2] = Vcomp[3] = Vav - Vmin
+
         else:
             if min_column == 0:
                 Vcomp[min_column] = Vav - Vmin
@@ -762,7 +747,7 @@ class HallEffectProbe2(BaseDeviceClass):
                 Vcomp[min_column] = Vav - Vmin
             else:
                 Vcomp[min_column] = Vav
-            
+
         print("Dip Value = " + str(Vcomp[min_column]))
 
         result = Vcomp, min_column
@@ -782,7 +767,8 @@ class HallEffectProbe2(BaseDeviceClass):
             # Now test the channel with the dip to see if any of the sensors are triggered
             if ((Vcomp[min_column] <= self.high_limits[count]) and (Vcomp[min_column] >= self.low_limits[count])):
                 level = self.depths[min_column][count]
-                print ("Depth = " + str(level))
+                print("Depth = " + str(level))
+
             elif level == 1000:
                 print("Between Sensors at this Depth")
 
@@ -802,7 +788,7 @@ class HallEffectProbe2(BaseDeviceClass):
         #Set the timer again.
         #TODO This may break program shutdown.
         threading.Timer(0.5, self.poll)
-    
+
     # ---------- CONTROL METHODS ----------
     def get_reading(self):
         """
@@ -849,20 +835,25 @@ class GateValve(BaseDeviceClass):
             GPIO.setup(pin, GPIO.OUT)
 
         #Start the thread so we can control the gate valve.
-        self.control_thread = core_tools.ActuatorPosition(pins, pos_tolerance, max_open, min_open, ref_voltage)
+        self.control_thread = core_tools.ActuatorPosition(pins, pos_tolerance, max_open, min_open,
+                                                          ref_voltage)
 
     def set_position(self, percentage):
         """
         This method sets the position of the gate valve to the given percentage.
 
-        If a value less than 0 is specified, the position is set to 0 (or any defined minimum value - currently 1).
-        If a value greater than 100 is specified, the position is set to 100 (or any defined maximum value - currently 99).
+        If a value less than 0 is specified, the position is set to 0 (or any defined minimum
+        value - currently 1).
+
+        If a value greater than 100 is specified, the position is set to 100 (or any defined
+        maximum value - currently 99).
+
         Usage:
 
             >>> <GateValve-Object>.set_position(100)
 
         """
-        
+
         self.control_thread.set_position(percentage)
 
     def get_reading(self):
@@ -896,4 +887,3 @@ class GateValve(BaseDeviceClass):
         """
 
         return (self.control_thread.get_position(), "OK")
-
