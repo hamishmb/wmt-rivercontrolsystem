@@ -139,6 +139,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
             probe.set_limits(high_limits, low_limits)
             probe.set_depths(depths)
+            probe.start_thread()
 
         else:
             pins = probe_settings["Pins"]

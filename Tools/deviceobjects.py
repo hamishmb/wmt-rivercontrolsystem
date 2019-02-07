@@ -671,7 +671,8 @@ class HallEffectProbe2(BaseDeviceClass, threading.Thread):
         self.chan2 = AnalogIn(ads, ADS.P2)
         self.chan3 = AnalogIn(ads, ADS.P3)
 
-        #Start the thread to keep polling the probe.
+    def start_thread(self):
+        """Start the thread to keep polling the probe."""
         self.start()
 
     def set_limits(self, high_limits, low_limits):
@@ -688,8 +689,10 @@ class HallEffectProbe2(BaseDeviceClass, threading.Thread):
 
         """
 
-        self.high_limits = [high_limits]
-        self.low_limits = [low_limits]
+        #NB: Removed the []s around these - we don't want a list with a tuple
+        #inside!
+        self.high_limits = high_limits
+        self.low_limits = low_limits
 
     def set_depths(self, depths):
         """
@@ -717,11 +720,15 @@ class HallEffectProbe2(BaseDeviceClass, threading.Thread):
         Vcomp = list()                                      # Compensated values
         result = list()                                                # Measured value and column
 
+        # Prepare Vcomp to hold 4 values (pre-populate to avoid errors).
+        for i in range(0, 4):
+            Vcomp.append(0)
+        
         # Measure the voltage in each chain
-        Vmeas[0] = self.chan0.voltage
-        Vmeas[1] = self.chan1.voltage
-        Vmeas[2] = self.chan2.voltage
-        Vmeas[3] = self.chan3.voltage
+        Vmeas.append(self.chan0.voltage)
+        Vmeas.append(self.chan1.voltage)
+        Vmeas.append(self.chan2.voltage)
+        Vmeas.append(self.chan3.voltage)
 
         # Find the minimum value
         Vmin = min(Vmeas)
@@ -783,13 +790,17 @@ class HallEffectProbe2(BaseDeviceClass, threading.Thread):
         """The main body of the monitor thread for this probe"""
         #FIXME We need a way of exiting from this cleanly on
         #program shutdown.
-        self._current_reading = self.test_levels()
+        new_reading = self.test_levels()
 
-        if self._current_reading == 1000:
+        if new_reading == 1000:
             print("No Sensors Triggered")
 
         else:
             print("Depth = " + str(self._current_reading))
+
+            #Only update this if we got a meaningful reading from the probe.
+            #Aka at least 1 sensor triggered.
+            self._current_reading = new_reading
 
         time.sleep(0.5)
 
