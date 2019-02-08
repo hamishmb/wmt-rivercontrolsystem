@@ -39,17 +39,17 @@ try:
     GPIO.setmode(GPIO.BCM)
 
     #Setup for ADS1115 (A2D converter).
-    import board
-    import busio
+#    import board
+#    import busio
 
     #TODO: This is a deprecated library - replace with a newer one at some point?
-    from adafruit_ads1x15.single_ended import ADS1115
+#    from adafruit_ads1x15.single_ended import ADS1115
 
     # Create the I2C bus
-    i2c = busio.I2C(board.SCL, board.SDA)
+#    i2c = busio.I2C(board.SCL, board.SDA)
 
     # Create the ADC object using the I2C bus
-    adc = ADS1115(i2c)
+#    adc = ADS1115(i2c)
 
 except ImportError:
     pass
@@ -371,7 +371,7 @@ class ActuatorPosition(threading.Thread):
         GPIO.output(self.clutch_pin, GPIO.LOW)
 
     def get_position(self):                      # Read A/D Converter for i iterations
-        v0 = adc[0].volts                   # Get voltage reading for channel 0 (the position pot slider)
+        v0 = 0 #adc[0].volts                   # Get voltage reading for channel 0 (the position pot slider)
         self.actual_position = int((v0/self.ref_voltage*100))       # Actual position as a percentage at the time of reading
         return self.actual_position
 

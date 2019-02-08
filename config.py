@@ -175,9 +175,6 @@ SITE_SETTINGS = {
                     {
                         "Type":  "Motor",
                         "ID":    "SUMP:P0",
-                        "ServerAddress": "192.168.0.2",
-                        "ServerPort": 30014,
-
                         "Name":  "Sump to Butts Pump",
                         "Class": Tools.deviceobjects.Motor,
                         "Pins":  (5)
