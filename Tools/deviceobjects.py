@@ -44,14 +44,14 @@ try:
     import RPi.GPIO as GPIO                             # GPIO imports and setups
     GPIO.setmode(GPIO.BCM)
 
-    import board                                        # Imports for A/D Converter
-    import busio
-    import adafruit_ads1x15.ads1015 as ADS
-    from adafruit_ads1x15.analog_in import AnalogIn
+#    import board                                        # Imports for A/D Converter
+#    import busio
+#    import adafruit_ads1x15.ads1015 as ADS
+#    from adafruit_ads1x15.analog_in import AnalogIn
 
-    i2c = busio.I2C(board.SCL, board.SDA)               # Create the I2C bus
+#    i2c = busio.I2C(board.SCL, board.SDA)               # Create the I2C bus
 
-    ads = ADS.ADS1015(i2c)                              # Create the ADC object using the I2C bus
+#    ads = ADS.ADS1015(i2c)                              # Create the ADC object using the I2C bus
 
 except ImportError:
     pass
@@ -666,10 +666,10 @@ class HallEffectProbe2(BaseDeviceClass, threading.Thread):
         self._post_init_called = False             #Internal use only.
 
         # Create four single-ended inputs on channels 0 to 3
-        self.chan0 = AnalogIn(ads, ADS.P0)
-        self.chan1 = AnalogIn(ads, ADS.P1)
-        self.chan2 = AnalogIn(ads, ADS.P2)
-        self.chan3 = AnalogIn(ads, ADS.P3)
+        self.chan0 = 2.42 #AnalogIn(ads, ADS.P0)
+        self.chan1 = 2.42 #AnalogIn(ads, ADS.P1)
+        self.chan2 = 2.42 #AnalogIn(ads, ADS.P2)
+        self.chan3 = 2.42 #AnalogIn(ads, ADS.P3)
 
     def start_thread(self):
         """Start the thread to keep polling the probe."""
@@ -708,7 +708,9 @@ class HallEffectProbe2(BaseDeviceClass, threading.Thread):
 
         """
 
-        self.depths = [depths]
+        #NB: Removed the []s around this too - we don't want a list with a tuple
+        #inside!
+        self.depths = depths
         self.length = len(depths)
 
     def get_compensated_probe_voltages(self):
