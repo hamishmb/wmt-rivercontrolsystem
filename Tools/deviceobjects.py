@@ -711,7 +711,9 @@ class HallEffectProbe2(BaseDeviceClass, threading.Thread):
         #NB: Removed the []s around this too - we don't want a list with a tuple
         #inside!
         self.depths = depths
-        self.length = len(depths)
+
+        #We need to count the number of sensors in the stack, not the number of stacks!
+        self.length = len(depths[0])
 
     def get_compensated_probe_voltages(self):
         """This function performs the measurement of the four voltages and applies the compensation
@@ -781,7 +783,7 @@ class HallEffectProbe2(BaseDeviceClass, threading.Thread):
                 level = self.depths[min_column][count]
                 print("Depth = " + str(level))
 
-            elif level == 1000:
+            else:
                 print("Between Sensors at this Depth")
 
             count += 1
@@ -792,19 +794,21 @@ class HallEffectProbe2(BaseDeviceClass, threading.Thread):
         """The main body of the monitor thread for this probe"""
         #FIXME We need a way of exiting from this cleanly on
         #program shutdown.
-        new_reading = self.test_levels()
 
-        if new_reading == 1000:
-            print("No Sensors Triggered")
+        while True:
+            new_reading = self.test_levels()
 
-        else:
-            print("Depth = " + str(self._current_reading))
+            if new_reading == 1000:
+                print("No Sensors Triggered")
 
-            #Only update this if we got a meaningful reading from the probe.
-            #Aka at least 1 sensor triggered.
-            self._current_reading = new_reading
+            else:
+                print("Depth = " + str(new_reading))
 
-        time.sleep(0.5)
+                #Only update this if we got a meaningful reading from the probe.
+                #Aka at least 1 sensor triggered.
+                self._current_reading = new_reading
+
+            time.sleep(0.5)
 
     # ---------- CONTROL METHODS ----------
     def get_reading(self):
