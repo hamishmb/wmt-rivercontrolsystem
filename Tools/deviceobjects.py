@@ -739,7 +739,6 @@ class HallEffectProbe2(BaseDeviceClass, threading.Thread):
 
         # Find the column that the minimum value is in
         min_column = Vmeas.index(min(Vmeas))
-        print("Column containing the minimum value = " + str(min_column))
 
         # Work out the average of the three highest measurements (thus ignoring the 'dipped' channel.
         Vtot = Vmeas[0] + Vmeas[1] + Vmeas[2] + Vmeas[3]
@@ -762,8 +761,6 @@ class HallEffectProbe2(BaseDeviceClass, threading.Thread):
             else:
                 Vcomp[min_column] = Vav
 
-        print("Dip Value = " + str(Vcomp[min_column]))
-
         result = Vcomp, min_column
 
         return result
@@ -773,18 +770,13 @@ class HallEffectProbe2(BaseDeviceClass, threading.Thread):
         level = 1000                                              # Value to return
 
         while count < self.length:
-            print("")
-            print("Count Number = " + str(count))
-
             Vcomp, min_column = self.get_compensated_probe_voltages()
 
             # Now test the channel with the dip to see if any of the sensors are triggered
             if ((Vcomp[min_column] <= self.high_limits[count]) and (Vcomp[min_column] >= self.low_limits[count])):
                 level = self.depths[min_column][count]
-                print("Depth = " + str(level))
-
             else:
-                print("Between Sensors at this Depth")
+                logger.debug("Possible faulty probe - no limits passed")
 
             count += 1
 
@@ -799,14 +791,14 @@ class HallEffectProbe2(BaseDeviceClass, threading.Thread):
             new_reading = self.test_levels()
 
             if new_reading == 1000:
-                print("No Sensors Triggered")
+                # No Sensors Triggered - leave the reading as it was.
+                logger.debug("Between levels - no sensors triggered")
 
             else:
-                print("Depth = " + str(new_reading))
-
                 #Only update this if we got a meaningful reading from the probe.
                 #Aka at least 1 sensor triggered.
                 self._current_reading = new_reading
+                no_trigger = False
 
             time.sleep(0.5)
 

@@ -88,7 +88,7 @@ class Reading:
         reading_value (String):     The value of the reading. Format differs
                                     depending on probe type at the moment **FIXME**.
                                     Ideally, these would all be values in mm like:
-                                    400mm.
+                                    400 mm.
 
         reading_status (String):    The status of the probe at the time the reading
                                     was taken. If there is no fault, this should be
@@ -493,8 +493,8 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, butts_float_reading, d
     This function is used to decides what action to take based
     on the readings it is passed.
 
-    The butts pump is turned on when the sump level >= 600mm, and
-    turned off when it reaches 400mm. The circulation pump is
+    The butts pump is turned on when the sump level >= 600 mm, and
+    turned off when it reaches 400 mm. The circulation pump is
     turned on when the sump level >= 300, and otherwise the
     circulation pump will be turned off.
 
@@ -558,8 +558,8 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, butts_float_reading, d
 
     if sump_reading >= 600:
         #Level in the sump is getting high.
-        logger.warning("Water level in the sump ("+str(sump_reading)+") >= 600mm!")
-        print("Water level in the sump ("+str(sump_reading)+") >= 600mm!")
+        logger.warning("Water level in the sump ("+str(sump_reading)+") >= 600 mm!")
+        print("Water level in the sump ("+str(sump_reading)+") >= 600 mm!")
 
         #Make sure the main circulation pump is on.
         logger.info("Turning the main circulation pump on, if it was off...")
@@ -601,12 +601,12 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, butts_float_reading, d
             print("Setting reading interval to 1 minute...")
             reading_interval = 60
 
-    elif sump_reading == 500:
+    elif sump_reading >= 500 and sump_reading <= 600:
         #Level is okay.
         #We might be pumping right now, or the level is increasing, but do nothing.
         #^ Do NOT change the state of the butts pump.
-        logger.info("Water level in the sump is 500mm.")
-        print("Water level in the sump is 500mm.")
+        logger.info("Water level in the sump is between 500 and 600 mm.")
+        print("Water level in the sump is between 500 and 600 mm.")
 
         #Make sure the main circulation pump is on.
         logger.info("Turning the main circulation pump on, if it was off...")
@@ -619,13 +619,13 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, butts_float_reading, d
 
         main_pump.enable()
 
-    elif sump_reading == 400:
+    elif sump_reading >= 400 and sump_reading <= 500:
         #Level in the sump is good.
         #If the butts pump is on, turn it off.
         butts_pump.disable()
 
-        logger.info("Water level in the sump is 400mm. Turned the butts pump off, if it was on.")
-        print("Water level in the sump is 400mm. Turned the butts pump off, if it was on.")
+        logger.info("Water level in the sump is between 400 and 500 mm. Turned the butts pump off, if it was on.")
+        print("Water level in the sump is between 400 and 500 mm. Turned the butts pump off, if it was on.")
 
         #Make sure the main circulation pump is on.
         logger.info("Turning the main circulation pump on, if it was off...")
@@ -642,15 +642,15 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, butts_float_reading, d
         print("Setting reading interval to 1 minute...")
         reading_interval = 60
 
-    elif sump_reading == 300:
+    elif sump_reading >= 300 and sump_reading <= 400:
         #Level in the sump is getting low.
         #If the butts pump is on, turn it off.
         butts_pump.disable()
 
-        logger.warning("Water level in the sump is 300mm!")
+        logger.warning("Water level in the sump is between 300 and 400 mm!")
         logger.warning("Opening wendy butts gate valve to 25%...")
 
-        print("Water level in the sump is 300mm!")
+        print("Water level in the sump is between 300 and 400 mm!")
 
         if (butts_reading >= 300):
             logger.info("Opening wendy butts gate valve to 25%...")
@@ -673,7 +673,7 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, butts_float_reading, d
 
         reading_interval = 60
 
-    elif sump_reading == 200:
+    elif sump_reading >= 200 and sump_reading <= 300:
         #Level in the sump is very low!
         #If the butts pump is on, turn it off.
         butts_pump.disable()
@@ -688,10 +688,10 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, butts_float_reading, d
             print("Insufficient water in wendy butts...")
             sockets["SOCK14"].write("Valve Position 0")
 
-            logger.error("*** NOTICE ***: Water level in the sump is 200mm!")
+            logger.error("*** NOTICE ***: Water level in the sump is between 200 and 300 mm!")
             logger.error("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
 
-            print("\n\n*** NOTICE ***: Water level in the sump is 200mm!")
+            print("\n\n*** NOTICE ***: Water level in the sump is between 200 and 300 mm!")
             print("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
 
         #Make sure the main circulation pump is off.
@@ -703,7 +703,7 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, butts_float_reading, d
         logger.warning("Setting reading interval to 30 seconds for close monitoring...")
         print("Setting reading interval to 30 seconds for close monitoring...")
 
-        reading_interval = 30
+        reading_interval = 30  
 
     else:
         #Level in the sump is critically low!
@@ -720,11 +720,11 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, butts_float_reading, d
             print("Insufficient water in wendy butts...")
             sockets["SOCK14"].write("Valve Position 0")
 
-            logger.critical("*** CRITICAL ***: Water level in the sump < 200mm!")
+            logger.critical("*** CRITICAL ***: Water level in the sump less than 200 mm!")
             logger.critical("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to system.")
             logger.critical("*** INFO ***: The pump won't run dry; it has been temporarily disabled.")
 
-            print("\n\n*** CRITICAL ***: Water level in the sump < 200mm!")
+            print("\n\n*** CRITICAL ***: Water level in the sump less than 200 mm!")
             print("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
             print("*** INFO ***: The pump won't run dry; it has been temporarily disabled.")
 
