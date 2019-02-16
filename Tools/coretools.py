@@ -42,14 +42,14 @@ try:
     import board
     import busio
 
-    #TODO: This is a deprecated library - replace with a newer one at some point?
-    from adafruit_ads1x15.single_ended import ADS1115
+    import adafruit_ads1x15.ads1115 as ADS
+    from adafruit_ads1x15.analog_in import AnalogIn
 
     # Create the I2C bus
     i2c = busio.I2C(board.SCL, board.SDA)
 
     # Create the ADC object using the I2C bus
-    adc = ADS1115(i2c)
+    ads = ADS.ADS1115(i2c)
 
 except ImportError:
     pass
@@ -370,8 +370,9 @@ class ActuatorPosition(threading.Thread):
     def clutch_disengage(self):
         GPIO.output(self.clutch_pin, GPIO.LOW)
 
-    def get_position(self):                      # Read A/D Converter for i iterations
-        v0 = adc[0].volts                   # Get voltage reading for channel 0 (the position pot slider)
+    def get_position(self):
+        chan = AnalogIn(ads, ADS.P0)                                # Create the Analog reading object to read Ch 0 of the A/D
+        v0 = chan.voltage                                           # Get voltage reading for channel 0 (the position pot slider)
         self.actual_position = int((v0/self.ref_voltage*100))       # Actual position as a percentage at the time of reading
         return self.actual_position
 
