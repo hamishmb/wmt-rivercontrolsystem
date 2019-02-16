@@ -181,7 +181,7 @@ def run_standalone():
 
     logger.info("Initialising connection to server, please wait...")
     print("Initialising connection to server, please wait...")
-    socket = socket_tools.Sockets("Plug")
+    socket = socket_tools.Sockets("Plug", config.SITE_SETTINGS[system_id]["Name"])
     socket.set_portnumber(config.SITE_SETTINGS[system_id]["ServerPort"])
     socket.set_server_address(config.SITE_SETTINGS[system_id]["ServerAddress"])
     socket.start_handler()

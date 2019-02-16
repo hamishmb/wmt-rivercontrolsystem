@@ -14,6 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#pylint: disable=logging-not-lazy
+#
+#Reason (logging-not-lazy): Harder to understand the logging statements that way.
+
 #NOTE: Using this terminology, "Plugs" are client sockets, "Sockets" are server sockets.
 
 """
@@ -77,13 +81,14 @@ class Sockets:
     #We need all of these public methods too.
     #TODO Ideally, we would simplify this, but we need to decide how.
 
-    def __init__(self, the_type):
+    def __init__(self, _type, name="Unknown"):
         """The constructor, as documented above."""
-        #TODO Throw error if the_type is invalid.
+        #TODO Throw error if _type is invalid.
         #Core variables and socket.
         self.port_number = -1
         self.server_address = ""
-        self.type = the_type
+        self.type = _type
+        self.name = name
         self.underlying_socket = ""
         self.server_socket = ""
         self.handler_thread = ""
@@ -348,7 +353,8 @@ class Sockets:
             logger.critical("Sockets._create_and_connect(): Retrying in 10 seconds...")
 
             if self.verbose:
-                print("Connecting Failed: "+str(err)+". Retrying in 10 seconds...")
+                print("Connecting Failed ("+self.name+"): "+str(err)
+                      + ". Retrying in 10 seconds...")
 
             #Make the handler exit.
             logger.debug("Sockets._create_and_connect(): Asking handler to exit...")
@@ -640,7 +646,7 @@ class Sockets:
         except BaseException as err:
             logger.error("Sockets._read_pending_messages(): Caught unhandled exception!")
             logger.error("Socket._read_pending_messages(): Error was "+str(err)+"...")
-            print("Error: ", err)
+            print("Error reading messages ("+self.name+"): ", err)
             return -1
 
     def _process_obj(self, obj):
@@ -652,7 +658,7 @@ class Sockets:
             self.in_queue.append(pickle.loads(obj))
 
         except (_pickle.UnpicklingError, EOFError):
-            print(b"Unpickling error: "+obj)
+            print(b"Unpickling error ("+bytes(self.name)+"):"+obj)
 
 class SocketHandlerThread(threading.Thread):
     """
@@ -721,7 +727,7 @@ class SocketHandlerThread(threading.Thread):
         if not self.socket.requested_handler_exit:
             #We have connected.
             logger.debug("Sockets.Handler(): Done! Entering main loop.")
-            print("Connected to peer.")
+            print("Connected to peer ("+self.socket.name+").")
 
         #Keep sending and receiving messages until we're asked to exit.
         while not self.socket.requested_handler_exit:
@@ -736,7 +742,8 @@ class SocketHandlerThread(threading.Thread):
                 logger.debug("Sockets.Handler(): Lost connection. Attempting to reconnect...")
 
                 if self.socket.verbose:
-                    print("Lost connection to peer. Reconnecting...")
+                    print("Lost connection to peer ("+self.socket.name
+                          + "). Reconnecting...")
 
                 #Wait for the socket to reconnect, unless the user ends the program
                 #(this allows us to exit cleanly if the peer is gone).
@@ -757,7 +764,7 @@ class SocketHandlerThread(threading.Thread):
                         self.socket.reconnected = True
 
                         if self.socket.verbose:
-                            print("Reconnected to peer.")
+                            print("Reconnected to peer ("+self.socket.name+").")
 
                         break
 

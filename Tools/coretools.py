@@ -55,7 +55,7 @@ try:
     # Create the ADC object using the I2C bus
     ads = ADS.ADS1115(i2c)
 
-except ImportError:
+except ImportError, NotImplementedError:
     pass
 
 VERSION = "0.9.2"

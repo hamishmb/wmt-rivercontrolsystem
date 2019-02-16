@@ -107,7 +107,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     #FIXME: See what happens at WMT, works at some.
     for each_socket in config.SITE_SETTINGS["SUMP"]["Sockets"].values():
-        socket = socket_tools.Sockets("Socket")
+        socket = socket_tools.Sockets("Socket", each_socket["Name"])
         socket.set_portnumber(each_socket["PortNumber"])
         sockets[each_socket["ID"]] = socket
 
