@@ -46,12 +46,12 @@ try:
 
     import board                                        # Imports for A/D Converter
     import busio
-    import adafruit_ads1x15.ads1015 as ADS
+    import adafruit_ads1x15.ads1115 as ADS
     from adafruit_ads1x15.analog_in import AnalogIn
 
     i2c = busio.I2C(board.SCL, board.SDA)               # Create the I2C bus
 
-    ads = ADS.ADS1015(i2c)                              # Create the ADC object using the I2C bus
+    ads = ADS.ADS1115(i2c)                              # Create the ADC object using the I2C bus
 
 except ImportError:
     pass
