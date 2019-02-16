@@ -57,7 +57,10 @@ try:
 
     ads = ADS.ADS1115(i2c)                              # Create the ADC object using the I2C bus
 
-except ImportError, NotImplementedError:
+except ImportError:
+    pass
+
+except NotImplementedError:
     pass
 
 VERSION = "0.9.2"
@@ -759,15 +762,11 @@ class HallEffectProbe2(BaseDeviceClass, threading.Thread):
             v_comp[0] = v_comp[1] = v_comp[2] = v_comp[3] = v_avg - v_min
 
         else:
-            if min_column == 0:
+            if min_column in (0, 1, 2, 3):
                 v_comp[min_column] = v_avg - v_min
-            elif min_column == 1:
-                v_comp[min_column] = v_avg - v_min
-            elif min_column == 2:
-                v_comp[min_column] = v_avg - v_min
-            elif min_column == 3:
-                v_comp[min_column] = v_avg - v_min
+
             else:
+                #NB: Will this ever happen? It seems impossible to me - Hamish.
                 v_comp[min_column] = v_avg
 
         result = v_comp, min_column

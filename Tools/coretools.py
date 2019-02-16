@@ -55,7 +55,10 @@ try:
     # Create the ADC object using the I2C bus
     ads = ADS.ADS1115(i2c)
 
-except ImportError, NotImplementedError:
+except ImportError:
+    pass
+
+except NotImplementedError:
     pass
 
 VERSION = "0.9.2"
@@ -322,6 +325,8 @@ class ActuatorPosition(threading.Thread):
 
     """
 
+    #FIXME The documentation for this constructor is wrong -
+    #there are extra arguments that we need to explain in the docstring.
     def __init__(self, pins, pos_tolerance, max_open, min_open, ref_voltage):
         """The constructor, set up some basic threading stuff."""
         self.forward_pin = pins[0]                          # The pin to set the motor direction to forwards (opening gate).
@@ -358,12 +363,12 @@ class ActuatorPosition(threading.Thread):
                 GPIO.output(self.reverse_pin, GPIO.LOW)
                 time.sleep(10)
 
-            if (self.actual_position < self.low_limit):
+            elif (self.actual_position < self.low_limit):
                 print("Open Valve a bit.")
                 GPIO.output(self.forward_pin, GPIO.HIGH)             # Open the valve
                 GPIO.output(self.reverse_pin, GPIO.LOW)
 
-            if (self.actual_position > self.high_limit):
+            elif (self.actual_position > self.high_limit):
                 print("Close Valve a bit.")
                 GPIO.output(self.forward_pin, GPIO.LOW)              # Close the valve
                 GPIO.output(self.reverse_pin, GPIO.HIGH)
