@@ -14,6 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#pylint: disable=logging-not-lazy
+#
+#Reason (logging-not-lazy): Harder to understand the logging statements that way.
+
 """
 This is the coretools module, which contains tools used by both
 the main control software, and the universal monitor. It's kind

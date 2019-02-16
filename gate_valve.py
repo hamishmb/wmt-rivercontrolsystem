@@ -14,7 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#TODO
+#pylint: disable=logging-not-lazy
+#
+#Reason (logging-not-lazy): Harder to understand the logging statements that way.
+
+#TODO what?
+
 """
 This is the secondary part of the software. It forms the universal
 controller & monitor that is used on the gate valve pis.

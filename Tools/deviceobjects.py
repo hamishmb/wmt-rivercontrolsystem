@@ -14,6 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#pylint: disable=logging-not-lazy
+#
+#Reason (logging-not-lazy): Harder to understand the logging statements that way.
+
 #TODO: Throw errors if setup hasn't been completed properly.
 
 """
@@ -450,7 +454,7 @@ class HallEffectDevice(BaseDeviceClass):
         self._num_detections = 0                  #Internal use only.
 
     # ---------- PRIVATE METHODS ----------
-    def _increment_num_detections(self, channel):
+    def _increment_num_detections(self, channel): #pylint: disable=unused-argument
         """
         PRIVATE, implementation detail.
 
@@ -552,52 +556,52 @@ class HallEffectProbe(BaseDeviceClass):
 
         self._post_init_called = True
 
-    def _level0(self, channel):
+    def _level0(self, channel): #pylint: disable=unused-argument
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 0
         logging.debug(self._id+" 0mm level detected.")
 
-    def _level1(self, channel):
+    def _level1(self, channel): #pylint: disable=unused-argument
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 100
         logging.debug(self._id+" 100mm level detected.")
 
-    def _level2(self, channel):
+    def _level2(self, channel): #pylint: disable=unused-argument
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 200
         logging.debug(self._id+" 200mm level detected.")
 
-    def _level3(self, channel):
+    def _level3(self, channel): #pylint: disable=unused-argument
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 300
         logging.debug(self._id+" 300mm level detected.")
 
-    def _level4(self, channel):
+    def _level4(self, channel): #pylint: disable=unused-argument
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 400
         logging.debug(self._id+" 400mm level detected.")
 
-    def _level5(self, channel):
+    def _level5(self, channel): #pylint: disable=unused-argument
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 500
         logging.debug(self._id+" 500mm level detected.")
 
-    def _level6(self, channel):
+    def _level6(self, channel): #pylint: disable=unused-argument
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 600
         logging.debug(self._id+" 600mm level detected.")
 
-    def _level7(self, channel):
+    def _level7(self, channel): #pylint: disable=unused-argument
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 700
         logging.debug(self._id+" 700mm level detected.")
 
-    def _level8(self, channel):
+    def _level8(self, channel): #pylint: disable=unused-argument
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 800
         logging.debug(self._id+" 800mm level detected.")
 
-    def _level9(self, channel):
+    def _level9(self, channel): #pylint: disable=unused-argument
         """Called when a falling edge is detected. Sets current reading to relevant level"""
         self._current_reading = 900
         logging.debug(self._id+" 900mm level detected.")
@@ -665,6 +669,11 @@ class HallEffectProbe2(BaseDeviceClass, threading.Thread):
         self._current_reading = 0                  #Internal use only.
         self._post_init_called = False             #Internal use only.
 
+        self.high_limits = None                    #The high limits to be used with this probe.
+        self.low_limits = None                     #The low limits to be used with this probe.
+        self.depths = None                         #The multidimensional list of 4 rows or depths.
+        self.length = None                         #The number of sensors in each stack.
+
         # Create four single-ended inputs on channels 0 to 3
         self.chan0 = AnalogIn(ads, ADS.P0)
         self.chan1 = AnalogIn(ads, ADS.P1)
@@ -720,48 +729,48 @@ class HallEffectProbe2(BaseDeviceClass, threading.Thread):
         to take out errors caused by the varying output impedance of the probe
         """
          # Initialise Lists and variables to hold the working values in each column
-        Vmeas = list()                                      # Actual voltages
-        Vcomp = list()                                      # Compensated values
+        v_meas = list()                                      # Actual voltages
+        v_comp = list()                                      # Compensated values
         result = list()                                                # Measured value and column
 
-        # Prepare Vcomp to hold 4 values (pre-populate to avoid errors).
+        # Prepare v_comp to hold 4 values (pre-populate to avoid errors).
         for i in range(0, 4):
-            Vcomp.append(0)
-        
+            v_comp.append(0)
+
         # Measure the voltage in each chain
-        Vmeas.append(self.chan0.voltage)
-        Vmeas.append(self.chan1.voltage)
-        Vmeas.append(self.chan2.voltage)
-        Vmeas.append(self.chan3.voltage)
+        v_meas.append(self.chan0.voltage)
+        v_meas.append(self.chan1.voltage)
+        v_meas.append(self.chan2.voltage)
+        v_meas.append(self.chan3.voltage)
 
         # Find the minimum value
-        Vmin = min(Vmeas)
+        v_min = min(v_meas)
 
         # Find the column that the minimum value is in
-        min_column = Vmeas.index(min(Vmeas))
+        min_column = v_meas.index(min(v_meas))
 
         # Work out the average of the three highest measurements (thus ignoring the 'dipped' channel.
-        Vtot = Vmeas[0] + Vmeas[1] + Vmeas[2] + Vmeas[3]
-        Vav = (Vtot - Vmin)/3
+        v_tot = v_meas[0] + v_meas[1] + v_meas[2] + v_meas[3]
+        v_avg = (v_tot - v_min)/3
 
         # Calculate the compensated value for each channel.
-        if Vmin >= 3.0:
+        if v_min >= 3.0:
             # Take a shortcut when the magnet is between sensors
-            Vcomp[0] = Vcomp[1] = Vcomp[2] = Vcomp[3] = Vav - Vmin
+            v_comp[0] = v_comp[1] = v_comp[2] = v_comp[3] = v_avg - v_min
 
         else:
             if min_column == 0:
-                Vcomp[min_column] = Vav - Vmin
+                v_comp[min_column] = v_avg - v_min
             elif min_column == 1:
-                Vcomp[min_column] = Vav - Vmin
+                v_comp[min_column] = v_avg - v_min
             elif min_column == 2:
-                Vcomp[min_column] = Vav - Vmin
+                v_comp[min_column] = v_avg - v_min
             elif min_column == 3:
-                Vcomp[min_column] = Vav - Vmin
+                v_comp[min_column] = v_avg - v_min
             else:
-                Vcomp[min_column] = Vav
+                v_comp[min_column] = v_avg
 
-        result = Vcomp, min_column
+        result = v_comp, min_column
 
         return result
 
@@ -770,10 +779,10 @@ class HallEffectProbe2(BaseDeviceClass, threading.Thread):
         level = 1000                                              # Value to return
 
         while count < self.length:
-            Vcomp, min_column = self.get_compensated_probe_voltages()
+            v_comp, min_column = self.get_compensated_probe_voltages()
 
             # Now test the channel with the dip to see if any of the sensors are triggered
-            if ((Vcomp[min_column] <= self.high_limits[count]) and (Vcomp[min_column] >= self.low_limits[count])):
+            if ((v_comp[min_column] <= self.high_limits[count]) and (v_comp[min_column] >= self.low_limits[count])):
                 level = self.depths[min_column][count]
             else:
                 logger.debug("Possible faulty probe - no limits passed")
@@ -798,7 +807,7 @@ class HallEffectProbe2(BaseDeviceClass, threading.Thread):
                 #Only update this if we got a meaningful reading from the probe.
                 #Aka at least 1 sensor triggered.
                 self._current_reading = new_reading
-                no_trigger = False
+                no_trigger = False #TODO Note that this isn't used - remove it?
 
             time.sleep(0.5)
 

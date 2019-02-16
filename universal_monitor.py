@@ -14,6 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#pylint: disable=logging-not-lazy
+#
+#Reason (logging-not-lazy): Harder to understand the logging statements that way.
+
 """
 This is the secondary part of the software. It forms the
 universal monitor that is used on the slave/client pis.

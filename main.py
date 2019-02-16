@@ -14,6 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#pylint: disable=logging-not-lazy
+#
+#Reason (logging-not-lazy): Harder to understand the logging statements that way.
+
 """
 This is the main part of the control software, and it currently manages
 balancing water between the butts and the sump using a magnetic probe and
@@ -232,7 +236,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                             sump_reading = reading
 
             #Logic.
-            reading_interval = core_tools.do_control_logic(sump_reading, butts_reading, butts_float_reading, devices,
+            reading_interval = core_tools.do_control_logic(sump_reading, butts_reading,
+                                                           butts_float_reading, devices,
                                                            monitors, sockets, reading_interval)
 
             #Wait until it's time to check for another reading.
