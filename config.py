@@ -223,7 +223,7 @@ SITE_SETTINGS = {
 
             "ServerAddress": "192.168.0.2",
             "ServerPort": 30004,
-            "Name":"SumpPi"
+            "ServerName": "SumpPi"
         },
 
     #Gate Valves.
@@ -244,7 +244,7 @@ SITE_SETTINGS = {
             #Config for server connection.
             "ServerAddress": "192.168.0.2",
             "ServerPort": 30014,
-            "Name":"SumpPi"
+            "ServerName": "SumpPi"
         }
 
 }
