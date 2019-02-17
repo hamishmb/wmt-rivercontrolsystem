@@ -39,7 +39,7 @@ and type the following key, eg:
         Hall Effect (magnetic) Probe -     M0
         Float Switch                 -     FS0
 
-    Gate Valve                     - V4 (Commented out in theis version)
+    Gate Valve                     - V4
 
 Full List of Devices and their ID Data, IP Addresses, Master Pi server Port and
 Socket Numbers where applicable:
@@ -134,15 +134,15 @@ SITE_SETTINGS = {
                     "Wendy Street Buttspi Socket":
                         {
                             "ID":           "SOCK4",
-                            "Name":         "Buttspi Socket",
+                            "Name":         "Wendy Street Buttspi Socket",
                             "PortNumber":   30004
                         },
 
                     #For connection to Wendy Street Butts Pi Gate Valve.
-                    "Buttspi Gate Valve Socket V4":
+                    "Wendy Street Butts Gate Valve Socket":
                         {
                             "ID":           "SOCK14",
-                            "Name":         "Buttspi Gate Valve V4 Socket",
+                            "Name":         "Wendy Street Butts Gate Valve V4 Socket",
                             "PortNumber":   30014
                         }
                 },
@@ -222,27 +222,29 @@ SITE_SETTINGS = {
                 },
 
             "ServerAddress": "192.168.0.2",
-            "ServerPort": 30004
+            "ServerPort": 30004,
+            "Name":"SumpPi"
         },
 
     #Gate Valves.
-#    "V4":
-#        {
-#            "Type": "Gate Valve",
-#            "ID":   "V4",
-#            "Name": "Butts Farm Gate Valve",
-#            "Class": Tools.deviceobjects.GateValve,
-#
-#            "Pins":  (17, 27, 19),
-#            "posTolerance": 1,
-#            "maxOpen": 99,
-#            "minOpen": 1,
-#            "refVoltage": 3.3,
-#            "Default Interval": 10,
-#
-#            #Config for server connection.
-#            "ServerAddress": "192.168.0.2",
-#            "ServerPort": 30014
-#        }
+    "V4":
+        {
+            "Type": "Gate Valve",
+            "ID":   "V4",
+            "Name": "Butts Farm Gate Valve",
+            "Class": Tools.deviceobjects.GateValve,
+
+            "Pins":  (17, 27, 19),
+            "posTolerance": 1,
+            "maxOpen": 99,
+            "minOpen": 1,
+            "refVoltage": 3.3,
+            "Default Interval": 10,
+
+            #Config for server connection.
+            "ServerAddress": "192.168.0.2",
+            "ServerPort": 30014,
+            "Name":"SumpPi"
+        }
 
 }
