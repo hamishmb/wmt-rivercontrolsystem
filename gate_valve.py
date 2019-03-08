@@ -39,7 +39,6 @@ import logging
 import getopt
 import sys
 import traceback
-
 #Do required imports.
 import config
 
@@ -270,6 +269,8 @@ def run_standalone():
 
                     elif "Valve Position" in data:
                         valve_position = int(data.split()[-1])
+                        logger.info("New valve position: "+str(valve_position))
+                        print("\nNew valve position: "+str(valve_position))
 
                         valve.set_position(valve_position)
 

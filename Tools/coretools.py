@@ -312,7 +312,7 @@ class Reading:
                 + "," + self._status)
 
 # ---------------------------------- HYBRID OBJECTS -----------------------------------------
-# (Objects that contain both controlled devices and sendors
+# (Objects that contain both controlled devices and sensors)
 class ActuatorPosition(threading.Thread):
     """
     This class is used to energise and position the Actuator Motor that drives a Gate Valve
@@ -361,7 +361,7 @@ class ActuatorPosition(threading.Thread):
                 print("Hold at ", self.actual_position)
                 GPIO.output(self.forward_pin, GPIO.LOW)              # Hold current position
                 GPIO.output(self.reverse_pin, GPIO.LOW)
-                time.sleep(10)
+                time.sleep(1)
 
             elif (self.actual_position < self.low_limit):
                 print("Open Valve a bit.")
