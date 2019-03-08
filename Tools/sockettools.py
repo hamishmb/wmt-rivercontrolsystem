@@ -50,7 +50,7 @@ import logging
 import pickle
 import _pickle
 
-VERSION = "0.9.2"
+VERSION = "0.10.0"
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
