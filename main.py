@@ -188,8 +188,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     monitors.append(SocketsMonitor(sockets["SOCK4"], "G4", "M0"))
 
     #Gate valve.
-    #TODO This is disabled.
-    #monitors.append(SocketsMonitor(sockets["SOCK14"], "V4", "V4"))
+    monitors.append(SocketsMonitor(sockets["SOCK14"], "V4", "V4"))
 
     #And for our SUMP probe.
     for probe in probes:
