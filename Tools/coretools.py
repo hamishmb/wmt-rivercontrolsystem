@@ -61,7 +61,7 @@ except ImportError:
 except NotImplementedError:
     pass
 
-VERSION = "0.9.2"
+VERSION = "0.10.0"
 
 #Don't ask for a logger name, so this works with both main.py
 #and the universal monitor.

@@ -63,7 +63,7 @@ except ImportError:
 except NotImplementedError:
     pass
 
-VERSION = "0.9.2"
+VERSION = "0.10.0"
 
 #Use logger here too.
 logger = logging.getLogger(__name__)
