@@ -66,7 +66,7 @@ except ImportError:
     pass
 
 #Define global variables.
-VERSION = "0.9.2"
+VERSION = "0.10.0"
 RELEASEDATE = "7/8/2018"
 
 def run_standalone(): #TODO Refactor me into lots of smaller functions.
