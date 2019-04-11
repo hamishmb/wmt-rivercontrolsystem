@@ -399,6 +399,9 @@ class Sockets:
 
         self.underlying_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+        #Make it non-blocking.
+        self.underlying_socket.setblocking(0)
+
         logger.info("Sockets._create_plug(): Done!")
 
     def _connect_plug(self):
@@ -437,6 +440,9 @@ class Sockets:
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.bind(('', self.port_number)) #FIXME Address already in use error.
         self.server_socket.listen(10)
+
+        #Make it non-blocking.
+        self.underlying_socket.setblocking(0)
 
         logger.info("Sockets._create_socket(): Done!")
 
@@ -598,10 +604,6 @@ class Sockets:
 
             #While the socket is ready for reading, or there is any incomplete data,
             #keep trying to read small packets of data.
-            print("Selecting...")
-            select.select([self.underlying_socket], [], [], 1)
-            print("Done.")
-
             while select.select([self.underlying_socket], [], [], 1)[0] or pickled_obj_is_incomplete:
 
                 try:
@@ -613,7 +615,7 @@ class Sockets:
 
                     data += new_data
 
-                except:
+                except socket.error:
                     #What error are we looking for here? TODO
                     pass
 
