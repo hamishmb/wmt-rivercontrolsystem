@@ -362,6 +362,21 @@ class Sockets:
             logger.debug("Sockets._create_and_connect(): Asking handler to exit...")
             self.internal_request_exit = True
 
+        except TimeoutError as err:
+            #Connection timed out.
+            logger.critical("Sockets._create_and_connect(): Error connecting: "+str(err))
+            logger.critical("Sockets._create_and_connect(): Connection timed out! Poor network "
+                            + "connectivity or bad socket configuration?")
+            logger.critical("Sockets._create_and_connect(): Retrying in 10 seconds...")
+
+            if self.verbose:
+                print("Connecting Failed ("+self.name+"): "+str(err)
+                      + ". Retrying in 10 seconds...")
+
+            #Make the handler exit.
+            logger.debug("Sockets._create_and_connect(): Asking handler to exit...")
+            self.internal_request_exit = True
+
     # ---------- Connection Functions (Plugs) ----------
     def _create_plug(self):
         """
@@ -694,13 +709,13 @@ class SocketHandlerThread(threading.Thread):
         #Keep sending and receiving messages until we're asked to exit.
         while not self.socket.requested_handler_exit:
             #Send any pending messages.
-            self.socket._send_pending_messages()
+            write_result = self.socket._send_pending_messages()
 
             #Receive messages if there are any.
             read_result = self.socket._read_pending_messages()
 
             #Check if the peer left.
-            if read_result == -1:
+            if read_result == -1 or write_result == False:
                 logger.debug("Sockets.Handler(): Lost connection. Attempting to reconnect...")
 
                 if self.socket.verbose:
