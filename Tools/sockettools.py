@@ -459,46 +459,6 @@ class Sockets:
         logger.debug("Sockets.write(): Appending "+str(data)+" to OutgoingQueue...")
         self.out_queue.append(data)
 
-    def send_to_peer(self, data):
-        #FIXME: If ACK is very slow, try again.
-        #FIXME: Will need to change this later cos if there's a
-        #       high volume of messages it might fail.
-        """
-        This method sends the given message to the peer & waits for an
-        acknowledgement. A convenience function. Useful when you want
-        to know if the peer got your message, but slower.
-
-        .. note::
-            Do we want this here? This is here because it was in the
-            Stroodlr sockets C++ code, and this is a Python port of
-            that, but the reply was never implemented.
-
-        .. warning::
-            Currently unusable as the reply is not implemented.
-
-        Args:
-            data (string):      Data to send.
-
-        Usage:
-
-            >>> <Sockets-Obj>.send_to_peer(<some_data_in_string_format>)
-        """
-
-        logger.debug("Sockets.send_to_peer(): Sending message "+str(data)+" to peer...")
-
-        #Push it to the message queue.
-        self.write(data)
-
-        #Wait until a \x06 (ASCII ACK code) has arrived. FIXME Will not work w/ pickled objects.
-        logger.debug("Sockets.send_to_peer(): Waiting for acknowledgement...")
-
-        while not self.has_data():
-            time.sleep(0.1)
-
-        #Remove the ACK from the queue.
-        logger.info("Sockets.send_to_peer(): Done.")
-        self.pop()
-
     def has_data(self):
         """
         This method returns True if there's data on the queue to read, else False.
