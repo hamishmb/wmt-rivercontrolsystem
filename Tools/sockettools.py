@@ -399,9 +399,6 @@ class Sockets:
 
         self.underlying_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        #Make it non-blocking.
-        self.underlying_socket.setblocking(0)
-
         logger.info("Sockets._create_plug(): Done!")
 
     def _connect_plug(self):
@@ -442,7 +439,7 @@ class Sockets:
         self.server_socket.listen(10)
 
         #Make it non-blocking.
-        self.underlying_socket.setblocking(0)
+        self.server_socket.setblocking(0)
 
         logger.info("Sockets._create_socket(): Done!")
 
