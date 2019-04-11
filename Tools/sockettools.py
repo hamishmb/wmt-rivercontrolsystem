@@ -606,9 +606,10 @@ class Sockets:
                 try:
                     print("Receiving")
                     new_data = self.underlying_socket.recv(2048)
+                    print("New data: "+new_data)
                     print("Done")
 
-                    if new_data == "":
+                    if new_data == b"":
                         logger.error("Sockets._read_pending_messages(): Connection closed cleanly")
                         return -1 #Connection closed cleanly by peer.
 
