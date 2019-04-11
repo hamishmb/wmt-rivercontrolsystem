@@ -377,6 +377,11 @@ class Sockets:
             logger.debug("Sockets._create_and_connect(): Asking handler to exit...")
             self.internal_request_exit = True
 
+        except OSError as err:
+            #Address already in use, probably.
+            #FIXME.
+            pass
+
     # ---------- Connection Functions (Plugs) ----------
     def _create_plug(self):
         """
@@ -430,7 +435,7 @@ class Sockets:
         logger.info("Sockets._create_socket(): Creating the socket...")
 
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket.bind(('', self.port_number))
+        self.server_socket.bind(('', self.port_number)) #FIXME Address already in use error.
         self.server_socket.listen(10)
 
         logger.info("Sockets._create_socket(): Done!")
@@ -591,7 +596,12 @@ class Sockets:
             #Use a 1-second timeout.
             self.underlying_socket.settimeout(1.0)
 
-            #While the socket is ready for reading, keep trying to read small packets of data.
+            #While the socket is ready for reading, or there is any incomplete data,
+            #keep trying to read small packets of data.
+            print("Selecting...")
+            select.select([self.underlying_socket], [], [], 1)
+            print("Done.")
+
             while select.select([self.underlying_socket], [], [], 1)[0] or pickled_obj_is_incomplete:
 
                 try:
@@ -615,6 +625,7 @@ class Sockets:
                     for obj in objs[:-1]:
                         self._process_obj(obj)
 
+                #Keep reading until there's nothing left to read.
                 pickled_obj_is_incomplete = (data != b"")
 
             logger.debug("Sockets._read_pending_messages(): Done.")
