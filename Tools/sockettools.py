@@ -616,11 +616,14 @@ class Sockets:
                     data += new_data
 
                 except socket.error:
+                    #TODO ignore for now.
+                    pass
+
                     #Assume that the socket is closed or the network connection has failed.
                     #Recreate the socket.
-                    logger.error("Sockets._read_pending_messages(): Connection closed or peer gone. "
-                                 + "Attempting to reconnect...")
-                    return -1 #Connection closed cleanly by peer.
+                    #logger.error("Sockets._read_pending_messages(): Connection closed or peer gone. "
+                    #             + "Attempting to reconnect...")
+                    #return -1 #Connection closed cleanly by peer.
 
 
                 if b"ENDMSG" in data:
