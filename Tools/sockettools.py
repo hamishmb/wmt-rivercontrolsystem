@@ -245,7 +245,7 @@ class Sockets:
 
         return temp
 
-    def wait_for_handler_to_exit(self): #TODO Ask handler to exit.
+    def wait_for_handler_to_exit(self):
         """
         This method waits for the handler to exit. Useful when e.g. doing clean-up,
         when you want to shut down the socket gracefully.
@@ -259,6 +259,7 @@ class Sockets:
             >>> <Sockets-Obj>.wait_for_handler_to_exit()
         """
 
+        self.request_handler_exit()
         self.handler_thread.join()
 
     def handler_has_exited(self):
@@ -348,7 +349,7 @@ class Sockets:
             logger.debug("Sockets._create_and_connect(): Done!")
             self.ready_to_send = True
 
-        except BaseException as err: #FIXME WHAT ERROR WOULD WE NEED TO CATCH?
+        except OSError as err: #FIXME WHAT ERROR WOULD WE NEED TO CATCH?
             logger.critical("Sockets._create_and_connect(): Error connecting: "+str(err))
             logger.critical("Sockets._create_and_connect(): Retrying in 10 seconds...")
 
