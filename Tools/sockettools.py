@@ -382,6 +382,7 @@ class Sockets:
 
         except OSError as err:
             #Address already in use, probably.
+            #This will eventually fix itself, but I need to find a way of doing this manually.
             #FIXME.
             pass
 
@@ -438,7 +439,7 @@ class Sockets:
         logger.info("Sockets._create_socket(): Creating the socket...")
 
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket.bind(('', self.port_number)) #FIXME Address already in use error.
+        self.server_socket.bind(('', self.port_number))
         self.server_socket.listen(10)
 
         logger.info("Sockets._create_socket(): Done!")
@@ -565,9 +566,11 @@ class Sockets:
                 logger.debug("Sockets._send_pending_messages(): Clearing front of out_queue...")
                 self.out_queue.popleft()
 
-        except BaseException as err:
-            #FIXME: Looking for an exception from sendall(), but don't know what it is.
-            logger.error("Sockets._send_pending_messages(): Connection closed cleanly...")
+        except OSError as err:
+            #Assume that network is down or client gone. Recreate the socket.
+            logger.error("Sockets._send_pending_messages(): Connection closed or client gone. "
+                         + "Attempting to reconnect...")
+
             return False #Connection closed cleanly by peer.
 
         logger.debug("Sockets._send_pending_messages(): Done.")
@@ -604,10 +607,7 @@ class Sockets:
             while select.select([self.underlying_socket], [], [], 1)[0] or pickled_obj_is_incomplete:
 
                 try:
-                    print("Receiving")
                     new_data = self.underlying_socket.recv(2048)
-                    print(b"New data: "+new_data)
-                    print("Done")
 
                     if new_data == b"":
                         logger.error("Sockets._read_pending_messages(): Connection closed cleanly")
@@ -616,8 +616,11 @@ class Sockets:
                     data += new_data
 
                 except socket.error:
-                    #What error are we looking for here? TODO
-                    pass
+                    #Assume that the socket is closed or the network connection has failed.
+                    #Recreate the socket.
+                    logger.error("Sockets._read_pending_messages(): Connection closed or peer gone. "
+                                 + "Attempting to reconnect...")
+                    return -1 #Connection closed cleanly by peer.
 
 
                 if b"ENDMSG" in data:
