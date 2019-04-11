@@ -349,7 +349,8 @@ class Sockets:
             logger.debug("Sockets._create_and_connect(): Done!")
             self.ready_to_send = True
 
-        except OSError as err: #FIXME WHAT ERROR WOULD WE NEED TO CATCH?
+        except ConnectionRefusedError as err:
+            #Connection refused by peer.
             logger.critical("Sockets._create_and_connect(): Error connecting: "+str(err))
             logger.critical("Sockets._create_and_connect(): Retrying in 10 seconds...")
 
