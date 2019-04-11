@@ -345,6 +345,9 @@ class Sockets:
                 self._create_socket()
                 self._connect_socket()
 
+            #Make it non-blocking.
+            self.underlying_socket.setblocking(0)
+
             #We are now connected.
             logger.debug("Sockets._create_and_connect(): Done!")
             self.ready_to_send = True
@@ -437,9 +440,6 @@ class Sockets:
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.bind(('', self.port_number)) #FIXME Address already in use error.
         self.server_socket.listen(10)
-
-        #Make it non-blocking.
-        self.server_socket.setblocking(0)
 
         logger.info("Sockets._create_socket(): Done!")
 
@@ -604,7 +604,9 @@ class Sockets:
             while select.select([self.underlying_socket], [], [], 1)[0] or pickled_obj_is_incomplete:
 
                 try:
+                    print("Receiving")
                     new_data = self.underlying_socket.recv(2048)
+                    print("Done")
 
                     if new_data == "":
                         logger.error("Sockets._read_pending_messages(): Connection closed cleanly")
