@@ -458,7 +458,7 @@ class Sockets:
 
         logger.info("Sockets._connect_socket(): Attempting to connect to the requested socket...")
 
-        self.underlying_socket, addr = self.server_socket.accept()
+        self.underlying_socket = self.server_socket.accept()[0]
 
         logger.info("Sockets._connect_socket(): Done!")
 
@@ -529,7 +529,8 @@ class Sockets:
             >>> <Sockets-Obj.pop()
         """
 
-        if len(self.in_queue) > 0:
+        #Clear the oldest element of the queue if there's anything in it.
+        if self.in_queue:
             logger.debug("Sockets.pop(): Clearing oldest element of IncomingQueue...")
             self.in_queue.popleft()
 
@@ -551,8 +552,8 @@ class Sockets:
         logger.debug("Sockets._send_pending_messages(): Sending any pending messages...")
 
         try:
-            #Write all pending messages.
-            while len(self.out_queue) > 0:
+            #Write all pending messages, if there are any.
+            while self.out_queue:
                 #Write the oldest message first.
                 logger.debug("Sockets._send_pending_messages(): Sending data...")
 
@@ -604,7 +605,8 @@ class Sockets:
 
             #While the socket is ready for reading, or there is any incomplete data,
             #keep trying to read small packets of data.
-            while select.select([self.underlying_socket], [], [], 1)[0] or pickled_obj_is_incomplete:
+            while select.select([self.underlying_socket], [], [], 1)[0] \
+                or pickled_obj_is_incomplete:
 
                 try:
                     new_data = self.underlying_socket.recv(2048)
@@ -703,6 +705,7 @@ class SocketHandlerThread(threading.Thread):
         logger.debug("Sockets.Handler(): Starting up...")
         read_result = -1
 
+        #-------------------- Setup the socket --------------------
         #Setup the socket.
         logger.debug("Sockets.Handler(): Calling Ptr->_create_and_connect to set the socket up...")
 
@@ -726,6 +729,7 @@ class SocketHandlerThread(threading.Thread):
             logger.debug("Sockets.Handler(): Done! Entering main loop.")
             print("Connected to peer ("+self.socket.name+").")
 
+        #-------------------- Manage the connection, sending and receiving data --------------------
         #Keep sending and receiving messages until we're asked to exit.
         while not self.socket.requested_handler_exit:
             #Send any pending messages.
@@ -735,7 +739,7 @@ class SocketHandlerThread(threading.Thread):
             read_result = self.socket._read_pending_messages()
 
             #Check if the peer left.
-            if read_result == -1 or write_result == False:
+            if read_result == -1 or write_result is False:
                 logger.debug("Sockets.Handler(): Lost connection. Attempting to reconnect...")
 
                 if self.socket.verbose:
