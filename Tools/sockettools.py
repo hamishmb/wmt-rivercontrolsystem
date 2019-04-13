@@ -84,7 +84,10 @@ class Sockets:
 
     def __init__(self, _type, name="Unknown"):
         """The constructor, as documented above."""
-        #TODO Throw error if _type is invalid.
+        #Throw ValueError if _type is invalid.
+        if _type not in ("Plug", "Socket"):
+            raise ValueError("_type must be either 'Plug' or 'Socket'")
+
         #Core variables and socket.
         self.port_number = -1
         self.server_address = ""
@@ -307,8 +310,8 @@ class Sockets:
             self.handler_thread = SocketHandlerThread(self)
 
         else:
-            logger.debug("Sockets.start_handler(): Type is wrong, throwing runtime_error...")
-            raise ValueError("Type not set correctly")
+            logger.debug("Sockets.start_handler(): Type is wrong, throwing ValueError...")
+            raise ValueError("Type must be 'Plug' or 'Socket'")
 
     def request_handler_exit(self):
         """
@@ -357,7 +360,7 @@ class Sockets:
         except ConnectionRefusedError as err:
             #Connection refused by peer.
             logger.error("Sockets._create_and_connect(): Error connecting:\n\n"
-                            + str(traceback.format_exc()) + "\n\n")
+                         + str(traceback.format_exc()) + "\n\n")
 
             logger.error("Sockets._create_and_connect(): Retrying in 10 seconds...")
 
@@ -372,10 +375,10 @@ class Sockets:
         except TimeoutError as err:
             #Connection timed out.
             logger.error("Sockets._create_and_connect(): Error connecting:\n\n"
-                            + str(traceback.format_exc()) + "\n\n")
+                         + str(traceback.format_exc()) + "\n\n")
 
             logger.error("Sockets._create_and_connect(): Connection timed out! Poor network "
-                            + "connectivity or bad socket configuration?")
+                         + "connectivity or bad socket configuration?")
 
             logger.error("Sockets._create_and_connect(): Retrying in 10 seconds...")
 
@@ -652,7 +655,9 @@ class Sockets:
 
         except Exception:
             logger.error("Sockets._read_pending_messages(): Caught unhandled exception!")
-            logger.error("Socket._read_pending_messages(): Error was\n\n"+str(traceback.format_exc())+"...")
+            logger.error("Socket._read_pending_messages(): Error was\n\n"
+                         + str(traceback.format_exc())+"...")
+
             print("Error reading messages ("+self.name+"): ", traceback.format_exc())
             return -1
 
