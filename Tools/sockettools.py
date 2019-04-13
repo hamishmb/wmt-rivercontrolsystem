@@ -45,6 +45,7 @@ from collections import deque
 import socket
 import select
 import threading
+import traceback
 import time
 import logging
 import pickle
@@ -196,7 +197,8 @@ class Sockets:
             self.underlying_socket.close()
 
         except AttributeError:
-            #On server side, this may happen if the client socket was never created. Never mind.
+            #On server side, this may happen if the underlying socket was not created/connected
+            #yet. Never mind.
             pass
 
         self.server_socket = ""
@@ -354,8 +356,10 @@ class Sockets:
 
         except ConnectionRefusedError as err:
             #Connection refused by peer.
-            logger.critical("Sockets._create_and_connect(): Error connecting: "+str(err))
-            logger.critical("Sockets._create_and_connect(): Retrying in 10 seconds...")
+            logger.error("Sockets._create_and_connect(): Error connecting:\n\n"
+                            + str(traceback.format_exc()) + "\n\n")
+
+            logger.error("Sockets._create_and_connect(): Retrying in 10 seconds...")
 
             if self.verbose:
                 print("Connecting Failed ("+self.name+"): "+str(err)
@@ -367,10 +371,13 @@ class Sockets:
 
         except TimeoutError as err:
             #Connection timed out.
-            logger.critical("Sockets._create_and_connect(): Error connecting: "+str(err))
-            logger.critical("Sockets._create_and_connect(): Connection timed out! Poor network "
+            logger.error("Sockets._create_and_connect(): Error connecting:\n\n"
+                            + str(traceback.format_exc()) + "\n\n")
+
+            logger.error("Sockets._create_and_connect(): Connection timed out! Poor network "
                             + "connectivity or bad socket configuration?")
-            logger.critical("Sockets._create_and_connect(): Retrying in 10 seconds...")
+
+            logger.error("Sockets._create_and_connect(): Retrying in 10 seconds...")
 
             if self.verbose:
                 print("Connecting Failed ("+self.name+"): "+str(err)
@@ -567,10 +574,11 @@ class Sockets:
                 logger.debug("Sockets._send_pending_messages(): Clearing front of out_queue...")
                 self.out_queue.popleft()
 
-        except OSError as err:
+        except OSError:
             #Assume that network is down or client gone. Recreate the socket.
             logger.error("Sockets._send_pending_messages(): Connection closed or client gone. "
-                         + "Attempting to reconnect...")
+                         + "Error was:\n\n"+str(traceback.format_exc())
+                         + "\n\nAttempting to reconnect...")
 
             return False #Connection closed cleanly by peer.
 
@@ -642,10 +650,10 @@ class Sockets:
 
             return 0
 
-        except BaseException as err:
+        except Exception:
             logger.error("Sockets._read_pending_messages(): Caught unhandled exception!")
-            logger.error("Socket._read_pending_messages(): Error was "+str(err)+"...")
-            print("Error reading messages ("+self.name+"): ", err)
+            logger.error("Socket._read_pending_messages(): Error was\n\n"+str(traceback.format_exc())+"...")
+            print("Error reading messages ("+self.name+"): ", traceback.format_exc())
             return -1
 
     def _process_obj(self, obj):
@@ -657,6 +665,7 @@ class Sockets:
             self.in_queue.append(pickle.loads(obj))
 
         except (_pickle.UnpicklingError, EOFError):
+            logger.error("Sockets._process_obj(): Error unpickling data from socket: "+str(obj))
             print(b"Unpickling error ("+bytes(self.name)+"):"+obj)
 
 class SocketHandlerThread(threading.Thread):
