@@ -56,9 +56,16 @@ try:
     ads = ADS.ADS1115(i2c)
 
 except ImportError:
-    pass
+    #Occurs when generating documentation on a non-pi system with Sphinx.
+    print("ImportError: Are you generating docuumentation?")
 
 except NotImplementedError:
+    #Occurs when importing busio on Raspberry Pi 1 B+ for some reason.
+    print("NotImplementedError: Testing environment?")
+
+except ValueError:
+    #Occurs when no I2C device is present.
+    print("ValueError: No I2C device found! Testing environment?")
     pass
 
 VERSION = "0.10.0"
@@ -66,7 +73,7 @@ VERSION = "0.10.0"
 #Don't ask for a logger name, so this works with both main.py
 #and the universal monitor.
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.getLogger('River System Control Software '+VERSION).getEffectiveLevel())
 
 class Reading:
     """

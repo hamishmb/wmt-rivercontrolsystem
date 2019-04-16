@@ -44,19 +44,12 @@ It communicates with buttspi over the network to gather readings.
 
 """
 
+import sys
+import getopt
 import time
 import datetime
 import logging
 import traceback
-
-#Do required imports.
-import config
-
-from Tools import coretools as core_tools
-from Tools import sockettools as socket_tools
-
-from Tools.monitortools import SocketsMonitor
-from Tools.monitortools import Monitor
 
 try:
     #Allow us to generate documentation on non-RPi systems.
@@ -68,6 +61,78 @@ except ImportError:
 #Define global variables.
 VERSION = "0.10.0"
 RELEASEDATE = "7/8/2018"
+
+def usage():
+    """
+    This function is used to output help information to the standard output
+    if the user passes invalid/incorrect commandline arguments.
+
+    Usage:
+
+    >>> usage()
+    """
+
+    print("\nUsage: main.py [OPTION]\n\n")
+    print("Options:\n")
+    print("       -h, --help:                   Show this help message")
+    print("       -d, --debug                   Enable debug mode")
+    print("       -q, --quiet                   Log only warnings, errors, and critical errors")
+    print("universal_standalone_monitor.py is released under the GNU GPL Version 3")
+    print("Copyright (C) Wimborne Model Town 2017-2019")
+
+def handle_cmdline_options():
+    """
+    This function is used to handle the commandline options passed
+    to main.py.
+
+    Valid commandline options to universal_standalone_monitor.py:
+        -h, --help                          Calls the usage() function to display help information
+                                            to the user.
+        -d, --debug                         Enable debug mode.
+        -q, --quiet                         Show only warnings, errors, and critical errors.
+
+    Returns:
+        None
+
+    Raises:
+        AssertionError, if there are unhandled options.
+
+    Usage:
+
+    >>> handle_cmdline_options()
+    """
+
+    #Check all cmdline options are valid.
+    try:
+        opts = getopt.getopt(sys.argv[1:], "hdq",
+                             ["help", "debug", "quiet"])[0]
+
+    except getopt.GetoptError as err:
+        #Invalid option. Show the help message and then exit.
+        #Show the error.
+        print(str(err))
+        usage()
+        sys.exit(2)
+
+    #Do setup. o=option, a=argument.
+    num_readings = 0 #Take readings indefinitely by default.
+    system_id = None
+
+    for opt, arg in opts:
+        if opt in ["-d", "--debug"]:
+            logger.setLevel(logging.DEBUG)
+
+        elif opt in ["-q", "--quiet"]:
+            logger.setLevel(logging.WARNING)
+
+        elif opt in ["-h", "--help"]:
+            usage()
+            sys.exit()
+
+        else:
+            assert False, "unhandled option"
+
+    return system_id, num_readings
 
 def run_standalone(): #TODO Refactor me into lots of smaller functions.
     """
@@ -97,6 +162,18 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     Usage:
         As above.
     """
+
+    #Handle cmdline options.
+    handle_cmdline_options()
+
+    #Do required imports.
+    import config
+
+    from Tools import coretools as core_tools
+    from Tools import sockettools as socket_tools
+
+    from Tools.monitortools import SocketsMonitor
+    from Tools.monitortools import Monitor
 
     #Get system ID from config.
     system_id = config.SITE_SETTINGS["SUMP"]["ID"]
@@ -272,10 +349,11 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
 if __name__ == "__main__":
     logger = logging.getLogger('River System Control Software '+VERSION)
-    logging.basicConfig(filename='./logs//rivercontrolsystem.log',
+    logging.basicConfig(filename='./logs/rivercontrolsystem.log',
                         format='%(asctime)s - %(name)s - %(levelname)s: %(message)s',
                         datefmt='%d/%m/%Y %I:%M:%S %p')
 
+    #Default logging level of INFO.
     logger.setLevel(logging.INFO)
 
     #Catch any unexpected errors and log them so we know what happened.

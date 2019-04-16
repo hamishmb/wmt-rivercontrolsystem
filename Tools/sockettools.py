@@ -54,7 +54,7 @@ import _pickle
 VERSION = "0.10.0"
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.getLogger('River System Control Software '+VERSION).getEffectiveLevel())
 
 # ---------- Sockets Class ----------
 class Sockets:
