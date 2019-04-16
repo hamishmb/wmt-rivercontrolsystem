@@ -35,7 +35,7 @@ import threading
 
 from . import coretools
 
-VERSION = "0.10.0"
+from ..config import VERSION
 
 # ---------- BASE CLASS ----------
 class BaseMonitorClass(threading.Thread):

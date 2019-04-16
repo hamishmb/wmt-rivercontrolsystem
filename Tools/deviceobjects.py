@@ -43,6 +43,8 @@ import logging
 #Import modules.
 from . import coretools as core_tools
 
+from ..config import VERSION
+
 try:
     #Allow us to generate documentation on non-RPi systems.
     import RPi.GPIO as GPIO                             # GPIO imports and setups
@@ -62,8 +64,6 @@ except ImportError:
 
 except NotImplementedError:
     pass
-
-VERSION = "0.10.0"
 
 #Use logger here too.
 logger = logging.getLogger(__name__)

@@ -51,16 +51,15 @@ import datetime
 import logging
 import traceback
 
+import config
+from config import VERSION
+
 try:
     #Allow us to generate documentation on non-RPi systems.
     import RPi.GPIO as GPIO
 
 except ImportError:
     pass
-
-#Define global variables.
-VERSION = "0.10.0"
-RELEASEDATE = "16/4/2018"
 
 def usage():
     """
@@ -167,8 +166,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     handle_cmdline_options()
 
     #Do framework imports.
-    import config
-
     from Tools import coretools as core_tools
     from Tools import sockettools as socket_tools
 

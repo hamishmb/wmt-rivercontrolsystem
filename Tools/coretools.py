@@ -37,6 +37,8 @@ import sys
 import threading
 import logging
 
+from ..config import VERSION
+
 try:
     #Allow us to generate documentation on non-RPi systems.
     import RPi.GPIO as GPIO

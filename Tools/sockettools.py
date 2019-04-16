@@ -51,7 +51,7 @@ import logging
 import pickle
 import _pickle
 
-VERSION = "0.10.0"
+from ..config import VERSION
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.getLogger('River System Control Software '+VERSION).getEffectiveLevel())

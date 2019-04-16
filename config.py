@@ -135,6 +135,10 @@ There are no classes or functions defined in this file.
 
 import Tools
 
+#Define global variables.
+VERSION = "0.10.0"
+RELEASEDATE = "16/4/2018"
+
 SITE_SETTINGS = {
 
     #Settings for the SUMP site (master pi).
