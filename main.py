@@ -27,14 +27,19 @@ It communicates with buttspi over the network to gather readings.
 .. note::
       This program currently has LIMITED FUNCTIONALITY.
       It is a pre-production version that is being used
-      to set up a test system that uses 2 RPis, one at
+      to set up a test system that uses 3 RPis, one at
       the sump, with a hall effect probe and 2 SSRs connected
-      and the other Pi is installed at the butts, and has
-      a float switch. The sump pi will be using this program.
+      and the other Pis are installed at the butts. One has
+      a float switch and a hall effect probe. The other is used
+      to control a gate valve for managing water flow coming
+      back from the water butts.
+
+      The sump pi will be using this program.
       Sump pi uses the first SSR to control the butts pump, and
       the second one is used to enable/disable the circulation
-      pump. It will communicate with the other pi over a socket,
-      and the other pi will be running universal_standalone_monitor.py.
+      pump. It will communicate with the other pis over sockets,
+      and the other pis will be running universal_standalone_monitor.py,
+      and gate_valve.py.
 
 .. module:: main.py
     :platform: Linux
