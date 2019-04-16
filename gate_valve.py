@@ -18,8 +18,6 @@
 #
 #Reason (logging-not-lazy): Harder to understand the logging statements that way.
 
-#TODO what?
-
 """
 This is the secondary part of the software. It forms the universal
 controller & monitor that is used on the gate valve pis.
@@ -39,12 +37,8 @@ import logging
 import getopt
 import sys
 import traceback
-#Do required imports.
-import config
 
-from Tools import coretools as core_tools
-from Tools import sockettools as socket_tools
-from Tools.monitortools import Monitor
+import config
 
 try:
     #Allow us to generate documentation on non-RPi systems.
@@ -74,8 +68,10 @@ def usage():
     print("       -n <int>, --num=<int>         Specify number of readings to take before exiting.")
     print("                                     Without this option, readings will be taken until")
     print("                                     the program is terminated with CTRL-C")
+    print("       -d, --debug                   Enable debug mode")
+    print("       -q, --quiet                   Log only warnings, errors, and critical errors")
     print("gate_valve.py is released under the GNU GPL Version 3")
-    print("Copyright (C) Wimborne Model Town 2017-2018")
+    print("Copyright (C) Wimborne Model Town 2017-2019")
 
 def handle_cmdline_options():
     """
@@ -91,6 +87,8 @@ def handle_cmdline_options():
         -n <int>, --num=<int>               Specify the number of readings to take before exiting.
                                             if not specified, readings will be taken until
                                             the program is terminated with CTRL-C.
+        -d, --debug                         Enable debug mode.
+        -q, --quiet                         Show only warnings, errors, and critical errors.
 
     Returns:
         tuple(string system_id, int num_readings).
@@ -107,8 +105,8 @@ def handle_cmdline_options():
 
     #Check all cmdline options are valid.
     try:
-        opts = getopt.getopt(sys.argv[1:], "hi:n:",
-                             ["help", "id=", "num="])[0]
+        opts = getopt.getopt(sys.argv[1:], "hdqi:n:",
+                             ["help", "debug", "quiet", "id=", "num="])[0]
 
     except getopt.GetoptError as err:
         #Invalid option. Show the help message and then exit.
@@ -127,6 +125,12 @@ def handle_cmdline_options():
 
         elif opt in ["-i", "--id"]:
             system_id = arg
+
+        elif opt in ("-d", "--debug"):
+            logger.setLevel(logging.DEBUG)
+
+        elif opt in ("-q", "--quiet"):
+            logger.setLevel(logging.WARNING)
 
         elif opt in ["-h", "--help"]:
             usage()
@@ -174,6 +178,11 @@ def run_standalone():
 
     #Handle cmdline options.
     system_id, num_readings = handle_cmdline_options()
+
+    #Do framework imports.
+    from Tools import coretools as core_tools
+    from Tools import sockettools as socket_tools
+    from Tools.monitortools import Monitor
 
     #Connect to server, if any.
     socket = None

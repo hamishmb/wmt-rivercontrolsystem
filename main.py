@@ -166,7 +166,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #Handle cmdline options.
     handle_cmdline_options()
 
-    #Do required imports.
+    #Do framework imports.
     import config
 
     from Tools import coretools as core_tools
