@@ -365,18 +365,18 @@ class ActuatorPosition(threading.Thread):
             self.actual_position = self.get_position()
 
             if (self.actual_position <= self.high_limit and self.actual_position >= self.low_limit):
-                print("Hold at ", self.actual_position)
+                logger.debug("ActuatorPosition: Hold at "+str(self.actual_position))
                 GPIO.output(self.forward_pin, GPIO.LOW)              # Hold current position
                 GPIO.output(self.reverse_pin, GPIO.LOW)
                 time.sleep(1)
 
             elif (self.actual_position < self.low_limit):
-                print("Open Valve a bit.")
+                logger.debug("ActuatorPosition: Open valve a bit.")
                 GPIO.output(self.forward_pin, GPIO.HIGH)             # Open the valve
                 GPIO.output(self.reverse_pin, GPIO.LOW)
 
             elif (self.actual_position > self.high_limit):
-                print("Close Valve a bit.")
+                logger.debug("ActuatorPosition: Close valve a bit.")
                 GPIO.output(self.forward_pin, GPIO.LOW)              # Close the valve
                 GPIO.output(self.reverse_pin, GPIO.HIGH)
 
@@ -494,7 +494,6 @@ def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None)
             logger.info(str(reading))
 
             print(reading)
-
 
         #Flush buffers.
         sys.stdout.flush()
