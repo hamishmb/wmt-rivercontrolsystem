@@ -114,9 +114,6 @@ def handle_cmdline_options():
         sys.exit(2)
 
     #Do setup. o=option, a=argument.
-    num_readings = 0 #Take readings indefinitely by default.
-    system_id = None
-
     for opt, arg in opts:
         if opt in ["-d", "--debug"]:
             logger.setLevel(logging.DEBUG)
@@ -130,8 +127,6 @@ def handle_cmdline_options():
 
         else:
             assert False, "unhandled option"
-
-    return system_id, num_readings
 
 def run_standalone(): #TODO Refactor me into lots of smaller functions.
     """
@@ -267,7 +262,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #And for our SUMP probe.
     for probe in probes:
         if probe.get_id() == "SUMP:M0":
-            monitors.append(Monitor(probe, 0, reading_interval, system_id))
+            monitors.append(Monitor(probe, reading_interval, system_id))
 
     #Wait until the first readings have come in so we are synchronised.
     #NB: Will now wait for client connection.

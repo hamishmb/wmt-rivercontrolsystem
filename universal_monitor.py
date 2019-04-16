@@ -65,9 +65,6 @@ def usage():
     print("       -i <string>, --id=<string>    Specifiies the system ID eg \"G4\". If settings")
     print("                                     for this site aren't found in config.py an")
     print("                                     exception will be thrown. Mandatory..")
-    print("       -n <int>, --num=<int>         Specify number of readings to take before exiting.")
-    print("                                     Without this option, readings will be taken until")
-    print("                                     the program is terminated with CTRL-C")
     print("       -d, --debug                   Enable debug mode")
     print("       -q, --quiet                   Log only warnings, errors, and critical errors")
     print("universal_standalone_monitor.py is released under the GNU GPL Version 3")
@@ -84,29 +81,26 @@ def handle_cmdline_options():
         -i <string>, --id=<string>          Specifies the system ID eg "G4". If settings for this
                                             site aren't found in config.py an exception will be
                                             thrown. Mandatory.
-        -n <int>, --num=<int>               Specify the number of readings to take before exiting.
-                                            if not specified, readings will be taken until
-                                            the program is terminated with CTRL-C.
         -d, --debug                         Enable debug mode.
         -q, --quiet                         Show only warnings, errors, and critical errors.
 
     Returns:
-        tuple(string system_id, int num_readings).
+        string system_id.
 
-            The system id and the number of readings to take.
+            The system id.
 
     Raises:
         AssertionError, if there are unhandled options.
 
     Usage:
 
-    >>> system_id, num_readings = handle_cmdline_options()
+    >>> system_id = handle_cmdline_options()
     """
 
     #Check all cmdline options are valid.
     try:
-        opts = getopt.getopt(sys.argv[1:], "hdqi:n:",
-                             ["help", "debug", "quiet", "id=", "num="])[0]
+        opts = getopt.getopt(sys.argv[1:], "hdqi:",
+                             ["help", "debug", "quiet", "id="])[0]
 
     except getopt.GetoptError as err:
         #Invalid option. Show the help message and then exit.
@@ -116,14 +110,10 @@ def handle_cmdline_options():
         sys.exit(2)
 
     #Do setup. o=option, a=argument.
-    num_readings = 0 #Take readings indefinitely by default.
     system_id = None
 
     for opt, arg in opts:
-        if opt in ["-n", "--num"]:
-            num_readings = int(arg)
-
-        elif opt in ["-i", "--id"]:
+        if opt in ["-i", "--id"]:
             system_id = arg
 
         elif opt in ("-d", "--debug"):
@@ -145,7 +135,7 @@ def handle_cmdline_options():
     #Check system ID is valid.
     assert system_id in config.SITE_SETTINGS, "Invalid system ID"
 
-    return system_id, num_readings
+    return system_id
 
 def run_standalone():
     """
@@ -177,7 +167,7 @@ def run_standalone():
     """
 
     #Handle cmdline options.
-    system_id, num_readings = handle_cmdline_options()
+    system_id = handle_cmdline_options()
 
     #Do framework imports.
     from Tools import coretools as core_tools
@@ -221,7 +211,7 @@ def run_standalone():
 
         #Start the monitor threads.
         logger.info("Starting the monitor thread for "+probe_id+"...")
-        monitors.append(Monitor(probe, num_readings, reading_interval, system_id))
+        monitors.append(Monitor(probe, reading_interval, system_id))
 
     print("Synchronising with monitor threads...")
 
