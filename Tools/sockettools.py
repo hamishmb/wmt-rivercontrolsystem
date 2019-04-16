@@ -47,11 +47,16 @@ import select
 import threading
 import traceback
 import time
+import sys
+import os
 import logging
 import pickle
 import _pickle
 
-from ..config import VERSION
+sys.path.insert(0, os.path.abspath('../'))
+
+import config
+from config import VERSION
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.getLogger('River System Control Software '+VERSION).getEffectiveLevel())

@@ -34,10 +34,14 @@ functions in here to reduce code duplication.
 import datetime
 import time
 import sys
+import os
 import threading
 import logging
 
-from ..config import VERSION
+sys.path.insert(0, os.path.abspath('../'))
+
+import config
+from config import VERSION
 
 try:
     #Allow us to generate documentation on non-RPi systems.
@@ -59,15 +63,15 @@ try:
 
 except ImportError:
     #Occurs when generating documentation on a non-pi system with Sphinx.
-    print("ImportError: Are you generating docuumentation?")
+    print("CoreTools: ImportError: Are you generating documentation?")
 
 except NotImplementedError:
     #Occurs when importing busio on Raspberry Pi 1 B+ for some reason.
-    print("NotImplementedError: Testing environment?")
+    print("CoreTools: NotImplementedError: Testing environment?")
 
 except ValueError:
     #Occurs when no I2C device is present.
-    print("ValueError: No I2C device found! Testing environment?")
+    print("CoreTools: ValueError: No I2C device found! Testing environment?")
     pass
 
 VERSION = "0.10.0"

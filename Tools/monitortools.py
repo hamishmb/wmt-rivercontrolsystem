@@ -31,11 +31,16 @@ a bit more of the complexity away.
 from collections import deque
 import time
 import datetime
+import sys
+import os
 import threading
 
 from . import coretools
 
-from ..config import VERSION
+sys.path.insert(0, os.path.abspath('../'))
+
+import config
+from config import VERSION
 
 # ---------- BASE CLASS ----------
 class BaseMonitorClass(threading.Thread):

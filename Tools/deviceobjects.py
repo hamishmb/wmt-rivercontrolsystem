@@ -38,12 +38,17 @@ from the rest of the program.
 #Standard Imports.
 import threading
 import time
+import sys
+import os
 import logging
 
 #Import modules.
 from . import coretools as core_tools
 
-from ..config import VERSION
+sys.path.insert(0, os.path.abspath('../'))
+
+import config
+from config import VERSION
 
 try:
     #Allow us to generate documentation on non-RPi systems.
