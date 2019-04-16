@@ -33,6 +33,7 @@ used for all of the gate valves this software framework supports.
 """
 
 import time
+import datetime
 import logging
 import getopt
 import sys
@@ -197,9 +198,8 @@ def run_standalone():
     logger.info("Will connect to server as soon as it becomes available.")
     print("Will connect to server as soon as it becomes available.")
 
-    #Greet and get filename.
-    logger.info("Greeting user...")
-    core_tools.greet_user("Gate Valve "+system_id)
+    #Print system time.
+    print("System Time: ", str(datetime.datetime.now()))
 
     #Create the gate valve.
     monitors = []

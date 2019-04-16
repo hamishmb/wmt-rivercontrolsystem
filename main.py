@@ -60,7 +60,7 @@ except ImportError:
 
 #Define global variables.
 VERSION = "0.10.0"
-RELEASEDATE = "7/8/2018"
+RELEASEDATE = "16/4/2018"
 
 def usage():
     """
@@ -192,8 +192,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     logger.debug("Done!")
 
-    #Greet user.
-    core_tools.greet_user("River System Control and Monitoring Software")
+    #Print system time.
+    print("System Time: ", str(datetime.datetime.now()))
 
     #Create the probe(s).
     probes = []

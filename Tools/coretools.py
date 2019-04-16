@@ -417,31 +417,6 @@ class ActuatorPosition(threading.Thread):
         self._exit = True
         self.clutch_disengage()
 
-def greet_user(module_name): #TODO do we need this.
-    """
-    This function greets the user.
-
-    Args:
-        module_name (str):  The program that has been started. Either
-                            the main software or the universal monitor.
-
-    Raises:
-        None, but will exit the program if a critical error is
-        encountered with sys.exit().
-
-    Usage:
-
-        >>> greet_user("AProgramName")
-
-    """
-
-    print("System Time: ", str(datetime.datetime.now()))
-    print(module_name+" is running standalone.")
-    print("Welcome. This program will quit automatically if you specified a number of readings.")
-    print("otherwise quit by pressing CTRL-C when you wish.\n")
-
-    return
-
 def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None):
     """
     This function is used to get, handle, and return new readings from the
