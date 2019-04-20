@@ -81,8 +81,6 @@ class ActuatorPosition(threading.Thread):
 
     def run(self):
         """This is the part of the code that runs in the thread"""
-        self.clutchEngage()                         # Enable the motor
-
         while not self._exit:
             self.actualposition = self.getPosition()
 
@@ -91,14 +89,20 @@ class ActuatorPosition(threading.Thread):
                 GPIO.output(forward, GPIO.LOW)              # Hold current position
                 GPIO.output(reverse, GPIO.LOW)
                 time.sleep(Pause)
-            if(self.actualposition < self.LL):
-                print("Open Valve a bit.")
-                GPIO.output(forward, GPIO.HIGH)             # Open the valve
-                GPIO.output(reverse, GPIO.LOW)
-            if(self.actualposition > self.HL):
-                print("Close Valve a bit.")
-                GPIO.output(forward, GPIO.LOW)              # Close the valve
-                GPIO.output(reverse, GPIO.HIGH)
+            elif(self.actualposition < self.LL):
+                self.clutchEngage()                         # Enable the motor
+                while(self.actualposition < self.LL):
+                    print("Open Valve a bit.")
+                    GPIO.output(forward, GPIO.HIGH)             # Open the valve
+                    GPIO.output(reverse, GPIO.LOW)
+                self.clutchDisengage()                      # Disable the motor
+            elif(self.actualposition > self.HL):
+                self.clutchEngage()                         # Enable the motor
+                while(self.actualposition > self.HL):
+                    print("Close Valve a bit.")
+                    GPIO.output(forward, GPIO.LOW)              # Close the valve
+                    GPIO.output(reverse, GPIO.HIGH)
+                self.clutchDisengage()                      # Disable the motor
 
     def clutchEngage(self):
         GPIO.output(clutch, GPIO.HIGH)
