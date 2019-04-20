@@ -27,14 +27,19 @@ It communicates with buttspi over the network to gather readings.
 .. note::
       This program currently has LIMITED FUNCTIONALITY.
       It is a pre-production version that is being used
-      to set up a test system that uses 2 RPis, one at
+      to set up a test system that uses 3 RPis, one at
       the sump, with a hall effect probe and 2 SSRs connected
-      and the other Pi is installed at the butts, and has
-      a float switch. The sump pi will be using this program.
+      and the other Pis are installed at the butts. One has
+      a float switch and a hall effect probe. The other is used
+      to control a gate valve for managing water flow coming
+      back from the water butts.
+
+      The sump pi will be using this program.
       Sump pi uses the first SSR to control the butts pump, and
       the second one is used to enable/disable the circulation
-      pump. It will communicate with the other pi over a socket,
-      and the other pi will be running universal_standalone_monitor.py.
+      pump. It will communicate with the other pis over sockets,
+      and the other pis will be running universal_standalone_monitor.py,
+      and gate_valve.py.
 
 .. module:: main.py
     :platform: Linux
@@ -44,19 +49,15 @@ It communicates with buttspi over the network to gather readings.
 
 """
 
+import sys
+import getopt
 import time
 import datetime
 import logging
 import traceback
 
-#Do required imports.
 import config
-
-from Tools import coretools as core_tools
-from Tools import sockettools as socket_tools
-
-from Tools.monitortools import SocketsMonitor
-from Tools.monitortools import Monitor
+from config import VERSION
 
 try:
     #Allow us to generate documentation on non-RPi systems.
@@ -65,9 +66,72 @@ try:
 except ImportError:
     pass
 
-#Define global variables.
-VERSION = "0.10.0"
-RELEASEDATE = "7/8/2018"
+def usage():
+    """
+    This function is used to output help information to the standard output
+    if the user passes invalid/incorrect commandline arguments.
+
+    Usage:
+
+    >>> usage()
+    """
+
+    print("\nUsage: main.py [OPTION]\n\n")
+    print("Options:\n")
+    print("       -h, --help:                   Show this help message")
+    print("       -d, --debug                   Enable debug mode")
+    print("       -q, --quiet                   Log only warnings, errors, and critical errors")
+    print("universal_standalone_monitor.py is released under the GNU GPL Version 3")
+    print("Copyright (C) Wimborne Model Town 2017-2019")
+
+def handle_cmdline_options():
+    """
+    This function is used to handle the commandline options passed
+    to main.py.
+
+    Valid commandline options to universal_standalone_monitor.py:
+        -h, --help                          Calls the usage() function to display help information
+                                            to the user.
+        -d, --debug                         Enable debug mode.
+        -q, --quiet                         Show only warnings, errors, and critical errors.
+
+    Returns:
+        None
+
+    Raises:
+        AssertionError, if there are unhandled options.
+
+    Usage:
+
+    >>> handle_cmdline_options()
+    """
+
+    #Check all cmdline options are valid.
+    try:
+        opts = getopt.getopt(sys.argv[1:], "hdq",
+                             ["help", "debug", "quiet"])[0]
+
+    except getopt.GetoptError as err:
+        #Invalid option. Show the help message and then exit.
+        #Show the error.
+        print(str(err))
+        usage()
+        sys.exit(2)
+
+    #Do setup. o=option, a=argument.
+    for opt, arg in opts:
+        if opt in ["-d", "--debug"]:
+            logger.setLevel(logging.DEBUG)
+
+        elif opt in ["-q", "--quiet"]:
+            logger.setLevel(logging.WARNING)
+
+        elif opt in ["-h", "--help"]:
+            usage()
+            sys.exit()
+
+        else:
+            assert False, "unhandled option"
 
 def run_standalone(): #TODO Refactor me into lots of smaller functions.
     """
@@ -98,6 +162,16 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         As above.
     """
 
+    #Handle cmdline options.
+    handle_cmdline_options()
+
+    #Do framework imports.
+    from Tools import coretools as core_tools
+    from Tools import sockettools as socket_tools
+
+    from Tools.monitortools import SocketsMonitor
+    from Tools.monitortools import Monitor
+
     #Get system ID from config.
     system_id = config.SITE_SETTINGS["SUMP"]["ID"]
 
@@ -115,8 +189,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     logger.debug("Done!")
 
-    #Greet user.
-    core_tools.greet_user("River System Control and Monitoring Software")
+    #Print system time.
+    print("System Time: ", str(datetime.datetime.now()))
 
     #Create the probe(s).
     probes = []
@@ -193,7 +267,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #And for our SUMP probe.
     for probe in probes:
         if probe.get_id() == "SUMP:M0":
-            monitors.append(Monitor(probe, 0, reading_interval, system_id))
+            monitors.append(Monitor(probe, reading_interval, system_id))
 
     #Wait until the first readings have come in so we are synchronised.
     #NB: Will now wait for client connection.
@@ -272,10 +346,11 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
 if __name__ == "__main__":
     logger = logging.getLogger('River System Control Software '+VERSION)
-    logging.basicConfig(filename='./logs//rivercontrolsystem.log',
+    logging.basicConfig(filename='./logs/rivercontrolsystem.log',
                         format='%(asctime)s - %(name)s - %(levelname)s: %(message)s',
                         datefmt='%d/%m/%Y %I:%M:%S %p')
 
+    #Default logging level of INFO.
     logger.setLevel(logging.INFO)
 
     #Catch any unexpected errors and log them so we know what happened.

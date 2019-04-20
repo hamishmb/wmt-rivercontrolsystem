@@ -31,11 +31,16 @@ a bit more of the complexity away.
 from collections import deque
 import time
 import datetime
+import sys
+import os
 import threading
 
 from . import coretools
 
-VERSION = "0.10.0"
+sys.path.insert(0, os.path.abspath('../'))
+
+import config
+from config import VERSION
 
 # ---------- BASE CLASS ----------
 class BaseMonitorClass(threading.Thread):
@@ -61,7 +66,7 @@ class BaseMonitorClass(threading.Thread):
         the subclass deriving from this as a thread.
 
     Usage:
-        >>> monitor = BaseMonitorClass(<aProbeObject>, <anInteger>, <aReadingInterval>, <anID>)
+        >>> monitor = BaseMonitorClass(<system_id>, <probe_id>)
 
         .. note::
                 This won't do anything helpful by itself;
@@ -248,12 +253,6 @@ class Monitor(BaseMonitorClass):
         probe (BaseDeviceClass):    A reference to a
                                     probe object.
 
-        num_readings (int):         The number of
-                                    readings to take.
-                                    If 0, take readings
-                                    until requested to
-                                    exit.
-
         reading_interval (int):     The initial reading
                                     interval for the
                                     monitor to use.
@@ -266,14 +265,13 @@ class Monitor(BaseMonitorClass):
         self.start() - starts the monitor thread.
 
     Usage:
-        >>> monitor = Monitor(<aProbeObject>, <anInteger>, <aReadingInterval>, <anID>)
+        >>> monitor = Monitor(<aProbeObject>, <aReadingInterval>, <anID>)
     """
 
-    def __init__(self, probe, num_readings, reading_interval, system_id):
+    def __init__(self, probe, reading_interval, system_id):
         BaseMonitorClass.__init__(self, system_id, probe.get_device_id())
 
         self.probe = probe
-        self.num_readings = num_readings
         self.reading_interval = reading_interval
         self.reading_func = probe.get_reading
 
@@ -304,7 +302,6 @@ class Monitor(BaseMonitorClass):
 
         """
 
-        num_readings_taken = 0
         previous_reading = None #NB: Just to use here, rather then self.prev_reading,
                                 #which is for external users.
         self.running = True
@@ -313,8 +310,7 @@ class Monitor(BaseMonitorClass):
         self.create_file_handle()
 
         try:
-            while ((not self.should_exit)
-                   and (self.num_readings == 0 or (num_readings_taken < self.num_readings))):
+            while not self.should_exit:
                 the_reading, status_text = self.reading_func()
 
                 #Construct a Reading object to hold this info.
@@ -338,9 +334,6 @@ class Monitor(BaseMonitorClass):
                     previous_reading = reading
 
                 self.file_handle.flush()
-
-                if self.num_readings != 0:
-                    num_readings_taken += 1
 
                 #Take readings every however often it is.
                 #I know we could use a long time.sleep(),

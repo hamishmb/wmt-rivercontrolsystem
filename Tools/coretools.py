@@ -34,8 +34,14 @@ functions in here to reduce code duplication.
 import datetime
 import time
 import sys
+import os
 import threading
 import logging
+
+sys.path.insert(0, os.path.abspath('../'))
+
+import config
+from config import VERSION
 
 try:
     #Allow us to generate documentation on non-RPi systems.
@@ -56,9 +62,16 @@ try:
     ads = ADS.ADS1115(i2c)
 
 except ImportError:
-    pass
+    #Occurs when generating documentation on a non-pi system with Sphinx.
+    print("CoreTools: ImportError: Are you generating documentation?")
 
 except NotImplementedError:
+    #Occurs when importing busio on Raspberry Pi 1 B+ for some reason.
+    print("CoreTools: NotImplementedError: Testing environment?")
+
+except ValueError:
+    #Occurs when no I2C device is present.
+    print("CoreTools: ValueError: No I2C device found! Testing environment?")
     pass
 
 VERSION = "0.10.0"
@@ -66,7 +79,7 @@ VERSION = "0.10.0"
 #Don't ask for a logger name, so this works with both main.py
 #and the universal monitor.
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.getLogger('River System Control Software '+VERSION).getEffectiveLevel())
 
 class Reading:
     """
@@ -358,18 +371,18 @@ class ActuatorPosition(threading.Thread):
             self.actual_position = self.get_position()
 
             if (self.actual_position <= self.high_limit and self.actual_position >= self.low_limit):
-                print("Hold at ", self.actual_position)
+                logger.debug("ActuatorPosition: Hold at "+str(self.actual_position))
                 GPIO.output(self.forward_pin, GPIO.LOW)              # Hold current position
                 GPIO.output(self.reverse_pin, GPIO.LOW)
                 time.sleep(1)
 
             elif (self.actual_position < self.low_limit):
-                print("Open Valve a bit.")
+                logger.debug("ActuatorPosition: Open valve a bit.")
                 GPIO.output(self.forward_pin, GPIO.HIGH)             # Open the valve
                 GPIO.output(self.reverse_pin, GPIO.LOW)
 
             elif (self.actual_position > self.high_limit):
-                print("Close Valve a bit.")
+                logger.debug("ActuatorPosition: Close valve a bit.")
                 GPIO.output(self.forward_pin, GPIO.LOW)              # Close the valve
                 GPIO.output(self.reverse_pin, GPIO.HIGH)
 
@@ -409,31 +422,6 @@ class ActuatorPosition(threading.Thread):
         """Stops the thread."""
         self._exit = True
         self.clutch_disengage()
-
-def greet_user(module_name): #TODO do we need this.
-    """
-    This function greets the user.
-
-    Args:
-        module_name (str):  The program that has been started. Either
-                            the main software or the universal monitor.
-
-    Raises:
-        None, but will exit the program if a critical error is
-        encountered with sys.exit().
-
-    Usage:
-
-        >>> greet_user("AProgramName")
-
-    """
-
-    print("System Time: ", str(datetime.datetime.now()))
-    print(module_name+" is running standalone.")
-    print("Welcome. This program will quit automatically if you specified a number of readings.")
-    print("otherwise quit by pressing CTRL-C when you wish.\n")
-
-    return
 
 def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None):
     """
@@ -487,7 +475,6 @@ def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None)
             logger.info(str(reading))
 
             print(reading)
-
 
         #Flush buffers.
         sys.stdout.flush()

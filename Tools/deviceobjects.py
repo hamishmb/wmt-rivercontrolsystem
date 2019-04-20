@@ -38,10 +38,17 @@ from the rest of the program.
 #Standard Imports.
 import threading
 import time
+import sys
+import os
 import logging
 
 #Import modules.
 from . import coretools as core_tools
+
+sys.path.insert(0, os.path.abspath('../'))
+
+import config
+from config import VERSION
 
 try:
     #Allow us to generate documentation on non-RPi systems.
@@ -63,11 +70,9 @@ except ImportError:
 except NotImplementedError:
     pass
 
-VERSION = "0.10.0"
-
 #Use logger here too.
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.getLogger('River System Control Software '+VERSION).getEffectiveLevel())
 
 class BaseDeviceClass:
     """

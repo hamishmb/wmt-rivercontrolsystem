@@ -133,6 +133,10 @@ There are no classes or functions defined in this file.
 
 """
 
+#Define global variables.
+VERSION = "0.10.0"
+RELEASEDATE = "16/4/2018"
+
 import Tools
 
 SITE_SETTINGS = {
