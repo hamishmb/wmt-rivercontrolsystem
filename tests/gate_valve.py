@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# gate_valve.py - V03: 
+# gate_valve.py - V04: 
 #                Wimborne Model Town
 #      River System Gate Valve Motor Functions
 #
