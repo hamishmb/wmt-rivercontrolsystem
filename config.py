@@ -256,7 +256,7 @@ SITE_SETTINGS = {
 
             "Pins":  (17, 27, 19),
             "posTolerance": 1,
-            "maxOpen": 99,
+            "maxOpen": 90,
             "minOpen": 1,
             "refVoltage": 3.3,
             "Default Interval": 10,

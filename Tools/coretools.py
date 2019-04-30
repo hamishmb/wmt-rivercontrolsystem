@@ -354,7 +354,7 @@ class ActuatorPosition(threading.Thread):
 
         self.percentage = 0                                 # Set the valve closed initially.
         self.actual_position = 0                             # Used to store the measured position of the valve.
-        self.high_limit = 5                                         # Initial value. Calculated from the percetage requested.
+        self.high_limit = 2                                         # Initial value. Calculated from the percetage requested.
         self.low_limit = 1                                         # Initial value. Calculated from the percetage requested.
 
         self.calculate_limits()
@@ -365,26 +365,26 @@ class ActuatorPosition(threading.Thread):
 
     def run(self):
         """This is the part of the code that runs in the thread"""
-        self.clutch_engage()                         # Enable the motor
-
         while not self._exit:
             self.actual_position = self.get_position()
 
             if (self.actual_position <= self.high_limit and self.actual_position >= self.low_limit):
                 logger.debug("ActuatorPosition: Hold at "+str(self.actual_position))
-                GPIO.output(self.forward_pin, GPIO.LOW)              # Hold current position
-                GPIO.output(self.reverse_pin, GPIO.LOW)
+                GPIO.output(self.forward, GPIO.LOW)         # Hold current position
+                GPIO.output(self.reverse, GPIO.LOW)
                 time.sleep(1)
 
             elif (self.actual_position < self.low_limit):
                 logger.debug("ActuatorPosition: Open valve a bit.")
-                GPIO.output(self.forward_pin, GPIO.HIGH)             # Open the valve
-                GPIO.output(self.reverse_pin, GPIO.LOW)
+                self.clutch_engage()                         # Enable the motor
+                GPIO.output(self.forward, GPIO.HIGH)        # Open the valve
+                GPIO.output(self.reverse, GPIO.LOW)
 
             elif (self.actual_position > self.high_limit):
                 logger.debug("ActuatorPosition: Close valve a bit.")
-                GPIO.output(self.forward_pin, GPIO.LOW)              # Close the valve
-                GPIO.output(self.reverse_pin, GPIO.HIGH)
+                self.clutch_engage()                         # Enable the motor
+                GPIO.output(self.forward, GPIO.LOW)         # Close the valve
+                GPIO.output(self.reverse, GPIO.HIGH)
 
     def clutch_engage(self):
         GPIO.output(self.clutch_pin, GPIO.HIGH)
@@ -394,7 +394,17 @@ class ActuatorPosition(threading.Thread):
 
     def get_position(self):
         chan = AnalogIn(ads, ADS.P0)                                # Create the Analog reading object to read Ch 0 of the A/D
-        v0 = chan.voltage                                           # Get voltage reading for channel 0 (the position pot slider)
+
+        try:
+            v0 = chan.voltage                                       # Get voltage reading for channel 0 (the position pot slider)
+        except OSError:
+            logger.error("OSError \n\n"+str(traceback.format_exc())
+                                +"\n\nwhile running. Continuing...")
+
+            print(" OSError \n\n"+str(traceback.format_exc())+"\n\nwhile running. Continuing...")
+
+            return(-1)
+
         self.actual_position = int((v0/self.ref_voltage*100))       # Actual position as a percentage at the time of reading
         return self.actual_position
 
@@ -404,16 +414,14 @@ class ActuatorPosition(threading.Thread):
         self.calculate_limits()
 
     def calculate_limits(self):
-        self.actual_position = self.get_position()
-        if (self.actual_position) != self.percentage:
-            if (self.percentage + self.pos_tolerance > self.max_open):
+        self.actualposition = self.get_position()
+        if (self.actualposition) != self.percentage:
+            if ((self.percentage + self.pos_tolerance) > (self.max_open - self.pos_tolerance)):
                 self.high_limit = self.max_open
-                self.low_limit = self.max_open - (2 * self.pos_tolerance)
-
+                self.low_limit = self.max_open - 6
             elif (self.percentage - self.pos_tolerance < self.min_open):
                 self.low_limit = self.min_open
-                self.high_limit = self.min_open + (2 * self.pos_tolerance)
-
+                self.high_limit = self.min_open + 1
             else:
                 self.high_limit = self.percentage + self.pos_tolerance        # Set the High Limit to the required percentage
                 self.low_limit = self.percentage - self.pos_tolerance        # Set the Low Limit to the required percentage

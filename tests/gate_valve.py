@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# gate_valve.py - V04: 
+# gate_valve.py - V05:
 #                Wimborne Model Town
 #      River System Gate Valve Motor Functions
 #
@@ -48,7 +48,7 @@ ads = ADS.ADS1115(i2c)
 forward   = 17                          # Motor Board Pin IN1 Pi Board Pin 11
 reverse   = 27                          # Motor Board Pin IN2 Pi Board Pin 13
 clutch = 19                             # Motor Board Pin IN3 Pi Board Pin 35
-Pause = 10                              # Define wait time in seconds 
+Pause = 1                              # Define wait time in seconds
 
 # Initialise and setup starting conditions
 GPIO.setmode(GPIO.BCM)                  # Numbers GPIOs by Broadcom Pin Numbers
@@ -60,18 +60,18 @@ GPIO.setup(clutch, GPIO.OUT)            # Control pin for Motor Drive Board
 GPIO.output(clutch, GPIO.LOW)           # Motor Clutch disengagedimport time
 
 class ActuatorPosition(threading.Thread):
-    def __init__(self, posTolerance, maxOpen, minOpen, refVoltage):
+    def __init__(self, pos_tolerance, max_open, min_open, ref_voltage):
         """The constructor, set up some basic threading stuff."""
-        self.posTolerance = posTolerance                    # Positional Tolerance in percent
-        self.maxOpen = maxOpen                              # Upper limmit of valve position in percent
-        self.minOpen = minOpen                              # Lower limmit of valve position in percent
-        self.refVoltage = refVoltage                        # Voltage at the top of the position pot
+        self.pos_tolerance = pos_tolerance                    # Positional Tolerance in percent
+        self.max_open = max_open                              # Upper limmit of valve position in percent
+        self.min_open = min_open                              # Lower limmit of valve position in percent
+        self.ref_voltage = ref_voltage                        # Voltage at the top of the position pot
         self._exit = False
 
         self.percentage = 0                                 # Set the valve closed initially.
         self.actualposition = 0                             # Used to store the measured position of the valve.
-        self.HL = 5                                         # Initial value. Calculated from the percetage requested.
-        self.LL = 1                                         # Initial value. Calculated from the percetage requested.
+        self.high_limit = 1                                         # Initial value. Calculated from the percetage requested.
+        self.low_limit = 1                                         # Initial value. Calculated from the percetage requested.
                 
         self.calculate_limits()
         
@@ -82,53 +82,53 @@ class ActuatorPosition(threading.Thread):
     def run(self):
         """This is the part of the code that runs in the thread"""
         while not self._exit:
-            self.actualposition = self.getPosition()
+            self.actualposition = self.get_position()
 
-            if(self.actualposition <= self.HL and self.actualposition >= self.LL):
-                print("Hold at ", self.actualposition)
+            if(self.actualposition <= self.high_limit and self.actualposition >= self.low_limit):
                 GPIO.output(forward, GPIO.LOW)              # Hold current position
                 GPIO.output(reverse, GPIO.LOW)
                 time.sleep(Pause)
-            elif(self.actualposition < self.LL):
-                self.clutchEngage()                         # Enable the motor
-                while(self.actualposition < self.LL):
-                    print("Open Valve a bit.")
-                    GPIO.output(forward, GPIO.HIGH)             # Open the valve
-                    GPIO.output(reverse, GPIO.LOW)
-                self.clutchDisengage()                      # Disable the motor
-            elif(self.actualposition > self.HL):
-                self.clutchEngage()                         # Enable the motor
-                while(self.actualposition > self.HL):
-                    print("Close Valve a bit.")
-                    GPIO.output(forward, GPIO.LOW)              # Close the valve
-                    GPIO.output(reverse, GPIO.HIGH)
-                self.clutchDisengage()                      # Disable the motor
 
-    def clutchEngage(self):
+            elif(self.actualposition < self.low_limit):
+                self.clutch_engage()                         # Enable the motor
+                GPIO.output(forward, GPIO.HIGH)             # Open the valve
+                GPIO.output(reverse, GPIO.LOW)
+
+            elif(self.actualposition > self.high_limit):
+                self.clutch_engage()                         # Enable the motor
+                GPIO.output(forward, GPIO.LOW)              # Close the valve
+                GPIO.output(reverse, GPIO.HIGH)
+
+    def clutch_engage(self):
         GPIO.output(clutch, GPIO.HIGH)
 
-    def clutchDisengage(self):
+    def clutch_disengage(self):
         GPIO.output(clutch, GPIO.LOW)
 
-    def getPosition(self):
+    def get_position(self):
         chan = AnalogIn(ads, ADS.P0)                                # Create the Analog reading object to read Ch 0 of the A/D
-        v0 = chan.voltage                                           # Get voltage reading for channel 0 (the position pot slider)
-        print (v0)
-        self.actualposition = int((v0/self.refVoltage*100))         # Actual position as a percentage at the time of reading
+        
+        try:
+            v0 = chan.voltage                                       # Get voltage reading for channel 0 (the position pot slider)
+        except OSError:
+            print(" OSError. Continuing...")
+            return(-1)
+        #print (v0)
+        self.actualposition = int((v0/self.ref_voltage)*100)         # Actual position as a percentage at the time of reading
         return self.actualposition
 
     def calculate_limits(self):
-        self.actualposition = self.getPosition()        
+        self.actualposition = self.get_position()
         if (self.actualposition) != self.percentage:
-            if (self.percentage + self.posTolerance > self.maxOpen):
-                self.HL = self.maxOpen
-                self.LL = self.maxOpen - (2 * self.posTolerance)
-            elif (self.percentage - self.posTolerance < self.minOpen):
-                self.LL = self.minOpen
-                self.HL = self.minOpen + (2 * self.posTolerance)
+            if ((self.percentage + self.pos_tolerance) > (self.max_open - self.pos_tolerance)):
+                self.high_limit = self.max_open
+                self.low_limit = self.max_open - 6
+            elif ((self.percentage - self.pos_tolerance) < self.min_open):
+                self.low_limit = self.min_open
+                self.high_limit = self.min_open + 1
             else:
-                self.HL = self.percentage + self.posTolerance        # Set the High Limit to the required percentage
-                self.LL = self.percentage - self.posTolerance        # Set the Low Limit to the required percentage
+                self.high_limit = self.percentage + self.pos_tolerance        # Set the High Limit to the required percentage
+                self.low_limit = self.percentage - self.pos_tolerance        # Set the Low Limit to the required percentage
 
     def set_percentage(self, new_percentage):
         """Sets self.percentage to new_percentage."""
@@ -138,16 +138,24 @@ class ActuatorPosition(threading.Thread):
     def stop(self):
         """Stops the thread."""
         self._exit = True
-        self.clutchDisengage()
+        self.clutch_disengage()
+
+def cycle():
+    while True:
+        gate.set_percentage(0)
+        time.sleep(15)
+        gate.set_percentage(100)
+        time.sleep(15)
 
 
 #############################################   Main Program   ##################################################
 
-gate = ActuatorPosition(1, 99, 1, 3.3)
+gate = ActuatorPosition(1, 90, 1, 3.3)
 
 def menu():
     print ("Select from the following Menu")
     print ("    Press 'm' to set the valve to a position in percent and hold it there")
+    print ("    Press 'c' to cycle the valve between 0% and 100%")
     print ("    Press 'e' to exit this menu or Ctrl-C to exit the program at any time")
 
     while True:
@@ -158,9 +166,15 @@ def menu():
             gate.stop()
             exit(0)
 
+        elif (char == "c"):
+            cycle()
+
         elif (char == "m"):
             percent = int(input("Enter required position in % "))
             print ("Holding Valve Position at",percent,"%")
             gate.set_percentage(percent)
 
-menu()
+try:
+    menu()
+except:
+    print("Exiting...")
