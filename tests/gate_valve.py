@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# gate_valve.py - V05:
+# gate_valve.py - V06:
 #                Wimborne Model Town
 #      River System Gate Valve Motor Functions
 #
@@ -110,10 +110,10 @@ class ActuatorPosition(threading.Thread):
         
         try:
             v0 = chan.voltage                                       # Get voltage reading for channel 0 (the position pot slider)
-        except OSError:
+        except OSError:                                             # An I/O error occured when trying to read from the A/D.
             print(" OSError. Continuing...")
-            return(-1)
-        #print (v0)
+            return self.actual_position                             # The current reading is invalid so return the last one.
+
         self.actualposition = int((v0/self.ref_voltage)*100)         # Actual position as a percentage at the time of reading
         return self.actualposition
 
