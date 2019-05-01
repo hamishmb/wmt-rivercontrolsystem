@@ -37,6 +37,7 @@ import sys
 import os
 import threading
 import logging
+import traceback
 
 sys.path.insert(0, os.path.abspath('../'))
 
