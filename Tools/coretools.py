@@ -371,21 +371,21 @@ class ActuatorPosition(threading.Thread):
 
             if (self.actual_position <= self.high_limit and self.actual_position >= self.low_limit):
                 logger.debug("ActuatorPosition: Hold at "+str(self.actual_position))
-                GPIO.output(self.forward, GPIO.LOW)         # Hold current position
-                GPIO.output(self.reverse, GPIO.LOW)
+                GPIO.output(self.forward_pin, GPIO.LOW)         # Hold current position
+                GPIO.output(self.reverse_pin, GPIO.LOW)
                 time.sleep(1)
 
             elif (self.actual_position < self.low_limit):
                 logger.debug("ActuatorPosition: Open valve a bit.")
                 self.clutch_engage()                         # Enable the motor
-                GPIO.output(self.forward, GPIO.HIGH)        # Open the valve
-                GPIO.output(self.reverse, GPIO.LOW)
+                GPIO.output(self.forward_pin, GPIO.HIGH)        # Open the valve
+                GPIO.output(self.reverse_pin, GPIO.LOW)
 
             elif (self.actual_position > self.high_limit):
                 logger.debug("ActuatorPosition: Close valve a bit.")
                 self.clutch_engage()                         # Enable the motor
-                GPIO.output(self.forward, GPIO.LOW)         # Close the valve
-                GPIO.output(self.reverse, GPIO.HIGH)
+                GPIO.output(self.forward_pin, GPIO.LOW)         # Close the valve
+                GPIO.output(self.reverse_pin, GPIO.HIGH)
 
     def clutch_engage(self):
         GPIO.output(self.clutch_pin, GPIO.HIGH)

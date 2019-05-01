@@ -45,19 +45,19 @@ i2c = busio.I2C(board.SCL, board.SDA)
 ads = ADS.ADS1115(i2c)
 
 # Define Valve Control Pins
-forward   = 17                          # Motor Board Pin IN1 Pi Board Pin 11
-reverse   = 27                          # Motor Board Pin IN2 Pi Board Pin 13
-clutch = 19                             # Motor Board Pin IN3 Pi Board Pin 35
-Pause = 1                              # Define wait time in seconds
+forward_pin   = 17                      # Motor Board Pin IN1 Pi Board Pin 11
+reverse_pin_pin   = 27                      # Motor Board Pin IN2 Pi Board Pin 13
+clutch_pin_pin = 19                         # Motor Board Pin IN3 Pi Board Pin 35
+Pause = 1                               # Define wait time in seconds
 
 # Initialise and setup starting conditions
 GPIO.setmode(GPIO.BCM)                  # Numbers GPIOs by Broadcom Pin Numbers
-GPIO.setup(forward, GPIO.OUT)           # Control pins for Motor Drive Board
-GPIO.setup(reverse, GPIO.OUT)           # ditto
-GPIO.output(forward, GPIO.LOW)          # Reset both pins
-GPIO.output(reverse, GPIO.LOW)
-GPIO.setup(clutch, GPIO.OUT)            # Control pin for Motor Drive Board
-GPIO.output(clutch, GPIO.LOW)           # Motor Clutch disengagedimport time
+GPIO.setup(forward_pin, GPIO.OUT)           # Control pins for Motor Drive Board
+GPIO.setup(reverse_pin, GPIO.OUT)           # ditto
+GPIO.output(forward_pin, GPIO.LOW)          # Reset both pins
+GPIO.output(reverse_pin, GPIO.LOW)
+GPIO.setup(clutch_pin, GPIO.OUT)            # Control pin for Motor Drive Board
+GPIO.output(clutch_pin, GPIO.LOW)           # Motor Clutch disengaged
 
 class ActuatorPosition(threading.Thread):
     def __init__(self, pos_tolerance, max_open, min_open, ref_voltage):
@@ -69,7 +69,7 @@ class ActuatorPosition(threading.Thread):
         self._exit = False
 
         self.percentage = 0                                 # Set the valve closed initially.
-        self.actualposition = 0                             # Used to store the measured position of the valve.
+        self.actual_position = 0                             # Used to store the measured position of the valve.
         self.high_limit = 1                                         # Initial value. Calculated from the percetage requested.
         self.low_limit = 1                                         # Initial value. Calculated from the percetage requested.
                 
@@ -82,28 +82,28 @@ class ActuatorPosition(threading.Thread):
     def run(self):
         """This is the part of the code that runs in the thread"""
         while not self._exit:
-            self.actualposition = self.get_position()
+            self.actual_position = self.get_position()
 
-            if(self.actualposition <= self.high_limit and self.actualposition >= self.low_limit):
-                GPIO.output(forward, GPIO.LOW)              # Hold current position
-                GPIO.output(reverse, GPIO.LOW)
+            if(self.actual_position <= self.high_limit and self.actual_position >= self.low_limit):
+                GPIO.output(forward_pin, GPIO.LOW)              # Hold current position
+                GPIO.output(reverse_pin, GPIO.LOW)
                 time.sleep(Pause)
 
-            elif(self.actualposition < self.low_limit):
+            elif(self.actual_position < self.low_limit):
                 self.clutch_engage()                         # Enable the motor
-                GPIO.output(forward, GPIO.HIGH)             # Open the valve
-                GPIO.output(reverse, GPIO.LOW)
+                GPIO.output(forward_pin, GPIO.HIGH)             # Open the valve
+                GPIO.output(reverse_pin, GPIO.LOW)
 
-            elif(self.actualposition > self.high_limit):
+            elif(self.actual_position > self.high_limit):
                 self.clutch_engage()                         # Enable the motor
-                GPIO.output(forward, GPIO.LOW)              # Close the valve
-                GPIO.output(reverse, GPIO.HIGH)
+                GPIO.output(forward_pin, GPIO.LOW)              # Close the valve
+                GPIO.output(reverse_pin, GPIO.HIGH)
 
     def clutch_engage(self):
-        GPIO.output(clutch, GPIO.HIGH)
+        GPIO.output(clutch_pin, GPIO.HIGH)
 
     def clutch_disengage(self):
-        GPIO.output(clutch, GPIO.LOW)
+        GPIO.output(clutch_pin, GPIO.LOW)
 
     def get_position(self):
         chan = AnalogIn(ads, ADS.P0)                                # Create the Analog reading object to read Ch 0 of the A/D
@@ -114,12 +114,12 @@ class ActuatorPosition(threading.Thread):
             print(" OSError. Continuing...")
             return self.actual_position                             # The current reading is invalid so return the last one.
 
-        self.actualposition = int((v0/self.ref_voltage)*100)         # Actual position as a percentage at the time of reading
-        return self.actualposition
+        self.actual_position = int((v0/self.ref_voltage)*100)         # Actual position as a percentage at the time of reading
+        return self.actual_position
 
     def calculate_limits(self):
-        self.actualposition = self.get_position()
-        if (self.actualposition) != self.percentage:
+        self.actual_position = self.get_position()
+        if (self.actual_position) != self.percentage:
             if ((self.percentage + self.pos_tolerance) > (self.max_open - self.pos_tolerance)):
                 self.high_limit = self.max_open
                 self.low_limit = self.max_open - 6
