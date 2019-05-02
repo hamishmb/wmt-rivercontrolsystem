@@ -369,7 +369,7 @@ class ActuatorPosition(threading.Thread):
         while not self._exit:
             self.actual_position = self.get_position()
 
-            if (self.actual_position <= self.high_limit and self.actual_position >= self.low_limit):
+            if ((self.actual_position <= self.high_limit and self.actual_position >= self.low_limit) or (self.actual_position == -1)):
                 logger.debug("ActuatorPosition: Hold at "+str(self.actual_position))
                 GPIO.output(self.forward_pin, GPIO.LOW)         # Hold current position
                 GPIO.output(self.reverse_pin, GPIO.LOW)
@@ -404,7 +404,7 @@ class ActuatorPosition(threading.Thread):
 
             print(" OSError \n\n"+str(traceback.format_exc())+"\n\nwhile running. Continuing...")
 
-            return self.actual_position                             # The current reading is invalid so return the last one.
+            return -1                                               # The current reading is invalid so flag an error.
 
         self.actual_position = int((v0/self.ref_voltage*100))       # Actual position as a percentage at the time of reading
         return self.actual_position
