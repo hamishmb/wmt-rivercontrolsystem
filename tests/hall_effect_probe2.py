@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# hall_effect_probe2.py - V03: 
+# hall_effect_probe2.py - V04: 
 #                Wimborne Model Town
 #      River System New Type Magnetic Probe Test Functions
 #
@@ -38,13 +38,22 @@ from adafruit_ads1x15.analog_in import AnalogIn
 i2c = busio.I2C(board.SCL, board.SDA)
 
 # Create the ADC object using the I2C bus
-ads = ADS.ADS1115(i2c)
+try:
+    ads = ADS.ADS1115(i2c)
+except OSError:
+    print(" OSError. No ADS Device.")
+except ValueError:
+    print(" ValueError. No I2C Device.  Exiting...")
+    exit(0)
 
 # Create four single-ended inputs on channels 0 to 3
-chan0 = AnalogIn(ads, ADS.P0)
-chan1 = AnalogIn(ads, ADS.P1)
-chan2 = AnalogIn(ads, ADS.P2)
-chan3 = AnalogIn(ads, ADS.P3)
+try:
+    chan0 = AnalogIn(ads, ADS.P0)
+    chan1 = AnalogIn(ads, ADS.P1)
+    chan2 = AnalogIn(ads, ADS.P2)
+    chan3 = AnalogIn(ads, ADS.P3)
+except OSError:
+    print(" OSError. A/D Channel(s) missing.")
 
 high_limit = [0.07,0.17,0.35,0.56,0.73,0.92,1.22,1.54,2.1,2.45]
 low_limit = [0.05,0.15,0.33,0.53,0.7,0.88,1.18,1.5,2,2.4]
@@ -64,15 +73,14 @@ def measure_probe_voltages():
     Vcomp = [0.0,0.0,0.0,0.0]                                      # Compensated values
     result =[0.0,0]                                                # Measured value and column
 
-    # Measure the voltage in each chain 
-    Vmeas[0] = chan0.voltage
-#    Vmeas[0] = 3.215
-    Vmeas[1] = chan1.voltage
-#    Vmeas[1] = 3.055
-    Vmeas[2] = chan2.voltage
-#    Vmeas[2] = 3.224
-    Vmeas[3] = chan3.voltage
-#   Vmeas[3] = 3.227
+    # Measure the voltage in each chain
+    try:
+        Vmeas[0] = chan0.voltage
+        Vmeas[1] = chan1.voltage
+        Vmeas[2] = chan2.voltage
+        Vmeas[3] = chan3.voltage
+    except OSError:
+        print(" OSError. ADS Channel(s) not responding.")
 
     # Find the minimum value
     Vmin = min(Vmeas)
@@ -99,7 +107,7 @@ def measure_probe_voltages():
             Vcomp[min_column] = Vav - Vmin
         else:
             Vcomp[min_column] = Vav
-            
+
     print("Dip Value = " + str(Vcomp[min_column]))
 
     result = Vcomp,min_column

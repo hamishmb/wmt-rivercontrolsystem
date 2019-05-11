@@ -42,8 +42,14 @@ from adafruit_ads1x15.analog_in import AnalogIn
 i2c = busio.I2C(board.SCL, board.SDA)
 
 # Create the ADC object using the I2C bus
-ads = ADS.ADS1115(i2c)
-
+try:
+    ads = ADS.ADS1115(i2c)
+except OSError:
+    print(" OSError. No ADS Device.")
+except ValueError:
+    print(" ValueError. No I2C Device.  Exiting...")
+    exit(0)
+    
 # Define Valve Control Pins
 forward_pin   = 17                      # Motor Board Pin IN1 Pi Board Pin 11
 reverse_pin_pin   = 27                      # Motor Board Pin IN2 Pi Board Pin 13
