@@ -59,7 +59,7 @@ import config
 from config import VERSION
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.getLogger('River System Control Software '+VERSION).getEffectiveLevel())
+logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
 
 # ---------- Sockets Class ----------
 class Sockets:
