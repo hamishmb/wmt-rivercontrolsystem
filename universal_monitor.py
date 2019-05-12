@@ -298,7 +298,7 @@ def run_standalone():
     GPIO.cleanup()
 
 if __name__ == "__main__":
-    logger = logging.getLogger('Universal Standalone Monitor '+VERSION)
+    logger = logging.getLogger('River System Control Software '+VERSION)
     logging.basicConfig(filename='./logs/universalmonitor.log',
                         format='%(asctime)s - %(name)s - %(levelname)s: %(message)s',
                         datefmt='%d/%m/%Y %I:%M:%S %p')
