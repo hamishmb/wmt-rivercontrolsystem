@@ -197,16 +197,34 @@ def run_standalone():
     #Get settings for each type of monitor from the config file.
     logger.info("Setting up the probes...")
 
+    # Create the multdimensional list for the Depth values
+    depths = list()
+
     for probe_id in config.SITE_SETTINGS[system_id]["Probes"]:
         probe_settings = config.SITE_SETTINGS[system_id]["Probes"][probe_id]
 
         _type = probe_settings["Type"]
         probe = probe_settings["Class"]
-        pins = probe_settings["Pins"]
         reading_interval = probe_settings["Default Interval"]
-
         probe = probe(probe_id)
-        probe.set_pins(pins)
+
+        if _type == "Hall Effect Probe2":
+            high_limits = probe_settings["HighLimits"]
+            low_limits = probe_settings["LowLimits"]
+
+            depths.append(probe_settings["Depths100s"])
+            depths.append(probe_settings["Depths25s"])
+            depths.append(probe_settings["Depths50s"])
+            depths.append(probe_settings["Depths75s"])
+
+            probe.set_limits(high_limits, low_limits)
+            probe.set_depths(depths)
+            probe.start_thread()
+
+        else:
+            pins = probe_settings["Pins"]
+            probe.set_pins(pins)
+
         probes.append(probe)
 
         #Start the monitor threads.
