@@ -80,7 +80,7 @@ VERSION = "0.10.0"
 #Don't ask for a logger name, so this works with both main.py
 #and the universal monitor.
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.getLogger('River System Control Software '+VERSION).getEffectiveLevel())
+logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
 
 class Reading:
     """

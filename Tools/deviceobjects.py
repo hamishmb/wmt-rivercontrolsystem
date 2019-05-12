@@ -72,7 +72,7 @@ except NotImplementedError:
 
 #Use logger here too.
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.getLogger('River System Control Software '+VERSION).getEffectiveLevel())
+logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
 
 class BaseDeviceClass:
     """

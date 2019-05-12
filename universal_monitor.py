@@ -39,9 +39,6 @@ import getopt
 import sys
 import traceback
 
-import config
-from config import VERSION
-
 try:
     #Allow us to generate documentation on non-RPi systems.
     import RPi.GPIO as GPIO
@@ -170,6 +167,9 @@ def run_standalone():
     system_id = handle_cmdline_options()
 
     #Do framework imports.
+    import config
+    from config import VERSION
+
     from Tools import coretools as core_tools
     from Tools import sockettools as socket_tools
     from Tools.monitortools import Monitor
@@ -298,7 +298,7 @@ def run_standalone():
     GPIO.cleanup()
 
 if __name__ == "__main__":
-    logger = logging.getLogger('River System Control Software '+VERSION)
+    logger = logging.getLogger('River System Control Software')
     logging.basicConfig(filename='./logs/universalmonitor.log',
                         format='%(asctime)s - %(name)s - %(levelname)s: %(message)s',
                         datefmt='%d/%m/%Y %I:%M:%S %p')
