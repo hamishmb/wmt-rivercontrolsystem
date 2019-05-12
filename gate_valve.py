@@ -129,8 +129,8 @@ def handle_cmdline_options():
     #Check system ID was specified.
     assert system_id is not None, "You must specify the system ID"
 
-    #Check system ID is valid.
-    assert system_id in config.SITE_SETTINGS, "Invalid system ID"
+    #Check system ID is valid. FIXME
+    #assert system_id in config.SITE_SETTINGS, "Invalid system ID"
 
     return system_id
 
