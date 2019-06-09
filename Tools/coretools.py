@@ -432,6 +432,63 @@ class ActuatorPosition(threading.Thread):
         self._exit = True
         self.clutch_disengage()
 
+# -------------------- MISCELLANEOUS FUNCTIONS --------------------
+def setup_devices(system_id, dictionary="Probes"):
+    """
+    This function is used to set up the device objects for each site.
+
+    Args:
+        system_id (str):              The system (pi) that we're setting up for.
+
+    KWargs:
+        dictionary (str):             The dictionary in config.py to set up for.
+                                      If not specified, default is "Probes".
+
+    Returns:
+        A list of the device objects that were set up.
+
+    Usage:
+        >>> setup_devices("G4")
+
+    """
+    devices = []
+
+    for device_id in config.SITE_SETTINGS[system_id][dictionary]:
+        device_settings = config.SITE_SETTINGS[system_id][dictionary][device_id]
+
+        device_name = device_settings["Name"]
+        _type = device_settings["Type"]
+        device = device_settings["Class"]
+        device = device(device_id, device_name)
+
+        if _type == "Hall Effect Probe2":
+            high_limits = device_settings["HighLimits"]
+            low_limits = device_settings["LowLimits"]
+
+            #Create the multdimensional list for the Depth values
+            depths = []
+            depths.append(device_settings["Depths100s"])
+            depths.append(device_settings["Depths25s"])
+            depths.append(device_settings["Depths50s"])
+            depths.append(device_settings["Depths75s"])
+
+            device.set_limits(high_limits, low_limits)
+            device.set_depths(depths)
+            device.start_thread()
+
+        elif _type == "Motor":
+            #The pins are outputs for these.
+            pins = device_settings["Pins"]
+            device.set_pins(pins, _input=False)
+            
+        else:
+            pins = device_settings["Pins"]
+            device.set_pins(pins)
+
+        devices.append(device)
+
+    return devices
+
 def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None):
     """
     This function is used to get, handle, and return new readings from the

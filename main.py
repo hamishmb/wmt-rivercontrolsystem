@@ -179,7 +179,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     logger.info("Creating sockets...")
     sockets = {}
 
-    #FIXME: See what happens at WMT, works at some.
     for each_socket in config.SITE_SETTINGS["SUMP"]["Sockets"].values():
         socket = socket_tools.Sockets("Socket", each_socket["Name"])
         socket.set_portnumber(each_socket["PortNumber"])
@@ -193,57 +192,10 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     print("System Time: ", str(datetime.datetime.now()))
 
     #Create the probe(s).
-    probes = []
-
-    # Create the multdimensional list for the Depth values
-    depths = list()
-
-    for probe_id in config.SITE_SETTINGS["SUMP"]["Probes"]:
-        probe_settings = config.SITE_SETTINGS["SUMP"]["Probes"][probe_id]
-
-        probe_name = probe_settings["Name"]
-        _type = probe_settings["Type"]
-        probe = probe_settings["Class"]
-        reading_interval = probe_settings["Default Interval"]
-        probe = probe(probe_id, probe_name)
-
-        if _type == "Hall Effect Probe2":
-            high_limits = probe_settings["HighLimits"]
-            low_limits = probe_settings["LowLimits"]
-
-            depths.append(probe_settings["Depths100s"])
-            depths.append(probe_settings["Depths25s"])
-            depths.append(probe_settings["Depths50s"])
-            depths.append(probe_settings["Depths75s"])
-
-            probe.set_limits(high_limits, low_limits)
-            probe.set_depths(depths)
-            probe.start_thread()
-
-        else:
-            pins = probe_settings["Pins"]
-            probe.set_pins(pins)
-
-        probes.append(probe)
+    probes = core_tools.setup_devices(system_id)
 
     #Create the device(s).
-    devices = []
-
-    for device_id in config.SITE_SETTINGS["SUMP"]["Devices"]:
-        device_settings = config.SITE_SETTINGS["SUMP"]["Devices"][device_id]
-
-        device_name = device_settings["Name"]
-        _type = device_settings["Type"]
-        device = device_settings["Class"]
-        pins = device_settings["Pins"]
-
-        device = device(device_id, device_name)
-
-        #These are all pumps. FIXME make tidy later.
-        #NB: PWM is implicitely disabled by default.
-        device.set_pins(pins, _input=False)
-
-        devices.append(device)
+    devices = core_tools.setup_devices(system_id, dictionary="Devices")
 
     #Reading interval.
     reading_interval = 15
