@@ -338,7 +338,7 @@ class Motor(BaseDeviceClass):
         GPIO.output(self._pin, False)
 
         #Log it.
-        logger.info("Motor "+self._id+": Enabled.")
+        logger.info("Motor ("+self._name+"): Enabled.")
 
         return True
 
@@ -364,7 +364,7 @@ class Motor(BaseDeviceClass):
         GPIO.output(self._pin, True)
 
         #Log it.
-        logger.info("Motor "+self._id+": Disabled.")
+        logger.info("Motor ("+self._name+"): Disabled.")
 
         return True
 
