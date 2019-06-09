@@ -201,10 +201,11 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     for probe_id in config.SITE_SETTINGS["SUMP"]["Probes"]:
         probe_settings = config.SITE_SETTINGS["SUMP"]["Probes"][probe_id]
 
+        probe_name = probe_settings["Name"]
         _type = probe_settings["Type"]
         probe = probe_settings["Class"]
         reading_interval = probe_settings["Default Interval"]
-        probe = probe(probe_id)
+        probe = probe(probe_id, probe_name)
 
         if _type == "Hall Effect Probe2":
             high_limits = probe_settings["HighLimits"]
@@ -231,11 +232,12 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     for device_id in config.SITE_SETTINGS["SUMP"]["Devices"]:
         device_settings = config.SITE_SETTINGS["SUMP"]["Devices"][device_id]
 
+        device_name = device_settings["Name"]
         _type = device_settings["Type"]
         device = device_settings["Class"]
         pins = device_settings["Pins"]
 
-        device = device(device_id)
+        device = device(device_id, device_name)
 
         #These are all pumps. FIXME make tidy later.
         #NB: PWM is implicitely disabled by default.

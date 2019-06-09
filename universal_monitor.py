@@ -203,10 +203,11 @@ def run_standalone():
     for probe_id in config.SITE_SETTINGS[system_id]["Probes"]:
         probe_settings = config.SITE_SETTINGS[system_id]["Probes"][probe_id]
 
+        probe_name = probe_settings["Name"]
         _type = probe_settings["Type"]
         probe = probe_settings["Class"]
         reading_interval = probe_settings["Default Interval"]
-        probe = probe(probe_id)
+        probe = probe(probe_id, probe_name)
 
         if _type == "Hall Effect Probe2":
             high_limits = probe_settings["HighLimits"]

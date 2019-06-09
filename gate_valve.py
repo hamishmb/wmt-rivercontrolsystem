@@ -198,6 +198,7 @@ def run_standalone():
 
     valve_settings = config.SITE_SETTINGS[system_id]
 
+    valve_name = valve_settings["Name"]
     _type = valve_settings["Type"]
     valve = valve_settings["Class"]
     pins = valve_settings["Pins"]
@@ -207,7 +208,7 @@ def run_standalone():
     min_open = valve_settings["minOpen"]
     ref_voltage = valve_settings["refVoltage"]
 
-    valve = valve(system_id, pins, pos_tolerance, max_open, min_open, ref_voltage)
+    valve = valve(system_id, valve_name, pins, pos_tolerance, max_open, min_open, ref_voltage)
 
     #Start the monitor threads.
     logger.info("Starting the monitor thread for "+system_id+"...")

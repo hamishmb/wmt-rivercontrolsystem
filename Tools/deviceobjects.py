@@ -109,10 +109,11 @@ class BaseDeviceClass:
     """
 
     # ---------- CONSTRUCTOR ----------
-    def __init__(self, _id):
+    def __init__(self, _id, _name="<unspecified>"):
         """Constructor as documented above"""
         #Set some semi-private variables.
         self._id = _id                      #A unique full ID eg "G4:FS0".
+        self._name = _name                  #The human-readable name for the probe.
         self._pin = -1                      #Needs to be set/deleted.
         self._pins = []                     #Needs to be set/deleted.
         self._reverse_pins = []             #Needs to be set/deleted.
@@ -148,17 +149,30 @@ class BaseDeviceClass:
 
     def get_id(self):
         """
-        This method returns this devices' full ID eg "G4:FS0".
+        This method returns this device's full ID eg "G4:FS0".
 
         Returns:
             string. The probe's full id.
 
         Usage:
 
-            >>> a_name = <Device-Object>.get_id()
+            >>> an_id = <Device-Object>.get_id()
         """
 
         return self._id
+
+    def get_name(self):
+        """
+        This method returns this device's human-readable name.
+
+        Returns:
+            string. The device's name.
+
+        Usage:
+
+            >>> a_name = <Device-Object>.get_name()
+        """
+        return self._name
 
     # ---------- INFO SETTER METHODS ----------
     def set_pins(self, pins, _input=True):
@@ -246,11 +260,11 @@ class Motor(BaseDeviceClass):
     """
 
     # ---------- CONSTRUCTORS ----------
-    def __init__(self, Name):
+    def __init__(self, _id, _name):
         """This is the constructor, as documented above."""
 
         #Call the base class constructor.
-        BaseDeviceClass.__init__(self, Name)
+        BaseDeviceClass.__init__(self, _id, _name)
 
         #Set some semi-private variables.
         self._state = False                  #Motor is initialised to be off.
@@ -373,10 +387,10 @@ class FloatSwitch(BaseDeviceClass):
     """
 
     # ---------- CONSTRUCTORS ----------
-    def __init__(self, Name):
+    def __init__(self, _id, _name):
         """This is the constructor as defined above."""
         #Call the base class constructor.
-        BaseDeviceClass.__init__(self, Name)
+        BaseDeviceClass.__init__(self, _id, _name)
 
         #Set some semi-private variables.
         #Actually active low, but active high by default,
@@ -452,11 +466,11 @@ class HallEffectDevice(BaseDeviceClass):
     """
 
     # ---------- CONSTRUCTORS ----------
-    def __init__(self, Name):
+    def __init__(self, _id, _name):
         """This is the constructor, as documented above."""
 
         #Call the base class costructor.
-        BaseDeviceClass.__init__(self, Name)
+        BaseDeviceClass.__init__(self, _id, _name)
 
         #Set some semi-private variables.
         self._num_detections = 0                  #Internal use only.
@@ -533,11 +547,11 @@ class HallEffectProbe(BaseDeviceClass):
     """
 
     # ---------- CONSTRUCTORS ----------
-    def __init__(self, Name):
+    def __init__(self, _id, _name):
         """This is the constructor, as documented above"""
 
         #Call the base class constructor.
-        BaseDeviceClass.__init__(self, Name)
+        BaseDeviceClass.__init__(self, _id, _name)
 
         #Set some semi-private variables.
         self._current_reading = 0                  #Internal use only.
@@ -664,11 +678,11 @@ class HallEffectProbe2(BaseDeviceClass, threading.Thread):
     """
 
     # ---------- CONSTRUCTORS ----------
-    def __init__(self, Name):
+    def __init__(self, _id, _name):
         """This is the constructor, as documented above"""
 
         #Call the base class constructor.
-        BaseDeviceClass.__init__(self, Name)
+        BaseDeviceClass.__init__(self, _id, _name)
 
         #Initialise the thread.
         threading.Thread.__init__(self)
@@ -848,13 +862,13 @@ class HallEffectProbe2(BaseDeviceClass, threading.Thread):
         return self._current_reading, "OK" #TODO Actual fault checking.
 
 # ---------------------------------- HYBRID OBJECTS -----------------------------------------
-# (Objects that contain both controlled devices and sendors
+# (Objects that contain both controlled devices and sensors
 class GateValve(BaseDeviceClass):
-    def __init__(self, _id, pins, pos_tolerance, max_open, min_open, ref_voltage):
+    def __init__(self, _id, _name, pins, pos_tolerance, max_open, min_open, ref_voltage):
         """This is the constructor"""
         #NB: ID will be repeated eg "V4:V4" so that BaseDeviceClass and the
         #rest of the software functions properly.
-        BaseDeviceClass.__init__(self, _id+":"+_id)
+        BaseDeviceClass.__init__(self, _id+":"+_id, _name)
 
         #Set all pins as outputs.
         for pin in pins:
