@@ -533,136 +533,7 @@ class HallEffectDevice(BaseDeviceClass):
 
         return rpm, "OK" #TODO Actual fault checking.
 
-class HallEffectProbe(BaseDeviceClass):
-    """
-    This class is used to represent a magnetic probe of the old type that sets 10 pins to represent
-    the level; one pin for each level.  It is now obsolecent and so this class
-    will ultimately be removed.
-
-    Documentation for the constructor for objects of type HallEffectProbe:
-
-    Usage:
-        Use the constructor for this class the same way as for BaseDeviceClass.
-
-    """
-
-    # ---------- CONSTRUCTORS ----------
-    def __init__(self, _id, _name):
-        """This is the constructor, as documented above"""
-
-        #Call the base class constructor.
-        BaseDeviceClass.__init__(self, _id, _name)
-
-        #Set some semi-private variables.
-        self._current_reading = 0                  #Internal use only.
-        self._post_init_called = False             #Internal use only.
-
-    # ---------- PRIVATE METHODS ----------
-    def _post_init(self):
-        """
-        Automatically call our methods when a falling edge is detected on each pin.
-
-        Not done in __init__ because pins aren't defined at that point.
-        """
-
-        GPIO.add_event_detect(self._pins[0], GPIO.FALLING, callback=self._level0)
-        GPIO.add_event_detect(self._pins[1], GPIO.FALLING, callback=self._level1)
-        GPIO.add_event_detect(self._pins[2], GPIO.FALLING, callback=self._level2)
-        GPIO.add_event_detect(self._pins[3], GPIO.FALLING, callback=self._level3)
-        GPIO.add_event_detect(self._pins[4], GPIO.FALLING, callback=self._level4)
-        GPIO.add_event_detect(self._pins[5], GPIO.FALLING, callback=self._level5)
-        GPIO.add_event_detect(self._pins[6], GPIO.FALLING, callback=self._level6)
-        GPIO.add_event_detect(self._pins[7], GPIO.FALLING, callback=self._level7)
-        GPIO.add_event_detect(self._pins[8], GPIO.FALLING, callback=self._level8)
-        GPIO.add_event_detect(self._pins[9], GPIO.FALLING, callback=self._level9)
-
-        self._post_init_called = True
-
-    def _level0(self, channel): #pylint: disable=unused-argument
-        """Called when a falling edge is detected. Sets current reading to relevant level"""
-        self._current_reading = 0
-        logging.debug(self._id+" 0mm level detected.")
-
-    def _level1(self, channel): #pylint: disable=unused-argument
-        """Called when a falling edge is detected. Sets current reading to relevant level"""
-        self._current_reading = 100
-        logging.debug(self._id+" 100mm level detected.")
-
-    def _level2(self, channel): #pylint: disable=unused-argument
-        """Called when a falling edge is detected. Sets current reading to relevant level"""
-        self._current_reading = 200
-        logging.debug(self._id+" 200mm level detected.")
-
-    def _level3(self, channel): #pylint: disable=unused-argument
-        """Called when a falling edge is detected. Sets current reading to relevant level"""
-        self._current_reading = 300
-        logging.debug(self._id+" 300mm level detected.")
-
-    def _level4(self, channel): #pylint: disable=unused-argument
-        """Called when a falling edge is detected. Sets current reading to relevant level"""
-        self._current_reading = 400
-        logging.debug(self._id+" 400mm level detected.")
-
-    def _level5(self, channel): #pylint: disable=unused-argument
-        """Called when a falling edge is detected. Sets current reading to relevant level"""
-        self._current_reading = 500
-        logging.debug(self._id+" 500mm level detected.")
-
-    def _level6(self, channel): #pylint: disable=unused-argument
-        """Called when a falling edge is detected. Sets current reading to relevant level"""
-        self._current_reading = 600
-        logging.debug(self._id+" 600mm level detected.")
-
-    def _level7(self, channel): #pylint: disable=unused-argument
-        """Called when a falling edge is detected. Sets current reading to relevant level"""
-        self._current_reading = 700
-        logging.debug(self._id+" 700mm level detected.")
-
-    def _level8(self, channel): #pylint: disable=unused-argument
-        """Called when a falling edge is detected. Sets current reading to relevant level"""
-        self._current_reading = 800
-        logging.debug(self._id+" 800mm level detected.")
-
-    def _level9(self, channel): #pylint: disable=unused-argument
-        """Called when a falling edge is detected. Sets current reading to relevant level"""
-        self._current_reading = 900
-        logging.debug(self._id+" 900mm level detected.")
-
-    # ---------- CONTROL METHODS ----------
-    def get_reading(self):
-        """
-        This method returns the rate at which the float is bobbing
-        about.
-
-        .. note::universal_monitor
-
-            Currently no fault checking is performed, so the string part of the return value
-            is always "OK".
-
-        Returns:
-
-            tuple(int, string)
-
-            int:
-                The level of the float.
-
-            string:
-                Fault checking status.
-
-                "OK" -- Everything is fine.
-
-        Usage:
-
-            >>> <HallEffectProbe-Object>.get_reading()
-            >>> (500, "OK")
-
-        """
-        if not self._post_init_called:
-            self._post_init()
-
-        return self._current_reading, "OK" #TODO Actual fault checking.
-
-class HallEffectProbe2(BaseDeviceClass, threading.Thread):
+class HallEffectProbe(BaseDeviceClass, threading.Thread):
     """
     This class is used to represent the new type of magnetic probe.  This probe
     encodes the water level as four voltages at 100 mm intervals.  Each of the four voltage
@@ -670,10 +541,10 @@ class HallEffectProbe2(BaseDeviceClass, threading.Thread):
     Board converts these voltages to four values, which this class then converts to depth.
     It has higher precision than the old type but only needs 6 wires to carry the signals.
 
-    Documentation for the constructor for objects of type HallEffectProbe2:
+    Documentation for the constructor for objects of type HallEffectProbe:
 
     Usage:
-        >>> probe = deviceobjects.HallEffectProbe2(<a_time>, <a_tick>, <an_id>, <a_value>, <a_status>)
+        >>> probe = deviceobjects.HallEffectProbe(<a_time>, <a_tick>, <an_id>, <a_value>, <a_status>)
 
     """
 
@@ -809,7 +680,7 @@ class HallEffectProbe2(BaseDeviceClass, threading.Thread):
 
         return level
 
-    def run(self):
+    def run(self): #FIXME This is not a monitor thread! Fix documentation.
         """The main body of the monitor thread for this probe"""
         #FIXME We need a way of exiting from this cleanly on
         #program shutdown.
@@ -854,7 +725,7 @@ class HallEffectProbe2(BaseDeviceClass, threading.Thread):
 
         Usage:
 
-            >>> <HallEffectProbe2-Object>.get_reading()
+            >>> <HallEffectProbe-Object>.get_reading()
             >>> (500, "OK")
 
         """

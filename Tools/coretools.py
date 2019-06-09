@@ -461,7 +461,7 @@ def setup_devices(system_id, dictionary="Probes"):
         device = device_settings["Class"]
         device = device(device_id, device_name)
 
-        if _type == "Hall Effect Probe2":
+        if _type == "Hall Effect Probe":
             high_limits = device_settings["HighLimits"]
             low_limits = device_settings["LowLimits"]
 
