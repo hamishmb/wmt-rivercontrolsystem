@@ -168,7 +168,6 @@ def run_standalone():
 
     #Do framework imports.
     import config
-    from config import VERSION
 
     from Tools import coretools as core_tools
     from Tools import sockettools as socket_tools

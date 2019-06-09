@@ -47,9 +47,6 @@ from . import coretools as core_tools
 
 sys.path.insert(0, os.path.abspath('../'))
 
-import config
-from config import VERSION
-
 try:
     #Allow us to generate documentation on non-RPi systems.
     import RPi.GPIO as GPIO                             # GPIO imports and setups

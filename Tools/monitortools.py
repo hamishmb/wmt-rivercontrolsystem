@@ -39,9 +39,6 @@ from . import coretools
 
 sys.path.insert(0, os.path.abspath('../'))
 
-import config
-from config import VERSION
-
 # ---------- BASE CLASS ----------
 class BaseMonitorClass(threading.Thread):
     """

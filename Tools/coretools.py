@@ -31,7 +31,6 @@ functions in here to reduce code duplication.
 .. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
 """
 
-import datetime
 import time
 import sys
 import os
@@ -42,7 +41,6 @@ import traceback
 sys.path.insert(0, os.path.abspath('../'))
 
 import config
-from config import VERSION
 
 try:
     #Allow us to generate documentation on non-RPi systems.
@@ -74,8 +72,6 @@ except ValueError:
     #Occurs when no I2C device is present.
     print("CoreTools: ValueError: No I2C device found! Testing environment?")
     pass
-
-VERSION = "0.10.0"
 
 #Don't ask for a logger name, so this works with both main.py
 #and the universal monitor.
