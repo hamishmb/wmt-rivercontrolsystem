@@ -163,6 +163,14 @@ SITE_SETTINGS = {
                             "PortNumber":   30004
                         },
 
+                    #For connection to Wendy Street Stage Pi.
+                    "Wendy Street Stagepi Socket":
+                        {
+                            "ID":           "SOCK6",
+                            "Name":         "Wendy Street Stagepi Socket",
+                            "PortNumber":   30006
+                        },
+
                     #For connection to Wendy Street Butts Pi Gate Valve.
                     "Wendy Street Butts Gate Valve Socket":
                         {
