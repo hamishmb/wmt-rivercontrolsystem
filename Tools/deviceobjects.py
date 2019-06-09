@@ -686,14 +686,13 @@ class HallEffectProbe(BaseDeviceClass, threading.Thread):
             new_reading = self.test_levels()
 
             if new_reading == 1000:
-                # No Sensors Triggered - leave the reading as it was.
+                #No Sensors Triggered - leave the reading as it was.
                 logger.debug("Between levels - no sensors triggered")
 
             else:
                 #Only update this if we got a meaningful reading from the probe.
                 #Aka at least 1 sensor triggered.
                 self._current_reading = new_reading
-                no_trigger = False #TODO Note that this isn't used - remove it?
 
             time.sleep(0.5)
 
