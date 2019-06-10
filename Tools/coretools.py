@@ -33,12 +33,9 @@ functions in here to reduce code duplication.
 
 import time
 import sys
-import os
 import threading
 import logging
 import traceback
-
-sys.path.insert(0, os.path.abspath('../'))
 
 import config
 
@@ -71,7 +68,6 @@ except NotImplementedError:
 except ValueError:
     #Occurs when no I2C device is present.
     print("CoreTools: ValueError: No I2C device found! Testing environment?")
-    pass
 
 #Don't ask for a logger name, so this works with both main.py
 #and the universal monitor.
@@ -339,20 +335,39 @@ class ActuatorPosition(threading.Thread):
     #there are extra arguments that we need to explain in the docstring.
     def __init__(self, pins, pos_tolerance, max_open, min_open, ref_voltage):
         """The constructor, set up some basic threading stuff."""
-        self.forward_pin = pins[0]                          # The pin to set the motor direction to forwards (opening gate).
-        self.reverse_pin = pins[1]                          # The pin to set the motor direction to backwards (closing gate).
-        self.clutch_pin = pins[2]                           # The pin to engage the clutch.
+        #The pin to set the motor direction to forwards (opening gate).
+        self.forward_pin = pins[0]
 
-        self.pos_tolerance = pos_tolerance                    # Positional Tolerance in percent
-        self.max_open = max_open                              # Upper limmit of valve position in percent
-        self.min_open = min_open                              # Lower limmit of valve position in percent
-        self.ref_voltage = ref_voltage                        # Voltage at the top of the position pot
+        #The pin to set the motor direction to backwards (closing gate).
+        self.reverse_pin = pins[1]
+
+        #The pin to engage the clutch.
+        self.clutch_pin = pins[2]
+
+        #Positional Tolerance in percent
+        self.pos_tolerance = pos_tolerance
+
+        #Upper limit of valve position in percent
+        self.max_open = max_open
+
+        #Lower limit of valve position in percent
+        self.min_open = min_open
+
+        #Voltage at the top of the position pot
+        self.ref_voltage = ref_voltage
         self._exit = False
 
-        self.percentage = 0                                 # Set the valve closed initially.
-        self.actual_position = 0                             # Used to store the measured position of the valve.
-        self.high_limit = 2                                         # Initial value. Calculated from the percetage requested.
-        self.low_limit = 1                                         # Initial value. Calculated from the percetage requested.
+        #Set the valve closed initially.
+        self.percentage = 0
+
+        #Used to store the measured position of the valve.
+        self.actual_position = 0
+
+        #Initial value. Calculated from the percentage requested.
+        self.high_limit = 2
+
+        #Initial value. Calculated from the percentage requested.
+        self.low_limit = 1
 
         self.calculate_limits()
 
@@ -365,22 +380,32 @@ class ActuatorPosition(threading.Thread):
         while not self._exit:
             self.actual_position = self.get_position()
 
-            if ((self.actual_position <= self.high_limit and self.actual_position >= self.low_limit) or (self.actual_position == -1)):
+            if ((self.actual_position <= self.high_limit
+                 and self.actual_position >= self.low_limit)
+                or (self.actual_position == -1)):
+
+                #Hold current position
                 logger.debug("ActuatorPosition: Hold at "+str(self.actual_position))
-                GPIO.output(self.forward_pin, GPIO.LOW)         # Hold current position
+                GPIO.output(self.forward_pin, GPIO.LOW)
                 GPIO.output(self.reverse_pin, GPIO.LOW)
                 time.sleep(1)
 
-            elif (self.actual_position < self.low_limit):
+            elif self.actual_position < self.low_limit:
+                #Open the valve
                 logger.debug("ActuatorPosition: Open valve a bit.")
-                self.clutch_engage()                         # Enable the motor
-                GPIO.output(self.forward_pin, GPIO.HIGH)        # Open the valve
+
+                #Enable the motor.
+                self.clutch_engage()
+                GPIO.output(self.forward_pin, GPIO.HIGH)
                 GPIO.output(self.reverse_pin, GPIO.LOW)
 
-            elif (self.actual_position > self.high_limit):
+            elif self.actual_position > self.high_limit:
+                #Close the valve.
                 logger.debug("ActuatorPosition: Close valve a bit.")
-                self.clutch_engage()                         # Enable the motor
-                GPIO.output(self.forward_pin, GPIO.LOW)         # Close the valve
+
+                #Enable the motor.
+                self.clutch_engage()
+                GPIO.output(self.forward_pin, GPIO.LOW)
                 GPIO.output(self.reverse_pin, GPIO.HIGH)
 
     def clutch_engage(self):
@@ -390,19 +415,25 @@ class ActuatorPosition(threading.Thread):
         GPIO.output(self.clutch_pin, GPIO.LOW)
 
     def get_position(self):
-        chan = AnalogIn(ads, ADS.P0)                                # Create the Analog reading object to read Ch 0 of the A/D
+        #Create the Analog reading object to read Ch 0 of the A/D
+        chan = AnalogIn(ads, ADS.P0)
 
         try:
-            v0 = chan.voltage                                       # Get voltage reading for channel 0 (the position pot slider)
-        except OSError:                                             # An I/O error occured when trying to read from the A/D.
+            #Get voltage reading for channel 0 (the position pot slider)
+            voltage_0 = chan.voltage
+
+        except OSError:
+            #An I/O error occured when trying to read from the A/D.
             logger.error("OSError \n\n"+str(traceback.format_exc())
-                                +"\n\nwhile running. Continuing...")
+                         + "\n\nwhile running. Continuing...")
 
-            print(" OSError \n\n"+str(traceback.format_exc())+"\n\nwhile running. Continuing...")
+            print("OSError \n\n"+str(traceback.format_exc())+"\n\nwhile running. Continuing...")
 
-            return -1                                               # The current reading is invalid so flag an error.
+            #The current reading is invalid so flag an error.
+            return -1
 
-        self.actual_position = int((v0/self.ref_voltage*100))       # Actual position as a percentage at the time of reading
+        #Actual position as a percentage at the time of reading
+        self.actual_position = int((voltage_0/self.ref_voltage*100))
         return self.actual_position
 
     def set_position(self, new_percentage):
@@ -416,12 +447,18 @@ class ActuatorPosition(threading.Thread):
             if ((self.percentage + self.pos_tolerance) > (self.max_open - self.pos_tolerance)):
                 self.high_limit = self.max_open
                 self.low_limit = self.max_open - 6
+
+
             elif (self.percentage - self.pos_tolerance < self.min_open):
                 self.low_limit = self.min_open
                 self.high_limit = self.min_open + 1
+
             else:
-                self.high_limit = self.percentage + self.pos_tolerance        # Set the High Limit to the required percentage
-                self.low_limit = self.percentage - self.pos_tolerance        # Set the Low Limit to the required percentage
+                #Set the High Limit to the required percentage
+                self.high_limit = self.percentage + self.pos_tolerance
+
+                #Set the Low Limit to the required percentage
+                self.low_limit = self.percentage - self.pos_tolerance
 
     def stop(self):
         """Stops the thread."""
@@ -546,8 +583,8 @@ def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None)
 
     return reading
 
-def do_control_logic(sump_reading_obj, butts_reading_obj, butts_float_reading, devices, monitors, sockets,
-                     reading_interval):
+def do_control_logic(sump_reading_obj, butts_reading_obj, butts_float_reading,
+                     devices, monitors, sockets, reading_interval):
     """
     This function is used to decides what action to take based
     on the readings it is passed.
@@ -683,8 +720,11 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, butts_float_reading, d
         #If the butts pump is on, turn it off.
         butts_pump.disable()
 
-        logger.info("Water level in the sump is between 400 and 500 mm. Turned the butts pump off, if it was on.")
-        print("Water level in the sump is between 400 and 500 mm. Turned the butts pump off, if it was on.")
+        logger.info("Water level in the sump is between 400 and 500 mm. "
+                    + "Turned the butts pump off, if it was on.")
+
+        print("Water level in the sump is between 400 and 500 mm. "
+              + "Turned the butts pump off, if it was on.")
 
         #Make sure the main circulation pump is on.
         logger.info("Turning the main circulation pump on, if it was off...")
@@ -748,7 +788,8 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, butts_float_reading, d
             sockets["SOCK14"].write("Valve Position 0")
 
             logger.error("*** NOTICE ***: Water level in the sump is between 200 and 300 mm!")
-            logger.error("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
+            logger.error("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: "
+                         + "Please add water to the system.")
 
             print("\n\n*** NOTICE ***: Water level in the sump is between 200 and 300 mm!")
             print("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
@@ -762,14 +803,14 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, butts_float_reading, d
         logger.warning("Setting reading interval to 30 seconds for close monitoring...")
         print("Setting reading interval to 30 seconds for close monitoring...")
 
-        reading_interval = 30  
+        reading_interval = 30
 
     else:
         #Level in the sump is critically low!
         #If the butts pump is on, turn it oactuaff.
         butts_pump.disable()
 
-        if (butts_reading >= 300):
+        if butts_reading >= 300:
             logger.info("Opening wendy butts gate valve to 100%...")
             print("Opening wendy butts gate valve to 100%...")
             sockets["SOCK14"].write("Valve Position 100")

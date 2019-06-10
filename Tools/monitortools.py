@@ -31,13 +31,9 @@ a bit more of the complexity away.
 from collections import deque
 import time
 import datetime
-import sys
-import os
 import threading
 
 from . import coretools
-
-sys.path.insert(0, os.path.abspath('../'))
 
 # ---------- BASE CLASS ----------
 class BaseMonitorClass(threading.Thread):
@@ -76,15 +72,33 @@ class BaseMonitorClass(threading.Thread):
         self.system_id = system_id
         self.probe_id = probe_id
 
+        #The file name the readings file will have (plus the time it was
+        #created)
         self.file_name = "readings/"+self.system_id+":"+self.probe_id
-        self.file_handle = None
-        self.file_creation_time = None
-        self.file_rotate_interval = 7 #Days.
 
+        #A reference to the file handle of the open readings file.
+        self.file_handle = None
+
+        #The time the readings file was created.
+        self.file_creation_time = None
+
+        #The interval at which we want to rotate the readings file, in days.
+        self.file_rotate_interval = 7
+
+        #Default reading interval. This will immediately be overridden by the
+        #master pi in practice.
         self.reading_interval = 0
+
+        #The outgoing queue for readings collected by this thread.
         self.queue = deque()
+
+        #The latest-but-one reading.
         self.prev_reading = ""
+
+        #Whether the monitor is currently running.
         self.running = False
+
+        #Used to ask the monitor thread to exit.
         self.should_exit = False
 
     def create_file_handle(self):

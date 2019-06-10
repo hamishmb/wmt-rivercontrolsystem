@@ -223,12 +223,17 @@ def run_standalone():
 
         while at_least_one_monitor_running:
             for monitor in monitors:
-                if monitor.is_running():
-                    #Check for new readings. NOTE: Later on, use the readings returned from this
-                    #for state history generation etc.
-                    core_tools.get_and_handle_new_reading(monitor, "test",
-                                                          config.SITE_SETTINGS
-                                                          ["G4"]["ServerAddress"], socket)
+                #Skip over any monitors that have stopped.
+                #TODO: This should never happen, moan in log file?
+                if not monitor.is_running():
+                    continue
+
+                #Check for new readings.
+                #NOTE: Later on, use the readings returned from this
+                #for state history generation etc.
+                core_tools.get_and_handle_new_reading(monitor, "test",
+                                                      config.SITE_SETTINGS
+                                                      ["G4"]["ServerAddress"], socket)
 
             #Wait until it's time to check for another reading.
             #I know we could use a long time.sleep(),

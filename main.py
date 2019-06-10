@@ -245,21 +245,29 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         while at_least_one_monitor_running:
             #Check for new readings from all monitors.
             for monitor in monitors:
-                if monitor.is_running():
-                    #Check for new readings. NOTE: Later on, use the readings returned from this
-                    #for state history generation etc.
-                    reading = core_tools.get_and_handle_new_reading(monitor, "test")
+                #Skip over any monitors that have stopped.
+                #TODO: This should never happen, moan in log file?
+                if not monitor.is_running():
+                    continue
 
-                    #Keep the G4:FS0 & SUMP:M0 readings (used in control logic).
-                    if reading != None:
-                        if reading.get_id() == "G4:FS0":
-                            butts_float_reading = reading
+                #Check for new readings.
+                #NOTE: Later on, use the readings returned from this
+                #for state history generation etc.
+                reading = core_tools.get_and_handle_new_reading(monitor, "test")
 
-                        elif reading.get_id() == "G4:M0":
-                            butts_reading = reading
+                #Ignore empty readings.
+                if reading is None:
+                    continue
 
-                        elif reading.get_id() == "SUMP:M0":
-                            sump_reading = reading
+                #Keep the G4:FS0 & SUMP:M0 readings (used in control logic).
+                if reading.get_id() == "G4:FS0":
+                    butts_float_reading = reading
+
+                elif reading.get_id() == "G4:M0":
+                    butts_reading = reading
+
+                elif reading.get_id() == "SUMP:M0":
+                    sump_reading = reading
 
             #Logic.
             reading_interval = core_tools.do_control_logic(sump_reading, butts_reading,

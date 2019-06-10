@@ -47,13 +47,9 @@ import select
 import threading
 import traceback
 import time
-import sys
-import os
 import logging
 import pickle
 import _pickle
-
-sys.path.insert(0, os.path.abspath('../'))
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
@@ -634,12 +630,13 @@ class Sockets:
                     #TODO ignore for now.
                     pass
 
-                    #Assume that the socket is closed or the network connection has failed.
+                    #Assume that the socket is closed,
+                    #or the network connection has failed.
                     #Recreate the socket.
-                    #logger.error("Sockets._read_pending_messages(): Connection closed or peer gone. "
+                    #logger.error("Sockets._read_pending_messages(): "
+                    #             + "Connection closed or peer gone. "
                     #             + "Attempting to reconnect...")
                     #return -1 #Connection closed cleanly by peer.
-
 
                 if b"ENDMSG" in data:
                     objs = data.split(b"ENDMSG")

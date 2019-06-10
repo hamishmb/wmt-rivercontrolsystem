@@ -38,14 +38,10 @@ from the rest of the program.
 #Standard Imports.
 import threading
 import time
-import sys
-import os
 import logging
 
 #Import modules.
 from . import coretools as core_tools
-
-sys.path.insert(0, os.path.abspath('../'))
 
 try:
     #Allow us to generate documentation on non-RPi systems.
@@ -639,7 +635,8 @@ class HallEffectProbe(BaseDeviceClass, threading.Thread):
         # Find the column that the minimum value is in
         min_column = v_meas.index(min(v_meas))
 
-        # Work out the average of the three highest measurements (thus ignoring the 'dipped' channel.
+        # Work out the average of the three highest measurements
+        #(thus ignoring the 'dipped' channel).
         v_tot = v_meas[0] + v_meas[1] + v_meas[2] + v_meas[3]
         v_avg = (v_tot - v_min)/3
 
@@ -668,9 +665,13 @@ class HallEffectProbe(BaseDeviceClass, threading.Thread):
             v_comp, min_column = self.get_compensated_probe_voltages()
 
             # Now test the channel with the dip to see if any of the sensors are triggered
-            if ((v_comp[min_column] <= self.high_limits[count]) and (v_comp[min_column] >= self.low_limits[count])):
+            if ((v_comp[min_column] <= self.high_limits[count])
+                    and (v_comp[min_column] >= self.low_limits[count])):
+
                 level = self.depths[min_column][count]
+
             else:
+                #FIXME: This fills up the log file pretty quickly - why?
                 logger.debug("Possible faulty probe - no limits passed")
 
             count += 1
@@ -729,7 +730,7 @@ class HallEffectProbe(BaseDeviceClass, threading.Thread):
         return self._current_reading, "OK" #TODO Actual fault checking.
 
 # ---------------------------------- HYBRID OBJECTS -----------------------------------------
-# (Objects that contain both controlled devices and sensors
+# (Objects that contain both controlled devices and sensors)
 class GateValve(BaseDeviceClass):
     def __init__(self, _id, _name, pins, pos_tolerance, max_open, min_open, ref_voltage):
         """This is the constructor"""
