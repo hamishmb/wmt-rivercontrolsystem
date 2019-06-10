@@ -189,28 +189,16 @@ def run_standalone():
     #Print system time.
     print("System Time: ", str(datetime.datetime.now()))
 
-    #Create the gate valve.
-    monitors = []
-
-    #Get settings for the valve from the config file.
+    #Set up the gate valve.
     logger.info("Setting up the gate valve...")
+    valve = core_tools.setup_valve(system_id)
 
-    valve_settings = config.SITE_SETTINGS[system_id]
-
-    valve_name = valve_settings["Name"]
-    _type = valve_settings["Type"]
-    valve = valve_settings["Class"]
-    pins = valve_settings["Pins"]
-    reading_interval = valve_settings["Default Interval"]
-    pos_tolerance = valve_settings["posTolerance"]
-    max_open = valve_settings["maxOpen"]
-    min_open = valve_settings["minOpen"]
-    ref_voltage = valve_settings["refVoltage"]
-
-    valve = valve(system_id, valve_name, pins, pos_tolerance, max_open, min_open, ref_voltage)
+    #NB: Use 15 seconds as default reading interval.
+    reading_interval = 15
 
     #Start the monitor threads.
     logger.info("Starting the monitor thread for "+system_id+"...")
+    monitors = []
     monitors.append(Monitor(valve, reading_interval, system_id))
 
     print("Synchronising with monitor threads...")

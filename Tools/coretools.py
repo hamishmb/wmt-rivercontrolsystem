@@ -522,6 +522,35 @@ def setup_devices(system_id, dictionary="Probes"):
 
     return devices
 
+def setup_valve(system_id):
+    """
+    This function is used to set up gate valves.
+
+    Args:
+        system_id (str):              The system (pi) that we're setting up for.
+
+    Returns:
+        A reference to the GateValve object created.
+
+    Usage:
+        >>> setup_valve("V4")
+
+    """
+    valve_settings = config.SITE_SETTINGS[system_id]
+
+    valve_name = valve_settings["Name"]
+    _type = valve_settings["Type"]
+    valve = valve_settings["Class"]
+    pins = valve_settings["Pins"]
+    pos_tolerance = valve_settings["posTolerance"]
+    max_open = valve_settings["maxOpen"]
+    min_open = valve_settings["minOpen"]
+    ref_voltage = valve_settings["refVoltage"]
+
+    valve = valve(system_id, valve_name, pins, pos_tolerance, max_open, min_open, ref_voltage)
+
+    return valve
+
 def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None):
     """
     This function is used to get, handle, and return new readings from the
