@@ -15,8 +15,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #TODO The way the lists are done here confuses Sphinx.
-#is there a list syntax that can be used instead - the generated
+#is there a list syntax that can be used instead? - the generated
 #docs are not displaying nicely.
+#FIXME Remove default reading intervals for each device, and do site-wide instead?
+# ^^^ These are overridden immediately by the master pi in normal operation.
 
 """
 This is the configuration for all pis. These dictionaries (key-value
