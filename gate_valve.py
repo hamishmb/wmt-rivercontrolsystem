@@ -193,8 +193,8 @@ def run_standalone():
     logger.info("Setting up the gate valve...")
     valve = core_tools.setup_valve(system_id)
 
-    #NB: Use 15 seconds as default reading interval.
-    reading_interval = 15
+    #Default reading interval for all probes.
+    reading_interval = config.SITE_SETTINGS[system_id]["Default Interval"]
 
     #Start the monitor threads.
     logger.info("Starting the monitor thread for "+system_id+"...")

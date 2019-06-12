@@ -196,8 +196,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #Create the device(s).
     devices = core_tools.setup_devices(system_id, dictionary="Devices")
 
-    #Reading interval.
-    reading_interval = 15
+    #Default reading interval for all probes.
+    reading_interval = config.SITE_SETTINGS["SUMP"]["Default Interval"]
 
     logger.info("Starting to take readings...")
     print("Starting to take readings. Please stand by...")

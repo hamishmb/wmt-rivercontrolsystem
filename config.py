@@ -152,6 +152,7 @@ SITE_SETTINGS = {
     "SUMP":
         {
             "ID": "SUMP",
+            "Default Interval": 15,
 
             #Sockets to host.
             "Sockets":
@@ -198,7 +199,6 @@ SITE_SETTINGS = {
                         "Depths25s":        (25, 125, 225, 325, 425, 525, 625, 725, 825, 925),
                         "Depths50s":        (50, 150, 250, 350, 450, 550, 650, 750, 850, 950),
                         "Depths75s":        (75, 175, 275, 375, 475, 575, 675, 775, 875, 975),
-                        "Default Interval": 10
                     }
                 },
 
@@ -230,6 +230,7 @@ SITE_SETTINGS = {
     "G4":
         {
             "ID": "G4",
+            "Default Interval": 15,
 
             #Local probes.
             "Probes":
@@ -247,7 +248,6 @@ SITE_SETTINGS = {
                         "Depths25s":        (25, 125, 225, 325, 425, 525, 625, 725, 825, 925),
                         "Depths50s":        (50, 150, 250, 350, 450, 550, 650, 750, 850, 950),
                         "Depths75s":        (75, 175, 275, 375, 475, 575, 675, 775, 875, 975),
-                        "Default Interval": 10
                     },
 
                     "G4:FS0":
@@ -257,7 +257,6 @@ SITE_SETTINGS = {
                         "Name": "Wendy Street Butts Switch",
                         "Class": Tools.deviceobjects.FloatSwitch,
                         "Pins":  (8),
-                        "Default Interval": 30
                     }
                 },
 
@@ -270,6 +269,7 @@ SITE_SETTINGS = {
     "G6":
         {
             "ID": "G6",
+            "Default Interval": 15,
 
             #Local probes.
             "Probes":
@@ -287,7 +287,6 @@ SITE_SETTINGS = {
                         "Depths25s":        (25, 125, 225, 325, 425, 525, 625, 725, 825, 925),
                         "Depths50s":        (50, 150, 250, 350, 450, 550, 650, 750, 850, 950),
                         "Depths75s":        (75, 175, 275, 375, 475, 575, 675, 775, 875, 975),
-                        "Default Interval": 10
                     },
 
                     "G6:FS0":
@@ -297,7 +296,6 @@ SITE_SETTINGS = {
                         "Name": "Stage Butts Switch",
                         "Class": Tools.deviceobjects.FloatSwitch,
                         "Pins":  (8),
-                        "Default Interval": 30
                     }
                 },
 
@@ -311,6 +309,8 @@ SITE_SETTINGS = {
         {
             "Type": "Gate Valve",
             "ID":   "V4",
+            "Default Interval": 15,
+
             "Name": "Butts Farm Gate Valve",
             "Class": Tools.deviceobjects.GateValve,
 
@@ -319,7 +319,6 @@ SITE_SETTINGS = {
             "maxOpen": 90,
             "minOpen": 1,
             "refVoltage": 3.3,
-            "Default Interval": 10,
 
             #Config for server connection.
             "ServerAddress": "192.168.0.2",

@@ -192,8 +192,8 @@ def run_standalone():
     #Create the probe(s).
     probes = core_tools.setup_devices(system_id)
 
-    #NB: Use 15 seconds as default reading interval.
-    reading_interval = 15
+    #Default reading interval for all probes.
+    reading_interval = config.SITE_SETTINGS[system_id]["Default Interval"]
 
     #Set up the monitor thread(s).
     monitors = []
