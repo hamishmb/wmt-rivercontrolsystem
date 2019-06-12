@@ -612,6 +612,7 @@ def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None)
 
     return reading
 
+# -------------------- CONTROL LOGIC FUNCTIONS --------------------
 def do_control_logic(sump_reading_obj, butts_reading_obj, butts_float_reading,
                      devices, monitors, sockets, reading_interval):
     """
