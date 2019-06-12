@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Tools Package for the River System Control and Monitoring Software Version 0.10.0
+# Tools Package for the River System Control and Monitoring Software
 # This file is part of the River System Control and Monitoring Software.
 # Copyright (C) 2017-2019 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
