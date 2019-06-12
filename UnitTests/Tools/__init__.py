@@ -18,8 +18,3 @@
 This is the Tests package for the modules under the Tools package in the river system
 control software.
 """
-
-from . import coretools_tests
-from . import deviceobjects_tests
-from . import monitortools_tests
-from . import sockettools_tests

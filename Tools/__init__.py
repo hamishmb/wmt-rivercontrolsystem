@@ -104,10 +104,3 @@ Contains Classes:
 .. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
 
 """
-
-from __future__ import absolute_import
-
-from . import coretools
-from . import monitortools
-from . import sockettools
-from . import deviceobjects
