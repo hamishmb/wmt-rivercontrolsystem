@@ -168,6 +168,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     from Tools import coretools as core_tools
     from Tools import sockettools as socket_tools
 
+    #TODO should standardise and do the same way as the above.
     from Tools.monitortools import SocketsMonitor
     from Tools.monitortools import Monitor
 

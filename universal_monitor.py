@@ -171,6 +171,8 @@ def run_standalone():
 
     from Tools import coretools as core_tools
     from Tools import sockettools as socket_tools
+
+    #TODO should standardise and do the same way as the above.
     from Tools.monitortools import Monitor
 
     #Connect to server, if any.
