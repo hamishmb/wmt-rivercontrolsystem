@@ -325,10 +325,9 @@ class Monitor(BaseMonitorClass):
                 the_reading, status_text = self.reading_func()
 
                 #Construct a Reading object to hold this info.
-                #TODO change tick value to 0 - negative values not allowed.
                 #Args in order: Time, Tick, ID, Value, Status
                 reading = coretools.Reading(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-                                            -1,
+                                            0,
                                             self.probe.get_id(),
                                             str(the_reading), status_text)
 
