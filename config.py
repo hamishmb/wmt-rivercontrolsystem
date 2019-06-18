@@ -143,6 +143,7 @@ VERSION = "0.11.0~pre1"
 RELEASEDATE = "16/4/2018"
 
 import Tools
+import Tools.deviceobjects
 
 SITE_SETTINGS = {
 

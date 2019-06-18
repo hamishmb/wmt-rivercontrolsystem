@@ -41,7 +41,7 @@ import time
 import logging
 
 #Import modules.
-from . import coretools as core_tools
+from . import devicemanagement as device_mgmt
 
 try:
     #Allow us to generate documentation on non-RPi systems.
@@ -743,7 +743,7 @@ class GateValve(BaseDeviceClass):
             GPIO.setup(pin, GPIO.OUT)
 
         #Start the thread so we can control the gate valve.
-        self.control_thread = core_tools.ActuatorPosition(pins, pos_tolerance, max_open, min_open,
+        self.control_thread = device_mgmt.ManageGateValve(pins, pos_tolerance, max_open, min_open,
                                                           ref_voltage)
 
     def set_position(self, percentage):
