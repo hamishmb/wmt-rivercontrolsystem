@@ -465,6 +465,7 @@ def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None)
     return reading
 
 # -------------------- CONTROL LOGIC FUNCTIONS --------------------
+#TODO update the documentation, this is old.
 def sumppi_control_logic(sump_reading_obj, butts_reading_obj, butts_float_reading,
                          devices, monitors, sockets, reading_interval):
     """
@@ -531,8 +532,18 @@ def sumppi_control_logic(sump_reading_obj, butts_reading_obj, butts_float_readin
         elif device.get_id() == "SUMP:P1":
             main_pump = device
 
+    #Check that we got references to both pumps.
     assert main_pump is not None
     assert butts_pump is not None
+
+    #Check that the devices list is not empty.
+    assert len(devices) > 0
+
+    #Check that the sockets list is not empty.
+    assert len(sockets) > 0
+
+    #Check that the reading interval is positive, and greater than 0.
+    assert reading_interval > 0
 
     if sump_reading >= 600:
         #Level in the sump is getting high.
