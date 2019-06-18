@@ -33,7 +33,7 @@ LOGGER_LEVEL = logging.CRITICAL
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s: %(message)s',
                     datefmt='%d/%m/%Y %I:%M:%S %p', level=LOGGER_LEVEL)
 
-def usage(): #TODO update me for new arguments
+def usage():
     """
     This function is used to output help information to the standard output
     if the user passes invalid/incorrect commandline arguments.
