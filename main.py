@@ -139,7 +139,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     monitors.
 
     After that, it enters a monitor loop and repeatedly checks for new
-    sensor data, and then calls the coretools.do_control_logic() function
+    sensor data, and then calls the coretools.sumppi_control_logic() function
     to make decisions about what to do based on this data.
 
     Raises:
@@ -271,9 +271,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                     sump_reading = reading
 
             #Logic.
-            reading_interval = core_tools.do_control_logic(sump_reading, butts_reading,
-                                                           butts_float_reading, devices,
-                                                           monitors, sockets, reading_interval)
+            reading_interval = core_tools.sumppi_control_logic(sump_reading, butts_reading,
+                                                               butts_float_reading, devices,
+                                                               monitors, sockets, reading_interval)
 
             #Wait until it's time to check for another reading.
             time.sleep(reading_interval)

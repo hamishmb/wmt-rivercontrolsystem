@@ -211,7 +211,7 @@ class TestControlLogic(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_1(self):
+    def test_sumppi_control_logic_(self):
         pass
 
 class TestMiscFunctions(unittest.TestCase):

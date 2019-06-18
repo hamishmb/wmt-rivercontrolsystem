@@ -465,8 +465,8 @@ def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None)
     return reading
 
 # -------------------- CONTROL LOGIC FUNCTIONS --------------------
-def do_control_logic(sump_reading_obj, butts_reading_obj, butts_float_reading,
-                     devices, monitors, sockets, reading_interval):
+def sumppi_control_logic(sump_reading_obj, butts_reading_obj, butts_float_reading,
+                         devices, monitors, sockets, reading_interval):
     """
     This function is used to decides what action to take based
     on the readings it is passed.
@@ -510,7 +510,7 @@ def do_control_logic(sump_reading_obj, butts_reading_obj, butts_float_reading,
 
     Usage:
 
-        >>> reading_interval = do_control_logic(<asumpreading>, <abuttsreading>,
+        >>> reading_interval = sumppi_control_logic(<asumpreading>, <abuttsreading>,
         >>>                                     <listofprobes>, <listofmonitors>,
         >>>                                     <listofsockets>, <areadinginterval)
 
