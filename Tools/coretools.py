@@ -105,11 +105,44 @@ class Reading:
     # ---------- CONSTRUCTORS ----------
     def __init__(self, reading_time, reading_tick, reading_id, reading_value, reading_status):
         """This is the constructor as defined above"""
-        #Set some semi-private variables. TODO format checking.
+        #Set some semi-private variables.
+        #Check the time is a string.
+        #TODO Check that the time string is valid as well.
+        if not isinstance(reading_time, str):
+            raise ValueError("reading_time argument must be of type str")
+ 
         self._time = reading_time
+
+        #Check the tick is valid.
+        if not isinstance(reading_tick, int):
+            raise ValueError("reading_tick argument must be of type int")
+
+        if not reading_tick >= 0:
+            raise ValueError("reading_tick argument must be a positive int")
+
         self._tick = reading_tick
+
+        #Check the ID is valid.
+        if not isinstance(reading_id, str) \
+            or ":" not in reading_id \
+            or len(reading_id.split(":")) != 2 \
+            or reading_id.split(":")[0] == "" \
+            or reading_id.split(":")[1] == "":
+
+            raise ValueError("Invalid ID: "+str(reading_id))
+
         self._id = reading_id
+
+        #Check the value is valid.
+        if not isinstance(reading_value, str):
+            raise ValueError("reading_value argument must be of type str")
+
         self._value = reading_value
+
+        #Check the status is valid.
+        if not isinstance(reading_status, str):
+            raise ValueError("reading_status argument must be of type str")
+
         self._status = reading_status
 
     # ---------- INFO GETTER METHODS ----------
