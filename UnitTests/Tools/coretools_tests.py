@@ -640,6 +640,30 @@ class TestSumpPiControlLogic(unittest.TestCase):
                                                            self.monitors, self.sockets,
                                                            0)
 
+    def test_sumppi_control_logic_bad_6(self):
+        """Test this works when the readings for the sump and the butts are over 1000mm."""
+        #Create reading objects.
+        sump_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "1100mm", "OK")
+        butts_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "4400mm", "OK")
+        butts_float_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        reading_interval = core_tools.sumppi_control_logic(sump_reading, butts_reading,
+                                                           butts_float_reading, self.devices,
+                                                           self.monitors, self.sockets,
+                                                           self.reading_interval)
+
+    def test_sumppi_control_logic_bad_7(self):
+        """Test this works when the readings for the sump and the butts are under 0mm."""
+        #Create reading objects.
+        sump_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "-100mm", "OK")
+        butts_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "-400mm", "OK")
+        butts_float_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        reading_interval = core_tools.sumppi_control_logic(sump_reading, butts_reading,
+                                                           butts_float_reading, self.devices,
+                                                           self.monitors, self.sockets,
+                                                           self.reading_interval)
+
     #-------------------- EXCEPTIONAL VALUES --------------------
     @unittest.expectedFailure
     def test_sumppi_control_logic_exceptional_1(self):
@@ -654,6 +678,42 @@ class TestSumpPiControlLogic(unittest.TestCase):
                                                            self.monitors, self.sockets,
                                                            -78)
 
+    @unittest.expectedFailure
+    def test_sumppi_control_logic_exceptional_2(self):
+        """Test this fails when the readings are None."""
+        #Create reading objects.
+        sump_reading = None
+        butts_reading = None
+        butts_float_reading = None
+
+        reading_interval = core_tools.sumppi_control_logic(sump_reading, butts_reading,
+                                                           butts_float_reading, self.devices,
+                                                           self.monitors, self.sockets,
+                                                           self.reading_interval)
+    @unittest.expectedFailure
+    def test_sumppi_control_logic_exceptional_3(self):
+        """Test this fails when the butts float switch reading is a string of nonsense."""
+        #Create reading objects.
+        sump_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "100mm", "OK")
+        butts_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "400mm", "OK")
+        butts_float_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "ABCDEF", "OK")
+
+        reading_interval = core_tools.sumppi_control_logic(sump_reading, butts_reading,
+                                                           butts_float_reading, self.devices,
+                                                           self.monitors, self.sockets,
+                                                           self.reading_interval)
+    @unittest.expectedFailure
+    def test_sumppi_control_logic_exceptional_4(self):
+        """Test this fails when the level readings are not integers."""
+        #Create reading objects.
+        sump_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "0xemm", "OK")
+        butts_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "rydfmm", "OK")
+        butts_float_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        reading_interval = core_tools.sumppi_control_logic(sump_reading, butts_reading,
+                                                           butts_float_reading, self.devices,
+                                                           self.monitors, self.sockets,
+                                                           self.reading_interval)
 class TestMiscFunctions(unittest.TestCase):
     """
     This test class tests the miscellaneous functions in

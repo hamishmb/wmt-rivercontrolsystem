@@ -317,153 +317,6 @@ class Reading:
                 + "," + self._value
                 + "," + self._status)
 
-# -------------------- MISCELLANEOUS FUNCTIONS --------------------
-def setup_devices(system_id, dictionary="Probes"):
-    """
-    This function is used to set up the device objects for each site.
-
-    Args:
-        system_id (str):              The system (pi) that we're setting up for.
-
-    KWargs:
-        dictionary (str):             The dictionary in config.py to set up for.
-                                      If not specified, default is "Probes".
-
-    Returns:
-        A list of the device objects that were set up.
-
-    Usage:
-        >>> setup_devices("G4")
-
-    """
-    devices = []
-
-    for device_id in config.SITE_SETTINGS[system_id][dictionary]:
-        device_settings = config.SITE_SETTINGS[system_id][dictionary][device_id]
-
-        device_name = device_settings["Name"]
-        _type = device_settings["Type"]
-        device = device_settings["Class"]
-        device = device(device_id, device_name)
-
-        if _type == "Hall Effect Probe":
-            high_limits = device_settings["HighLimits"]
-            low_limits = device_settings["LowLimits"]
-
-            #Create the multdimensional list for the Depth values
-            depths = []
-            depths.append(device_settings["Depths100s"])
-            depths.append(device_settings["Depths25s"])
-            depths.append(device_settings["Depths50s"])
-            depths.append(device_settings["Depths75s"])
-
-            device.set_limits(high_limits, low_limits)
-            device.set_depths(depths)
-            device.start_thread()
-
-        elif _type == "Motor":
-            #The pins are outputs for these.
-            pins = device_settings["Pins"]
-            device.set_pins(pins, _input=False)
-            
-        else:
-            pins = device_settings["Pins"]
-            device.set_pins(pins)
-
-        devices.append(device)
-
-    return devices
-
-def setup_valve(system_id):
-    """
-    This function is used to set up gate valves.
-
-    Args:
-        system_id (str):              The system (pi) that we're setting up for.
-
-    Returns:
-        A reference to the GateValve object created.
-
-    Usage:
-        >>> setup_valve("V4")
-
-    """
-    valve_settings = config.SITE_SETTINGS[system_id]
-
-    valve_name = valve_settings["Name"]
-    _type = valve_settings["Type"]
-    valve = valve_settings["Class"]
-    pins = valve_settings["Pins"]
-    pos_tolerance = valve_settings["posTolerance"]
-    max_open = valve_settings["maxOpen"]
-    min_open = valve_settings["minOpen"]
-    ref_voltage = valve_settings["refVoltage"]
-
-    valve = valve(system_id, valve_name, pins, pos_tolerance, max_open, min_open, ref_voltage)
-
-    return valve
-
-def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None):
-    """
-    This function is used to get, handle, and return new readings from the
-    monitors. It checks each monitor to see if there is data, then prints
-    and logs it if needed, before writing the new reading down the socket
-    to the master pi, if a connection has been set up.
-
-    Args:
-        monitor (BaseMonitorClass):     The monitor we're checking.
-        _type (str):                    The type of probe we're monitoring.
-
-    KWargs:
-        server_address (str):           The server address. Set to None if
-                                        not specified.
-
-        socket (Sockets):               The socket connected to the master pi.
-                                        Set to None if not specified.
-
-    Returns:
-        A Reading object.
-
-    Usage:
-
-        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>)
-
-        OR
-
-        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, "192.168.0.2")
-
-        OR
-
-        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, "192.168.0.2", <Socket-Obj>)
-    """
-
-    reading = None
-
-    while monitor.has_data():
-        last_reading = monitor.get_previous_reading()
-
-        reading = monitor.get_reading()
-
-        #Check if the reading is different to the last reading.
-        if reading == last_reading: #TODO What to do here if a fault is detected?
-            #Write a . to each file.
-            logger.info(".")
-            print(".", end='') #Disable newline when printing this message.
-
-        else:
-            #Write any new readings to the file and to stdout.
-            logger.info(str(reading))
-
-            print(reading)
-
-        #Flush buffers.
-        sys.stdout.flush()
-
-        if server_address is not None:
-            socket.write(reading)
-
-    return reading
-
 # -------------------- CONTROL LOGIC FUNCTIONS --------------------
 #TODO update the documentation, this is old.
 def sumppi_control_logic(sump_reading_obj, butts_reading_obj, butts_float_reading,
@@ -537,13 +390,16 @@ def sumppi_control_logic(sump_reading_obj, butts_reading_obj, butts_float_readin
     assert butts_pump is not None
 
     #Check that the devices list is not empty.
-    assert len(devices) > 0
+    assert devices
 
     #Check that the sockets list is not empty.
-    assert len(sockets) > 0
+    assert sockets
 
     #Check that the reading interval is positive, and greater than 0.
     assert reading_interval > 0
+
+    #Check that the butts float switch reading is sane.
+    assert butts_float_reading.get_value() in ("True", "False")
 
     if sump_reading >= 600:
         #Level in the sump is getting high.
@@ -740,3 +596,150 @@ def sumppi_control_logic(sump_reading_obj, butts_reading_obj, butts_float_readin
         each_socket.write("Reading Interval: "+str(reading_interval))
 
     return reading_interval
+
+# -------------------- MISCELLANEOUS FUNCTIONS --------------------
+def setup_devices(system_id, dictionary="Probes"):
+    """
+    This function is used to set up the device objects for each site.
+
+    Args:
+        system_id (str):              The system (pi) that we're setting up for.
+
+    KWargs:
+        dictionary (str):             The dictionary in config.py to set up for.
+                                      If not specified, default is "Probes".
+
+    Returns:
+        A list of the device objects that were set up.
+
+    Usage:
+        >>> setup_devices("G4")
+
+    """
+    devices = []
+
+    for device_id in config.SITE_SETTINGS[system_id][dictionary]:
+        device_settings = config.SITE_SETTINGS[system_id][dictionary][device_id]
+
+        device_name = device_settings["Name"]
+        _type = device_settings["Type"]
+        device = device_settings["Class"]
+        device = device(device_id, device_name)
+
+        if _type == "Hall Effect Probe":
+            high_limits = device_settings["HighLimits"]
+            low_limits = device_settings["LowLimits"]
+
+            #Create the multdimensional list for the Depth values
+            depths = []
+            depths.append(device_settings["Depths100s"])
+            depths.append(device_settings["Depths25s"])
+            depths.append(device_settings["Depths50s"])
+            depths.append(device_settings["Depths75s"])
+
+            device.set_limits(high_limits, low_limits)
+            device.set_depths(depths)
+            device.start_thread()
+
+        elif _type == "Motor":
+            #The pins are outputs for these.
+            pins = device_settings["Pins"]
+            device.set_pins(pins, _input=False)
+            
+        else:
+            pins = device_settings["Pins"]
+            device.set_pins(pins)
+
+        devices.append(device)
+
+    return devices
+
+def setup_valve(system_id):
+    """
+    This function is used to set up gate valves.
+
+    Args:
+        system_id (str):              The system (pi) that we're setting up for.
+
+    Returns:
+        A reference to the GateValve object created.
+
+    Usage:
+        >>> setup_valve("V4")
+
+    """
+    valve_settings = config.SITE_SETTINGS[system_id]
+
+    valve_name = valve_settings["Name"]
+    _type = valve_settings["Type"]
+    valve = valve_settings["Class"]
+    pins = valve_settings["Pins"]
+    pos_tolerance = valve_settings["posTolerance"]
+    max_open = valve_settings["maxOpen"]
+    min_open = valve_settings["minOpen"]
+    ref_voltage = valve_settings["refVoltage"]
+
+    valve = valve(system_id, valve_name, pins, pos_tolerance, max_open, min_open, ref_voltage)
+
+    return valve
+
+def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None):
+    """
+    This function is used to get, handle, and return new readings from the
+    monitors. It checks each monitor to see if there is data, then prints
+    and logs it if needed, before writing the new reading down the socket
+    to the master pi, if a connection has been set up.
+
+    Args:
+        monitor (BaseMonitorClass):     The monitor we're checking.
+        _type (str):                    The type of probe we're monitoring.
+
+    KWargs:
+        server_address (str):           The server address. Set to None if
+                                        not specified.
+
+        socket (Sockets):               The socket connected to the master pi.
+                                        Set to None if not specified.
+
+    Returns:
+        A Reading object.
+
+    Usage:
+
+        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>)
+
+        OR
+
+        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, "192.168.0.2")
+
+        OR
+
+        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, "192.168.0.2", <Socket-Obj>)
+    """
+
+    reading = None
+
+    while monitor.has_data():
+        last_reading = monitor.get_previous_reading()
+
+        reading = monitor.get_reading()
+
+        #Check if the reading is different to the last reading.
+        if reading == last_reading: #TODO What to do here if a fault is detected?
+            #Write a . to each file.
+            logger.info(".")
+            print(".", end='') #Disable newline when printing this message.
+
+        else:
+            #Write any new readings to the file and to stdout.
+            logger.info(str(reading))
+
+            print(reading)
+
+        #Flush buffers.
+        sys.stdout.flush()
+
+        if server_address is not None:
+            socket.write(reading)
+
+    return reading

@@ -33,7 +33,7 @@ LOGGER_LEVEL = logging.CRITICAL
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s: %(message)s',
                     datefmt='%d/%m/%Y %I:%M:%S %p', level=LOGGER_LEVEL)
 
-def usage():
+def usage(): #TODO update me for new arguments
     """
     This function is used to output help information to the standard output
     if the user passes invalid/incorrect commandline arguments.
@@ -46,8 +46,16 @@ def usage():
     print("\nUsage: unittests.py [OPTION]\n\n")
     print("Options:\n")
     print("       -h, --help:                   Show this help message")
-    print("       -d, --debug                   Enable debug mode")
-    print("       -a, --all:                    Run all the tests. The default.\n")
+    print("       -D, --debug                   Enable debug mode")
+    print("       -a, --all:                    Run all the tests. The default.")
+    print("       -c, --coretools:              Run only the tests for the")
+    print("                                     coretools module.")
+    print("       -d, --deviceobjects:          Run only the tests for the")
+    print("                                     deviceobjects module.")
+    print("       -m, --monitortools:           Run only the tests for the")
+    print("                                     monitortools module.")
+    print("       -s, --sockettools:            Run only the tests for the")
+    print("                                     sockettools module.")
     print("unittests.py is released under the GNU GPL Version 3")
     print("Copyright (C) Wimborne Model Town 2017-2019")
 
@@ -102,6 +110,9 @@ if __name__ == "__main__":
         elif o in ["-h", "--help"]:
             usage()
             sys.exit()
+
+        elif o in ["-D", "--debug"]:
+            pass
 
         else:
             assert False, "unhandled option"
