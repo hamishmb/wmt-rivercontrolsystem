@@ -36,7 +36,6 @@ from the rest of the program.
 """
 
 #Standard Imports.
-import threading
 import time
 import logging
 
@@ -47,15 +46,6 @@ try:
     #Allow us to generate documentation on non-RPi systems.
     import RPi.GPIO as GPIO                             # GPIO imports and setups
     GPIO.setmode(GPIO.BCM)
-
-    import board                                        # Imports for A/D Converter
-    import busio
-    import adafruit_ads1x15.ads1115 as ADS
-    from adafruit_ads1x15.analog_in import AnalogIn
-
-    i2c = busio.I2C(board.SCL, board.SDA)               # Create the I2C bus
-
-    ads = ADS.ADS1115(i2c)                              # Create the ADC object using the I2C bus
 
 except ImportError:
     pass
@@ -526,7 +516,7 @@ class HallEffectDevice(BaseDeviceClass):
 
         return rpm, "OK" #TODO Actual fault checking.
 
-class HallEffectProbe(BaseDeviceClass, threading.Thread):
+class HallEffectProbe(BaseDeviceClass):
     """
     This class is used to represent the new type of magnetic probe.  This probe
     encodes the water level as four voltages at 100 mm intervals.  Each of the four voltage
@@ -548,9 +538,6 @@ class HallEffectProbe(BaseDeviceClass, threading.Thread):
         #Call the base class constructor.
         BaseDeviceClass.__init__(self, _id, _name)
 
-        #Initialise the thread.
-        threading.Thread.__init__(self)
-
         #Set some semi-private variables.
         self._current_reading = 0                  #Internal use only.
         self._post_init_called = False             #Internal use only.
@@ -560,15 +547,9 @@ class HallEffectProbe(BaseDeviceClass, threading.Thread):
         self.depths = None                         #The multidimensional list of 4 rows or depths.
         self.length = None                         #The number of sensors in each stack.
 
-        # Create four single-ended inputs on channels 0 to 3
-        self.chan0 = AnalogIn(ads, ADS.P0)
-        self.chan1 = AnalogIn(ads, ADS.P1)
-        self.chan2 = AnalogIn(ads, ADS.P2)
-        self.chan3 = AnalogIn(ads, ADS.P3)
-
     def start_thread(self):
         """Start the thread to keep polling the probe."""
-        self.start()
+        device_mgmt.ManageHallEffectProbe(self)
 
     def set_limits(self, high_limits, low_limits):
         """
@@ -609,93 +590,6 @@ class HallEffectProbe(BaseDeviceClass, threading.Thread):
 
         #We need to count the number of sensors in the stack, not the number of stacks!
         self.length = len(depths[0])
-
-    def get_compensated_probe_voltages(self):
-        """This function performs the measurement of the four voltages and applies the compensation
-        to take out errors caused by the varying output impedance of the probe
-        """
-         # Initialise Lists and variables to hold the working values in each column
-        v_meas = list()                                      # Actual voltages
-        v_comp = list()                                      # Compensated values
-        result = list()                                                # Measured value and column
-
-        # Prepare v_comp to hold 4 values (pre-populate to avoid errors).
-        for i in range(0, 4):
-            v_comp.append(0)
-
-        # Measure the voltage in each chain
-        v_meas.append(self.chan0.voltage)
-        v_meas.append(self.chan1.voltage)
-        v_meas.append(self.chan2.voltage)
-        v_meas.append(self.chan3.voltage)
-
-        # Find the minimum value
-        v_min = min(v_meas)
-
-        # Find the column that the minimum value is in
-        min_column = v_meas.index(min(v_meas))
-
-        # Work out the average of the three highest measurements
-        #(thus ignoring the 'dipped' channel).
-        v_tot = v_meas[0] + v_meas[1] + v_meas[2] + v_meas[3]
-        v_avg = (v_tot - v_min)/3
-
-        # Calculate the compensated value for each channel.
-        if v_min >= 3.0:
-            # Take a shortcut when the magnet is between sensors
-            v_comp[0] = v_comp[1] = v_comp[2] = v_comp[3] = v_avg - v_min
-
-        else:
-            if min_column in (0, 1, 2, 3):
-                v_comp[min_column] = v_avg - v_min
-
-            else:
-                #NB: Will this ever happen? It seems impossible to me - Hamish.
-                v_comp[min_column] = v_avg
-
-        result = v_comp, min_column
-
-        return result
-
-    def test_levels(self):
-        count = 0
-        level = 1000                                              # Value to return
-
-        while count < self.length:
-            v_comp, min_column = self.get_compensated_probe_voltages()
-
-            # Now test the channel with the dip to see if any of the sensors are triggered
-            if ((v_comp[min_column] <= self.high_limits[count])
-                    and (v_comp[min_column] >= self.low_limits[count])):
-
-                level = self.depths[min_column][count]
-
-            else:
-                #FIXME: This fills up the log file pretty quickly - why?
-                logger.debug("Possible faulty probe - no limits passed")
-
-            count += 1
-
-        return level
-
-    def run(self): #FIXME This is not a monitor thread! Fix documentation.
-        """The main body of the monitor thread for this probe"""
-        #FIXME We need a way of exiting from this cleanly on
-        #program shutdown.
-
-        while True:
-            new_reading = self.test_levels()
-
-            if new_reading == 1000:
-                #No Sensors Triggered - leave the reading as it was.
-                logger.debug("Between levels - no sensors triggered")
-
-            else:
-                #Only update this if we got a meaningful reading from the probe.
-                #Aka at least 1 sensor triggered.
-                self._current_reading = new_reading
-
-            time.sleep(0.5)
 
     # ---------- CONTROL METHODS ----------
     def get_reading(self):
