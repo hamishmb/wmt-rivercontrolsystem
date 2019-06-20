@@ -30,6 +30,7 @@ a bit more of the complexity away.
 
 from collections import deque
 import time
+import os
 import datetime
 import threading
 
@@ -256,6 +257,10 @@ class BaseMonitorClass(threading.Thread):
         """
 
         #TODO need a logger here and to catch exceptions.
+        #Create the readings directory if it doesn't exist.
+        if not os.path.isdir("readings"):
+            os.mkdir("readings")
+
         #Time format: yyyy-mm-dd hh:mm:ss
         the_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
