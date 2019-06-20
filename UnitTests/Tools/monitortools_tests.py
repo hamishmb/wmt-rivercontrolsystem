@@ -21,27 +21,122 @@
 #Import modules
 import unittest
 import sys
+import datetime
+import threading
 
 #Import other modules.
 sys.path.append('../..') #Need to be able to import the Tools module from here.
 
 import Tools
 import Tools.monitortools as monitor_tools
+import Tools.coretools as core_tools
 
 #Import test data and functions.
-#TODO if needed.
+from . import monitortools_test_data as data
 
 class TestBaseMonitorClass(unittest.TestCase):
     """This test class tests the features of the BaseMonitorClass class in Tools/monitortools.py"""
-
     def setUp(self):
-        pass
+        self.basemonitor = monitor_tools.BaseMonitorClass("SUMP", "M0")
+
+        self.reading = core_tools.Reading(str(datetime.datetime.now()), 0,
+                                     "G4:M0", "400mm", "OK")
+
+        self.basemonitor.queue.append(self.reading)
 
     def tearDown(self):
-        pass
+        del self.reading
+        del self.basemonitor
 
-    def test_1(self):
-        pass
+    def set_exited_flag(self):
+        self.basemonitor.running = False
+
+    def test_constructor_1(self):
+        """Test that the constructor works when passed valid arguments"""
+        for dataset in data.TEST_BASEMONITOR_DATA:
+            system_id = dataset[0]
+            device_id = dataset[1]
+
+            new_basemonitor = monitor_tools.BaseMonitorClass(system_id, device_id)
+
+            self.assertEqual(new_basemonitor.get_system_id(), system_id)
+            self.assertEqual(new_basemonitor.get_probe_id(), device_id)
+
+    def test_constructor_2(self):
+        """Test that the constructor fails when passed invalid arguments"""
+        for dataset in data.TEST_BASEMONITOR_BAD_DATA:
+            system_id = dataset[0]
+            device_id = dataset[1]
+
+            try:
+                new_basemonitor = monitor_tools.BaseMonitorClass(system_id, device_id)
+
+            except ValueError:
+                #This is expected.
+                pass
+
+            else:
+                #These should all throw errors!
+                self.assertTrue(False, "ValueError was expected for data: "+str(dataset))
+
+    def test_get_reading_1(self):
+        """Test that get_reading works when there is a reading to return."""
+        self.assertEqual(self.basemonitor.get_reading(), self.reading)
+
+    @unittest.expectedFailure
+    def test_get_reading_2(self):
+        """Test that get_reading fails when there are no readings to return."""
+        self.assertEqual(self.basemonitor.get_reading(), self.reading)
+        self.assertEqual(self.basemonitor.get_reading(), self.reading)
+
+    def test_get_previous_reading_1(self):
+        """Test that get_previous_reading returns "" when no previous reading is available"""
+        self.assertEqual(self.basemonitor.get_previous_reading(), "")
+
+    def test_get_previous_reading_2(self):
+        """Test that get_previous_reading works when a previous reading is available"""
+        self.basemonitor.get_reading()
+        self.assertEqual(self.basemonitor.get_previous_reading(), self.reading)
+
+    def test_is_running_1(self):
+        """Test that is_running reports status correctly when not running"""
+        self.assertFalse(self.basemonitor.is_running())
+
+    def test_is_running_2(self):
+        """Test that is_running reports status correctly when running"""
+        self.basemonitor.running = True
+        self.assertTrue(self.basemonitor.is_running())
+
+    def test_has_data_1(self):
+        """Test that has_data works when there is data on the queue"""
+        self.assertTrue(self.basemonitor.has_data())
+
+    def test_has_data_2(self):
+        """Test that has_data works when there isn't data on the queue"""
+        self.basemonitor.get_reading()
+        self.assertFalse(self.basemonitor.has_data())
+
+    def test_set_reading_interval_1(self):
+        """Test that setting the reading interval works"""
+        for i in range(0, 600):
+            self.basemonitor.set_reading_interval(i)
+            self.assertEqual(self.basemonitor.reading_interval, i)
+
+    #TODO: Test create_file_handle
+
+    def test_request_exit_1(self):
+        """Test that requesting exit without waiting works"""
+        self.basemonitor.request_exit()
+        self.assertTrue(self.basemonitor.should_exit)
+
+    def test_request_exit_2(self):
+        """Test that requesting exit and waiting works"""
+        self.basemonitor.running = True
+
+        #Schedule the exit flag to be set in 10 seconds.
+        threading.Timer(10, self.set_exited_flag).start()
+        self.basemonitor.request_exit(wait=True)
+        self.assertTrue(self.basemonitor.should_exit)
 
 class TestMonitor(unittest.TestCase):
     """

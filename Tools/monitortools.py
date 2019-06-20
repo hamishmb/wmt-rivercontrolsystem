@@ -69,6 +69,13 @@ class BaseMonitorClass(threading.Thread):
     def __init__(self, system_id, probe_id):
         """Constructor as documented above"""
         threading.Thread.__init__(self)
+        #Check IDs are sane.
+        for _id in (system_id, probe_id):
+            if ":" in _id \
+                or _id == "":
+
+                raise ValueError("Invalid ID: "+_id)
+
         self.system_id = system_id
         self.probe_id = probe_id
 
@@ -101,36 +108,83 @@ class BaseMonitorClass(threading.Thread):
         #Used to ask the monitor thread to exit.
         self.should_exit = False
 
-    def create_file_handle(self):
+    #---------- GETTERS ----------
+    def get_system_id(self):
         """
-        This method is used to create / update the
-        file containing the readings for this probe.
-        The file will be opened in append mode, and
-        a CSV header and start time will be written.
+        This method returns the system ID of the probe this monitor
+        is monitoring.
 
-        The name for the file will be readings/<system_id>:<probe_name>.csv
-
-        For example: readings/G4:M0.csv
+        Returns:
+            string. The system ID.
 
         Usage:
-            >>> <BaseMonitorClassObject>.create_file_handle()
 
+            >>> <BaseMonitorClassObject>.get_system_id()
+            >>> "G4"
+        """
+        return self.system_id
+
+    def get_probe_id(self):
+        """
+        This method returns the probe ID of the probe this monitor
+        is monitoring.
+
+        Returns:
+            string. The probe ID.
+
+        Usage:
+
+            >>> <BaseMonitorClassObject>.get_probe_id()
+            >>> "M0"
+        """
+        return self.probe_id
+
+    def get_reading(self):
+        """
+        This method returns the oldest reading on the queue (so that
+        if there are multiple readings they are read in the correct
+        order), and deletes it from the queue.
+
+        The reading ID is a combination of the system ID and the
+        sensor ID.
+
+        Throws:
+            IndexError, if there is no reading to return.
+
+        Returns:
+            A Reading object (see coretools.Reading).
+
+            .. note::
+                  The content of the value attribute differs slightly
+                  between probe types, because they eg don't all measure
+                  water depth in mm.
+
+        Usage:
+
+            >>> reading_id, time, reading, status = <BaseMonitorClassObject>.get_reading()
         """
 
-        #TODO need a logger here and to catch exceptions.
-        #Time format: yyyy-mm-dd hh:mm:ss
-        the_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        self.prev_reading = self.queue[0]
 
-        self.file_handle = open(self.file_name+"-"+the_time+".csv", "a")
+        return self.queue.popleft()
 
-        #Write the start time and the CSV header.
-        self.file_handle.write("\n\nStart Time: "+the_time+"\n\n")
-        self.file_handle.write("\nTIME,SYSTEM TICK,ID,VALUE,STATUS\n")
-        self.file_handle.flush()
+    def get_previous_reading(self):
+        """
+        This method returns the previous (next-to-newest) reading.
+        Call it before you get the next reading.
 
-        #Set the file creation time so we can rotate readings files.
-        #This uses the datetime class cos it's easier to compare times that way.
-        self.file_creation_time = datetime.datetime.now()
+        The reading format differs to the above, because the time
+        and status aren't included. Only the value is included eg
+        "500".
+
+        Returns:
+            A Reading object.
+
+        Usage:
+            >>> reading = <BaseMonitorClassObject>.get_previous_reading()
+        """
+
+        return self.prev_reading
 
     def is_running(self):
         """
@@ -166,52 +220,9 @@ class BaseMonitorClass(threading.Thread):
             >>> state = <BaseMonitorClassObject>.has_data()
         """
 
-        return int(len(self.queue))
+        return bool(len(self.queue))
 
-    def get_reading(self):
-        """
-        This method returns the oldest reading on the queue (so that
-        if there are multiple readings they are read in the correct
-        order), and deletes it from the queue.
-
-        The reading ID is a combination of the system ID and the
-        sensor ID.
-
-        Returns:
-            A Reading object (see coretools.Reading).
-
-            .. note::
-                  The content of the value attribute differs slightly
-                  between probe types, because they eg don't all measure
-                  water depth in mm.
-
-        Usage:
-
-            >>> reading_id, time, reading, status = <BaseMonitorClassObject>.get_reading()
-        """
-
-        self.prev_reading = self.queue[0]
-
-        return self.queue.popleft()
-
-    def get_previous_reading(self):
-        """
-        This method returns the previous (next-to-newest) reading.
-        Call it before you get the next reading.
-
-        The reading format differs to the above, because the time
-        and status aren't included. Only the value is included eg
-        "500".
-
-        Returns:
-            A Reading object.
-
-        Usage:
-            >>> reading =  <BaseMonitorClassObject>.get_previous_reading()
-        """
-
-        return self.prev_reading
-
+    #---------- SETTERS ----------
     def set_reading_interval(self, interval):
         """
         This method sets the reading interval, with immediate effect (ie, if
@@ -226,6 +237,38 @@ class BaseMonitorClass(threading.Thread):
         """
 
         self.reading_interval = interval
+
+    #---------- CONTROL METHODS ----------
+    def create_file_handle(self):
+        """
+        This method is used to create / update the
+        file containing the readings for this probe.
+        The file will be opened in append mode, and
+        a CSV header and start time will be written.
+
+        The name for the file will be readings/<system_id>:<probe_name>.csv
+
+        For example: readings/G4:M0.csv
+
+        Usage:
+            >>> <BaseMonitorClassObject>.create_file_handle()
+
+        """
+
+        #TODO need a logger here and to catch exceptions.
+        #Time format: yyyy-mm-dd hh:mm:ss
+        the_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+
+        self.file_handle = open(self.file_name+"-"+the_time+".csv", "a")
+
+        #Write the start time and the CSV header.
+        self.file_handle.write("\n\nStart Time: "+the_time+"\n\n")
+        self.file_handle.write("\nTIME,SYSTEM TICK,ID,VALUE,STATUS\n")
+        self.file_handle.flush()
+
+        #Set the file creation time so we can rotate readings files.
+        #This uses the datetime class cos it's easier to compare times that way.
+        self.file_creation_time = datetime.datetime.now()
 
     def request_exit(self, wait=False):
         """
