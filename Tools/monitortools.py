@@ -415,6 +415,7 @@ class Monitor(BaseMonitorClass):
 
         except BaseException as err:
             #Ignore all errors. Generally bad practice :P
+            #TODO log these!
             print("\nCaught Exception: ", err)
 
         self.file_handle.close()
@@ -529,6 +530,7 @@ class SocketsMonitor(BaseMonitorClass):
 
         except BaseException as err:
             #Ignore all errors. Generally bad practice :P
+            #TODO Log these errors!
             print("\nCaught Exception: ", err)
 
         self.file_handle.close()
