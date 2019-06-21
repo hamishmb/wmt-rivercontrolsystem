@@ -454,7 +454,7 @@ class Sockets:
 
         logger.info("Sockets._create_socket(): Done!")
 
-    def _connect_socket(self): #TODO Add timeout capability somehow.
+    def _connect_socket(self):
         """
         PRIVATE, implementation detail.
 
@@ -465,6 +465,8 @@ class Sockets:
 
             >>> <Sockets-Obj>._connect_socket()
         """
+        #TODO Add timeout capability somehow.
+        #TODO If the socket never connects, this will stop the program from exiting.
 
         logger.info("Sockets._connect_socket(): Attempting to connect to the requested socket...")
 
