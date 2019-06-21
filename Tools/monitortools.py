@@ -323,7 +323,7 @@ class BaseMonitorClass(threading.Thread):
 
         if wait:
             while self.running:
-                time.sleep(5)
+                time.sleep(0.5)
 
 # ---------- Universal Monitor ----------
 class Monitor(BaseMonitorClass):

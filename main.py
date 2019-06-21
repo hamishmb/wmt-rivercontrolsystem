@@ -291,12 +291,18 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         print("Caught keyboard interrupt. Asking monitor threads to exit.")
         print("This may take a little while, so please be patient...")
 
-        for monitor in monitors:
-            monitor.request_exit(wait=True)
+    for monitor in monitors:
+        monitor.request_exit()
+
+    logger.info("Waiting for monitor threads to exit...")
+    print("Waiting for monitor threads to exit...")
+
+    for monitor in monitors:
+        monitor.request_exit(wait=True)
 
     #Always clean up properly.
-    logger.info("Cleaning up...")
-    print("Cleaning up...")
+    logger.info("Waiting for sockets to exit...")
+    print("Waiting for sockets to exit...")
 
     for each_socket in sockets.values():
         each_socket.request_handler_exit()
