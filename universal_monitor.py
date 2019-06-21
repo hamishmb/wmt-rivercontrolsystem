@@ -297,6 +297,9 @@ def run_standalone():
     socket.wait_for_handler_to_exit()
     socket.reset()
 
+    logger.info("Resetting GPIO pins...")
+    print("Resetting GPIO pins...")
+
     #Reset GPIO pins.
     GPIO.cleanup()
 

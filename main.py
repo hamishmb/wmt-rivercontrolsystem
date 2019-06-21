@@ -309,6 +309,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         each_socket.wait_for_handler_to_exit()
         each_socket.reset()
 
+    logger.info("Resetting GPIO pins...")
+    print("Resetting GPIO pins...")
+
     #Reset GPIO pins.
     GPIO.cleanup()
 
