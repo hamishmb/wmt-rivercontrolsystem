@@ -264,7 +264,7 @@ class Sockets:
 
         self.request_handler_exit()
 
-        while not self.socket.handler_exited:
+        while not self.handler_exited:
             time.sleep(0.5)
 
     def handler_has_exited(self):
