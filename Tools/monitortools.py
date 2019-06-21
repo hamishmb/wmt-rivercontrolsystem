@@ -14,6 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#pylint: disable=logging-not-lazy
+#
+#Reason (logging-not-lazy): Harder to understand the logging statements that way.
+
 """
 This is the part of the software framework that contains the
 monitor thread. This is used to obtain readings from sensors
@@ -31,10 +35,17 @@ a bit more of the complexity away.
 from collections import deque
 import time
 import os
+import traceback
 import datetime
 import threading
+import logging
 
 from . import coretools
+
+#Don't ask for a logger name, so this works with both main.py
+#and the universal monitor.
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
 
 # ---------- BASE CLASS ----------
 class BaseMonitorClass(threading.Thread):
@@ -256,20 +267,34 @@ class BaseMonitorClass(threading.Thread):
 
         """
 
-        #TODO need a logger here and to catch exceptions.
         #Create the readings directory if it doesn't exist.
         if not os.path.isdir("readings"):
+            logger.debug("Creating readings folder...")
             os.mkdir("readings")
 
         #Time format: yyyy-mm-dd hh:mm:ss
         the_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
+        #Open in append mode, just in case the file is already here.
         self.file_handle = open(self.file_name+"-"+the_time+".csv", "a")
 
-        #Write the start time and the CSV header.
-        self.file_handle.write("\n\nStart Time: "+the_time+"\n\n")
-        self.file_handle.write("\nTIME,SYSTEM TICK,ID,VALUE,STATUS\n")
-        self.file_handle.flush()
+        try:
+            #Write the start time and the CSV header.
+            self.file_handle.write("\n\nStart Time: "+the_time+"\n\n")
+            self.file_handle.write("\nTIME,SYSTEM TICK,ID,VALUE,STATUS\n")
+            self.file_handle.flush()
+
+        except Exception as e:
+            logger.error("Exception \n\n"+str(traceback.format_exc())
+                         + "\n\nwhile running!")
+
+            print("Exception \n\n"+str(traceback.format_exc())+"\n\nwhile running!")
+
+            #Make sure the file is closed.
+            self.file_handle.close()
+
+            #Raise the error, because we don't want to continue when this fails.
+            raise e
 
         #Set the file creation time so we can rotate readings files.
         #This uses the datetime class cos it's easier to compare times that way.
@@ -384,10 +409,16 @@ class Monitor(BaseMonitorClass):
 
                 if reading == previous_reading:
                     #Write a . to the file.
+                    logger.debug("Monitor for "+self.system_id+":"+self.probe_id
+                                 + ": New reading, same value as last time.")
+
                     self.file_handle.write(".")
 
                 else:
                     #Write it to the readings file.
+                    logger.debug("Monitor for "+self.system_id+":"+self.probe_id
+                                 + ": New reading, new value: "+reading.get_value())
+
                     self.file_handle.write("\n"+reading.as_csv())
 
                     previous_reading = reading
@@ -413,10 +444,14 @@ class Monitor(BaseMonitorClass):
                     self.create_file_handle()
                     previous_reading = None
 
-        except BaseException as err:
-            #Ignore all errors. Generally bad practice :P
-            #TODO log these!
-            print("\nCaught Exception: ", err)
+        except Exception:
+            #Log all of these errors to the log file.
+            logger.error("Exception \n\n"+str(traceback.format_exc())
+                         + "\n\nwhile running!")
+
+            print("Exception \n\n"+str(traceback.format_exc())+"\n\nwhile running!")
+
+        logger.debug("Monitor for "+self.system_id+":"+self.probe_id+": Exiting...")
 
         self.file_handle.close()
         self.running = False
@@ -507,10 +542,16 @@ class SocketsMonitor(BaseMonitorClass):
 
                         if reading == previous_reading:
                             #Write a . to the file.
+                            logger.debug("SocketsMonitor for "+self.system_id+":"+self.probe_id
+                                         + ": New reading, same value as last time.")
+
                             self.file_handle.write(".")
 
                         else:
                             #Write it to the readings file.
+                            logger.debug("SocketsMonitor for "+self.system_id+":"+self.probe_id
+                                         + ": New reading, new value: "+reading.get_value())
+
                             self.file_handle.write("\n"+reading.as_csv())
 
                             previous_reading = reading
@@ -528,10 +569,12 @@ class SocketsMonitor(BaseMonitorClass):
                     self.create_file_handle()
                     previous_reading = None
 
-        except BaseException as err:
-            #Ignore all errors. Generally bad practice :P
-            #TODO Log these errors!
-            print("\nCaught Exception: ", err)
+        except Exception:
+            #Log all of these errors to the log file.
+            logger.error("Exception \n\n"+str(traceback.format_exc())
+                         + "\n\nwhile running!")
+
+            print("Exception \n\n"+str(traceback.format_exc())+"\n\nwhile running!")
 
         self.file_handle.close()
         self.running = False
