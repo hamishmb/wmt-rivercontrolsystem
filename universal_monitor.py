@@ -290,12 +290,18 @@ def run_standalone():
         monitor.request_exit(wait=True)
 
     #Always clean up properly.
+    logger.info("Asking sockets to exit...")
+    print("Asking sockets to exit...")
+
+    for each_socket in sockets:
+        each_socket.request_handler_exit()
+
     logger.info("Waiting for sockets to exit...")
     print("Waiting for sockets to exit...")
 
-    socket.request_handler_exit()
-    socket.wait_for_handler_to_exit()
-    socket.reset()
+    for each_socket in sockets:
+        each_socket.wait_for_handler_to_exit()
+        each_socket.reset()
 
     logger.info("Resetting GPIO pins...")
     print("Resetting GPIO pins...")

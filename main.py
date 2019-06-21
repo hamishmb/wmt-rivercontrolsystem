@@ -301,11 +301,16 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         monitor.request_exit(wait=True)
 
     #Always clean up properly.
+    logger.info("Asking sockets to exit...")
+    print("Asking sockets to exit...")
+
+    for each_socket in sockets:
+        each_socket.request_handler_exit()
+
     logger.info("Waiting for sockets to exit...")
     print("Waiting for sockets to exit...")
 
-    for each_socket in sockets.values():
-        each_socket.request_handler_exit()
+    for each_socket in sockets:
         each_socket.wait_for_handler_to_exit()
         each_socket.reset()
 
