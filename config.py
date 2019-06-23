@@ -233,7 +233,7 @@ SITE_SETTINGS = {
             "ServerAddress": "192.168.0.2",
             "ServerPort": 30004,
             "ServerName": "SumpPi",
-            "SocketName:": "Wendy Street Buttspi Socket",
+            "SocketName": "Wendy Street Buttspi Socket",
             "SocketID": "SOCK4"
         },
 
@@ -274,8 +274,8 @@ SITE_SETTINGS = {
             "ServerAddress": "192.168.0.2",
             "ServerPort": 30006,
             "ServerName": "SumpPi",
-            "SocketName":         "Wendy Street Stagepi Socket",
-            "SocketID":           "SOCK6"
+            "SocketName": "Wendy Street Stagepi Socket",
+            "SocketID": "SOCK6"
 
         },
 
@@ -299,8 +299,8 @@ SITE_SETTINGS = {
             "ServerAddress": "192.168.0.2",
             "ServerPort": 30014,
             "ServerName": "SumpPi",
-            "SocketName":         "Wendy Street Butts Gate Valve V4 Socket",
-            "SocketID":           "SOCK14",
+            "SocketName": "Wendy Street Butts Gate Valve V4 Socket",
+            "SocketID": "SOCK14",
 
         }
 
