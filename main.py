@@ -182,7 +182,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     for site in config.SITE_SETTINGS:
         if site == "SUMP":
-            pass
+            continue
 
         site_settings = config.SITE_SETTINGS[site]
 
