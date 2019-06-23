@@ -176,13 +176,19 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     system_id = config.SITE_SETTINGS["SUMP"]["ID"]
 
     #Create all sockets.
+    #Use information from the other sites to figure out what sockets to create.
     logger.info("Creating sockets...")
     sockets = {}
 
-    for each_socket in config.SITE_SETTINGS["SUMP"]["Sockets"].values():
-        socket = socket_tools.Sockets("Socket", each_socket["Name"])
-        socket.set_portnumber(each_socket["PortNumber"])
-        sockets[each_socket["ID"]] = socket
+    for site in config.SITE_SETTINGS:
+        if site == "SUMP":
+            pass
+
+        site_settings = config.SITE_SETTINGS[site]
+
+        socket = socket_tools.Sockets("Socket", site_settings["SocketName"])
+        socket.set_portnumber(site_settings["ServerPort"])
+        sockets[site_settings["SocketID"]] = socket
 
         socket.start_handler()
 

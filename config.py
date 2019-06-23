@@ -153,35 +153,6 @@ SITE_SETTINGS = {
             "ID": "SUMP",
             "Default Interval": 15,
 
-            #Sockets to host.
-            "Sockets":
-                {
-
-                    #For connection to Wendy Street Butts Pi.
-                    "Wendy Street Buttspi Socket":
-                        {
-                            "ID":           "SOCK4",
-                            "Name":         "Wendy Street Buttspi Socket",
-                            "PortNumber":   30004
-                        },
-
-                    #For connection to Wendy Street Stage Pi.
-                    "Wendy Street Stagepi Socket":
-                        {
-                            "ID":           "SOCK6",
-                            "Name":         "Wendy Street Stagepi Socket",
-                            "PortNumber":   30006
-                        },
-
-                    #For connection to Wendy Street Butts Pi Gate Valve.
-                    "Wendy Street Butts Gate Valve Socket":
-                        {
-                            "ID":           "SOCK14",
-                            "Name":         "Wendy Street Butts Gate Valve V4 Socket",
-                            "PortNumber":   30014
-                        }
-                },
-
             #Local probes.
             "Probes":
                 {
@@ -261,7 +232,9 @@ SITE_SETTINGS = {
 
             "ServerAddress": "192.168.0.2",
             "ServerPort": 30004,
-            "ServerName": "SumpPi"
+            "ServerName": "SumpPi",
+            "SocketName:": "Wendy Street Buttspi Socket",
+            "SocketID": "SOCK4"
         },
 
     #Settings for the G6 site (client pi behind the stage).
@@ -300,7 +273,10 @@ SITE_SETTINGS = {
 
             "ServerAddress": "192.168.0.2",
             "ServerPort": 30006,
-            "ServerName": "SumpPi"
+            "ServerName": "SumpPi",
+            "SocketName":         "Wendy Street Stagepi Socket",
+            "SocketID":           "SOCK6"
+
         },
 
     #Gate Valves.
@@ -322,7 +298,10 @@ SITE_SETTINGS = {
             #Config for server connection.
             "ServerAddress": "192.168.0.2",
             "ServerPort": 30014,
-            "ServerName": "SumpPi"
+            "ServerName": "SumpPi",
+            "SocketName":         "Wendy Street Butts Gate Valve V4 Socket",
+            "SocketID":           "SOCK14",
+
         }
 
 }
