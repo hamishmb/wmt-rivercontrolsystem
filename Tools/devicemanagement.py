@@ -101,6 +101,8 @@ class ManageHallEffectProbe(threading.Thread):
         self.chan2 = AnalogIn(ads, ADS.P2)
         self.chan3 = AnalogIn(ads, ADS.P3)
 
+        self.start()
+
     def run(self): #FIXME This is not a monitor thread! Fix documentation.
         """The main body of the monitor thread for this probe"""
         #FIXME We need a way of exiting from this cleanly on
