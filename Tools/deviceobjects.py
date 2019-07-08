@@ -484,6 +484,10 @@ class FloatSwitch(BaseDeviceClass):
             >>> <FloatSwitch-Object>.set_active_state(False)    //Active low.
         """
 
+        #Check the state is valid.
+        if not isinstance(state, bool):
+            raise ValueError("Invalid state: "+str(state))
+
         self._active_state = state
 
     # ---------- INFO GETTER METHODS ----------

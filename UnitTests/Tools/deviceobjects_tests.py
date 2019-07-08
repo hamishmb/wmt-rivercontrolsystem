@@ -267,13 +267,53 @@ class TestFloatSwitch(unittest.TestCase):
     """
 
     def setUp(self):
-        pass
+        self.floatswitch = device_objects.FloatSwitch("G4:FS0", "Test")
 
     def tearDown(self):
-        pass
+        del self.floatswitch
 
-    def test_1(self):
-        pass
+    #---------- CONSTRUCTOR TESTS ----------
+    #Note: All arguments are validated in BaseDeviceClass, so no complex tests here.
+    def test_constructor_1(self):
+        """Test the constructor works as expected"""
+        floatswitch = device_objects.FloatSwitch("G6:FS1", "Testing")
+
+        self.assertTrue(self.floatswitch._active_state)
+
+    #---------- GETTER TESTS ----------
+    def test_get_reading_1(self):
+        """Test that get_reading() works as expected"""
+        #The fake GPIO.input() function alternates the return value each time - we can predict what it should be.
+        #By default the active state is True - active high.
+        self.assertEqual(self.floatswitch.get_reading(), (False, "OK"))
+        self.assertEqual(self.floatswitch.get_reading(), (True, "OK"))
+
+        #Now we will change the active state to False - active low.
+        self.floatswitch._active_state = False
+
+        self.assertEqual(self.floatswitch.get_reading(), (True, "OK"))
+        self.assertEqual(self.floatswitch.get_reading(), (False, "OK"))
+
+    #---------- SETTER TESTS ----------
+    def test_set_active_state_1(self):
+        """Test that set_active_state() works when given a valid state"""
+        for state in (False, True):
+            self.floatswitch.set_active_state(state)
+            self.assertEqual(self.floatswitch._active_state, state)
+
+    def test_set_active_state_2(self):
+        """Test that set_active_state() fails with invalid states"""
+        for state in (0, -1, 7.6, [], {}):
+            try:
+                self.floatswitch.set_active_state(state)
+
+            except ValueError:
+                #Expected.
+                pass
+
+            else:
+                #This should have failed!
+                self.assertTrue(False, "ValueError expected for data: "+str(state))
 
 class TestHallEffectDevice(unittest.TestCase):
     """
