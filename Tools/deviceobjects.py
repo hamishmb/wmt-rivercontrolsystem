@@ -80,7 +80,7 @@ class BaseDeviceClass:
                                     helping construct
                                     a subclass.
 
-        _id (string):                The probe's full ID.
+        _id (string):               The probe's full ID.
                                     Used to identify the
                                     probe. eg "G4:FS0"
 
@@ -95,7 +95,23 @@ class BaseDeviceClass:
     def __init__(self, _id, _name="<unspecified>"):
         """Constructor as documented above"""
         #Set some semi-private variables.
+        #Check the ID is valid.
+        if not isinstance(_id, str) \
+            or ":" not in _id \
+            or len(_id.split(":")) != 2 \
+            or _id.split(":")[0] == "" \
+            or _id.split(":")[1] == "":
+
+            raise ValueError("Invalid ID: "+str(_id))
+
         self._id = _id                      #A unique full ID eg "G4:FS0".
+
+        #Check the name is valid.
+        if not isinstance(_name, str) \
+            or _name == "":
+
+            raise ValueError("Invalid Name: "+str(_name))
+
         self._name = _name                  #The human-readable name for the probe.
         self._pin = -1                      #Needs to be set/deleted.
         self._pins = []                     #Needs to be set/deleted.
@@ -200,9 +216,17 @@ class BaseDeviceClass:
                                                                         on all listed BCM pins.
         """
 
-        #Put the int in a list so this works.
+        #Put the int in a list so this works, if there is only one pin.
         if isinstance(pins, int):
             pins = [pins]
+
+        #NOTE: Valid BCM pins range from 2 to 27.
+        #Check that the pins specified are valid.
+        for pin in pins:
+            if pin < 2 or \
+                pin > 27:
+
+                raise ValueError("Invalid pin(s): "+str(pins))
 
         self._pins = pins
         self._reverse_pins = pins[::-1]
