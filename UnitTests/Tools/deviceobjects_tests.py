@@ -171,6 +171,15 @@ class TestMotor(unittest.TestCase):
         self.assertEqual(motor._pwm_pin, -1)
 
     #---------- GETTER TESTS ----------
+    def get_reading_1(self):
+        """Test that get_reading() works as expected"""
+        #NOTE: Currently no fault checking to test.
+        self.assertEqual(self.motor.get_reading(), (False, "OK"))
+
+        self.motor._state = True
+
+        self.assertEqual(self.motor.get_reading(), (True, "OK"))
+
     def test_pwm_supported_1(self):
         """Test that pwm_supported() works as expected"""
         self.assertFalse(self.motor._supports_pwm)
@@ -230,6 +239,7 @@ class TestMotor(unittest.TestCase):
         retval = self.motor.enable()
 
         self.assertTrue(retval)
+        self.assertTrue(self.motor.get_reading()[0])
 
     @unittest.expectedFailure
     def test_enable_2(self):
@@ -243,6 +253,7 @@ class TestMotor(unittest.TestCase):
         retval = self.motor.disable()
 
         self.assertTrue(retval)
+        self.assertFalse(self.motor.get_reading()[0])
 
     @unittest.expectedFailure
     def test_disable_2(self):

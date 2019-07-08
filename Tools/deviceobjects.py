@@ -334,6 +334,34 @@ class Motor(BaseDeviceClass):
         self._pwm_pin = pwm_pin
 
     # ---------- INFO GETTER METHODS ----------
+    def get_reading(self):
+        """
+        This method returns the state of the switch. True = on, False = off.
+
+        .. note::
+            No fault checking is done thus far, so the string part of the return value is always
+            "OK".
+
+        Returns:
+            tuple(bool, string).
+
+            bool: The status of the motor.
+
+                - True  -- On.
+                - False -- Off.
+
+            string: Fault checking status.
+
+                - OK -- Everything is fine.
+
+        Usage:
+            >>> <Motor-Object>.get_reading()
+            >>> (False, OK)
+        """
+        #TODO: Fault checking?
+
+        return self._state, "OK"
+
     def pwm_supported(self):
         """
         This method returns True if PWM is supported for this motor. Else False.
@@ -372,6 +400,7 @@ class Motor(BaseDeviceClass):
 
         #Turn the pin on.
         GPIO.output(self._pin, False)
+        self._state = True
 
         #Log it.
         logger.info("Motor ("+self._name+"): Enabled.")
@@ -401,6 +430,7 @@ class Motor(BaseDeviceClass):
 
         #Turn the pin off.
         GPIO.output(self._pin, True)
+        self._state = False
 
         #Log it.
         logger.info("Motor ("+self._name+"): Disabled.")
