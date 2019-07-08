@@ -222,8 +222,14 @@ class BaseDeviceClass:
 
         #NOTE: Valid BCM pins range from 2 to 27.
         #Check that the pins specified are valid.
+        if not isinstance(pins, list) and \
+            not isinstance(pins, tuple):
+
+            raise ValueError("Invalid value for pins: "+str(pins))
+
         for pin in pins:
-            if pin < 2 or \
+            if not isinstance(pin, int) or \
+                pin < 2 or \
                 pin > 27:
 
                 raise ValueError("Invalid pin(s): "+str(pins))
@@ -304,7 +310,27 @@ class Motor(BaseDeviceClass):
             >>> <Motor-Object>.set_pwm_available(False)
         """
 
+        #Check that pwm_available is valid.
+        if not isinstance(pwm_available, bool):
+            raise ValueError("Invalid value for pwm_available: "+str(pwm_available))
+
         self._supports_pwm = pwm_available
+
+        #Check that pwm_pin is valid (-1 is also allowed if disabled).
+        if (not isinstance(pwm_pin, int) or \
+            pwm_pin < 2 or \
+            pwm_pin > 27) and \
+            pwm_pin != -1:
+
+            raise ValueError("Invalid pin: "+str(pwm_pin))
+
+        #Check that the arguments make sense together.
+        if (pwm_available is True and pwm_pin == -1) or \
+            (pwm_available is False and pwm_pin != -1):
+
+            raise ValueError("Arguments: "+str(pwm_available)+" and "+str(pwm_pin)
+                             + " do not make sense together.")
+
         self._pwm_pin = pwm_pin
 
     # ---------- INFO GETTER METHODS ----------
@@ -331,15 +357,18 @@ class Motor(BaseDeviceClass):
         Returns:
             bool. True if successful, False if not.
 
+        Throws:
+            RuntimeError if control pin not set.
+
         Usage:
 
             >>> <Motor-Object>.enable()
             >>> True
         """
 
-        #Return false if control pin isn't set.
+        #Raise RuntimeError if control pin isn't set.
         if self._pin == -1:
-            return False
+            raise RuntimeError("Control pin was not set!")
 
         #Turn the pin on.
         GPIO.output(self._pin, False)
@@ -357,15 +386,18 @@ class Motor(BaseDeviceClass):
         Returns:
             bool. True if successful, False if not.
 
+        Throws:
+            RuntimeError if control pin not set.
+
         Usage:
 
             >>> <Motor-Object>.disable()
             >>> True
         """
 
-        #Return false if control pin isn't set.
+        #Raise RuntimeError if control pin isn't set.
         if self._pin == -1:
-            return False
+            raise RuntimeError("Control pin was not set!")
 
         #Turn the pin off.
         GPIO.output(self._pin, True)

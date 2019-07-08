@@ -155,13 +155,99 @@ class TestMotor(unittest.TestCase):
     """
 
     def setUp(self):
-        pass
+        self.motor = device_objects.Motor("SUMP:P0", "Test")
 
     def tearDown(self):
-        pass
+        del self.motor
 
-    def test_1(self):
-        pass
+    #---------- CONSTRUCTOR TESTS ----------
+    #Note: All arguments are validated in BaseDeviceClass, so no complex tests here.
+    def test_constructor_1(self):
+        """Test the constructor works as expected."""
+        motor = device_objects.Motor("SUMP:P1", "Test Motor")
+
+        self.assertFalse(motor._state)
+        self.assertFalse(motor._supports_pwm)
+        self.assertEqual(motor._pwm_pin, -1)
+
+    #---------- GETTER TESTS ----------
+    def test_pwm_supported_1(self):
+        """Test that pwm_supported() works as expected"""
+        self.assertFalse(self.motor._supports_pwm)
+
+        self.motor._supports_pwm = True
+
+        self.assertTrue(self.motor._supports_pwm)
+
+    #---------- SETTER TESTS ----------
+    def test_set_pwm_available_1(self):
+        """Test that set_pwm_available() works as expected with valid arguments."""
+        for dataset in data.TEST_MOTOR_SETPWMAVAILABLE_DATA:
+            pwm_available = dataset[0]
+            pwm_pin = dataset[1]
+
+            if pwm_pin is not None:
+                self.motor.set_pwm_available(pwm_available, pwm_pin)
+
+            else:
+                self.motor.set_pwm_available(pwm_available)
+
+                #Reset pwm_pin to -1 - default if unspecified.
+                pwm_pin = -1
+
+            self.assertEqual(pwm_available, self.motor._supports_pwm)
+            self.assertEqual(pwm_pin, self.motor._pwm_pin)
+
+    def test_set_pwm_available_2(self):
+        """Test that set_pwm_available() fails with invalid arguments."""
+        for dataset in data.TEST_MOTOR_SETPWMAVAILABLE_BAD_DATA:
+            pwm_available = dataset[0]
+            pwm_pin = dataset[1]
+
+            try:
+                if pwm_pin is not None:
+                    self.motor.set_pwm_available(pwm_available, pwm_pin)
+
+                else:
+                    self.motor.set_pwm_available(pwm_available)
+
+                    #Reset pwm_pin to -1 - default if unspecified.
+                    pwm_pin = -1
+
+            except ValueError:
+                #Expected.
+                pass
+
+            else:
+                #This should have failed!
+                self.assertTrue(False, "ValueError was expected for data: "+str(dataset))
+
+    #---------- CONTROL TESTS ----------
+    def test_enable_1(self):
+        """Test that enabling the motor works when the control pin is set"""
+        self.motor.set_pins(7, _input=False)
+
+        retval = self.motor.enable()
+
+        self.assertTrue(retval)
+
+    @unittest.expectedFailure
+    def test_enable_2(self):
+        """Test that enabling the motor fails when the control pin isn't set"""
+        retval = self.motor.enable()
+
+    def test_disable_1(self):
+        """Test that disabling the motor works when the control pin is set"""
+        self.motor.set_pins(7, _input=False)
+
+        retval = self.motor.disable()
+
+        self.assertTrue(retval)
+
+    @unittest.expectedFailure
+    def test_disable_2(self):
+        """Test that enabling the motor fails when the control pin isn't set"""
+        retval = self.motor.disable()
 
 class TestFloatSwitch(unittest.TestCase):
     """
