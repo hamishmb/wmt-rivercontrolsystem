@@ -609,11 +609,8 @@ class HallEffectDevice(BaseDeviceClass):
         #Stop calling our function.
         GPIO.remove_event_detect(self._pin)
 
-        #Use integer divison '//' because it's fast.
-        revs_per_5_seconds = self._num_detections // 5 #Take the mean average over 5 seconds.
-
-        #Then multiply by 12 to get rpm.
-        rpm = revs_per_5_seconds * 12
+        #Multiply by 12 to get rpm.
+        rpm = self._num_detections * 12
 
         return rpm, "OK" #TODO Actual fault checking.
 

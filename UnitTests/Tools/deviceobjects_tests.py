@@ -330,13 +330,40 @@ class TestHallEffectDevice(unittest.TestCase):
     """
 
     def setUp(self):
-        pass
+        self.halleffectdevice = device_objects.HallEffectDevice("SUMP:W0", "Water Wheel")
 
     def tearDown(self):
-        pass
+        del self.halleffectdevice
 
-    def test_1(self):
-        pass
+    #---------- CONSTRUCTOR TESTS ----------
+    #Note: All arguments are validated in BaseDeviceClass, so no complex tests here.
+    def test_constructor_1(self):
+        """Test that the constructor works as expected"""
+        halleffectdevice = device_objects.HallEffectDevice("G6:W1", "Test")
+
+        self.assertEqual(halleffectdevice._num_detections, 0)
+
+    #------------ PRIVATE METHOD TESTS ----------
+    def test_increment_num_detections(self):
+        """Test that _increment_num_detections() works as expected"""
+        self.assertEqual(self.halleffectdevice._num_detections, 0)
+
+        for i in range(0, 500):
+            self.halleffectdevice._increment_num_detections("test")
+
+        self.assertEqual(self.halleffectdevice._num_detections, 500)
+
+    #---------- GETTER TESTS ----------
+    def test_get_reading(self):
+        """Test that get_reading() works as expected (slow test)"""
+        #NOTE: We have a custom fake GPIO.add_event_detect() method just for this purpose.
+        #NOTE: We can set data.GPIO.num_events to change how many times it calls back the function.
+        for num in (1, 5, 10, 50, 7000):
+            data.GPIO.num_events = num
+
+            reading = self.halleffectdevice.get_reading()
+
+            self.assertEqual(reading, (num*12, "OK"))
 
 class TestHallEffectProbe(unittest.TestCase):
     """
