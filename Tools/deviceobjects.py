@@ -491,6 +491,17 @@ class FloatSwitch(BaseDeviceClass):
         self._active_state = state
 
     # ---------- INFO GETTER METHODS ----------
+    def get_active_state(self):
+        """
+        This method returns the active state of the switch. True = active high, False = active low.
+
+        Usage:
+            >>> <FloatSwitch-Object>.get_active_state()
+            >>> True
+        """
+
+        return self._active_state
+
     def get_reading(self):
         """
         This method returns the state of the switch. True = triggered, False = not triggered.

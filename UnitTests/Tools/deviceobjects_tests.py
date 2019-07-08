@@ -281,6 +281,14 @@ class TestFloatSwitch(unittest.TestCase):
         self.assertTrue(self.floatswitch._active_state)
 
     #---------- GETTER TESTS ----------
+    def test_get_active_state_1(self):
+        """Test that get_active_state() works as expected"""
+        self.assertTrue(self.floatswitch.get_active_state())
+
+        self.floatswitch.set_active_state(False)
+
+        self.assertFalse(self.floatswitch.get_active_state())
+
     def test_get_reading_1(self):
         """Test that get_reading() works as expected"""
         #The fake GPIO.input() function alternates the return value each time - we can predict what it should be.
