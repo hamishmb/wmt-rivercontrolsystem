@@ -34,6 +34,9 @@ from . import deviceobjects_test_data as data
 #Set up device_objects to use dummy GPIO.
 device_objects.GPIO = data.GPIO
 
+#Prevent any management threads from being started - use dummy ones instead.
+device_objects.device_mgmt = data
+
 class TestBaseDeviceClass(unittest.TestCase):
     """This test class tests the features of the BaseDeviceClass class in Tools/deviceobjects.py"""
 
@@ -485,10 +488,36 @@ class TestGateValve(unittest.TestCase):
     """
 
     def setUp(self):
-        pass
+        #Don't specify the other arguments because they're only used in the
+        #ManageGateValve class.
+        self.gatevalve = device_objects.GateValve("V4", "Test", (2, 3, 4), None, None, None, None)
 
     def tearDown(self):
-        pass
+        del self.gatevalve
 
-    def test_1(self):
-        pass
+    #---------- CONSTRUCTOR TESTS ----------
+    #Note: All arguments (used in this class) are validated in BaseDeviceClass,
+    #so no complex tests here. The others are validated in
+    #device_mgmt.ManageGateValve.
+
+    def test_constructor_1(self):
+        """Test that the constructor works as expected"""
+        #TODO Once made consistent with HallEffectProbe class.
+        return
+
+        gatevalve = device_objects.GateValve("V4", "Test", (2, 3, 4), None, None, None, None)
+
+        #self.assertEqual(gatevalve.control_thread,
+        #                 data.ManageGateValve(None, None, None, None, None))
+
+    #---------- GETTER TESTS ----------
+    def test_get_reading_1(self):
+        """Test that the get_reading() method works as expected"""
+        #TODO Once made consistent with HallEffectProbe class.
+        return
+
+    #---------- SETTER TESTS ----------
+    def test_set_position_1(self):
+        """Test that the set_position() method works as expected"""
+        #TODO Once made consistent with HallEffectProbe class.
+        return

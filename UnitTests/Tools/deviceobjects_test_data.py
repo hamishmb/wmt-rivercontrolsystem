@@ -55,6 +55,16 @@ class GPIO:
     def remove_event_detect(pin):
         pass
 
+#Dummy ManageHallEffectProbe class for testing.
+class ManageHallEffectProbe:
+    def __init__(self, probe):
+        pass
+
+#Dummy ManageGateValve class for testing.
+class ManageGateValve:
+    def __init__(self, pins, pos_tolerance, max_open, min_open, ref_voltage):
+        pass
+
 #Sample arguments for the BaseDeviceClass constructor.
 TEST_BASEDEVICECLASS_NONAME_DATA = [
     ["G4:FS0"],

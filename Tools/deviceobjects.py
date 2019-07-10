@@ -817,11 +817,28 @@ class GateValve(BaseDeviceClass):
         #rest of the software functions properly.
         BaseDeviceClass.__init__(self, _id+":"+_id, _name)
 
+        #NOTE: Valid BCM pins range from 2 to 27.
+        #Check that the pins specified are valid.
+        if (not isinstance(pins, list) and \
+            not isinstance(pins, tuple)) or \
+            len(pins) != 3:
+
+            raise ValueError("Invalid value for pins: "+str(pins))
+
+        for pin in pins:
+            if not isinstance(pin, int) or \
+                pin < 2 or \
+                pin > 27:
+
+                raise ValueError("Invalid pin(s): "+str(pins))
+
         #Set all pins as outputs.
         for pin in pins:
             GPIO.setup(pin, GPIO.OUT)
 
         #Start the thread so we can control the gate valve.
+        #TODO: Not consistent with the HallEffectProbe class, but does it matter?
+        #TODO: Yes, fix this, and validate and store these attributes here.
         self.control_thread = device_mgmt.ManageGateValve(pins, pos_tolerance, max_open, min_open,
                                                           ref_voltage)
 
