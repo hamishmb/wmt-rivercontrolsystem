@@ -638,7 +638,6 @@ class HallEffectProbe(BaseDeviceClass):
 
         #Set some semi-private variables.
         self._current_reading = 0                  #Internal use only.
-        self._post_init_called = False             #Internal use only.
 
         self.high_limits = None                    #The high limits to be used with this probe.
         self.low_limits = None                     #The low limits to be used with this probe.
@@ -656,7 +655,7 @@ class HallEffectProbe(BaseDeviceClass):
 
         Args:
             high_limits (list(float):          The high limits to be used with this probe.
-            low_limits (list(float)):          The high limits to be used with this probe.
+            low_limits (list(float)):          The low limits to be used with this probe.
 
         Usage:
             >>> <Device-Object>.set_limits(<list(float)>, <list(float)>)
@@ -665,6 +664,32 @@ class HallEffectProbe(BaseDeviceClass):
 
         #NB: Removed the []s around these - we don't want a list with a tuple
         #inside!
+
+        #Check the limits are valid.
+        #Basic check.
+        if not (isinstance(high_limits, list) or isinstance(high_limits, tuple)) or \
+            not (isinstance(low_limits, list) or isinstance(low_limits, tuple)) or \
+            len(high_limits) != 10 or \
+            len(low_limits) != 10 or \
+            high_limits in ((), []) or \
+            low_limits in ((), []):
+
+            raise ValueError("Invalid limits: "+str(high_limits)+", "+str(low_limits))
+
+        #Advanced checks.
+        #Check that all the limits are floats or ints.
+        for limits in (high_limits, low_limits):
+            for limit in limits:
+                if not (isinstance(limit, float) or isinstance(limit, int)) or \
+                    isinstance(limit, bool):
+
+                    raise ValueError("Invalid limits: "+str(high_limits)+", "+str(low_limits))
+
+        #Check that the corresponding limits in low_limits are actually lower.
+        for limit in high_limits:
+            if not (limit > low_limits[high_limits.index(limit)]):
+                raise ValueError("Invalid limits: "+str(high_limits)+", "+str(low_limits))
+
         self.high_limits = high_limits
         self.low_limits = low_limits
 
@@ -674,20 +699,82 @@ class HallEffectProbe(BaseDeviceClass):
         calling code must already have established these from config.py
 
         Args:
-            depths (list(int):              The multidimensionl list of four rows of depths
+            depths (list(list(int)):              The multidimensionl list of four rows of depths
                                             to be used with this probe.
 
         Usage:
-            >>> <Device-Object>.set_limits(<list(int)>)
+            >>> <Device-Object>.set_limits(<list<list(int)>>)
 
         """
 
         #NB: Removed the []s around this too - we don't want a list with a tuple
         #inside!
+
+        #Check the depths are valid.
+        #Basic checks.
+        for depthlist in depths:
+            if not (isinstance(depthlist, list) or isinstance(depthlist, tuple)) or \
+                depthlist in ((), []) or \
+                len(depthlist) != 10 or \
+                len(depths) != 4:
+
+                raise ValueError("Invalid depths: "+str(depths))
+
+        #Advanced checks.
+        #Check that these are all integers.
+        for depthlist in depths:
+            for depth in depthlist:
+                if not isinstance(depth, int):
+                    raise ValueError("Invalid depths: "+str(depths))
+
+        #Check that the hundreds are actually hundreds and so on.
+        #Also check that the values are in the right order, eg if we are at 400
+        #in the 100s, the corresponding 25 should be 425, the 50 should be 450
+        #and so on.
+        for depth in depths[0]:
+            i = depths[0].index(depth)
+
+            if (not depth % 100 == 0) or \
+                depths[1][i] != depth + 25 or \
+                depths[2][i] != depth + 50 or \
+                depths[3][i] != depth + 75:
+
+                raise ValueError("Invalid depths: "+str(depths))
+
         self.depths = depths
 
         #We need to count the number of sensors in the stack, not the number of stacks!
         self.length = len(depths[0])
+
+    def get_limits(self):
+        """
+        This method returns the limits, in the order: high, low.
+
+        Returns:
+            tuple(list(float), list(float))
+
+            OR
+
+            tuple(None, None), if not set.
+
+        Usage:
+            >>> <FloatSwitch-Object>.get_limits()
+        """
+
+        return self.high_limits, self.low_limits
+
+    def get_depths(self):
+        """
+        This method returns the depth precision values.
+
+        Returns:
+            list(list(int)). The depths.
+
+        Usage:
+            >>> <HallEffectProbe-Object>.get_depths()
+        """
+
+        return self.depths
 
     # ---------- CONTROL METHODS ----------
     def get_reading(self):

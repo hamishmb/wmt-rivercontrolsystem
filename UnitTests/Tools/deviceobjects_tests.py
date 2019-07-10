@@ -358,6 +358,7 @@ class TestHallEffectDevice(unittest.TestCase):
         """Test that get_reading() works as expected (slow test)"""
         #NOTE: We have a custom fake GPIO.add_event_detect() method just for this purpose.
         #NOTE: We can set data.GPIO.num_events to change how many times it calls back the function.
+
         for num in (1, 5, 10, 50, 7000):
             data.GPIO.num_events = num
 
@@ -372,13 +373,110 @@ class TestHallEffectProbe(unittest.TestCase):
     """
 
     def setUp(self):
-        pass
+        self.halleffectprobe = device_objects.HallEffectProbe("G4:M1", "Testing")
 
     def tearDown(self):
-        pass
+        del self.halleffectprobe
 
-    def test_1(self):
-        pass
+    #---------- CONSTRUCTOR TESTS ----------
+    #Note: All arguments are validated in BaseDeviceClass, so no complex tests here.
+    def test_constructor_1(self):
+        """Test the constructor works properly"""
+        halleffectprobe = device_objects.HallEffectProbe("SUMP:M0", "Test")
+
+        self.assertEqual(halleffectprobe._current_reading, 0)
+        self.assertEqual(halleffectprobe.high_limits, None)
+        self.assertEqual(halleffectprobe.low_limits, None)
+        self.assertEqual(halleffectprobe.depths, None)
+        self.assertEqual(halleffectprobe.length, None)
+
+    #---------- GETTER TESTS ----------
+    def test_get_limits_1(self):
+        """Test the get_limits() method works as expected"""
+        self.assertEqual(self.halleffectprobe.get_limits(), (None, None))
+
+        self.halleffectprobe.high_limits = (1, 2, 3, 4)
+        self.halleffectprobe.low_limits = (-3, -2, -1, 0)
+
+        self.assertEqual(self.halleffectprobe.get_limits(),
+                         ((1, 2, 3, 4), (-3, -2, -1, 0)))
+
+    def test_get_depths_1(self):
+        """Test the get_depths() method works as expected"""
+        self.assertEqual(self.halleffectprobe.get_depths(), None)
+
+        self.halleffectprobe.depths = ((25), (50), (75), (100))
+
+        self.assertEqual(self.halleffectprobe.get_depths(), ((25), (50), (75), (100)))
+
+    def test_get_reading(self):
+        """Test that get_reading() works as expected"""
+        for num in range(0, 1000):
+            self.halleffectprobe._current_reading = num
+
+            self.assertEqual(self.halleffectprobe.get_reading(), (num, "OK"))
+
+    #---------- SETTER TESTS ----------
+    def test_set_limits_1(self):
+        """Test the set_limits() method works when given valid data"""
+        for dataset in data.TEST_HALLEFFECTPROBE_SETLIMITS_DATA:
+            high_limits = dataset[0]
+            low_limits = dataset[1]
+
+            self.halleffectprobe.set_limits(high_limits, low_limits)
+
+            self.assertEqual(self.halleffectprobe.get_limits(), (high_limits, low_limits))
+
+    def test_set_limits_2(self):
+        """Test the set_limits() method fails when given invalid data"""
+        for dataset in data.TEST_HALLEFFECTPROBE_SETLIMITS_BAD_DATA:
+            high_limits = dataset[0]
+            low_limits = dataset[1]
+
+            try:
+                self.halleffectprobe.set_limits(high_limits, low_limits)
+
+            except ValueError:
+                #Expected.
+                pass
+
+            else:
+                #This should have failed!
+                self.assertTrue(False, "ValueError was expected for data: "+str(dataset))
+
+    def test_set_depths_1(self):
+        """Test that the set_depths() method works when given valid data"""
+        for dataset in data.TEST_HALLEFFECTPROBE_SETDEPTHS_DATA:
+            hundreds = dataset[0]
+            twentyfives = dataset[1]
+            fifties = dataset[2]
+            seventies = dataset[3]
+
+            self.halleffectprobe.set_depths((hundreds, twentyfives, fifties, seventies))
+
+            self.assertEqual(self.halleffectprobe.get_depths(),
+                             (hundreds, twentyfives, fifties, seventies))
+
+            self.assertEqual(self.halleffectprobe.length, len(hundreds))
+
+    def test_set_depths_2(self):
+        """Test that the set_depths() method fails when given invalid data"""
+        for dataset in data.TEST_HALLEFFECTPROBE_SETDEPTHS_BAD_DATA:
+            hundreds = dataset[0]
+            twentyfives = dataset[1]
+            fifties = dataset[2]
+            seventies = dataset[3]
+
+            try:
+                self.halleffectprobe.set_depths((hundreds, twentyfives, fifties, seventies))
+
+            except ValueError:
+                #Expected.
+                pass
+
+            else:
+                #This should have failed!
+                self.assertTrue(False, "ValueError was expected for data: "+str(dataset))
 
 class TestGateValve(unittest.TestCase):
     """
