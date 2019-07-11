@@ -284,6 +284,10 @@ class Motor(BaseDeviceClass):
         self._supports_pwm = False           #Assume we don't have PWM by default.
         self._pwm_pin = -1                   #Needs to be set.
 
+        #Immediately disable the motor, as it seems they can turn on during
+        #startup, if state is not initialised.
+        self.disable()
+
     # ---------- INFO SETTER METHODS ----------
     def set_pwm_available(self, pwm_available, pwm_pin=-1):
         #TODO Hardware check to determine if PWM is available.
