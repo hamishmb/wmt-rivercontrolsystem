@@ -821,6 +821,8 @@ class GateValve(BaseDeviceClass):
         #rest of the software functions properly.
         BaseDeviceClass.__init__(self, _id+":"+_id, _name)
 
+        self.control_thread = None
+
         #NOTE: Valid BCM pins range from 2 to 27.
         #Check that the pins specified are valid.
         if (not isinstance(pins, list) and \
@@ -840,11 +842,31 @@ class GateValve(BaseDeviceClass):
         for pin in pins:
             GPIO.setup(pin, GPIO.OUT)
 
-        #Start the thread so we can control the gate valve.
-        #TODO: Not consistent with the HallEffectProbe class, but does it matter?
-        #TODO: Yes, fix this, and validate and store these attributes here.
-        self.control_thread = device_mgmt.ManageGateValve(pins, pos_tolerance, max_open, min_open,
-                                                          ref_voltage)
+        #The pin to set the motor direction to forwards (opening gate).
+        self.forward_pin = pins[0]
+
+        #The pin to set the motor direction to backwards (closing gate).
+        self.reverse_pin = pins[1]
+
+        #The pin to engage the clutch.
+        self.clutch_pin = pins[2]
+
+        #TODO Validate these and write getters for them.
+        #Positional Tolerance in percent
+        self.pos_tolerance = pos_tolerance
+
+        #Upper limit of valve position in percent
+        self.max_open = max_open
+
+        #Lower limit of valve position in percent
+        self.min_open = min_open
+
+        #Voltage at the top of the position pot
+        self.ref_voltage = ref_voltage
+        
+    def start_thread(self):
+        """Start the thread to manage the thread."""
+        self.control_thread = device_mgmt.ManageGateValve(self)
 
     def set_position(self, percentage):
         """

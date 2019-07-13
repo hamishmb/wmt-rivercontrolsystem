@@ -681,6 +681,8 @@ def setup_valve(system_id):
 
     valve = valve(system_id, valve_name, pins, pos_tolerance, max_open, min_open, ref_voltage)
 
+    valve.start_thread()
+
     return valve
 
 def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None):

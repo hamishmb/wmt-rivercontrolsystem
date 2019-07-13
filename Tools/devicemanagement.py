@@ -204,28 +204,11 @@ class ManageGateValve(threading.Thread):
 
     #FIXME The documentation for this constructor is wrong -
     #there are extra arguments that we need to explain in the docstring.
-    def __init__(self, pins, pos_tolerance, max_open, min_open, ref_voltage):
+    def __init__(self, valve):
         """The constructor, set up some basic threading stuff."""
-        #The pin to set the motor direction to forwards (opening gate).
-        self.forward_pin = pins[0]
+        #Store a reference to the GateValve object.
+        self.valve = valve
 
-        #The pin to set the motor direction to backwards (closing gate).
-        self.reverse_pin = pins[1]
-
-        #The pin to engage the clutch.
-        self.clutch_pin = pins[2]
-
-        #Positional Tolerance in percent
-        self.pos_tolerance = pos_tolerance
-
-        #Upper limit of valve position in percent
-        self.max_open = max_open
-
-        #Lower limit of valve position in percent
-        self.min_open = min_open
-
-        #Voltage at the top of the position pot
-        self.ref_voltage = ref_voltage
         self._exit = False
 
         #Set the valve closed initially.
@@ -257,8 +240,8 @@ class ManageGateValve(threading.Thread):
 
                 #Hold current position
                 logger.debug("ManageGateValve: Hold at "+str(self.actual_position))
-                GPIO.output(self.forward_pin, GPIO.LOW)
-                GPIO.output(self.reverse_pin, GPIO.LOW)
+                GPIO.output(self.valve.forward_pin, GPIO.LOW)
+                GPIO.output(self.valve.reverse_pin, GPIO.LOW)
                 time.sleep(1)
 
             elif self.actual_position < self.low_limit:
@@ -267,8 +250,8 @@ class ManageGateValve(threading.Thread):
 
                 #Enable the motor.
                 self.clutch_engage()
-                GPIO.output(self.forward_pin, GPIO.HIGH)
-                GPIO.output(self.reverse_pin, GPIO.LOW)
+                GPIO.output(self.valve.forward_pin, GPIO.HIGH)
+                GPIO.output(self.valve.reverse_pin, GPIO.LOW)
 
             elif self.actual_position > self.high_limit:
                 #Close the valve.
@@ -276,14 +259,14 @@ class ManageGateValve(threading.Thread):
 
                 #Enable the motor.
                 self.clutch_engage()
-                GPIO.output(self.forward_pin, GPIO.LOW)
-                GPIO.output(self.reverse_pin, GPIO.HIGH)
+                GPIO.output(self.valve.forward_pin, GPIO.LOW)
+                GPIO.output(self.valve.reverse_pin, GPIO.HIGH)
 
     def clutch_engage(self):
-        GPIO.output(self.clutch_pin, GPIO.HIGH)
+        GPIO.output(self.valve.clutch_pin, GPIO.HIGH)
 
     def clutch_disengage(self):
-        GPIO.output(self.clutch_pin, GPIO.LOW)
+        GPIO.output(self.valve.clutch_pin, GPIO.LOW)
 
     def get_position(self):
         #Create the Analog reading object to read Ch 0 of the A/D
@@ -304,7 +287,7 @@ class ManageGateValve(threading.Thread):
             return -1
 
         #Actual position as a percentage at the time of reading
-        self.actual_position = int((voltage_0/self.ref_voltage*100))
+        self.actual_position = int((voltage_0/self.valve.ref_voltage*100))
         return self.actual_position
 
     def set_position(self, new_percentage):
@@ -315,21 +298,21 @@ class ManageGateValve(threading.Thread):
     def calculate_limits(self):
         self.actualposition = self.get_position()
         if (self.actualposition) != self.percentage:
-            if ((self.percentage + self.pos_tolerance) > (self.max_open - self.pos_tolerance)):
-                self.high_limit = self.max_open
-                self.low_limit = self.max_open - 6
+            if ((self.percentage + self.valve.pos_tolerance) > (self.valve.max_open - self.valve.pos_tolerance)):
+                self.high_limit = self.valve.max_open
+                self.low_limit = self.valve.max_open - 6
 
 
-            elif (self.percentage - self.pos_tolerance < self.min_open):
-                self.low_limit = self.min_open
-                self.high_limit = self.min_open + 1
+            elif (self.percentage - self.valve.pos_tolerance < self.valve.min_open):
+                self.low_limit = self.valve.min_open
+                self.high_limit = self.valve.min_open + 1
 
             else:
                 #Set the High Limit to the required percentage
-                self.high_limit = self.percentage + self.pos_tolerance
+                self.high_limit = self.percentage + self.valve.pos_tolerance
 
                 #Set the Low Limit to the required percentage
-                self.low_limit = self.percentage - self.pos_tolerance
+                self.low_limit = self.percentage - self.valve.pos_tolerance
 
     def stop(self):
         """Stops the thread."""
