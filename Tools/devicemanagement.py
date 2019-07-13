@@ -286,7 +286,8 @@ class ManageGateValve(threading.Thread):
             #The current reading is invalid so flag an error.
             return -1
 
-        #Actual position as a percentage at the time of reading
+        #Actual position as a percentage at the time of reading.
+        #FIXME: This sometimes seems to be negative. Why? Bug in the ADS software?
         self.actual_position = int((voltage_0/self.valve.ref_voltage*100))
         return self.actual_position
 

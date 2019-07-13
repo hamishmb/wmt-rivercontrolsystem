@@ -839,8 +839,7 @@ class GateValve(BaseDeviceClass):
                 raise ValueError("Invalid pin(s): "+str(pins))
 
         #Set all pins as outputs.
-        for pin in pins:
-            GPIO.setup(pin, GPIO.OUT)
+        self.set_pins(pins)
 
         #The pin to set the motor direction to forwards (opening gate).
         self.forward_pin = pins[0]
@@ -851,7 +850,7 @@ class GateValve(BaseDeviceClass):
         #The pin to engage the clutch.
         self.clutch_pin = pins[2]
 
-        #TODO Validate these and write getters for them.
+        #TODO Validate these (need to discuss reasonable values first).
         #Positional Tolerance in percent
         self.pos_tolerance = pos_tolerance
 
@@ -867,6 +866,66 @@ class GateValve(BaseDeviceClass):
     def start_thread(self):
         """Start the thread to manage the thread."""
         self.control_thread = device_mgmt.ManageGateValve(self)
+
+    def get_pos_tolerance(self):
+        """
+        This method returns the positional tolerance of this valve as a percentage.
+
+        Returns:
+
+            int. The percentage tolerance of the valve.
+
+        Usage:
+
+            >>> <GateValve-Object>.get_pos_tolerance()
+            >>> 5
+        """
+        return self.pos_tolerance
+
+    def get_max_open(self):
+        """
+        This method returns the maximum percentage the gate valve will open.
+
+        Returns:
+
+            int. The maximum open value of this gate valve.
+
+        Usage:
+
+            >>> <GateValve-Object>.get_max_open()
+            >>> 95
+        """
+        return self.max_open
+
+    def get_min_open(self):
+        """
+        This method returns the minimum percentage the gate valve will open.
+
+        Returns:
+
+            float. The reference voltage of this gate valve.
+
+        Usage:
+
+            >>> <GateValve-Object>.get_ref_voltage()
+            >>> 5
+        """
+        return self.min_open
+
+    def get_ref_voltage(self):
+        """
+        This method returns the reference voltage of the gate valve.
+
+        Returns:
+
+            int. The maximum open value of this gate valve.
+
+        Usage:
+
+            >>> <GateValve-Object>.get_max_open()
+            >>> 3.3
+        """
+        return self.ref_voltage
 
     def set_position(self, percentage):
         """
