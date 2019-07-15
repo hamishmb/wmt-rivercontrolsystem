@@ -361,7 +361,6 @@ class TestHallEffectDevice(unittest.TestCase):
         """Test that get_reading() works as expected (slow test)"""
         #NOTE: We have a custom fake GPIO.add_event_detect() method just for this purpose.
         #NOTE: We can set data.GPIO.num_events to change how many times it calls back the function.
-
         for num in (1, 5, 10, 50, 7000):
             data.GPIO.num_events = num
 
@@ -490,34 +489,97 @@ class TestGateValve(unittest.TestCase):
     def setUp(self):
         #Don't specify the other arguments because they're only used in the
         #ManageGateValve class.
-        self.gatevalve = device_objects.GateValve("V4", "Test", (2, 3, 4), None, None, None, None)
+        self.gatevalve = device_objects.GateValve("V4", "Test", (2, 3, 4), 5, 99, 1, 3.3)
 
     def tearDown(self):
         del self.gatevalve
 
     #---------- CONSTRUCTOR TESTS ----------
     #Note: All arguments (used in this class) are validated in BaseDeviceClass,
-    #so no complex tests here. The others are validated in
-    #device_mgmt.ManageGateValve.
+    #so no tests for those here. Other arguments specifically for this class
+    #are tested here, though.
 
     def test_constructor_1(self):
-        """Test that the constructor works as expected"""
-        #TODO Once made consistent with HallEffectProbe class.
-        return
+        """Test that the constructor works when given valid arguments"""
+        for dataset in data.TEST_GATEVALVE_DATA:
+            _id = dataset[0]
+            _name = dataset[1]
+            pins = dataset[2]
+            pos_tolerance = dataset[3]
+            max_open = dataset[4]
+            min_open = dataset[5]
+            ref_voltage = dataset[6]
 
-        gatevalve = device_objects.GateValve("V4", "Test", (2, 3, 4), None, None, None, None)
+            gatevalve = device_objects.GateValve(_id, _name, pins, pos_tolerance, max_open,
+                                                 min_open, ref_voltage)
 
-        #self.assertEqual(gatevalve.control_thread,
-        #                 data.ManageGateValve(None, None, None, None, None))
+            self.assertEqual(gatevalve.forward_pin, pins[0])
+            self.assertEqual(gatevalve.reverse_pin, pins[1])
+            self.assertEqual(gatevalve.clutch_pin, pins[2])
+            self.assertEqual(gatevalve.pos_tolerance, pos_tolerance)
+            self.assertEqual(gatevalve.max_open, max_open)
+            self.assertEqual(gatevalve.min_open, min_open)
+            self.assertEqual(gatevalve.ref_voltage, ref_voltage)
+
+    def test_constructor_2(self):
+        """Test that the constructor fails when given invalid arguments"""
+        for dataset in data.TEST_GATEVALVE_BAD_DATA:
+            _id = dataset[0]
+            _name = dataset[1]
+            pins = dataset[2]
+            pos_tolerance = dataset[3]
+            max_open = dataset[4]
+            min_open = dataset[5]
+            ref_voltage = dataset[6]
+
+            try:
+                gatevalve = device_objects.GateValve(_id, _name, pins, pos_tolerance, max_open,
+                                                 min_open, ref_voltage)
+
+            except ValueError:
+                #Expected.
+                pass
+
+            else:
+                #This should have failed!
+                self.assertTrue(False, "ValueError was expected for data: "+str(dataset))
 
     #---------- GETTER TESTS ----------
+    def test_get_pos_tolerance(self):
+        """Test that the get_pos_tolerance() method works as expected"""
+        self.assertEqual(self.gatevalve.get_pos_tolerance(), 5)
+
+    def test_get_max_open(self):
+        """Test that the get_max_open() method works as expected"""
+        self.assertEqual(self.gatevalve.get_max_open(), 99)
+
+    def test_get_min_open(self):
+        """Test that the get_min_open() method works as expected"""
+        self.assertEqual(self.gatevalve.get_min_open(), 1)
+
+    def test_get_max_open(self):
+        """Test that the get_max_open() method works as expected"""
+        self.assertEqual(self.gatevalve.get_max_open(), 99)
+
+    def test_get_ref_voltage(self):
+        """Test that the get_ref_voltage() method works as expected"""
+        self.assertEqual(self.gatevalve.get_ref_voltage(), 3.3)
+
     def test_get_reading_1(self):
         """Test that the get_reading() method works as expected"""
-        #TODO Once made consistent with HallEffectProbe class.
-        return
+        #Start our fake thread.
+        self.gatevalve.start_thread()
+
+        for position in range(0, 100):
+            self.gatevalve.control_thread.position = position
+            self.assertEqual(self.gatevalve.get_reading(), (position, "OK"))
 
     #---------- SETTER TESTS ----------
     def test_set_position_1(self):
         """Test that the set_position() method works as expected"""
-        #TODO Once made consistent with HallEffectProbe class.
-        return
+        #Start our fake thread.
+        self.gatevalve.start_thread()
+
+        for position in range(0, 100):
+            self.gatevalve.set_position(position)
+            self.assertEqual(self.gatevalve.control_thread.position, position)

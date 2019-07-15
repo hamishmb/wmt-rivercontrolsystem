@@ -284,10 +284,6 @@ class Motor(BaseDeviceClass):
         self._supports_pwm = False           #Assume we don't have PWM by default.
         self._pwm_pin = -1                   #Needs to be set.
 
-        #Immediately disable the motor, as it seems they can turn on during
-        #startup, if state is not initialised.
-        self.disable()
-
     # ---------- INFO SETTER METHODS ----------
     def set_pwm_available(self, pwm_available, pwm_pin=-1):
         #TODO Hardware check to determine if PWM is available.
@@ -852,10 +848,11 @@ class GateValve(BaseDeviceClass):
 
         #Positional Tolerance in percent
         if not isinstance(pos_tolerance, int) or \
-            pos_tolerance < 5 or \
+            isinstance(pos_tolerance, bool) or \
+            pos_tolerance < 1 or \
             pos_tolerance > 10:
 
-            raise ValueError("Invalid value for pos_tolerance: "+pos_tolerance)
+            raise ValueError("Invalid value for pos_tolerance: "+str(pos_tolerance))
 
         self.pos_tolerance = pos_tolerance
 
@@ -864,7 +861,7 @@ class GateValve(BaseDeviceClass):
             max_open < 90 or \
             max_open > 99:
 
-            raise ValueError("Invalid value for max_open: "+max_open)
+            raise ValueError("Invalid value for max_open: "+str(max_open))
 
         self.max_open = max_open
 
@@ -873,16 +870,16 @@ class GateValve(BaseDeviceClass):
             min_open < 1 or \
             min_open > 10:
 
-            raise ValueError("Invalid value for min_open: "+min_open)
+            raise ValueError("Invalid value for min_open: "+str(min_open))
 
         self.min_open = min_open
 
         #Voltage at the top of the position pot
-        if not isinstance(ref_voltage, int) or \
+        if not (isinstance(ref_voltage, int) or isinstance(ref_voltage, float)) or \
             ref_voltage < 2 or \
             ref_voltage > 5.5:
 
-            raise ValueError("Invalid value for ref_voltage: "+ref_voltage)
+            raise ValueError("Invalid value for ref_voltage: "+str(ref_voltage))
 
         self.ref_voltage = ref_voltage
         

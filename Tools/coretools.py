@@ -645,6 +645,10 @@ def setup_devices(system_id, dictionary="Probes"):
             #The pins are outputs for these.
             pins = device_settings["Pins"]
             device.set_pins(pins, _input=False)
+
+            #Immediately disable the motor, as it seems they can turn on during
+            #startup, if state is not initialised.
+            device.disable()
             
         else:
             pins = device_settings["Pins"]

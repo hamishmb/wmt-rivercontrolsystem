@@ -62,8 +62,16 @@ class ManageHallEffectProbe:
 
 #Dummy ManageGateValve class for testing.
 class ManageGateValve:
-    def __init__(self, pins, pos_tolerance, max_open, min_open, ref_voltage):
+    position = 0
+
+    def __init__(self, valve):
         pass
+
+    def get_position(self):
+        return self.position
+
+    def set_position(self, pos):
+        self.position = pos
 
 #Sample arguments for the BaseDeviceClass constructor.
 TEST_BASEDEVICECLASS_NONAME_DATA = [
@@ -207,4 +215,67 @@ TEST_HALLEFFECTPROBE_SETDEPTHS_BAD_DATA = [
 
     #Empty.
     [(), (), (), ()]
+]
+
+#Sample arguments for the GateValve constructor.
+TEST_GATEVALVE_DATA = [
+    #ID, Name, Pins, Tolerance, Max, Min, Voltage
+    ["V4", "Test", (2, 3, 4), 5, 99, 10, 2.0],
+    ["V5", "Test", (3, 4, 5), 6, 98, 9, 2.1],
+    ["V1", "Test", (5, 6, 7), 7, 97, 8, 2.2],
+    ["V2", "Test", (6, 7, 8), 8, 96, 7, 2.3],
+    ["V3", "Test", (7, 8, 9), 9, 95, 6, 2.4],
+    ["V6", "Test", (8, 9, 10), 1, 94, 5, 2.5],
+    ["V7", "Test", (9, 10, 11), 2, 93, 9, 2.6],
+    ["V8", "Test", (10, 11, 12), 3, 92, 9, 2.7],
+    ["V9", "Test", (11, 12, 13), 4, 91, 9, 2.8],
+    ["V10", "Test", (12, 13, 14), 6, 90, 9, 2.9],
+    ["V11", "Test", (13, 14, 15), 6, 98, 9, 3],
+    ["V12", "Test", (14, 15, 16), 6, 98, 9, 3.1],
+    ["V13", "Test", (2, 4, 5), 6, 98, 9, 3.2],
+    ["V14", "Test", (6, 4, 5), 6, 98, 9, 3.3],
+    ["V15", "Test", (9, 4, 5), 6, 98, 9, 4.1],
+    ["V16", "Test", (19, 4, 5), 6, 98, 9, 3.7],
+    ["V17", "Test", (3, 12, 6), 6, 98, 9, 5.5]
+]
+
+TEST_GATEVALVE_BAD_DATA = [
+    #ID, Name, Pins, Tolerance, Max, Min, Voltage
+    #Invalid pins.
+    ["V4", "Test", (0, 3, -4), 5, 99, 10, 2.0],
+    ["V5", "Test", (3, 4, -5), 6, 98, 9, 2.1],
+    ["V1", "Test", (5, 6), 7, 97, 8, 2.2],
+    ["V2", "Test", (), 8, 96, 7, 2.3],
+    ["V3", "Test", True, 9, 95, 6, 2.4],
+
+    #Invalid values for Tolerance.
+    ["V6", "Test", (8, 9, 10), 0, 94, 5, 2.5],
+    ["V7", "Test", (9, 10, 11), -18, 93, 9, 2.6],
+    ["V8", "Test", (10, 11, 12), True, 92, 9, 2.7],
+    ["V9", "Test", (11, 12, 13), 15, 91, 9, 2.8],
+    ["V10", "Test", (12, 13, 14), 11.7, 90, 9, 2.9],
+    ["V11", "Test", (13, 14, 15), {}, 98, 9, 3],
+
+    #Invalid values for Max Open.
+    ["V12", "Test", (14, 15, 16), 6.4, 89, 9, 3.1],
+    ["V13", "Test", (2, 4, 5), 6, 100, 9, 3.2],
+    ["V14", "Test", (6, 4, 5), 6, -98, 9, 3.3],
+    ["V15", "Test", (9, 4, 5), 6, 50, 9, 4.1],
+    ["V16", "Test", (19, 4, 5), 6, False, 9, 3.7],
+
+    #Invalid values for Min Open.
+    ["V17", "Test", (3, 12, 6), 6, 98, 0, 5.5],
+    ["V17", "Test", (3, 12, 6), 6, 98, 11, 5.5],
+    ["V17", "Test", (3, 12, 6), 6, 98, 60, 5.5],
+    ["V17", "Test", (3, 12, 6), 6, 98, -78, 5.5],
+    ["V17", "Test", (3, 12, 6), 6, 98, {}, 5.5],
+    ["V17", "Test", (3, 12, 6), 6, 98, 9.5, 5.5],
+
+    #Invalid values for Reference Voltage.
+    ["V17", "Test", (3, 12, 6), 6, 98, 9, -5.5],
+    ["V17", "Test", (3, 12, 6), 6, 98, 9, 1.9],
+    ["V17", "Test", (3, 12, 6), 6, 98, 9, 5.6],
+    ["V17", "Test", (3, 12, 6), 6, 98, 9, False],
+    ["V17", "Test", (3, 12, 6), 6, 98, 9, ()],
+
 ]
