@@ -850,17 +850,40 @@ class GateValve(BaseDeviceClass):
         #The pin to engage the clutch.
         self.clutch_pin = pins[2]
 
-        #TODO Validate these (need to discuss reasonable values first).
         #Positional Tolerance in percent
+        if not isinstance(pos_tolerance, int) or \
+            pos_tolerance < 5 or \
+            pos_tolerance > 10:
+
+            raise ValueError("Invalid value for pos_tolerance: "+pos_tolerance)
+
         self.pos_tolerance = pos_tolerance
 
         #Upper limit of valve position in percent
+        if not isinstance(max_open, int) or \
+            max_open < 90 or \
+            max_open > 99:
+
+            raise ValueError("Invalid value for max_open: "+max_open)
+
         self.max_open = max_open
 
         #Lower limit of valve position in percent
+        if not isinstance(min_open, int) or \
+            min_open < 1 or \
+            min_open > 10:
+
+            raise ValueError("Invalid value for min_open: "+min_open)
+
         self.min_open = min_open
 
         #Voltage at the top of the position pot
+        if not isinstance(ref_voltage, int) or \
+            ref_voltage < 2 or \
+            ref_voltage > 5.5:
+
+            raise ValueError("Invalid value for ref_voltage: "+ref_voltage)
+
         self.ref_voltage = ref_voltage
         
     def start_thread(self):
