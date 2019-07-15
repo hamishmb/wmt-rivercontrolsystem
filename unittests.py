@@ -52,6 +52,8 @@ def usage():
     print("                                     coretools module.")
     print("       -d, --deviceobjects:          Run only the tests for the")
     print("                                     deviceobjects module.")
+    print("       -e, --devicemanagement:       Run only the tests for the")
+    print("                                     devicemanagement module.")
     print("       -m, --monitortools:           Run only the tests for the")
     print("                                     monitortools module.")
     print("       -s, --sockettools:            Run only the tests for the")
@@ -62,9 +64,10 @@ def usage():
 if __name__ == "__main__":
     #Check all cmdline options are valid.
     try:
-        OPTIONS, ARGUMENTS = getopt.getopt(sys.argv[1:], "hDcdmsa",
+        OPTIONS, ARGUMENTS = getopt.getopt(sys.argv[1:], "hDcdemsa",
                                            ["help", "debug", "coretools", "deviceobjects",
-                                            "monitortools", "sockettools", "all"])
+                                            "devicemanagement", "monitortools", "sockettools",
+                                            "all"])
 
     except getopt.GetoptError as err:
         #Invalid option. Show the help message and then exit.
@@ -84,22 +87,27 @@ if __name__ == "__main__":
     #Import test modules here so the logging level is right - debug mode will work.
     from UnitTests.Tools import coretools_tests
     from UnitTests.Tools import deviceobjects_tests
+    from UnitTests.Tools import devicemanagement_tests
     from UnitTests.Tools import monitortools_tests
     from UnitTests.Tools import sockettools_tests
 
     #Set up which tests to run based on options given.
-    TEST_SUITES = [coretools_tests, deviceobjects_tests, monitortools_tests, sockettools_tests]
+    TEST_SUITES = [coretools_tests, deviceobjects_tests, devicemanagement_tests,
+                   monitortools_tests, sockettools_tests]
 
     for o, a in OPTIONS:
         if o in ["-a", "--all"]:
-            TEST_SUITES = [coretools_tests, deviceobjects_tests, monitortools_tests,
-                           sockettools_tests]
+            TEST_SUITES = [coretools_tests, deviceobjects_tests, devicemanagement_tests,
+                           monitortools_tests, sockettools_tests]
 
         elif o in ["-c", "--coretools"]:
             TEST_SUITES = [coretools_tests]
 
         elif o in ["-d", "--deviceobjects"]:
             TEST_SUITES = [deviceobjects_tests]
+
+        elif o in ("-e", "--devicemanagement"):
+            TEST_SUITES = [devicemanagement_tests]
 
         elif o in ["-m", "--monitortools"]:
             TEST_SUITES = [monitortools_tests]
