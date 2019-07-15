@@ -218,10 +218,10 @@ class ManageGateValve(threading.Thread):
         self.actual_position = 0
 
         #Initial value. Calculated from the percentage requested.
-        self.high_limit = 2
+        self.high_limit = 5
 
         #Initial value. Calculated from the percentage requested.
-        self.low_limit = 1
+        self.low_limit = 0
 
         self.calculate_limits()
 
@@ -301,12 +301,14 @@ class ManageGateValve(threading.Thread):
         if (self.actualposition) != self.percentage:
             if ((self.percentage + self.valve.pos_tolerance) > (self.valve.max_open - self.valve.pos_tolerance)):
                 self.high_limit = self.valve.max_open
-                self.low_limit = self.valve.max_open - 6
+                #TODO why not subtract pos_tolerance here (previously subtracted 6)?
+                self.low_limit = self.valve.max_open - self.valve.pos_tolerance
 
 
             elif (self.percentage - self.valve.pos_tolerance < self.valve.min_open):
                 self.low_limit = self.valve.min_open
-                self.high_limit = self.valve.min_open + 1
+                #TODO why not add pos_tolerance here (previously added 1)?
+                self.high_limit = self.valve.min_open + self.valve.pos_tolerance
 
             else:
                 #Set the High Limit to the required percentage

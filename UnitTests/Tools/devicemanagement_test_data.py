@@ -27,6 +27,8 @@ class GPIO:
     #Constants.
     IN = 1
     OUT = 1
+    LOW = 1
+    HIGH = 1
     FALLING = 1
     RISING = 1
 
@@ -58,7 +60,7 @@ class GPIO:
     def remove_event_detect(pin):
         pass
 
-#Define dummy ADC class for testing.
+#Define two dummy ADC classes for testing.
 class ADS:
     #Constants.
     P0 = 0
@@ -68,9 +70,23 @@ class ADS:
 
     voltage = 1
 
-#Define dummy AnalogIn function for testing.
+class ADS2:
+    #Constants.
+    P0 = 0
+    P1 = 0
+    P2 = 0
+    P3 = 0
+
+    @property
+    def voltage(self):
+        raise OSError("Test class; Always throws OSError")
+
+#Define dummy AnalogIn functions for testing.
 def AnalogIn(ads, pin):
     return ADS()
+
+def AnalogIn2(ads, pin):
+    return ADS2()
 
 #Define dummy start function for testing.
 def start(self):
@@ -92,6 +108,18 @@ def test_levels_result():
 
     except IndexError:
         raise RuntimeError("No more test data")
+
+#Sample limits for the HallEffectProbe class so we can test our test_levels() method.
+#Note: These are *NOT* the same as the real values from config.py.
+HIGH_LIMITS = (0.07, 0.17, 0.35, 0.56, 0.73, 0.92, 1.4, 1.9, 2.1, 2.45)
+LOW_LIMITS = (0.05, 0.15, 0.33, 0.53, 0.7, 0.88, 1.18, 1.5, 2, 2.4)
+
+DEPTHS = [
+     (0, 100, 200, 300, 400, 500, 600, 700, 800, 900),
+     (25, 125, 225, 325, 425, 525, 625, 725, 825, 925),
+     (50, 150, 250, 350, 450, 550, 650, 750, 850, 950),
+     (75, 175, 275, 375, 475, 575, 675, 775, 875, 975)
+]
 
 #Sample channel values for ManageHallEffectProbe.get_compensated_probe_voltages.
 #(these must be kept in the same order)
@@ -144,16 +172,4 @@ TEST_MANAGEHALLEFFECTPROBE_TEST_LEVELS_RESULTS = [
     750,
     1000,
     775
-]
-
-#Sample limits for the HallEffectProbe class so we can test our test_levels() method.
-#Note: These are *NOT* the same as the real values from config.py.
-HIGH_LIMITS = (0.07, 0.17, 0.35, 0.56, 0.73, 0.92, 1.4, 1.9, 2.1, 2.45)
-LOW_LIMITS = (0.05, 0.15, 0.33, 0.53, 0.7, 0.88, 1.18, 1.5, 2, 2.4)
-
-DEPTHS = [
-     (0, 100, 200, 300, 400, 500, 600, 700, 800, 900),
-     (25, 125, 225, 325, 425, 525, 625, 725, 825, 925),
-     (50, 150, 250, 350, 450, 550, 650, 750, 850, 950),
-     (75, 175, 275, 375, 475, 575, 675, 775, 875, 975)
 ]

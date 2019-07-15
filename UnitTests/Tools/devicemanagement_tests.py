@@ -104,3 +104,113 @@ class TestManageHallEffectProbe(unittest.TestCase):
         except RuntimeError:
             #Happens when there are no more results to test.
             pass
+
+class TestManageGateValve(unittest.TestCase):
+    """This class tests the features of the ManageGateValve class in Tools/devicemanagement.py"""
+
+    def setUp(self):
+        self.valve = device_objects.GateValve("V4", "Test", (2, 3, 4), 5, 99, 1, 3.3)
+        self.mgmtclass = device_mgmt.ManageGateValve(self.valve)
+
+    def tearDown(self):
+        del self.mgmtclass
+        del self.valve
+
+    #---------- CONSTRUCTOR TESTS ----------
+    #Note: No fancy test here because there's only one argument - the probe object.
+
+    def test_constructor_1(self):
+        """Test that the constructor works as expected"""
+        valve = device_objects.GateValve("V4", "Test", (2, 3, 4), 5, 99, 1, 3.3)
+        mgmtclass = device_mgmt.ManageGateValve(self.valve)
+
+        #Check that variables were set correctly by the constructor.
+        self.assertFalse(mgmtclass._exit)
+        self.assertEqual(mgmtclass.percentage, 0)
+
+        #NOTE: The other three variables are change immediately and are not trivial to determine.
+
+
+    #---------- GETTER TESTS ----------
+    def test_get_position_1(self):
+        """Test that the get_position() method works as expected when there is no error reading the voltage"""
+        for voltage in range(0, 331, 1):
+            #We have to use ints with range, but we want a graudla increase to 3.3v, so
+            #we'll divide these values by 100.
+            voltage /= 100
+
+            data.ADS.voltage = voltage
+
+            position = self.mgmtclass.get_position()
+
+            self.assertEqual(position, int(voltage/3.3*100))
+
+    def test_get_position_2(self):
+        """Test that the get_position() method works as expected when there is an error reading the voltage"""
+        #Use the special ADS class that always throws an OSError when voltage is accessed.
+        device_mgmt.AnalogIn = data.AnalogIn2
+
+        position = self.mgmtclass.get_position()
+
+        #Revert the change.
+        device_mgmt.AnalogIn = data.AnalogIn
+
+        self.assertEqual(position, -1)
+
+    #---------- SETTER TESTS ----------
+    def test_set_position_1(self):
+        """Test that the set_position() method works as expected"""
+        for i in range(0, 101):
+            self.mgmtclass.set_position(i)
+            self.assertEqual(self.mgmtclass.percentage, i)
+
+    #---------- CALCULATION METHOD TESTS ----------
+    def test_calculate_limits(self):
+        """Test that the calculate_limits() method works as expected"""
+        #Test with all the different desired positions.
+        for position in range(0, 101):
+            self.mgmtclass.set_position(position)
+
+            #We'll test this with all the different actual positions, the same way as before.
+            for voltage in range(0, 331, 1):
+                #We have to use ints with range, but we want a gradual increase to 3.3v, so
+                #we'll divide these values by 100.
+                voltage /= 100
+
+                data.ADS.voltage = voltage
+
+                #This is a slightly simplified version of what is in the calculate_limits() method,
+                #because it's not super-easy to break it down into anything simpler to test with.
+                if ((position + self.valve.pos_tolerance) > (self.valve.max_open - self.valve.pos_tolerance)):
+                    high_limit = self.valve.max_open
+                    low_limit = self.valve.max_open - self.valve.pos_tolerance
+
+                elif (position - self.valve.pos_tolerance < self.valve.min_open):
+                    low_limit = self.valve.min_open
+                    high_limit = self.valve.min_open + self.valve.pos_tolerance
+
+                else:
+                    #Set the High Limit to the required percentage
+                    high_limit = position + self.valve.pos_tolerance
+
+                    #Set the Low Limit to the required percentage
+                    low_limit = position - self.valve.pos_tolerance
+
+                self.assertEqual(self.mgmtclass.low_limit, low_limit)
+                self.assertEqual(self.mgmtclass.high_limit, high_limit)
+
+    #---------- CONTROL METHOD TESTS ----------
+    #We just check that these two run without error - they are very simple.
+    def test_clutch_engage(self):
+        """Test that the clutch_engage() method works as expected"""
+        self.mgmtclass.clutch_engage()
+
+    def test_clutch_disengage(self):
+        """Test that the clutch_disengage() method works as expected"""
+        self.mgmtclass.clutch_disengage()
+
+    def test_stop(self):
+        """Test that the stop() method works as expected"""
+        self.mgmtclass.stop()
+
+        self.assertTrue(self.mgmtclass._exit)
