@@ -273,6 +273,10 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
         monitors.append(Monitor(probe, reading_interval, system_id))
 
+    #Add monitor for the gate valve if needed.
+    if system_id[0] == "V":
+        monitors.append(Monitor(valve, reading_interval, system_id))
+
     #Wait until the first readings have come in so we are synchronised.
     #NB: Will now wait for client connection.
     for each_monitor in monitors:
