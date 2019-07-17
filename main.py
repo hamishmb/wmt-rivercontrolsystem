@@ -231,6 +231,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         logger.info("Setting up the gate valve...")
         valve = core_tools.setup_valve(system_id)
 
+        probes = []
+
     else:
         #Create the probe(s).
         probes = core_tools.setup_devices(system_id)
