@@ -269,8 +269,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     #And for our SUMP probe.
     for probe in probes:
-        print(probe.get_id())
-
         monitors.append(Monitor(probe, reading_interval, system_id))
 
     #Add monitor for the gate valve if needed.
@@ -278,10 +276,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         monitors.append(Monitor(valve, reading_interval, system_id))
 
     #Wait until the first readings have come in so we are synchronised.
+    #TODO: We probably want to remove this - this was only ever meant to be temporary.
     #NB: Will now wait for client connection.
     for each_monitor in monitors:
-        print(each_monitor.get_system_id()+":"+each_monitor.get_probe_id(), each_monitor.has_data())
-
         while not each_monitor.has_data():
             time.sleep(0.5)
 
