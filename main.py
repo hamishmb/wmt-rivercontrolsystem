@@ -313,24 +313,24 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                 if system_id == "SUMP":
                     reading = core_tools.get_and_handle_new_reading(monitor, "test")
 
+                    #Ignore empty readings.
+                    if reading is None:
+                        continue
+
+                    #Keep the G4:FS0 & SUMP:M0 readings (used in control logic).
+                    if reading.get_id() == "G4:FS0":
+                        butts_float_reading = reading
+
+                    elif reading.get_id() == "G4:M0":
+                        butts_reading = reading
+
+                    elif reading.get_id() == "SUMP:M0":
+                        sump_reading = reading
+
                 else:
                     core_tools.get_and_handle_new_reading(monitor, "test",
                                                           config.SITE_SETTINGS
                                                           [system_id]["ServerAddress"], socket)
-
-                #Ignore empty readings.
-                if reading is None:
-                    continue
-
-                #Keep the G4:FS0 & SUMP:M0 readings (used in control logic).
-                if reading.get_id() == "G4:FS0":
-                    butts_float_reading = reading
-
-                elif reading.get_id() == "G4:M0":
-                    butts_reading = reading
-
-                elif reading.get_id() == "SUMP:M0":
-                    sump_reading = reading
 
             #Logic.
             if system_id == "SUMP":
