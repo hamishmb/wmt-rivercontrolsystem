@@ -186,10 +186,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     from Tools import coretools as core_tools
     from Tools import sockettools as socket_tools
-
-    #TODO should standardise and do the same way as the above.
-    from Tools.monitortools import SocketsMonitor
-    from Tools.monitortools import Monitor
+    from Tools import monitortools as monitor_tools
 
     #Create all sockets.
     logger.info("Creating sockets...")
@@ -260,23 +257,23 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         #than hardcoding it.
 
         #Wendy house butts.
-        monitors.append(SocketsMonitor(sockets["SOCK4"], "G4", "FS0"))
-        monitors.append(SocketsMonitor(sockets["SOCK4"], "G4", "M0"))
+        monitors.append(monitor_tools.SocketsMonitor(sockets["SOCK4"], "G4", "FS0"))
+        monitors.append(monitor_tools.SocketsMonitor(sockets["SOCK4"], "G4", "M0"))
 
         #Stage butts.
-        monitors.append(SocketsMonitor(sockets["SOCK6"], "G6", "FS0"))
-        monitors.append(SocketsMonitor(sockets["SOCK6"], "G6", "M0"))
+        monitors.append(monitor_tools.SocketsMonitor(sockets["SOCK6"], "G6", "FS0"))
+        monitors.append(monitor_tools.SocketsMonitor(sockets["SOCK6"], "G6", "M0"))
 
         #Gate valve.
-        monitors.append(SocketsMonitor(sockets["SOCK14"], "V4", "V4"))
+        monitors.append(monitor_tools.SocketsMonitor(sockets["SOCK14"], "V4", "V4"))
 
     #And for our SUMP probe.
     for probe in probes:
-        monitors.append(Monitor(probe, reading_interval, system_id))
+        monitors.append(monitor_tools.Monitor(probe, reading_interval, system_id))
 
     #Add monitor for the gate valve if needed.
     if system_id[0] == "V":
-        monitors.append(Monitor(valve, reading_interval, system_id))
+        monitors.append(monitor_tools.Monitor(valve, reading_interval, system_id))
 
     #Wait until the first readings have come in so we are synchronised.
     #TODO: We probably want to remove this - this was only ever meant to be temporary.
@@ -285,15 +282,19 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         while not each_monitor.has_data():
             time.sleep(0.5)
 
-    #Setup. Prevent errors.
-    sump_reading = core_tools.Reading(str(datetime.datetime.now()), 0,
-                                      "SUMP:M0", "0mm", "OK")
-
-    butts_reading = core_tools.Reading(str(datetime.datetime.now()), 0,
-                                       "G4:FS0", "True", "OK")
-
     #Set to sensible defaults to avoid errors.
     old_reading_interval = 0
+
+    #Make a readings dictionary for temporary storage for the control logic function.
+    #TODO Set up with default readings - need discussion first for some of these.
+    #NB: datetime.datetime.now() is actually the wrong function to call, fix this.
+    readings = {}
+
+    readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "0mm",
+                                             "OK")
+
+    readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "True",
+                                            "OK")
 
     #Keep tabs on its progress so we can write new readings to the file.
     try:
@@ -323,25 +324,18 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                 if reading is None:
                     continue
 
-                #Keep the G4:FS0 & SUMP:M0 readings (used in control logic).
-                #TODO Tune this for each pi/find a more portable way to do this.
-                if reading.get_id() == "G4:FS0":
-                    butts_float_reading = reading
-
-                elif reading.get_id() == "G4:M0":
-                    butts_reading = reading
-
-                elif reading.get_id() == "SUMP:M0":
-                    sump_reading = reading
+                #Keep all the readings we get, for the control logic.
+                readings[reading.get_id()] = reading
 
             #Logic.
-            #TODO Add support for other pis to have control logic too.
-            if system_id == "SUMP":
-                reading_interval = core_tools.sumppi_control_logic(sump_reading, butts_reading,
-                                                                   butts_float_reading, devices,
-                                                                   monitors, sockets, reading_interval)
+            if "ControlLogicFunction" in config.SITE_SETTINGS[system_id]:
+                function = getattr(core_tools,
+                                   config.SITE_SETTINGS[system_id]["ControlLogicFunction"])
+
+                reading_interval = function(readings, devices, monitors, sockets, reading_interval)
 
             #Sumppi sets the reading interval, so it doesn't need to check if it is changing.
+            #TODO: Do we still want this?
             if system_id == "SUMP":
                 #Wait until it's time to check for another reading.
                 time.sleep(reading_interval)

@@ -153,6 +153,7 @@ SITE_SETTINGS = {
             "ID": "SUMP",
             "Default Interval": 15,
             "HostingSockets": True,
+            "ControlLogicFunction": "sumppi_control_logic",
 
             #Local probes.
             "Probes":
@@ -203,6 +204,7 @@ SITE_SETTINGS = {
             "ID": "G4",
             "Default Interval": 15,
             "HostingSockets": False,
+            "ControlLogicFunction": None,
 
             #Local probes.
             "Probes":
@@ -248,6 +250,7 @@ SITE_SETTINGS = {
             "ID": "G6",
             "Default Interval": 15,
             "HostingSockets": False,
+            "ControlLogicFunction": None,
 
             #Local probes.
             "Probes":
@@ -294,6 +297,7 @@ SITE_SETTINGS = {
             "Type": "Gate Valve",
             "ID":   "V4",
             "HostingSockets": False,
+            "ControlLogicFunction": None,
             "Default Interval": 15,
 
             "Name": "Butts Farm Gate Valve",

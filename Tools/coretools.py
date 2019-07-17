@@ -319,8 +319,7 @@ class Reading:
 
 # -------------------- CONTROL LOGIC FUNCTIONS --------------------
 #TODO update the documentation, this is old.
-def sumppi_control_logic(sump_reading_obj, butts_reading_obj, butts_float_reading,
-                         devices, monitors, sockets, reading_interval):
+def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval):
     """
     This function is used to decides what action to take based
     on the readings it is passed.
@@ -340,12 +339,7 @@ def sumppi_control_logic(sump_reading_obj, butts_reading_obj, butts_float_readin
     else we can take control of at the moment.
 
     Args:
-        sump_reading_obj (Reading):     The newest reading we have from
-                                        the sump probe.
-
-        butts_reading_obj (Reading):    As above, but for the butts.
-
-        butts_float_reading (Reading):  As above, for the butts float switch.
+        readings (list):                A list of the latest readings for each probe/device.
 
         devices  (list):                A list of all master pi device objects.
 
@@ -364,15 +358,16 @@ def sumppi_control_logic(sump_reading_obj, butts_reading_obj, butts_float_readin
 
     Usage:
 
-        >>> reading_interval = sumppi_control_logic(<asumpreading>, <abuttsreading>,
+        >>> reading_interval = sumppi_control_logic(<listofreadings>,
         >>>                                     <listofprobes>, <listofmonitors>,
         >>>                                     <listofsockets>, <areadinginterval)
 
     """
 
     #Remove the 'mm' from the end of the reading value and convert to int.
-    sump_reading = int(sump_reading_obj.get_value().replace("m", ""))
-    butts_reading = int(butts_reading_obj.get_value().replace("m", ""))
+    sump_reading = int(readings["SUMP:M0"].get_value().replace("m", ""))
+    butts_reading = int(readings["G4:M0"].get_value().replace("m", ""))
+    butts_float_reading = readings["G4:FS0"]
 
     #Get a reference to both pumps.
     main_pump = None
@@ -409,7 +404,6 @@ def sumppi_control_logic(sump_reading_obj, butts_reading_obj, butts_float_readin
         #Make sure the main circulation pump is on.
         logger.info("Turning the main circulation pump on, if it was off...")
         print("Turning the main circulation pump on, if it was off...")
-
 
         #Close the wendy butts gate valve.
         logger.info("Closing the wendy butts gate valve...")

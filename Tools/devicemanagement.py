@@ -305,7 +305,6 @@ class ManageGateValve(threading.Thread):
                 #motor if alignment isn't perfect.
                 self.low_limit = self.valve.max_open - 6
 
-
             elif (self.percentage - self.valve.pos_tolerance < self.valve.min_open):
                 self.low_limit = self.valve.min_open
                 #Add 1 to make sure the valve can close, but doesn't strain the
