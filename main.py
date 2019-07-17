@@ -195,13 +195,15 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     logger.info("Creating sockets...")
     sockets = {}
 
-    if system_id == "SUMP":
+    if config.SITE_SETTINGS[system_id]["HostingSockets"]:
+        #We are a server, and we are hosting sockets.
         #Use information from the other sites to figure out what sockets to create.
         for site in config.SITE_SETTINGS:
-            if site == "SUMP":
-                continue
-
             site_settings = config.SITE_SETTINGS[site]
+
+            #If no server is defined for this site, skip it.
+            if "SocketName" not in site_settings:
+                pass
 
             socket = socket_tools.Sockets("Socket", site_settings["SocketName"])
             socket.set_portnumber(site_settings["ServerPort"])
@@ -209,8 +211,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
             socket.start_handler()
 
-    else:
-        #Connect to sumppi.
+    #If a server is defined for this pi, connect to it.
+    if "SocketName" in config.SITE_SETTINGS[system_id]:
+        #Connect to the server.
         logger.info("Initialising connection to server, please wait...")
         print("Initialising connection to server, please wait...")
         socket = socket_tools.Sockets("Plug", config.SITE_SETTINGS[system_id]["ServerName"])
@@ -251,8 +254,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     monitors = []
 
-    #Start monitor threads for the socket (wendy house butts).
-    if system_id == "SUMP":
+    #Start monitor threads for the sockets.
+    if config.SITE_SETTINGS[system_id]["HostingSockets"]:
         #FIXME Figure out what to do based on what is in config.py, rather
         #than hardcoding it.
 
@@ -277,7 +280,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     #Wait until the first readings have come in so we are synchronised.
     #TODO: We probably want to remove this - this was only ever meant to be temporary.
-    #NB: Will now wait for client connection.
+    #NB: Will now wait for the client connections.
     for each_monitor in monitors:
         while not each_monitor.has_data():
             time.sleep(0.5)
@@ -307,34 +310,38 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                 #Check for new readings.
                 #NOTE: Later on, use the readings returned from this
                 #for state history generation etc.
-                if system_id == "SUMP":
-                    reading = core_tools.get_and_handle_new_reading(monitor, "test")
-
-                    #Ignore empty readings.
-                    if reading is None:
-                        continue
-
-                    #Keep the G4:FS0 & SUMP:M0 readings (used in control logic).
-                    if reading.get_id() == "G4:FS0":
-                        butts_float_reading = reading
-
-                    elif reading.get_id() == "G4:M0":
-                        butts_reading = reading
-
-                    elif reading.get_id() == "SUMP:M0":
-                        sump_reading = reading
+                if "SocketName" in config.SITE_SETTINGS[system_id]:
+                    reading = core_tools.get_and_handle_new_reading(monitor, "test",
+                                                                    config.SITE_SETTINGS
+                                                                    [system_id]["ServerAddress"],
+                                                                    socket)
 
                 else:
-                    core_tools.get_and_handle_new_reading(monitor, "test",
-                                                          config.SITE_SETTINGS
-                                                          [system_id]["ServerAddress"], socket)
+                    reading = core_tools.get_and_handle_new_reading(monitor, "test")
+
+                #Ignore empty readings.
+                if reading is None:
+                    continue
+
+                #Keep the G4:FS0 & SUMP:M0 readings (used in control logic).
+                #TODO Tune this for each pi/find a more portable way to do this.
+                if reading.get_id() == "G4:FS0":
+                    butts_float_reading = reading
+
+                elif reading.get_id() == "G4:M0":
+                    butts_reading = reading
+
+                elif reading.get_id() == "SUMP:M0":
+                    sump_reading = reading
 
             #Logic.
+            #TODO Add support for other pis to have control logic too.
             if system_id == "SUMP":
                 reading_interval = core_tools.sumppi_control_logic(sump_reading, butts_reading,
                                                                    butts_float_reading, devices,
                                                                    monitors, sockets, reading_interval)
 
+            #Sumppi sets the reading interval, so it doesn't need to check if it is changing.
             if system_id == "SUMP":
                 #Wait until it's time to check for another reading.
                 time.sleep(reading_interval)

@@ -139,8 +139,8 @@ There are no classes or functions defined in this file.
 """
 
 #Define global variables.
-VERSION = "0.11.0~pre1"
-RELEASEDATE = "16/4/2018"
+VERSION = "0.11.0~pre2"
+RELEASEDATE = "17/7/2019"
 
 import Tools
 import Tools.deviceobjects
@@ -152,6 +152,7 @@ SITE_SETTINGS = {
         {
             "ID": "SUMP",
             "Default Interval": 15,
+            "HostingSockets": True,
 
             #Local probes.
             "Probes":
@@ -201,6 +202,7 @@ SITE_SETTINGS = {
         {
             "ID": "G4",
             "Default Interval": 15,
+            "HostingSockets": False,
 
             #Local probes.
             "Probes":
@@ -245,6 +247,7 @@ SITE_SETTINGS = {
         {
             "ID": "G6",
             "Default Interval": 15,
+            "HostingSockets": False,
 
             #Local probes.
             "Probes":
@@ -290,6 +293,7 @@ SITE_SETTINGS = {
         {
             "Type": "Gate Valve",
             "ID":   "V4",
+            "HostingSockets": False,
             "Default Interval": 15,
 
             "Name": "Butts Farm Gate Valve",
