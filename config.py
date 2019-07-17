@@ -230,6 +230,9 @@ SITE_SETTINGS = {
                     }
                 },
 
+            #Devices to control.
+            "Devices": {},
+
             "ServerAddress": "192.168.0.2",
             "ServerPort": 30004,
             "ServerName": "SumpPi",
@@ -270,6 +273,9 @@ SITE_SETTINGS = {
                         "Pins":  (8),
                     }
                 },
+
+            #Devices to control.
+            "Devices": {},
 
             "ServerAddress": "192.168.0.2",
             "ServerPort": 30006,
