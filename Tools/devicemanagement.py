@@ -301,14 +301,16 @@ class ManageGateValve(threading.Thread):
         if (self.actualposition) != self.percentage:
             if ((self.percentage + self.valve.pos_tolerance) > (self.valve.max_open - self.valve.pos_tolerance)):
                 self.high_limit = self.valve.max_open
-                #TODO why not subtract pos_tolerance here (previously subtracted 6)?
-                self.low_limit = self.valve.max_open - self.valve.pos_tolerance
+                #Subtract 6 to make sure the valve can close, but doesn't strain the
+                #motor if alignment isn't perfect.
+                self.low_limit = self.valve.max_open - 6
 
 
             elif (self.percentage - self.valve.pos_tolerance < self.valve.min_open):
                 self.low_limit = self.valve.min_open
-                #TODO why not add pos_tolerance here (previously added 1)?
-                self.high_limit = self.valve.min_open + self.valve.pos_tolerance
+                #Add 1 to make sure the valve can close, but doesn't strain the
+                #motor if alignment isn't perfect.
+                self.high_limit = self.valve.min_open + 1
 
             else:
                 #Set the High Limit to the required percentage
