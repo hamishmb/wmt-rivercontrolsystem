@@ -247,11 +247,12 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     logger.info("Waiting for client(s) to connect...")
     print("Waiting for client(s) to connect...")
 
+    monitors = []
+
     #Start monitor threads for the socket (wendy house butts).
     if system_id == "SUMP":
         #FIXME Figure out what to do based on what is in config.py, rather
         #than hardcoding it.
-        monitors = []
 
         #Wendy house butts.
         monitors.append(SocketsMonitor(sockets["SOCK4"], "G4", "FS0"))
