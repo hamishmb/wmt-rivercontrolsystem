@@ -76,6 +76,9 @@ def usage():
     print("\nUsage: main.py [OPTION]\n\n")
     print("Options:\n")
     print("       -h, --help:                   Show this help message")
+    print("       -i <string>, --id=<string>    Specifiies the system ID eg \"G4\". If settings")
+    print("                                     for this site aren't found in config.py an")
+    print("                                     exception will be thrown. Mandatory.")
     print("       -d, --debug                   Enable debug mode")
     print("       -q, --quiet                   Log only warnings, errors, and critical errors")
     print("universal_standalone_monitor.py is released under the GNU GPL Version 3")
@@ -89,24 +92,29 @@ def handle_cmdline_options():
     Valid commandline options to universal_standalone_monitor.py:
         -h, --help                          Calls the usage() function to display help information
                                             to the user.
+        -i <string>, --id=<string>          Specifies the system ID eg "G4". If settings for this
+                                            site aren't found in config.py an exception will be
+                                            thrown. Mandatory.
         -d, --debug                         Enable debug mode.
         -q, --quiet                         Show only warnings, errors, and critical errors.
 
     Returns:
-        None
+        string system_id.
+
+            The system id.
 
     Raises:
         AssertionError, if there are unhandled options.
 
     Usage:
 
-    >>> handle_cmdline_options()
+    >>> system_id = handle_cmdline_options()
     """
 
     #Check all cmdline options are valid.
     try:
-        opts = getopt.getopt(sys.argv[1:], "hdq",
-                             ["help", "debug", "quiet"])[0]
+        opts = getopt.getopt(sys.argv[1:], "hdqi:",
+                             ["help", "debug", "quiet", "id="])[0]
 
     except getopt.GetoptError as err:
         #Invalid option. Show the help message and then exit.
@@ -117,7 +125,10 @@ def handle_cmdline_options():
 
     #Do setup. o=option, a=argument.
     for opt, arg in opts:
-        if opt in ["-d", "--debug"]:
+        if opt in ["-i", "--id"]:
+            system_id = arg
+
+        elif opt in ["-d", "--debug"]:
             logger.setLevel(logging.DEBUG)
 
         elif opt in ["-q", "--quiet"]:
@@ -129,6 +140,14 @@ def handle_cmdline_options():
 
         else:
             assert False, "unhandled option"
+
+    #Check system ID was specified.
+    assert system_id is not None, "You must specify the system ID"
+
+    #Check system ID is valid. FIXME
+    #assert system_id in config.SITE_SETTINGS, "Invalid system ID"
+
+    return system_id
 
 def run_standalone(): #TODO Refactor me into lots of smaller functions.
     """
@@ -160,7 +179,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     """
 
     #Handle cmdline options.
-    handle_cmdline_options()
+    system_id = handle_cmdline_options()
 
     #Do framework imports.
     import config
@@ -172,39 +191,55 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     from Tools.monitortools import SocketsMonitor
     from Tools.monitortools import Monitor
 
-    #Get system ID from config.
-    system_id = config.SITE_SETTINGS["SUMP"]["ID"]
-
     #Create all sockets.
-    #Use information from the other sites to figure out what sockets to create.
     logger.info("Creating sockets...")
     sockets = {}
 
-    for site in config.SITE_SETTINGS:
-        if site == "SUMP":
-            continue
+    if system_id == "SUMP":
+        #Use information from the other sites to figure out what sockets to create.
+        for site in config.SITE_SETTINGS:
+            if site == "SUMP":
+                continue
 
-        site_settings = config.SITE_SETTINGS[site]
+            site_settings = config.SITE_SETTINGS[site]
 
-        socket = socket_tools.Sockets("Socket", site_settings["SocketName"])
-        socket.set_portnumber(site_settings["ServerPort"])
-        sockets[site_settings["SocketID"]] = socket
+            socket = socket_tools.Sockets("Socket", site_settings["SocketName"])
+            socket.set_portnumber(site_settings["ServerPort"])
+            sockets[site_settings["SocketID"]] = socket
 
+            socket.start_handler()
+
+    else:
+        #Connect to sumppi.
+        logger.info("Initialising connection to server, please wait...")
+        print("Initialising connection to server, please wait...")
+        socket = socket_tools.Sockets("Plug", config.SITE_SETTINGS[system_id]["ServerName"])
+        socket.set_portnumber(config.SITE_SETTINGS[system_id]["ServerPort"])
+        socket.set_server_address(config.SITE_SETTINGS[system_id]["ServerAddress"])
         socket.start_handler()
+
+        logger.info("Will connect to server as soon as it becomes available.")
+        print("Will connect to server as soon as it becomes available.")
 
     logger.debug("Done!")
 
     #Print system time.
     print("System Time: ", str(datetime.datetime.now()))
 
-    #Create the probe(s).
-    probes = core_tools.setup_devices(system_id)
+    if system_id[0] == "V":
+        #This is a gate valve - setup is different.
+        logger.info("Setting up the gate valve...")
+        valve = core_tools.setup_valve(system_id)
 
-    #Create the device(s).
-    devices = core_tools.setup_devices(system_id, dictionary="Devices")
+    else:
+        #Create the probe(s).
+        probes = core_tools.setup_devices(system_id)
+
+        #Create the device(s).
+        devices = core_tools.setup_devices(system_id, dictionary="Devices")
 
     #Default reading interval for all probes.
-    reading_interval = config.SITE_SETTINGS["SUMP"]["Default Interval"]
+    reading_interval = config.SITE_SETTINGS[system_id]["Default Interval"]
 
     logger.info("Starting to take readings...")
     print("Starting to take readings. Please stand by...")
@@ -213,21 +248,27 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     print("Waiting for client(s) to connect...")
 
     #Start monitor threads for the socket (wendy house butts).
-    #FIXME Figure out what to do based on what is in config.py, rather
-    #than hardcoding it.
-    monitors = []
+    if system_id == "SUMP":
+        #FIXME Figure out what to do based on what is in config.py, rather
+        #than hardcoding it.
+        monitors = []
 
-    #Wendy house butts.
-    monitors.append(SocketsMonitor(sockets["SOCK4"], "G4", "FS0"))
-    monitors.append(SocketsMonitor(sockets["SOCK4"], "G4", "M0"))
+        #Wendy house butts.
+        monitors.append(SocketsMonitor(sockets["SOCK4"], "G4", "FS0"))
+        monitors.append(SocketsMonitor(sockets["SOCK4"], "G4", "M0"))
 
-    #Gate valve.
-    monitors.append(SocketsMonitor(sockets["SOCK14"], "V4", "V4"))
+        #Stage butts.
+        monitors.append(SocketsMonitor(sockets["SOCK6"], "G6", "FS0"))
+        monitors.append(SocketsMonitor(sockets["SOCK6"], "G6", "M0"))
+
+        #Gate valve.
+        monitors.append(SocketsMonitor(sockets["SOCK14"], "V4", "V4"))
 
     #And for our SUMP probe.
     for probe in probes:
-        if probe.get_id() == "SUMP:M0":
-            monitors.append(Monitor(probe, reading_interval, system_id))
+        print(probe.get_id())
+
+        monitors.append(Monitor(probe, reading_interval, system_id))
 
     #Wait until the first readings have come in so we are synchronised.
     #NB: Will now wait for client connection.
@@ -235,15 +276,15 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         while not each_monitor.has_data():
             time.sleep(0.5)
 
-    #Sleep a few more seconds to make sure the client is ready.
-    time.sleep(10)
-
     #Setup. Prevent errors.
     sump_reading = core_tools.Reading(str(datetime.datetime.now()), 0,
                                       "SUMP:M0", "0mm", "OK")
 
     butts_reading = core_tools.Reading(str(datetime.datetime.now()), 0,
                                        "G4:FS0", "True", "OK")
+
+    #Set to sensible defaults to avoid errors.
+    old_reading_interval = 0
 
     #Keep tabs on its progress so we can write new readings to the file.
     try:
@@ -277,12 +318,44 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                     sump_reading = reading
 
             #Logic.
-            reading_interval = core_tools.sumppi_control_logic(sump_reading, butts_reading,
-                                                               butts_float_reading, devices,
-                                                               monitors, sockets, reading_interval)
+            if system_id == "SUMP":
+                reading_interval = core_tools.sumppi_control_logic(sump_reading, butts_reading,
+                                                                   butts_float_reading, devices,
+                                                                   monitors, sockets, reading_interval)
 
-            #Wait until it's time to check for another reading.
-            time.sleep(reading_interval)
+            if system_id == "SUMP":
+                #Wait until it's time to check for another reading.
+                time.sleep(reading_interval)
+
+            else:
+                #I know we could use a long time.sleep(),
+                #but this MUST be responsive to changes in the reading interval.
+                count = 0
+
+                while count < reading_interval:
+                    #This way, if our reading interval changes,
+                    #the code will respond to the change immediately.
+                    #Check if we have a new reading interval.
+                    if socket.has_data():
+                        data = socket.read()
+
+                        if "Reading Interval" in data:
+                            reading_interval = int(data.split()[-1])
+
+                            #Only add a new line to the log if the reading interval changed.
+                            if reading_interval != old_reading_interval:
+                                old_reading_interval = reading_interval
+                                logger.info("New reading interval: "+str(reading_interval))
+                                print("\nNew reading interval: "+str(reading_interval))
+
+                                #Make sure all monitors use the new reading interval.
+                                for monitor in monitors:
+                                    monitor.set_reading_interval(reading_interval)
+
+                        socket.pop()
+
+                    time.sleep(1)
+                    count += 1
 
             #Check if at least one monitor is running.
             at_least_one_monitor_running = False

@@ -61,7 +61,7 @@ def usage():
     print("       -h, --help:                   Show this help message")
     print("       -i <string>, --id=<string>    Specifiies the system ID eg \"G4\". If settings")
     print("                                     for this site aren't found in config.py an")
-    print("                                     exception will be thrown. Mandatory..")
+    print("                                     exception will be thrown. Mandatory.")
     print("       -d, --debug                   Enable debug mode")
     print("       -q, --quiet                   Log only warnings, errors, and critical errors")
     print("universal_standalone_monitor.py is released under the GNU GPL Version 3")
