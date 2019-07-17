@@ -426,7 +426,7 @@ if __name__ == "__main__":
     try:
         run_standalone()
 
-    except:
+    except Exception:
         logger.critical("Unexpected error \n\n"+str(traceback.format_exc())
                         +"\n\nwhile running. Exiting...")
 
