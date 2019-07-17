@@ -203,7 +203,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
             #If no server is defined for this site, skip it.
             if "SocketName" not in site_settings:
-                pass
+                continue
 
             socket = socket_tools.Sockets("Socket", site_settings["SocketName"])
             socket.set_portnumber(site_settings["ServerPort"])
