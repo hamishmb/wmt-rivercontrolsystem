@@ -310,7 +310,13 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                 #Check for new readings.
                 #NOTE: Later on, use the readings returned from this
                 #for state history generation etc.
-                reading = core_tools.get_and_handle_new_reading(monitor, "test")
+                if system_id == "SUMP":
+                    reading = core_tools.get_and_handle_new_reading(monitor, "test")
+
+                else:
+                    core_tools.get_and_handle_new_reading(monitor, "test",
+                                                          config.SITE_SETTINGS
+                                                          [system_id]["ServerAddress"], socket)
 
                 #Ignore empty readings.
                 if reading is None:
