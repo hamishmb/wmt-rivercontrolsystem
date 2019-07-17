@@ -24,6 +24,8 @@ import logging
 import getopt
 import sys
 
+import config
+
 #Set up the logger.
 logger = logging.getLogger('River System Control Software')
 
@@ -59,6 +61,7 @@ def usage():
     print("       -s, --sockettools:            Run only the tests for the")
     print("                                     sockettools module.")
     print("unittests.py is released under the GNU GPL Version 3")
+    print("Version: "+config.VERSION+" ("+config.RELEASEDATE+")")
     print("Copyright (C) Wimborne Model Town 2017-2019")
 
 if __name__ == "__main__":

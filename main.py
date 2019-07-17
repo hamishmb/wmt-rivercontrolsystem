@@ -56,6 +56,8 @@ import datetime
 import logging
 import traceback
 
+import config
+
 try:
     #Allow us to generate documentation on non-RPi systems.
     import RPi.GPIO as GPIO
@@ -81,7 +83,8 @@ def usage():
     print("                                     exception will be thrown. Mandatory.")
     print("       -d, --debug                   Enable debug mode")
     print("       -q, --quiet                   Log only warnings, errors, and critical errors")
-    print("universal_standalone_monitor.py is released under the GNU GPL Version 3")
+    print("main.py is released under the GNU GPL Version 3")
+    print("Version: "+config.VERSION+" ("+config.RELEASEDATE+")")
     print("Copyright (C) Wimborne Model Town 2017-2019")
 
 def handle_cmdline_options():
@@ -144,8 +147,8 @@ def handle_cmdline_options():
     #Check system ID was specified.
     assert system_id is not None, "You must specify the system ID"
 
-    #Check system ID is valid. FIXME
-    #assert system_id in config.SITE_SETTINGS, "Invalid system ID"
+    #Check system ID is valid.
+    assert system_id in config.SITE_SETTINGS, "Invalid system ID"
 
     return system_id
 
@@ -182,8 +185,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     system_id = handle_cmdline_options()
 
     #Do framework imports.
-    import config
-
     from Tools import coretools as core_tools
     from Tools import sockettools as socket_tools
     from Tools import monitortools as monitor_tools
