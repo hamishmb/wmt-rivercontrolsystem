@@ -835,7 +835,7 @@ class GateValve(BaseDeviceClass):
                 raise ValueError("Invalid pin(s): "+str(pins))
 
         #Set all pins as outputs.
-        self.set_pins(pins)
+        self.set_pins(pins, _input=False)
 
         #The pin to set the motor direction to forwards (opening gate).
         self.forward_pin = pins[0]
