@@ -333,7 +333,7 @@ SITE_SETTINGS = {
             "refVoltage": 3.3,
 
             #Config for server connection.
-            "ServerAddress": "192.168.0.22",
+            "ServerAddress": "192.168.0.2",
             "ServerPort": 30022,
             "ServerName": "SumpPi",
             "SocketName": "Stage Butts Gate Valve V12 Socket",
