@@ -99,7 +99,7 @@ TBD Gate Valve                          - V10, 192.168.0.20, 30020, SOCK20
 
 TBD Loctn Gardeners Supply Gate Valve   - V11, 192.168.0.21, 30021, SOCK21
 
-Stage Buts Group G6 Gate Valve          - V12, 192.168.0.22, 30022, SOCK22
+Stage Butts Group G6 Gate Valve         - V12, 192.168.0.22, 30022, SOCK22
 
 Staff & Visitor GUI Pi                  - GUI, 192.168.0.9
 
@@ -313,6 +313,31 @@ SITE_SETTINGS = {
             "SocketName": "Wendy Street Butts Gate Valve V4 Socket",
             "SocketID": "SOCK14",
 
-        }
+        },
 
+    #Gate Valves.
+    "V12":
+        {
+            "Type": "Gate Valve",
+            "ID":   "V12",
+            "HostingSockets": False,
+            "Default Interval": 15,
+
+            "Name": "Stage Butts Gate Valve",
+            "Class": Tools.deviceobjects.GateValve,
+
+            "Pins":  (17, 27, 19),
+            "posTolerance": 1,
+            "maxOpen": 90,
+            "minOpen": 1,
+            "refVoltage": 3.3,
+
+            #Config for server connection.
+            "ServerAddress": "192.168.0.22",
+            "ServerPort": 30022,
+            "ServerName": "SumpPi",
+            "SocketName": "Stage Butts Gate Valve V12 Socket",
+            "SocketID": "SOCK22",
+
+        }
 }

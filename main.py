@@ -265,8 +265,12 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         monitors.append(monitor_tools.SocketsMonitor(sockets["SOCK6"], "G6", "FS0"))
         monitors.append(monitor_tools.SocketsMonitor(sockets["SOCK6"], "G6", "M0"))
 
-        #Gate valve.
+        #Gate valves.
+        #Wendy Butts:
         monitors.append(monitor_tools.SocketsMonitor(sockets["SOCK14"], "V4", "V4"))
+        #Stage Butts:
+        monitors.append(monitor_tools.SocketsMonitor(sockets["SOCK22"], "V12", "V12"))
+
 
     #And for our SUMP probe.
     for probe in probes:
