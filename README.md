@@ -110,4 +110,4 @@ To generate the report. To view the report, run:
 
     xdg-open ./htmlcov/index.html
 
-Coverage isn't at 100% as of the time of writing, but it will continue to improve as the software is developed.
+Coverage isn't at 100% as of the time of writing, but it will continue to improve as the software is developed. Ignoring sockettools.py, which may soon be obsolete, the total coverage is around 76% at the time of writing - not bad.
