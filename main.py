@@ -152,8 +152,6 @@ def handle_cmdline_options():
         else:
             assert False, "unhandled option"
 
-    print(opts)
-
     #Check system ID was specified.
     assert system_id is not None, "You must specify the system ID"
 

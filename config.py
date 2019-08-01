@@ -138,15 +138,22 @@ There are no classes or functions defined in this file.
 
 """
 
+import os
+
 #Define global variables.
 VERSION = "0.11.0~pre2"
 RELEASEDATE = "1/8/2019"
 
-#This is set to True by default, and then set to False later if testing mode is disabled.
 #A strange approach, but it works and means we can import the modules for doc generation
-#without error.
+#without error. It also doesn't relax the checks on our actual deployments.
 if not "TESTING" in globals():
-    TESTING = True
+    #If running on a raspberry pi (architecture check), default to False.
+    if os.uname()[4][:3] == "arm":
+        TESTING = False
+
+    #Otherwise, default to True.
+    else:
+        TESTING = True
 
 import Tools
 import Tools.deviceobjects
