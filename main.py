@@ -417,6 +417,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         print("Caught keyboard interrupt. Asking threads to exit.")
         print("This may take a little while, so please be patient...")
 
+    config.EXITING = True
+
     for monitor in monitors:
         monitor.request_exit()
 
