@@ -201,7 +201,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     from Tools import sockettools as socket_tools
     from Tools import monitortools as monitor_tools
 
-    #Import RPi.GPIO.
+    #Import RPi.GPIO
     try:
         import RPi.GPIO as GPIO
 
@@ -213,6 +213,10 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             logging.shutdown()
 
             sys.exit("Unable to import RPi.GPIO! Did you mean to use testing mode? Exiting...")
+
+        else:
+            #Import dummy class.
+            from Tools.testingtools import GPIO
 
     #Create all sockets.
     logger.info("Creating sockets...")

@@ -55,13 +55,16 @@ try:
     GPIO.setmode(GPIO.BCM)
 
 except (ModuleNotFoundError, ImportError, NotImplementedError):
-
     if not config.TESTING:
         logger.critical("Unable to import RPi.GPIO! Did you mean to use testing mode?")
         logger.critical("Exiting...")
         logging.shutdown()
 
         sys.exit("Unable to import RPi.GPIO! Did you mean to use testing mode? Exiting...")
+
+    else:
+        #Import dummy class.
+        from Tools.testingtools import GPIO
 
 class BaseDeviceClass:
     """

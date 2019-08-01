@@ -77,6 +77,13 @@ except (ModuleNotFoundError, ImportError, NotImplementedError, ValueError) as e:
 
         sys.exit("Unable to import RPi.GPIO or ADS modules! Did you mean to use testing mode? Exiting...")
 
+    else:
+        #Import dummy classes and methods.
+        from Tools.testingtools import GPIO
+        from Tools.testingtools import ADS
+        from Tools.testingtools import ads
+        from Tools.testingtools import AnalogIn
+
 class ManageHallEffectProbe(threading.Thread):
     """
     This class is used to repeatedly poll the level of the hall effect probe, and
