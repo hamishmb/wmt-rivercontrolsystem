@@ -36,7 +36,15 @@ more complicated devices, from the classes that represent the devices themselves
 import traceback
 import threading
 import time
+import sys
 import logging
+
+#Import modules.
+import config
+
+#Use logger here too.
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
 
 try:
     #Allow us to generate documentation on non-RPi systems.
@@ -56,22 +64,18 @@ try:
     # Create the ADC object using the I2C bus
     ads = ADS.ADS1115(i2c)
 
-except ImportError:
-    #Occurs when generating documentation on a non-pi system with Sphinx.
-    print("CoreTools: ImportError: Are you generating documentation?")
+except (ModuleNotFoundError, ImportError, NotImplementedError, ValueError) as e:
+    if isinstance(e, ValueError):
+        #Occurs when no I2C device is present.
+        logger.critical("ADS (I2C) device not found!")
+        print("ADS (I2C) device not found!")
 
-except NotImplementedError:
-    #Occurs when importing busio on Raspberry Pi 1 B+ for some reason.
-    print("CoreTools: NotImplementedError: Testing environment?")
+    if not config.TESTING:
+        logger.critical("Unable to import RPi.GPIO or ADS modules! Did you mean to use testing mode?")
+        logger.critical("Exiting...")
+        logging.shutdown()
 
-except ValueError:
-    #Occurs when no I2C device is present.
-    print("CoreTools: ValueError: No I2C device found! Testing environment?")
-
-#Don't ask for a logger name, so this works with both main.py
-#and the universal monitor.
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
+        sys.exit("Unable to import RPi.GPIO or ADS modules! Did you mean to use testing mode? Exiting...")
 
 class ManageHallEffectProbe(threading.Thread):
     """

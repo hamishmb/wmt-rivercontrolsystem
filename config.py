@@ -142,6 +142,12 @@ There are no classes or functions defined in this file.
 VERSION = "0.11.0~pre2"
 RELEASEDATE = "1/8/2019"
 
+#This is set to True by default, and then set to False later if testing mode is disabled.
+#A strange approach, but it works and means we can import the modules for doc generation
+#without error.
+if not "TESTING" in globals():
+    TESTING = True
+
 import Tools
 import Tools.deviceobjects
 

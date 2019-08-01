@@ -25,6 +25,9 @@ sys.path.insert(0, os.path.abspath('../..'))
 # Import configuration from river control system framework to access the version.
 import config
 
+# Enable testing mode so we can import the modules on a system without all the hardware.
+config.TESTING = True
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
