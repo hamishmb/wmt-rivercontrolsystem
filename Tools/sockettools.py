@@ -51,6 +51,8 @@ import logging
 import pickle
 import _pickle
 
+import config
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
 
@@ -323,7 +325,7 @@ class Sockets:
         """
 
         logger.debug("Sockets.request_handler_exit(): Requesting handler to exit...")
-        self.requested_handler_exit = True
+        #self.requested_handler_exit = True
 
     # ---------- Handler Thread & Functions ----------
     def _create_and_connect(self):
@@ -726,7 +728,7 @@ class SocketHandlerThread(threading.Thread):
         #Setup the socket.
         logger.debug("Sockets.Handler(): Calling Ptr->_create_and_connect to set the socket up...")
 
-        while not self.socket.requested_handler_exit:
+        while not config.EXITING:
             self.socket._create_and_connect()
 
             #If we have connected without error, break out of this loop and enter the main loop.
@@ -741,14 +743,14 @@ class SocketHandlerThread(threading.Thread):
             #Wait for 10 seconds in between attempts.
             time.sleep(10)
 
-        if not self.socket.requested_handler_exit:
+        if not config.EXITING:
             #We have connected.
             logger.debug("Sockets.Handler(): Done! Entering main loop.")
             print("Connected to peer ("+self.socket.name+").")
 
         #-------------------- Manage the connection, sending and receiving data --------------------
         #Keep sending and receiving messages until we're asked to exit.
-        while not self.socket.requested_handler_exit:
+        while not config.EXITING:
             #Send any pending messages.
             write_result = self.socket._send_pending_messages()
 
@@ -765,7 +767,7 @@ class SocketHandlerThread(threading.Thread):
 
                 #Wait for the socket to reconnect, unless the user ends the program
                 #(this allows us to exit cleanly if the peer is gone).
-                while not self.socket.requested_handler_exit:
+                while not config.EXITING:
                     #Reset the socket. Also resets the status trackers.
                     logger.debug("Sockets.Handler(): Resetting socket...")
                     self.socket.reset()

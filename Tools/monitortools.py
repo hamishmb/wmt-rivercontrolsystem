@@ -40,6 +40,8 @@ import datetime
 import threading
 import logging
 
+import config
+
 from . import coretools
 
 #Don't ask for a logger name, so this works with both main.py
@@ -118,7 +120,7 @@ class BaseMonitorClass(threading.Thread):
         self.running = False
 
         #Used to ask the monitor thread to exit.
-        self.should_exit = False
+        #self.should_exit = False
 
     #---------- GETTERS ----------
     def get_system_id(self):
@@ -318,7 +320,7 @@ class BaseMonitorClass(threading.Thread):
             >>> <BaseMonitorClassObject>.request_exit() //Wait for thread to exit.
         """
 
-        self.should_exit = True
+#        self.should_exit = True
         self.reading_interval = 0 #Helps thread to react faster.
 
         if wait:
@@ -394,7 +396,7 @@ class Monitor(BaseMonitorClass):
         self.create_file_handle()
 
         try:
-            while not self.should_exit:
+            while not config.EXITING:
                 the_reading, status_text = self.reading_func()
 
                 #Construct a Reading object to hold this info.
@@ -522,7 +524,7 @@ class SocketsMonitor(BaseMonitorClass):
         self.create_file_handle()
 
         try:
-            while not self.should_exit:
+            while not config.EXITING:
 
                 while self.socket.has_data():
                     try:

@@ -116,10 +116,7 @@ class ManageHallEffectProbe(threading.Thread):
 
     def run(self): #FIXME This is not a monitor thread! Fix documentation.
         """The main body of the monitor thread for this probe"""
-        #FIXME We need a way of exiting from this cleanly on
-        #program shutdown.
-
-        while True:
+        while not config.EXITING:
             new_reading = self.test_levels()
 
             if new_reading == 1000:
@@ -242,7 +239,7 @@ class ManageGateValve(threading.Thread):
 
     def run(self):
         """This is the part of the code that runs in the thread"""
-        while not self._exit:
+        while not config.EXITING:
             self.actual_position = self.get_position()
 
             if ((self.actual_position <= self.high_limit
@@ -272,6 +269,8 @@ class ManageGateValve(threading.Thread):
                 self.clutch_engage()
                 GPIO.output(self.valve.forward_pin, GPIO.LOW)
                 GPIO.output(self.valve.reverse_pin, GPIO.HIGH)
+
+        self.clutch_disengage()
 
     def clutch_engage(self):
         GPIO.output(self.valve.clutch_pin, GPIO.HIGH)
@@ -331,5 +330,7 @@ class ManageGateValve(threading.Thread):
 
     def stop(self):
         """Stops the thread."""
-        self._exit = True
-        self.clutch_disengage()
+        pass
+
+        #self._exit = True
+        #self.clutch_disengage()
