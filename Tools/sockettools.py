@@ -101,7 +101,6 @@ class Sockets:
         self.verbose = True
         self.ready_to_send = False
         self.reconnected = False
-        self.requested_handler_exit = False
         self.internal_request_exit = False
         self.handler_exited = False
 
@@ -187,7 +186,6 @@ class Sockets:
         #Variables for tracking status of the other thread.
         self.ready_to_send = False
         self.reconnected = False
-        self.requested_handler_exit = False
         self.internal_request_exit = False
         self.handler_exited = False
 
@@ -264,7 +262,6 @@ class Sockets:
             >>> <Sockets-Obj>.wait_for_handler_to_exit()
         """
 
-        self.request_handler_exit()
 
         while not self.handler_exited:
             time.sleep(0.5)
@@ -303,7 +300,6 @@ class Sockets:
         #Setup.
         self.ready_to_send = False
         self.reconnected = False
-        self.requested_handler_exit = False
         self.internal_request_exit = False
         self.handler_exited = False
 
@@ -314,18 +310,6 @@ class Sockets:
         else:
             logger.debug("Sockets.start_handler(): Type is wrong, throwing ValueError...")
             raise ValueError("Type must be 'Plug' or 'Socket'")
-
-    def request_handler_exit(self):
-        """
-        This method is used to ask the handler to exit. Returns immediately, without waiting.
-
-        Usage:
-
-            >>> <Sockets-Obj>.request_handler_exit()
-        """
-
-        logger.debug("Sockets.request_handler_exit(): Requesting handler to exit...")
-        #self.requested_handler_exit = True
 
     # ---------- Handler Thread & Functions ----------
     def _create_and_connect(self):

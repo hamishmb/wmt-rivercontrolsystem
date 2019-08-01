@@ -327,10 +327,3 @@ class ManageGateValve(threading.Thread):
 
                 #Set the Low Limit to the required percentage
                 self.low_limit = self.percentage - self.valve.pos_tolerance
-
-    def stop(self):
-        """Stops the thread."""
-        pass
-
-        #self._exit = True
-        #self.clutch_disengage()

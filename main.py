@@ -417,6 +417,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         print("Caught keyboard interrupt. Asking threads to exit.")
         print("This may take a little while, so please be patient...")
 
+    #This triggers shutdown of everything else - no explicit call to each thread is needed.
+    #The code below simply makes it easier to monitor what is shutting down.
     config.EXITING = True
 
     for monitor in monitors:
@@ -429,12 +431,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         monitor.request_exit(wait=True)
 
     #Always clean up properly.
-    logger.info("Asking sockets to exit...")
-    print("Asking sockets to exit...")
-
-    for each_socket in sockets.values():
-        each_socket.request_handler_exit()
-
     logger.info("Waiting for sockets to exit...")
     print("Waiting for sockets to exit...")
 

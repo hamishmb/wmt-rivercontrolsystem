@@ -119,9 +119,6 @@ class BaseMonitorClass(threading.Thread):
         #Whether the monitor is currently running.
         self.running = False
 
-        #Used to ask the monitor thread to exit.
-        #self.should_exit = False
-
     #---------- GETTERS ----------
     def get_system_id(self):
         """
@@ -320,7 +317,6 @@ class BaseMonitorClass(threading.Thread):
             >>> <BaseMonitorClassObject>.request_exit() //Wait for thread to exit.
         """
 
-#        self.should_exit = True
         self.reading_interval = 0 #Helps thread to react faster.
 
         if wait:
