@@ -17,6 +17,7 @@ Contents:
     coretools
     monitortools
     deviceobjects
+    devicemanagement
     sockettools
 
 
