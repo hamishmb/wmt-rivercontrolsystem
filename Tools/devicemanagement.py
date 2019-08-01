@@ -64,7 +64,7 @@ try:
     # Create the ADC object using the I2C bus
     ads = ADS.ADS1115(i2c)
 
-except (ModuleNotFoundError, ImportError, NotImplementedError, ValueError) as e:
+except (ImportError, NotImplementedError, ValueError) as e:
     if isinstance(e, ValueError):
         #Occurs when no I2C device is present.
         logger.critical("ADS (I2C) device not found!")
