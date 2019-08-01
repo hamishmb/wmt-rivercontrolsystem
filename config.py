@@ -140,7 +140,7 @@ There are no classes or functions defined in this file.
 
 #Define global variables.
 VERSION = "0.11.0~pre2"
-RELEASEDATE = "17/7/2019"
+RELEASEDATE = "1/8/2019"
 
 import Tools
 import Tools.deviceobjects
