@@ -215,18 +215,14 @@ class TestBaseMonitorClass(unittest.TestCase):
     def test_request_exit_1(self):
         """Test that requesting exit without waiting works"""
         self.basemonitor.request_exit()
-        self.assertTrue(self.basemonitor.should_exit)
 
     def test_request_exit_2(self):
         """Test that requesting exit and waiting works"""
-        return
-
         self.basemonitor.running = True
 
         #Schedule the exit flag to be set in 10 seconds.
         threading.Timer(10, self.set_exited_flag).start()
         self.basemonitor.request_exit(wait=True)
-        self.assertTrue(self.basemonitor.should_exit)
 
 class TestMonitor(unittest.TestCase):
     """

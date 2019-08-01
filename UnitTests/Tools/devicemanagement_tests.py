@@ -208,9 +208,3 @@ class TestManageGateValve(unittest.TestCase):
     def test_clutch_disengage(self):
         """Test that the clutch_disengage() method works as expected"""
         self.mgmtclass.clutch_disengage()
-
-    def test_stop(self):
-        """Test that the stop() method works as expected"""
-        self.mgmtclass.stop()
-
-        self.assertTrue(self.mgmtclass._exit)
