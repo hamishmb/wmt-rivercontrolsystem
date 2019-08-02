@@ -345,12 +345,18 @@ class SyncTime(threading.Thread):
                 logger.error("Unable to sync system time. Error was: "+str(stdout))
                 print("Unable to sync system time. Error was: "+str(stdout))
                 logger.error("Retrying time sync in 10 seconds...")
-                time.sleep(10)
+                sleep = 10
 
             else:
                 logger.info("System time synchronised, now set to "+str(stdout))
                 print("System time synchronised, now set to "+str(stdout))
-                time.sleep(3600)
+                sleep = 3600
+
+            #Respond to system shutdown quickly.
+            count = 0
+
+            while count < sleep and not config.EXITING:
+                time.sleep(1)
 
 # -------------------- CONTROL LOGIC FUNCTIONS --------------------
 #TODO update the documentation, this is old.
