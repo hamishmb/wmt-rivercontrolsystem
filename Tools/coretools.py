@@ -336,7 +336,7 @@ class SyncTime(threading.Thread):
     def run(self):
         """The main body of the thread"""
         while not config.EXITING:
-            cmd = subprocess.run(["rdate", config.SITE_SETTINGS["SUMP"]["IPAddress"]], stdout=subprocess.PIPE,
+            cmd = subprocess.run(["sudo", "rdate", config.SITE_SETTINGS["SUMP"]["IPAddress"]], stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT)
 
             stdout = cmd.stdout.decode("UTF-8", errors="ignore")
