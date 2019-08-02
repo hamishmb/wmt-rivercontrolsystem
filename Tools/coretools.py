@@ -339,15 +339,17 @@ class SyncTime(threading.Thread):
             cmd = subprocess.run(["rdate", config.SITE_SETTINGS["SUMP"]["IPAddress"]], stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT)
 
+            stdout = cmd.stdout.encode("UTF-8", errors="ignore")
+
             if cmd.returncode != 0:
-                logger.error("Unable to sync system time. Error was: "+str(cmd.stdout))
-                print("Unable to sync system time. Error was: "+str(cmd.stdout))
+                logger.error("Unable to sync system time. Error was: "+str(stdout))
+                print("Unable to sync system time. Error was: "+str(stdout))
                 logger.error("Retrying time sync in 10 seconds...")
                 time.sleep(10)
 
             else:
-                logger.info("System time synchronised, now set to "+str(cmd.stdout))
-                print("System time synchronised, now set to "+str(cmd.stdout))
+                logger.info("System time synchronised, now set to "+str(stdout))
+                print("System time synchronised, now set to "+str(stdout))
                 time.sleep(3600)
 
 # -------------------- CONTROL LOGIC FUNCTIONS --------------------
