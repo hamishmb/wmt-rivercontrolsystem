@@ -218,6 +218,10 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             #Import dummy class.
             from Tools.testingtools import GPIO
 
+    #If this isn't sumppi, start synchronising time with sumppi.
+    if system_id != "SUMP":
+        core_tools.SyncTime()
+
     #Create all sockets.
     logger.info("Creating sockets...")
     sockets = {}

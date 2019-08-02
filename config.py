@@ -168,6 +168,7 @@ SITE_SETTINGS = {
         {
             "ID": "SUMP",
             "Default Interval": 15,
+            "IPAddress": "192.168.0.2",
             "HostingSockets": True,
             "ControlLogicFunction": "sumppi_control_logic",
 
@@ -219,6 +220,7 @@ SITE_SETTINGS = {
         {
             "ID": "G4",
             "Default Interval": 15,
+            "IPAddress": "192.168.0.4",
             "HostingSockets": False,
 
             #Local probes.
@@ -264,6 +266,7 @@ SITE_SETTINGS = {
         {
             "ID": "G6",
             "Default Interval": 15,
+            "IPAddress": "192.168.0.6",
             "HostingSockets": False,
 
             #Local probes.
@@ -311,6 +314,7 @@ SITE_SETTINGS = {
             "Type": "Gate Valve",
             "ID":   "V4",
             "HostingSockets": False,
+            "IPAddress": "192.168.0.14",
             "Default Interval": 15,
 
             "Name": "Butts Farm Gate Valve",
@@ -337,6 +341,7 @@ SITE_SETTINGS = {
             "Type": "Gate Valve",
             "ID":   "V12",
             "HostingSockets": False,
+            "IPAddress": "192.168.0.22",
             "Default Interval": 15,
 
             "Name": "Stage Butts Gate Valve",

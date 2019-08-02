@@ -32,6 +32,9 @@ functions in here to reduce code duplication.
 """
 
 import sys
+import time
+import threading
+import subprocess
 import logging
 
 import config
@@ -316,6 +319,33 @@ class Reading:
                 + "," + self._id
                 + "," + self._value
                 + "," + self._status)
+
+class SyncTime(threading.Thread):
+    """
+    This class starts a thread that repeatedly synchronises the system time of
+    all the pis with Sump Pi's hardware clock every hour. Note that special permissions
+    need to have been granted to normal users for this to work when not run as root.
+    """
+
+    def __init__(self):
+        """The constructor"""
+        threading.Thread.__init__(self)
+
+        self.start()
+
+    def run(self):
+        """The main body of the thread"""
+        while not config.EXITING:
+            cmd = subprocess.run(["rdate", config.SITE_SETTINGS["SUMP"]["IPAddress"]], stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT)
+
+            if cmd.returncode != 0:
+                logger.error("Unable to sync system time. Error was: "+str(cmd.stdout))
+
+            else:
+                logger.info("System time synchronised, now set to "+str(cmd.stdout))
+
+            time.sleep(3600)
 
 # -------------------- CONTROL LOGIC FUNCTIONS --------------------
 #TODO update the documentation, this is old.
