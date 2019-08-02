@@ -341,11 +341,14 @@ class SyncTime(threading.Thread):
 
             if cmd.returncode != 0:
                 logger.error("Unable to sync system time. Error was: "+str(cmd.stdout))
+                print("Unable to sync system time. Error was: "+str(cmd.stdout))
+                logger.error("Retrying time sync in 10 seconds...")
+                time.sleep(10)
 
             else:
                 logger.info("System time synchronised, now set to "+str(cmd.stdout))
-
-            time.sleep(3600)
+                print("System time synchronised, now set to "+str(cmd.stdout))
+                time.sleep(3600)
 
 # -------------------- CONTROL LOGIC FUNCTIONS --------------------
 #TODO update the documentation, this is old.
