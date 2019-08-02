@@ -356,6 +356,7 @@ class SyncTime(threading.Thread):
             count = 0
 
             while count < sleep and not config.EXITING:
+                count += 1
                 time.sleep(1)
 
 # -------------------- CONTROL LOGIC FUNCTIONS --------------------
