@@ -291,9 +291,18 @@ SITE_SETTINGS = {
                     {
                         "Type": "Float Switch",
                         "ID":   "G6:FS0",
-                        "Name": "Stage Butts Switch",
+                        "Name": "Stage Butts High Float Switch",
                         "Class": Tools.deviceobjects.FloatSwitch,
                         "Pins":  (8),
+                    },
+
+                    "G6:FS1":
+                    {
+                        "Type": "Float Switch",
+                        "ID":   "G6:FS1",
+                        "Name": "Stage Butts Low Float Switch",
+                        "Class": Tools.deviceobjects.FloatSwitch,
+                        "Pins":  (7),
                     }
                 },
 
