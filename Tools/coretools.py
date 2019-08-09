@@ -323,7 +323,7 @@ class Reading:
 class SyncTime(threading.Thread):
     """
     This class starts a thread that repeatedly synchronises the system time of
-    all the pis with Sump Pi's hardware clock every hour. Note that special permissions
+    all the pis with Sump Pi's hardware clock every day. Note that special permissions
     need to have been granted to normal users for this to work when not run as root.
     """
 
@@ -350,7 +350,7 @@ class SyncTime(threading.Thread):
             else:
                 logger.info("System time synchronised, now set to "+str(stdout))
                 print("System time synchronised, now set to "+str(stdout))
-                sleep = 3600
+                sleep = 86400
 
             #Respond to system shutdown quickly.
             count = 0
