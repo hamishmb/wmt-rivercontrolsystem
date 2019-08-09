@@ -18,6 +18,8 @@
 #
 #Reason (logging-not-lazy): Harder to understand the logging statements that way.
 
+#TODO Lots of duplicated code here, refactor and put in BaseMonitorClass.
+
 """
 This is the part of the software framework that contains the
 monitor thread. This is used to obtain readings from sensors
@@ -96,6 +98,7 @@ class BaseMonitorClass(threading.Thread):
         #The file name the readings file will have (plus the time it was
         #created)
         self.file_name = "readings/"+self.system_id+":"+self.probe_id
+        self.current_file_name = None
 
         #A reference to the file handle of the open readings file.
         self.file_handle = None
@@ -275,7 +278,8 @@ class BaseMonitorClass(threading.Thread):
         the_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
         #Open in append mode, just in case the file is already here.
-        self.file_handle = open(self.file_name+"-"+the_time+".csv", "a")
+        self.current_file_name = self.file_name+"-"+the_time+".csv"
+        self.file_handle = open(self.current_file_name, "a")
 
         try:
             #Write the start time and the CSV header.
@@ -388,6 +392,8 @@ class Monitor(BaseMonitorClass):
                                 #which is for external users.
         self.running = True
 
+        write_failed = False
+
         #Set up the readings file.
         self.create_file_handle()
 
@@ -405,23 +411,74 @@ class Monitor(BaseMonitorClass):
                 #Add it to the queue.
                 self.queue.append(reading)
 
-                if reading == previous_reading:
-                    #Write a . to the file.
-                    logger.debug("Monitor for "+self.system_id+":"+self.probe_id
-                                 + ": New reading, same value as last time.")
+                try:
+                    if reading == previous_reading:
+                        #Write a . to the file.
+                        logger.debug("Monitor for "+self.system_id+":"+self.probe_id
+                                     + ": New reading, same value as last time.")
 
-                    self.file_handle.write(".")
+                        self.file_handle.write(".")
 
-                else:
-                    #Write it to the readings file.
-                    logger.debug("Monitor for "+self.system_id+":"+self.probe_id
-                                 + ": New reading, new value: "+reading.get_value())
+                    else:
+                        #Write it to the readings file.
+                        logger.debug("Monitor for "+self.system_id+":"+self.probe_id
+                                     + ": New reading, new value: "+reading.get_value())
 
-                    self.file_handle.write("\n"+reading.as_csv())
+                        self.file_handle.write("\n"+reading.as_csv())
 
-                    previous_reading = reading
+                        previous_reading = reading
 
-                self.file_handle.flush()
+                    self.file_handle.flush()
+
+                except OSError:
+                    logger.error("Couldn't write to readings file! "
+                                 + "Creating a new one...")
+
+                    print("Couldn't write to readings file! "
+                          + "Creating a new one...")
+
+                    write_failed = True
+
+                #Check if the readings file is still there.
+                readings_file_exists = os.path.isfile(self.current_file_name)
+
+                #Check if it's time to rotate the readings file.
+                timediff = datetime.datetime.now() - self.file_creation_time
+
+                #If it's time, or the previous file is gone, create a new
+                #readings file.
+                if timediff.days >= self.file_rotate_interval or \
+                    not readings_file_exists or \
+                    write_failed:
+
+                    self.file_handle.close()
+                    self.create_file_handle()
+                    previous_reading = None
+
+                if not readings_file_exists:
+                    logger.error("Monitor for "+self.system_id+":"+self.probe_id
+                                 + ": Readings file gone! Creating new one...")
+
+                    print("Monitor for "+self.system_id+":"+self.probe_id
+                          + ": Readings file gone! Creating new one...")
+
+                    self.file_handle.write("WARNING: Previous readings file was "
+                                           + "deleted.\n")
+
+                    #Take a new reading immediately.
+                    continue
+
+                elif write_failed:
+                    logger.error("Monitor for "+self.system_id+":"+self.probe_id
+                                 + ": Can't write to readings file! Creating new one...")
+
+                    print("Monitor for "+self.system_id+":"+self.probe_id
+                          + ": Can't write to readings file! Creating new one...")
+
+                    self.file_handle.write("WARNING: Couldn't write to previous readings file.\n")
+
+                    #Take a new reading immediately.
+                    continue
 
                 #Take readings every however often it is.
                 #I know we could use a long time.sleep(),
@@ -433,14 +490,6 @@ class Monitor(BaseMonitorClass):
                     #the code will respond to the change immediately.
                     time.sleep(1)
                     count += 1
-
-                #Check if it's time to rotate the readings file.
-                timediff = datetime.datetime.now() - self.file_creation_time
-
-                if timediff.days >= self.file_rotate_interval:
-                    self.file_handle.close()
-                    self.create_file_handle()
-                    previous_reading = None
 
         except Exception:
             #Log all of these errors to the log file.
@@ -516,12 +565,13 @@ class SocketsMonitor(BaseMonitorClass):
                                 #which is for external users.
         self.running = True
 
+        write_failed = False
+
         #Set up the readings file.
         self.create_file_handle()
 
         try:
             while not config.EXITING:
-
                 while self.socket.has_data():
                     try:
                         reading = self.socket.read()
@@ -538,34 +588,74 @@ class SocketsMonitor(BaseMonitorClass):
                         #Add it to the queue.
                         self.queue.append(reading)
 
-                        if reading == previous_reading:
-                            #Write a . to the file.
-                            logger.debug("SocketsMonitor for "+self.system_id+":"+self.probe_id
-                                         + ": New reading, same value as last time.")
+                        try:
+                            if reading == previous_reading:
+                                #Write a . to the file.
+                                logger.debug("SocketsMonitor for "+self.system_id+":"+self.probe_id
+                                             + ": New reading, same value as last time.")
 
-                            self.file_handle.write(".")
+                                self.file_handle.write(".")
 
-                        else:
-                            #Write it to the readings file.
-                            logger.debug("SocketsMonitor for "+self.system_id+":"+self.probe_id
-                                         + ": New reading, new value: "+reading.get_value())
+                            else:
+                                #Write it to the readings file.
+                                logger.debug("SocketsMonitor for "+self.system_id+":"+self.probe_id
+                                             + ": New reading, new value: "+reading.get_value())
 
-                            self.file_handle.write("\n"+reading.as_csv())
+                                self.file_handle.write("\n"+reading.as_csv())
 
-                            previous_reading = reading
+                                previous_reading = reading
 
-                        self.file_handle.flush()
+                            self.file_handle.flush()
+
+                        except OSError:
+                            logger.error("Couldn't write to readings file! "
+                                         + "Creating a new one...")
+
+                            print("Couldn't write to readings file! "
+                                  + "Creating a new one...")
+
+                            write_failed = True
 
                 #Check every 1 second (prevent delays in logging at sump pi end).
                 time.sleep(1)
 
+                #Check if the readings file is still there.
+                readings_file_exists = os.path.isfile(self.current_file_name)
+
                 #Check if it's time to rotate the readings file.
                 timediff = datetime.datetime.now() - self.file_creation_time
 
-                if timediff.days >= self.file_rotate_interval:
+                if timediff.days >= self.file_rotate_interval or \
+                    write_failed:
+
                     self.file_handle.close()
                     self.create_file_handle()
                     previous_reading = None
+
+                if not readings_file_exists:
+                    logger.error("Monitor for "+self.system_id+":"+self.probe_id
+                                 + ": Readings file gone! Creating new one...")
+
+                    print("Monitor for "+self.system_id+":"+self.probe_id
+                          + ": Readings file gone! Creating new one...")
+
+                    self.file_handle.write("WARNING: Previous readings file was "
+                                           + "deleted.\n")
+
+                    #Take a new reading immediately.
+                    continue
+
+                elif write_failed:
+                    logger.error("Monitor for "+self.system_id+":"+self.probe_id
+                                 + ": Can't write to readings file! Creating new one...")
+
+                    print("Monitor for "+self.system_id+":"+self.probe_id
+                          + ": Can't write to readings file! Creating new one...")
+
+                    self.file_handle.write("WARNING: Couldn't write to previous readings file.\n")
+
+                    #Take a new reading immediately.
+                    continue
 
         except Exception:
             #Log all of these errors to the log file.
