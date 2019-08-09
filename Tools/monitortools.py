@@ -103,11 +103,8 @@ class BaseMonitorClass(threading.Thread):
         #A reference to the file handle of the open readings file.
         self.file_handle = None
 
-        #The time the readings file was created.
-        self.file_creation_time = None
-
-        #The interval at which we want to rotate the readings file, in days.
-        self.file_rotate_interval = 7
+        #The time the readings file will expire.
+        self.midnight_tonight = None
 
         #Default reading interval. This will immediately be overridden by the
         #master pi in practice.
@@ -275,7 +272,7 @@ class BaseMonitorClass(threading.Thread):
             os.mkdir("readings")
 
         #Time format: yyyy-mm-dd hh:mm:ss
-        the_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        the_time = time.strftime("%Y-%m-%d", time.localtime())
 
         #Open in append mode, just in case the file is already here.
         self.current_file_name = self.file_name+"-"+the_time+".csv"
@@ -283,7 +280,7 @@ class BaseMonitorClass(threading.Thread):
 
         try:
             #Write the start time and the CSV header.
-            self.file_handle.write("\n\nStart Time: "+the_time+"\n\n")
+            self.file_handle.write("\n\nStart Time: "+str(datetime.datetime.now())+"\n\n")
             self.file_handle.write("\nTIME,SYSTEM TICK,ID,VALUE,STATUS\n")
             self.file_handle.flush()
 
@@ -299,9 +296,13 @@ class BaseMonitorClass(threading.Thread):
             #Raise the error, because we don't want to continue when this fails.
             raise e
 
-        #Set the file creation time so we can rotate readings files.
+        #Set the expiration time to midnight so we can rotate readings files.
         #This uses the datetime class cos it's easier to compare times that way.
-        self.file_creation_time = datetime.datetime.now()
+        midnight = datetime.time(hour=23, minute=59, second=59)
+        current_time = datetime.datetime.now()
+
+        self.midnight_tonight = datetime.datetime.combine(current_time.date(),
+                                                          midnight)
 
     def request_exit(self, wait=False):
         """
@@ -443,11 +444,11 @@ class Monitor(BaseMonitorClass):
                 readings_file_exists = os.path.isfile(self.current_file_name)
 
                 #Check if it's time to rotate the readings file.
-                timediff = datetime.datetime.now() - self.file_creation_time
+                timediff = datetime.datetime.now() - self.midnight_tonight
 
                 #If it's time, or the previous file is gone, create a new
                 #readings file.
-                if timediff.days >= self.file_rotate_interval or \
+                if timediff.days > -1 or \
                     not readings_file_exists or \
                     write_failed:
 
@@ -623,9 +624,9 @@ class SocketsMonitor(BaseMonitorClass):
                 readings_file_exists = os.path.isfile(self.current_file_name)
 
                 #Check if it's time to rotate the readings file.
-                timediff = datetime.datetime.now() - self.file_creation_time
+                timediff = datetime.datetime.now() - self.midnight_tonight
 
-                if timediff.days >= self.file_rotate_interval or \
+                if timediff.days > -1 or \
                     write_failed:
 
                     self.file_handle.close()
