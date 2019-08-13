@@ -627,6 +627,7 @@ class SocketsMonitor(BaseMonitorClass):
                 timediff = datetime.datetime.now() - self.midnight_tonight
 
                 if timediff.days > -1 or \
+                    not readings_file_exists or \
                     write_failed:
 
                     self.file_handle.close()
