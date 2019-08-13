@@ -22,6 +22,7 @@
 import unittest
 import sys
 import os
+import time
 import shutil
 import datetime
 import threading
@@ -33,6 +34,7 @@ sys.path.append('../..') #Need to be able to import the Tools module from here.
 import Tools
 import Tools.monitortools as monitor_tools
 import Tools.coretools as core_tools
+import Tools.deviceobjects as device_objects
 
 #Import test data and functions.
 from . import monitortools_test_data as data
@@ -410,13 +412,43 @@ class TestMonitor(unittest.TestCase):
     """
 
     def setUp(self):
-        pass
+        os.chdir("UnitTests")
+
+        self.halleffectprobe = device_objects.HallEffectProbe("SUMP:M0", "Test")
+
+        #Make sure it won't exit immediately.
+        monitor_tools.config.EXITING = False
 
     def tearDown(self):
-        pass
+        del self.halleffectprobe
+
+        #Clear the readings directory that has been created.
+        if os.path.isdir("readings"):
+            shutil.rmtree("readings")
+            os.mkdir("readings")
+
+        os.chdir("../")
 
     def test_1(self):
-        pass
+        """Test that the class initialises and exits correctly (slow test)"""
+        monitor = monitor_tools.Monitor(self.halleffectprobe, 5, "SUMP")
+
+        #Check that the constructor worked.
+        self.assertEqual(monitor.probe, self.halleffectprobe)
+        self.assertEqual(monitor.reading_interval, 5)
+        self.assertEqual(monitor.reading_func, self.halleffectprobe.get_reading)
+
+        time.sleep(25)
+
+        #Stop the monitor thread.
+        monitor_tools.config.EXITING = True
+
+        while monitor.is_running():
+            time.sleep(1)
+
+        #Monitor thread has exited.
+        #Check shutdown code worked.
+        self.assertFalse(monitor.running)
 
 class TestSocketsMonitor(unittest.TestCase):
     """
@@ -425,10 +457,39 @@ class TestSocketsMonitor(unittest.TestCase):
     """
 
     def setUp(self):
-        pass
+        os.chdir("UnitTests")
+
+        self.socket = data.Sockets()
+
+        #Make sure it won't exit immediately.
+        monitor_tools.config.EXITING = False
 
     def tearDown(self):
-        pass
+        del self.socket
+
+        #Clear the readings directory that has been created.
+        if os.path.isdir("readings"):
+            shutil.rmtree("readings")
+            os.mkdir("readings")
+
+        os.chdir("../")
 
     def test_1(self):
-        pass
+        """Test that the class initialises and exits correctly (slow test)"""
+        monitor = monitor_tools.SocketsMonitor(self.socket, "SUMP", "M0")
+
+        #Check that the constructor worked.
+        self.assertEqual(monitor.socket, self.socket)
+        self.assertEqual(monitor.probe_id, "M0")
+
+        time.sleep(25)
+
+        #Stop the monitor thread.
+        monitor_tools.config.EXITING = True
+
+        while monitor.is_running():
+            time.sleep(1)
+
+        #Monitor thread has exited.
+        #Check shutdown code worked.
+        self.assertFalse(monitor.running)

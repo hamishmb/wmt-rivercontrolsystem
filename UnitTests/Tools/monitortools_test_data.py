@@ -89,6 +89,12 @@ class Sockets:
     def get_queue(self):
         return self.out_queue
 
+    def has_data(self):
+        return True
+
+    def read(self):
+        raise IndexError("Fake Socket - No data")
+
     def write(self, data):
         self.out_queue.append(data)
 
