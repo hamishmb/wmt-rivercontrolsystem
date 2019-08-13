@@ -739,6 +739,7 @@ class SocketHandlerThread(threading.Thread):
             write_result = self.socket._send_pending_messages()
 
             #Receive messages if there are any.
+            #FIXME this can hang, preventing socket from being recreated when write fails!
             read_result = self.socket._read_pending_messages()
 
             #Check if the peer left.
