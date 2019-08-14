@@ -153,6 +153,7 @@ if not "TESTING" in globals():
     if os.uname()[4][:3] == "arm" and \
         "-t" not in sys.argv and \
         "--testing" not in sys.argv:
+
         TESTING = False
 
     #Otherwise, default to True.
