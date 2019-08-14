@@ -139,6 +139,7 @@ There are no classes or functions defined in this file.
 """
 
 import os
+import sys
 
 #Define global variables.
 VERSION = "0.11.0~pre2"
@@ -147,8 +148,11 @@ RELEASEDATE = "1/8/2019"
 #A strange approach, but it works and means we can import the modules for doc generation
 #without error. It also doesn't relax the checks on our actual deployments.
 if not "TESTING" in globals():
-    #If running on a raspberry pi (architecture check), default to False.
-    if os.uname()[4][:3] == "arm":
+    #If running on a raspberry pi (architecture check), default to False,
+    #unless the testing flag is present.
+    if os.uname()[4][:3] == "arm" and \
+        "-t" not in sys.argv and \
+        "--testing" not in sys.argv:
         TESTING = False
 
     #Otherwise, default to True.
