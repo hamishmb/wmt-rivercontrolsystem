@@ -36,7 +36,15 @@ more complicated devices, from the classes that represent the devices themselves
 import traceback
 import threading
 import time
+import sys
 import logging
+
+#Import modules.
+import config
+
+#Use logger here too.
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
 
 try:
     #Allow us to generate documentation on non-RPi systems.
@@ -56,22 +64,25 @@ try:
     # Create the ADC object using the I2C bus
     ads = ADS.ADS1115(i2c)
 
-except ImportError:
-    #Occurs when generating documentation on a non-pi system with Sphinx.
-    print("CoreTools: ImportError: Are you generating documentation?")
+except (ImportError, NotImplementedError, ValueError) as e:
+    if isinstance(e, ValueError):
+        #Occurs when no I2C device is present.
+        logger.critical("ADS (I2C) device not found!")
+        print("ADS (I2C) device not found!")
 
-except NotImplementedError:
-    #Occurs when importing busio on Raspberry Pi 1 B+ for some reason.
-    print("CoreTools: NotImplementedError: Testing environment?")
+    if not config.TESTING:
+        logger.critical("Unable to import RPi.GPIO or ADS modules! Did you mean to use testing mode?")
+        logger.critical("Exiting...")
+        logging.shutdown()
 
-except ValueError:
-    #Occurs when no I2C device is present.
-    print("CoreTools: ValueError: No I2C device found! Testing environment?")
+        sys.exit("Unable to import RPi.GPIO or ADS modules! Did you mean to use testing mode? Exiting...")
 
-#Don't ask for a logger name, so this works with both main.py
-#and the universal monitor.
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
+    else:
+        #Import dummy classes and methods.
+        from Tools.testingtools import GPIO
+        from Tools.testingtools import ADS
+        from Tools.testingtools import ads
+        from Tools.testingtools import AnalogIn
 
 class ManageHallEffectProbe(threading.Thread):
     """
@@ -105,10 +116,7 @@ class ManageHallEffectProbe(threading.Thread):
 
     def run(self): #FIXME This is not a monitor thread! Fix documentation.
         """The main body of the monitor thread for this probe"""
-        #FIXME We need a way of exiting from this cleanly on
-        #program shutdown.
-
-        while True:
+        while not config.EXITING:
             new_reading = self.test_levels()
 
             if new_reading == 1000:
@@ -231,7 +239,7 @@ class ManageGateValve(threading.Thread):
 
     def run(self):
         """This is the part of the code that runs in the thread"""
-        while not self._exit:
+        while not config.EXITING:
             self.actual_position = self.get_position()
 
             if ((self.actual_position <= self.high_limit
@@ -261,6 +269,8 @@ class ManageGateValve(threading.Thread):
                 self.clutch_engage()
                 GPIO.output(self.valve.forward_pin, GPIO.LOW)
                 GPIO.output(self.valve.reverse_pin, GPIO.HIGH)
+
+        self.clutch_disengage()
 
     def clutch_engage(self):
         GPIO.output(self.valve.clutch_pin, GPIO.HIGH)
@@ -317,8 +327,3 @@ class ManageGateValve(threading.Thread):
 
                 #Set the Low Limit to the required percentage
                 self.low_limit = self.percentage - self.valve.pos_tolerance
-
-    def stop(self):
-        """Stops the thread."""
-        self._exit = True
-        self.clutch_disengage()

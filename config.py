@@ -138,9 +138,30 @@ There are no classes or functions defined in this file.
 
 """
 
+import os
+import sys
+
 #Define global variables.
 VERSION = "0.11.0~pre2"
-RELEASEDATE = "17/7/2019"
+RELEASEDATE = "1/8/2019"
+
+#A strange approach, but it works and means we can import the modules for doc generation
+#without error. It also doesn't relax the checks on our actual deployments.
+if not "TESTING" in globals():
+    #If running on a raspberry pi (architecture check), default to False,
+    #unless the testing flag is present.
+    if os.uname()[4][:3] == "arm" and \
+        "-t" not in sys.argv and \
+        "--testing" not in sys.argv:
+
+        TESTING = False
+
+    #Otherwise, default to True.
+    else:
+        TESTING = True
+
+#Used to signal system shutdown to all the threads.
+EXITING = False
 
 import Tools
 import Tools.deviceobjects
@@ -152,6 +173,7 @@ SITE_SETTINGS = {
         {
             "ID": "SUMP",
             "Default Interval": 15,
+            "IPAddress": "192.168.0.2",
             "HostingSockets": True,
             "ControlLogicFunction": "sumppi_control_logic",
 
@@ -203,6 +225,7 @@ SITE_SETTINGS = {
         {
             "ID": "G4",
             "Default Interval": 15,
+            "IPAddress": "192.168.0.4",
             "HostingSockets": False,
 
             #Local probes.
@@ -248,6 +271,7 @@ SITE_SETTINGS = {
         {
             "ID": "G6",
             "Default Interval": 15,
+            "IPAddress": "192.168.0.6",
             "HostingSockets": False,
 
             #Local probes.
@@ -272,9 +296,18 @@ SITE_SETTINGS = {
                     {
                         "Type": "Float Switch",
                         "ID":   "G6:FS0",
-                        "Name": "Stage Butts Switch",
+                        "Name": "Stage Butts High Float Switch",
                         "Class": Tools.deviceobjects.FloatSwitch,
                         "Pins":  (8),
+                    },
+
+                    "G6:FS1":
+                    {
+                        "Type": "Float Switch",
+                        "ID":   "G6:FS1",
+                        "Name": "Stage Butts Low Float Switch",
+                        "Class": Tools.deviceobjects.FloatSwitch,
+                        "Pins":  (7),
                     }
                 },
 
@@ -295,6 +328,7 @@ SITE_SETTINGS = {
             "Type": "Gate Valve",
             "ID":   "V4",
             "HostingSockets": False,
+            "IPAddress": "192.168.0.14",
             "Default Interval": 15,
 
             "Name": "Butts Farm Gate Valve",
@@ -321,6 +355,7 @@ SITE_SETTINGS = {
             "Type": "Gate Valve",
             "ID":   "V12",
             "HostingSockets": False,
+            "IPAddress": "192.168.0.22",
             "Default Interval": 15,
 
             "Name": "Stage Butts Gate Valve",

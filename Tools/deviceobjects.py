@@ -37,9 +37,16 @@ from the rest of the program.
 
 #Standard Imports.
 import time
+import sys
 import logging
 
+#Use logger here too.
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
+
 #Import modules.
+import config
+
 from . import devicemanagement as device_mgmt
 
 try:
@@ -47,15 +54,17 @@ try:
     import RPi.GPIO as GPIO                             # GPIO imports and setups
     GPIO.setmode(GPIO.BCM)
 
-except ImportError:
-    pass
+except (ImportError, NotImplementedError):
+    if not config.TESTING:
+        logger.critical("Unable to import RPi.GPIO! Did you mean to use testing mode?")
+        logger.critical("Exiting...")
+        logging.shutdown()
 
-except NotImplementedError:
-    pass
+        sys.exit("Unable to import RPi.GPIO! Did you mean to use testing mode? Exiting...")
 
-#Use logger here too.
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
+    else:
+        #Import dummy class.
+        from Tools.testingtools import GPIO
 
 class BaseDeviceClass:
     """

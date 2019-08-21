@@ -89,8 +89,44 @@ class Sockets:
     def get_queue(self):
         return self.out_queue
 
+    def has_data(self):
+        return True
+
+    def read(self):
+        raise IndexError("Fake Socket - No data")
+
     def write(self, data):
         self.out_queue.append(data)
+
+class GoodFakeFile:
+    def write(self, data):
+        pass
+
+    def flush(self):
+        pass
+
+    def close(self):
+        pass
+
+class BadFakeFile:
+    def write(self, data):
+        raise OSError("Always throws OSError")
+
+    def flush(self):
+        raise OSError("Always throws OSError")
+
+    def close(self):
+        pass
+
+#Dummy methods.
+def goodopen(file, mode):
+    return GoodFakeFile()
+
+def badopen(file, mode):
+    return BadFakeFile()
+
+def do_nothing():
+    pass
 
 #Sample values for the arguments to the BaseMonitorClass class constructor.
 TEST_BASEMONITOR_DATA = [

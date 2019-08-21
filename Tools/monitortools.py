@@ -40,6 +40,8 @@ import datetime
 import threading
 import logging
 
+import config
+
 from . import coretools
 
 #Don't ask for a logger name, so this works with both main.py
@@ -94,15 +96,13 @@ class BaseMonitorClass(threading.Thread):
         #The file name the readings file will have (plus the time it was
         #created)
         self.file_name = "readings/"+self.system_id+":"+self.probe_id
+        self.current_file_name = None
 
         #A reference to the file handle of the open readings file.
         self.file_handle = None
 
-        #The time the readings file was created.
-        self.file_creation_time = None
-
-        #The interval at which we want to rotate the readings file, in days.
-        self.file_rotate_interval = 7
+        #The time the readings file will expire.
+        self.midnight_tonight = None
 
         #Default reading interval. This will immediately be overridden by the
         #master pi in practice.
@@ -116,9 +116,6 @@ class BaseMonitorClass(threading.Thread):
 
         #Whether the monitor is currently running.
         self.running = False
-
-        #Used to ask the monitor thread to exit.
-        self.should_exit = False
 
     #---------- GETTERS ----------
     def get_system_id(self):
@@ -250,7 +247,7 @@ class BaseMonitorClass(threading.Thread):
 
         self.reading_interval = interval
 
-    #---------- CONTROL METHODS ----------
+    #---------- RUNTIME METHODS ----------
     def create_file_handle(self):
         """
         This method is used to create / update the
@@ -273,18 +270,19 @@ class BaseMonitorClass(threading.Thread):
             os.mkdir("readings")
 
         #Time format: yyyy-mm-dd hh:mm:ss
-        the_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        the_time = time.strftime("%Y-%m-%d", time.localtime())
 
         #Open in append mode, just in case the file is already here.
-        self.file_handle = open(self.file_name+"-"+the_time+".csv", "a")
+        self.current_file_name = self.file_name+"-"+the_time+".csv"
+        self.file_handle = open(self.current_file_name, "a")
 
         try:
             #Write the start time and the CSV header.
-            self.file_handle.write("\n\nStart Time: "+the_time+"\n\n")
+            self.file_handle.write("\n\nStart Time: "+str(datetime.datetime.now())+"\n\n")
             self.file_handle.write("\nTIME,SYSTEM TICK,ID,VALUE,STATUS\n")
             self.file_handle.flush()
 
-        except Exception as e:
+        except Exception as error:
             logger.error("Exception \n\n"+str(traceback.format_exc())
                          + "\n\nwhile running!")
 
@@ -294,12 +292,140 @@ class BaseMonitorClass(threading.Thread):
             self.file_handle.close()
 
             #Raise the error, because we don't want to continue when this fails.
-            raise e
+            raise error
 
-        #Set the file creation time so we can rotate readings files.
+        #Set the expiration time to midnight so we can rotate readings files.
         #This uses the datetime class cos it's easier to compare times that way.
-        self.file_creation_time = datetime.datetime.now()
+        midnight = datetime.time(hour=23, minute=59, second=59)
+        current_time = datetime.datetime.now()
 
+        self.midnight_tonight = datetime.datetime.combine(current_time.date(),
+                                                          midnight)
+
+    def handle_reading(self, reading, previous_reading):
+        """
+        This method handles new readings from the device/network, writing them to the
+        readings file and logging them. It also flags any errors that occur.
+
+        Args:
+            reading (Reading):              The Reading object we are managing.
+            previous_reading (Reading):     The last Reading object we managed.
+
+        Returns:
+            tuple(Reading, bool).
+
+            Reading: The previous reading.
+
+            bool:
+                False -- Everything is fine.
+                True -- Failed to write the reading.
+
+        Usage:
+            >>> <BaseMonitorClassObject>.handle_reading(<ReadingObject>, <ReadingObject>)
+            >>> False
+
+        """
+
+        write_failed = False
+
+        try:
+            if reading == previous_reading:
+                #Write a . to the file.
+                logger.debug("Monitor for "+self.system_id+":"+self.probe_id
+                             + ": New reading, same value as last time.")
+
+                self.file_handle.write(".")
+
+            else:
+                #Write it to the readings file.
+                logger.debug("Monitor for "+self.system_id+":"+self.probe_id
+                             + ": New reading, new value: "+reading.get_value())
+
+                self.file_handle.write("\n"+reading.as_csv())
+
+                previous_reading = reading
+
+            self.file_handle.flush()
+
+        except OSError:
+            logger.error("Couldn't write to readings file! "
+                         + "Creating a new one...")
+
+            print("Couldn't write to readings file! "
+                  + "Creating a new one...")
+
+            write_failed = True
+
+        return previous_reading, write_failed
+
+    def manage_rotation(self, write_failed, previous_reading):
+        """
+        This method handles rotating the readings file, and recreating it if needed, for
+        example if it is missing or cannot be written to.
+
+        Args:
+            write_failed (bool):            Whether or not the last write to the readings file
+                                            failed.
+
+            previous_reading (Reading):     The last Reading object we managed.
+
+        Returns:
+            Reading.
+
+            The previous reading.
+
+        Usage:
+            >>> <BaseMonitorClassObject>.manage_rotation(<ReadingObject>)
+
+        """
+
+        #Assume that all is fine by default.
+        should_continue = False
+
+        #Check if the readings file is still there.
+        readings_file_exists = os.path.isfile(self.current_file_name)
+
+        #Check if it's time to rotate the readings file.
+        timediff = datetime.datetime.now() - self.midnight_tonight
+
+        #If it's time, or the previous file is gone, create a new
+        #readings file.
+        if timediff.days > -1 or \
+            not readings_file_exists or \
+            write_failed:
+
+            self.file_handle.close()
+            self.create_file_handle()
+            previous_reading = None
+
+        if not readings_file_exists:
+            logger.error("Monitor for "+self.system_id+":"+self.probe_id
+                         + ": Readings file gone! Creating new one...")
+
+            print("Monitor for "+self.system_id+":"+self.probe_id
+                  + ": Readings file gone! Creating new one...")
+
+            self.file_handle.write("WARNING: Previous readings file was "
+                                   + "deleted.\n")
+
+            #Take a new reading immediately.
+            should_continue = True
+
+        elif write_failed:
+            logger.error("Monitor for "+self.system_id+":"+self.probe_id
+                         + ": Can't write to readings file! Creating new one...")
+
+            print("Monitor for "+self.system_id+":"+self.probe_id
+                  + ": Can't write to readings file! Creating new one...")
+
+            self.file_handle.write("WARNING: Couldn't write to previous readings file.\n")
+
+            #Take a new reading immediately.
+            should_continue = True
+
+        return previous_reading, should_continue
+
+    #----- CONTROL METHODS -----
     def request_exit(self, wait=False):
         """
         This method is used to ask the monitor thread to exit. It can also wait
@@ -318,7 +444,6 @@ class BaseMonitorClass(threading.Thread):
             >>> <BaseMonitorClassObject>.request_exit() //Wait for thread to exit.
         """
 
-        self.should_exit = True
         self.reading_interval = 0 #Helps thread to react faster.
 
         if wait:
@@ -390,11 +515,13 @@ class Monitor(BaseMonitorClass):
                                 #which is for external users.
         self.running = True
 
+        write_failed = False
+
         #Set up the readings file.
         self.create_file_handle()
 
         try:
-            while not self.should_exit:
+            while not config.EXITING:
                 the_reading, status_text = self.reading_func()
 
                 #Construct a Reading object to hold this info.
@@ -407,23 +534,13 @@ class Monitor(BaseMonitorClass):
                 #Add it to the queue.
                 self.queue.append(reading)
 
-                if reading == previous_reading:
-                    #Write a . to the file.
-                    logger.debug("Monitor for "+self.system_id+":"+self.probe_id
-                                 + ": New reading, same value as last time.")
+                previous_reading, write_failed = self.handle_reading(reading, previous_reading)
 
-                    self.file_handle.write(".")
+                previous_reading, should_continue = self.manage_rotation(write_failed,
+                                                                         previous_reading)
 
-                else:
-                    #Write it to the readings file.
-                    logger.debug("Monitor for "+self.system_id+":"+self.probe_id
-                                 + ": New reading, new value: "+reading.get_value())
-
-                    self.file_handle.write("\n"+reading.as_csv())
-
-                    previous_reading = reading
-
-                self.file_handle.flush()
+                if should_continue:
+                    continue
 
                 #Take readings every however often it is.
                 #I know we could use a long time.sleep(),
@@ -435,14 +552,6 @@ class Monitor(BaseMonitorClass):
                     #the code will respond to the change immediately.
                     time.sleep(1)
                     count += 1
-
-                #Check if it's time to rotate the readings file.
-                timediff = datetime.datetime.now() - self.file_creation_time
-
-                if timediff.days >= self.file_rotate_interval:
-                    self.file_handle.close()
-                    self.create_file_handle()
-                    previous_reading = None
 
         except Exception:
             #Log all of these errors to the log file.
@@ -518,12 +627,13 @@ class SocketsMonitor(BaseMonitorClass):
                                 #which is for external users.
         self.running = True
 
+        write_failed = False
+
         #Set up the readings file.
         self.create_file_handle()
 
         try:
-            while not self.should_exit:
-
+            while not config.EXITING:
                 while self.socket.has_data():
                     try:
                         reading = self.socket.read()
@@ -534,40 +644,24 @@ class SocketsMonitor(BaseMonitorClass):
                     #Check the reading is from the right probe.
                     #NB: Could check site ID, but we'll have a socket for each one, so a non-issue.
                     if reading.get_sensor_id() == self.probe_id:
-                        #Remove from socket.
-                        self.socket.pop()
+                        previous_reading, write_failed = self.handle_reading(reading,
+                                                                             previous_reading)
 
-                        #Add it to the queue.
-                        self.queue.append(reading)
+                        previous_reading, should_continue = self.manage_rotation(write_failed,
+                                                                                 previous_reading)
 
-                        if reading == previous_reading:
-                            #Write a . to the file.
-                            logger.debug("SocketsMonitor for "+self.system_id+":"+self.probe_id
-                                         + ": New reading, same value as last time.")
-
-                            self.file_handle.write(".")
+                        if should_continue:
+                            continue
 
                         else:
-                            #Write it to the readings file.
-                            logger.debug("SocketsMonitor for "+self.system_id+":"+self.probe_id
-                                         + ": New reading, new value: "+reading.get_value())
+                            #Remove the reading from the socket's queue.
+                            self.socket.pop()
 
-                            self.file_handle.write("\n"+reading.as_csv())
-
-                            previous_reading = reading
-
-                        self.file_handle.flush()
+                            #Add it to the queue.
+                            self.queue.append(reading)
 
                 #Check every 1 second (prevent delays in logging at sump pi end).
                 time.sleep(1)
-
-                #Check if it's time to rotate the readings file.
-                timediff = datetime.datetime.now() - self.file_creation_time
-
-                if timediff.days >= self.file_rotate_interval:
-                    self.file_handle.close()
-                    self.create_file_handle()
-                    previous_reading = None
 
         except Exception:
             #Log all of these errors to the log file.
@@ -575,6 +669,8 @@ class SocketsMonitor(BaseMonitorClass):
                          + "\n\nwhile running!")
 
             print("Exception \n\n"+str(traceback.format_exc())+"\n\nwhile running!")
+
+        logger.debug("SocketsMonitor for "+self.system_id+":"+self.probe_id+": Exiting...")
 
         self.file_handle.close()
         self.running = False

@@ -58,13 +58,6 @@ import traceback
 
 import config
 
-try:
-    #Allow us to generate documentation on non-RPi systems.
-    import RPi.GPIO as GPIO
-
-except ImportError:
-    pass
-
 def usage():
     """
     This function is used to output help information to the standard output
@@ -81,6 +74,9 @@ def usage():
     print("       -i <string>, --id=<string>    Specifiies the system ID eg \"G4\". If settings")
     print("                                     for this site aren't found in config.py an")
     print("                                     exception will be thrown. Mandatory.")
+    print("       -t, --testing                 Enable testing mode. Disables certain checks on start-up,")
+    print("                                     and hardware access via GPIO pins.")
+    print("                                     Useful when running the software in test deployments.")
     print("       -d, --debug                   Enable debug mode")
     print("       -q, --quiet                   Log only warnings, errors, and critical errors")
     print("main.py is released under the GNU GPL Version 3")
@@ -98,6 +94,9 @@ def handle_cmdline_options():
         -i <string>, --id=<string>          Specifies the system ID eg "G4". If settings for this
                                             site aren't found in config.py an exception will be
                                             thrown. Mandatory.
+        -t, --testing                       Enable testing mode. Disables certain checks on start-up,
+                                            and hardware access via GPIO pins.
+                                            Useful when running the software in test deployments.
         -d, --debug                         Enable debug mode.
         -q, --quiet                         Show only warnings, errors, and critical errors.
 
@@ -114,10 +113,12 @@ def handle_cmdline_options():
     >>> system_id = handle_cmdline_options()
     """
 
+    system_id = None
+
     #Check all cmdline options are valid.
     try:
-        opts = getopt.getopt(sys.argv[1:], "hdqi:",
-                             ["help", "debug", "quiet", "id="])[0]
+        opts = getopt.getopt(sys.argv[1:], "htdqi:",
+                             ["help", "testing", "debug", "quiet", "id="])[0]
 
     except getopt.GetoptError as err:
         #Invalid option. Show the help message and then exit.
@@ -127,9 +128,16 @@ def handle_cmdline_options():
         sys.exit(2)
 
     #Do setup. o=option, a=argument.
+    testing = False
+
     for opt, arg in opts:
         if opt in ["-i", "--id"]:
             system_id = arg
+
+        elif opt in ("-t", "--testing"):
+            #Enable testing mode.
+            testing = True
+            logger.critical("Running in testing mode, hardware access simulated/disabled...")
 
         elif opt in ["-d", "--debug"]:
             logger.setLevel(logging.DEBUG)
@@ -149,6 +157,10 @@ def handle_cmdline_options():
 
     #Check system ID is valid.
     assert system_id in config.SITE_SETTINGS, "Invalid system ID"
+
+    #Disable test mode if not specified.
+    if not testing:
+        config.TESTING = False
 
     return system_id
 
@@ -188,6 +200,27 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     from Tools import coretools as core_tools
     from Tools import sockettools as socket_tools
     from Tools import monitortools as monitor_tools
+
+    #Import RPi.GPIO
+    try:
+        import RPi.GPIO as GPIO
+
+    except ImportError:
+        #Only allow import errors if we are testing.
+        if not config.TESTING:
+            logger.critical("Unable to import RPi.GPIO! Did you mean to use testing mode?")
+            logger.critical("Exiting...")
+            logging.shutdown()
+
+            sys.exit("Unable to import RPi.GPIO! Did you mean to use testing mode? Exiting...")
+
+        else:
+            #Import dummy class.
+            from Tools.testingtools import GPIO
+
+    #If this isn't sumppi, start synchronising time with sumppi.
+    if system_id != "SUMP":
+        core_tools.SyncTime()
 
     #Create all sockets.
     logger.info("Creating sockets...")
@@ -370,6 +403,14 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                                 for monitor in monitors:
                                     monitor.set_reading_interval(reading_interval)
 
+                        elif "Valve Position" in data:
+                            valve_position = int(data.split()[-1])
+
+                            logger.info("New valve position: "+str(valve_position))
+                            print("New valve position: "+str(valve_position))
+                            
+                            valve.set_position(valve_position)
+
                         socket.pop()
 
                     time.sleep(1)
@@ -384,9 +425,13 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     except KeyboardInterrupt:
         #Ask the threads to exit.
-        logger.info("Caught keyboard interrupt. Asking monitor threads to exit...")
-        print("Caught keyboard interrupt. Asking monitor threads to exit.")
+        logger.info("Caught keyboard interrupt. Asking threads to exit...")
+        print("Caught keyboard interrupt. Asking threads to exit.")
         print("This may take a little while, so please be patient...")
+
+    #This triggers shutdown of everything else - no explicit call to each thread is needed.
+    #The code below simply makes it easier to monitor what is shutting down.
+    config.EXITING = True
 
     for monitor in monitors:
         monitor.request_exit()
@@ -398,12 +443,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         monitor.request_exit(wait=True)
 
     #Always clean up properly.
-    logger.info("Asking sockets to exit...")
-    print("Asking sockets to exit...")
-
-    for each_socket in sockets.values():
-        each_socket.request_handler_exit()
-
     logger.info("Waiting for sockets to exit...")
     print("Waiting for sockets to exit...")
 
@@ -414,8 +453,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     logger.info("Resetting GPIO pins...")
     print("Resetting GPIO pins...")
 
-    #Reset GPIO pins.
-    GPIO.cleanup()
+    if not config.TESTING:
+        #Reset GPIO pins.
+        GPIO.cleanup()
 
 if __name__ == "__main__":
     logger = logging.getLogger('River System Control Software')

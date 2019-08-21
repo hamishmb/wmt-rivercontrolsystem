@@ -22,6 +22,7 @@
 import unittest
 import sys
 import os
+import time
 import shutil
 import datetime
 import threading
@@ -33,6 +34,7 @@ sys.path.append('../..') #Need to be able to import the Tools module from here.
 import Tools
 import Tools.monitortools as monitor_tools
 import Tools.coretools as core_tools
+import Tools.deviceobjects as device_objects
 
 #Import test data and functions.
 from . import monitortools_test_data as data
@@ -212,21 +214,196 @@ class TestBaseMonitorClass(unittest.TestCase):
             if error is not None:
                 raise error
 
+    @unittest.expectedFailure
+    def test_create_file_handle_4(self):
+        """Test that create_file_handle fails when we can't write the start time and CSV header"""
+        #Create the readings directory.
+        os.chdir("UnitTests")
+
+        error = None
+
+        try:
+            if os.path.exists("readings"):
+                shutil.rmtree("readings")
+
+            os.mkdir("readings")
+
+            #Replace the open function with a special one for this test.
+            monitor_tools.open = data.badopen
+
+            self.basemonitor.create_file_handle()
+            self.basemonitor.file_handle.close()
+
+            shutil.rmtree("readings")
+
+        except Exception as e:
+            error = e
+
+        finally:
+            try:
+                self.basemonitor.file_handle.close()
+
+            except:
+                pass
+
+            monitor_tools.open = open
+
+            os.rmdir("readings")
+            os.chdir("../")
+
+            if error is not None:
+                raise error
+
+    def test_handle_reading_1(self):
+        """Test that handle_reading() works as expected when the reading differs to the previous reading, and there are no issues writing to the file"""
+        reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
+        previous_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "775mm", "OK")
+
+        #Create a fake file handle.
+        self.basemonitor.file_handle = data.goodopen("test", "r")
+
+        previous_reading, write_failed = self.basemonitor.handle_reading(reading, previous_reading)
+
+        self.assertEqual(previous_reading, reading)
+        self.assertFalse(write_failed)
+
+    def test_handle_reading_2(self):
+        """Test that handle_reading() works as expected when the reading equals the previous reading, and there are no issues writing to the file"""
+        reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
+        previous_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
+
+        #Create a fake file handle.
+        self.basemonitor.file_handle = data.goodopen("test", "r")
+
+        prev_reading, write_failed = self.basemonitor.handle_reading(reading, previous_reading)
+
+        self.assertEqual(prev_reading, previous_reading)
+        self.assertEqual(prev_reading, reading)
+        self.assertFalse(write_failed)
+
+    def test_handle_reading_3(self):
+        """Test that handle_reading() works as expected when there are issues writing to the file"""
+        reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
+        previous_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
+
+        #Create a fake file handle.
+        self.basemonitor.file_handle = data.badopen("test", "r")
+
+        prev_reading, write_failed = self.basemonitor.handle_reading(reading, previous_reading)
+
+        self.assertEqual(prev_reading, previous_reading)
+        self.assertEqual(prev_reading, reading)
+        self.assertTrue(write_failed)
+
+    def test_manage_rotation_1(self):
+        """Test that manage_rotation() works as expected when rotation is not due and all is fine"""
+        previous_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
+
+        #Just a hack to make sure that the file is reported to exist.
+        self.basemonitor.current_file_name = "main.py"
+
+        #Set the expiration time to midnight so we can rotate readings files.
+        #This uses the datetime class cos it's easier to compare times that way.
+        midnight = datetime.time(hour=23, minute=59, second=59)
+        current_time = datetime.datetime.now()
+
+        self.basemonitor.midnight_tonight = datetime.datetime.combine(current_time.date(),
+                                                                      midnight)
+
+        prev_reading, should_continue = self.basemonitor.manage_rotation(False,
+                                                                         previous_reading)
+
+        del self.basemonitor.current_file_name
+        del self.basemonitor.midnight_tonight
+
+        self.assertEqual(prev_reading, previous_reading)
+        self.assertFalse(should_continue)
+
+    def test_manage_rotation_2(self):
+        """Test that manage_rotation() works as expected when rotation is not due and the readings file is missing"""
+        previous_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
+
+        #----- BEGIN HACKY STUFF TO MAKE THE TEST WORK -----
+        #Just a hack to make sure that the file is reported not to exist.
+        self.basemonitor.current_file_name = "i_dont_exist"
+
+        #Set the expiration time to midnight so we can rotate readings files.
+        #This uses the datetime class cos it's easier to compare times that way.
+        midnight = datetime.time(hour=23, minute=59, second=59)
+        current_time = datetime.datetime.now()
+
+        self.basemonitor.midnight_tonight = datetime.datetime.combine(current_time.date(),
+                                                                      midnight)
+
+        self.basemonitor.file_handle = data.goodopen("test", "r")
+
+        create_file_handle_method = self.basemonitor.create_file_handle
+
+        self.basemonitor.create_filehandle = data.do_nothing
+
+        #----- END HACKY STUFF ---
+
+        prev_reading, should_continue = self.basemonitor.manage_rotation(False,
+                                                                         previous_reading)
+
+        #Revert all the hacky stuff we just did.
+        self.basemonitor.current_file_name = None
+        self.basemonitor.midnight_tonight = None
+        self.basemonitor.file_handle = None
+        self.basemonitor.create_file_handle = create_file_handle_method
+
+        self.assertEqual(prev_reading, None)
+        self.assertTrue(should_continue)
+
+    def test_manage_rotation_3(self):
+        """Test that manage_rotation() works as expected when rotation is not due and we failed to write to the readings file"""
+        previous_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
+
+        #----- BEGIN HACKY STUFF TO MAKE THE TEST WORK -----
+        #Just a hack to make sure that the file is reported not to exist.
+        self.basemonitor.current_file_name = "main.py"
+
+        #Set the expiration time to midnight so we can rotate readings files.
+        #This uses the datetime class cos it's easier to compare times that way.
+        midnight = datetime.time(hour=23, minute=59, second=59)
+        current_time = datetime.datetime.now()
+
+        self.basemonitor.midnight_tonight = datetime.datetime.combine(current_time.date(),
+                                                                      midnight)
+
+        self.basemonitor.file_handle = data.goodopen("test", "r")
+
+        create_file_handle_method = self.basemonitor.create_file_handle
+
+        self.basemonitor.create_filehandle = data.do_nothing
+
+        #----- END HACKY STUFF ---
+
+        prev_reading, should_continue = self.basemonitor.manage_rotation(True,
+                                                                         previous_reading)
+
+        #Revert all the hacky stuff we just did.
+        self.basemonitor.current_file_name = None
+        self.basemonitor.midnight_tonight = None
+        self.basemonitor.file_handle = None
+        self.basemonitor.create_file_handle = create_file_handle_method
+
+        self.assertEqual(prev_reading, None)
+        self.assertTrue(should_continue)
+
+    #TODO Test that manage_rotation works when rotation is due.
+
     def test_request_exit_1(self):
         """Test that requesting exit without waiting works"""
         self.basemonitor.request_exit()
-        self.assertTrue(self.basemonitor.should_exit)
 
     def test_request_exit_2(self):
         """Test that requesting exit and waiting works"""
-        return
-
         self.basemonitor.running = True
 
         #Schedule the exit flag to be set in 10 seconds.
         threading.Timer(10, self.set_exited_flag).start()
         self.basemonitor.request_exit(wait=True)
-        self.assertTrue(self.basemonitor.should_exit)
 
 class TestMonitor(unittest.TestCase):
     """
@@ -235,13 +412,43 @@ class TestMonitor(unittest.TestCase):
     """
 
     def setUp(self):
-        pass
+        os.chdir("UnitTests")
+
+        self.halleffectprobe = device_objects.HallEffectProbe("SUMP:M0", "Test")
+
+        #Make sure it won't exit immediately.
+        monitor_tools.config.EXITING = False
 
     def tearDown(self):
-        pass
+        del self.halleffectprobe
+
+        #Clear the readings directory that has been created.
+        if os.path.isdir("readings"):
+            shutil.rmtree("readings")
+            os.mkdir("readings")
+
+        os.chdir("../")
 
     def test_1(self):
-        pass
+        """Test that the class initialises and exits correctly (slow test)"""
+        monitor = monitor_tools.Monitor(self.halleffectprobe, 5, "SUMP")
+
+        #Check that the constructor worked.
+        self.assertEqual(monitor.probe, self.halleffectprobe)
+        self.assertEqual(monitor.reading_interval, 5)
+        self.assertEqual(monitor.reading_func, self.halleffectprobe.get_reading)
+
+        time.sleep(25)
+
+        #Stop the monitor thread.
+        monitor_tools.config.EXITING = True
+
+        while monitor.is_running():
+            time.sleep(1)
+
+        #Monitor thread has exited.
+        #Check shutdown code worked.
+        self.assertFalse(monitor.running)
 
 class TestSocketsMonitor(unittest.TestCase):
     """
@@ -250,10 +457,39 @@ class TestSocketsMonitor(unittest.TestCase):
     """
 
     def setUp(self):
-        pass
+        os.chdir("UnitTests")
+
+        self.socket = data.Sockets()
+
+        #Make sure it won't exit immediately.
+        monitor_tools.config.EXITING = False
 
     def tearDown(self):
-        pass
+        del self.socket
+
+        #Clear the readings directory that has been created.
+        if os.path.isdir("readings"):
+            shutil.rmtree("readings")
+            os.mkdir("readings")
+
+        os.chdir("../")
 
     def test_1(self):
-        pass
+        """Test that the class initialises and exits correctly (slow test)"""
+        monitor = monitor_tools.SocketsMonitor(self.socket, "SUMP", "M0")
+
+        #Check that the constructor worked.
+        self.assertEqual(monitor.socket, self.socket)
+        self.assertEqual(monitor.probe_id, "M0")
+
+        time.sleep(25)
+
+        #Stop the monitor thread.
+        monitor_tools.config.EXITING = True
+
+        while monitor.is_running():
+            time.sleep(1)
+
+        #Monitor thread has exited.
+        #Check shutdown code worked.
+        self.assertFalse(monitor.running)
