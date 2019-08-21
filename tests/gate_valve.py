@@ -52,8 +52,8 @@ except ValueError:
     
 # Define Valve Control Pins
 forward_pin   = 17                      # Motor Board Pin IN1 Pi Board Pin 11
-reverse_pin_pin   = 27                      # Motor Board Pin IN2 Pi Board Pin 13
-clutch_pin_pin = 19                         # Motor Board Pin IN3 Pi Board Pin 35
+reverse_pin   = 27                      # Motor Board Pin IN2 Pi Board Pin 13
+clutch_pin = 19                         # Motor Board Pin IN3 Pi Board Pin 35
 Pause = 1                               # Define wait time in seconds
 
 # Initialise and setup starting conditions
