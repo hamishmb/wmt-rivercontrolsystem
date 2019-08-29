@@ -181,9 +181,9 @@ class ManageHallEffectProbe(threading.Thread):
         count = 0
         level = 1000                                              # Value to return
 
-        while count < self.probe.length:
-            v_comp, min_column = self.get_compensated_probe_voltages()
+        v_comp, min_column = self.get_compensated_probe_voltages()
 
+        while count < self.probe.length:
             # Now test the channel with the dip to see if any of the sensors are triggered
             if ((v_comp[min_column] <= self.probe.high_limits[count])
                     and (v_comp[min_column] >= self.probe.low_limits[count])):
