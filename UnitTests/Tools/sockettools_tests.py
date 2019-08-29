@@ -22,6 +22,7 @@
 from collections import deque
 import unittest
 import sys
+import threading
 
 #Import other modules.
 sys.path.append('../..') #Need to be able to import the Tools module from here.
@@ -40,6 +41,9 @@ class TestSockets(unittest.TestCase):
 
     def tearDown(self):
         del self.socket
+
+    def set_exited_flag(self):
+        self.socket.handler_exited = True
 
     def test_constructor_1(self):
         """Test #1: Test that the constructor works when no name is specified"""
@@ -191,6 +195,43 @@ class TestSockets(unittest.TestCase):
         self.assertEqual(self.socket.out_queue, deque())
         self.assertEqual(self.socket.underlying_socket, None)
         self.assertEqual(self.socket.server_socket, None)
+
+    def test_is_ready_1(self):
+        """Test #1: Test that this works as expected."""
+        for value in (True, False):
+            self.socket.ready_to_send = value
+            self.assertEqual(self.socket.is_ready(), value)
+
+    def test_just_reconnected_1(self):
+        """Test #1: Test that this works as expected"""
+        for value in (True, False):
+            self.socket.reconnected = value
+            self.assertEqual(self.socket.just_reconnected(), value)
+
+            #This resets to False after it has been called.
+            self.assertFalse(self.socket.just_reconnected())
+
+    def test_wait_for_handler_to_exit_1(self):
+        """Test #1: Test this works as expected when handler has just exited"""
+        self.socket.handler_exited = True
+
+        self.socket.wait_for_handler_to_exit()
+
+    def test_wait_for_handler_to_exit_2(self):
+        """Test #2: Test this works as expected when handler takes 10 seconds to exit."""
+        #Schedule the exit flag to be set in 10 seconds.
+        threading.Timer(10, self.set_exited_flag).start()
+        self.socket.wait_for_handler_to_exit()
+
+    def test_handler_has_exited_1(self):
+        """Test #1: Test this works as expected."""
+        for value in (True, False):
+            self.socket.handler_exited = value
+            self.assertEqual(self.socket.handler_has_exited(), value)
+
+    def test_start_handler_1(self):
+        """Test #1: Test that this works as expected"""
+        pass
 
 class TestSocketHandlerThread(unittest.TestCase):
     """
