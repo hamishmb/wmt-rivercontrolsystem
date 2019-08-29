@@ -279,6 +279,7 @@ class ManageGateValve(threading.Thread):
         GPIO.output(self.valve.clutch_pin, GPIO.LOW)
 
     def get_position(self):
+        #TODO This can be refactored - no need to return an instance variable.
         #Create the Analog reading object to read Ch 0 of the A/D
         chan = AnalogIn(ads, ADS.P0)
 
@@ -297,8 +298,15 @@ class ManageGateValve(threading.Thread):
             return -1
 
         #Actual position as a percentage at the time of reading.
-        #FIXME: This sometimes seems to be negative. Why? Bug in the ADS software?
-        self.actual_position = int((voltage_0/self.valve.ref_voltage*100))
+        actual_position = int((voltage_0/self.valve.ref_voltage*100))
+
+        #If this position came through as a negative number, reject it.
+        #FIXME: We don't yet know why this happens, perhaps a bad reading from the ADS?
+        if actual_position < 0:
+            return -1
+
+        self.actual_position = actual_position
+
         return self.actual_position
 
     def set_position(self, new_percentage):
