@@ -19,6 +19,7 @@
 # Reason (too-few-public-methods): Test classes don't need many public members.
 
 #Import modules
+from collections import deque
 import unittest
 import sys
 
@@ -35,13 +36,161 @@ class TestSockets(unittest.TestCase):
     """This test class tests the features of the Sockets class in Tools/sockettools.py"""
 
     def setUp(self):
-        pass
+        self.socket = socket_tools.Sockets("Plug")
 
     def tearDown(self):
-        pass
+        del self.socket
 
-    def test_1(self):
-        pass
+    def test_constructor_1(self):
+        """Test #1: Test that the constructor works when no name is specified"""
+        for _type in ("Plug", "Socket"):
+            socket = socket_tools.Sockets(_type)
+
+            self.assertEqual(socket.port_number, -1)
+            self.assertEqual(socket.server_address, "")
+            self.assertEqual(socket.type, _type)
+            self.assertEqual(socket.name, "Unknown")
+            self.assertEqual(socket.underlying_socket, None)
+            self.assertEqual(socket.server_socket, None)
+            self.assertEqual(socket.handler_thread, None)
+            self.assertTrue(socket.verbose)
+            self.assertFalse(socket.ready_to_send)
+            self.assertFalse(socket.reconnected)
+            self.assertFalse(socket.internal_request_exit)
+            self.assertFalse(socket.handler_exited)
+            self.assertEqual(socket.in_queue, deque())
+            self.assertEqual(socket.out_queue, deque())
+
+    def test_constructor_2(self):
+        """Test #2: Test that the constructor works when a name is specified"""
+        for _type in ("Plug", "Socket"):
+            socket = socket_tools.Sockets(_type, "Test Socket")
+
+            self.assertEqual(socket.port_number, -1)
+            self.assertEqual(socket.server_address, "")
+            self.assertEqual(socket.type, _type)
+            self.assertEqual(socket.name, "Test Socket")
+            self.assertEqual(socket.underlying_socket, None)
+            self.assertEqual(socket.server_socket, None)
+            self.assertEqual(socket.handler_thread, None)
+            self.assertTrue(socket.verbose)
+            self.assertFalse(socket.ready_to_send)
+            self.assertFalse(socket.reconnected)
+            self.assertFalse(socket.internal_request_exit)
+            self.assertFalse(socket.handler_exited)
+            self.assertEqual(socket.in_queue, deque())
+            self.assertEqual(socket.out_queue, deque())
+
+    def test_constructor_3(self):
+        """Test #3: Test that the constructor fails when _type is not 'Plug' or 'Socket'"""
+        for _type in ("plug", "socket", "test", "notatype", None, 1, True):
+            try:
+                socket = socket_tools.Sockets(_type, "Test Socket")
+
+            except ValueError:
+                #Expected.
+                pass
+
+            else:
+                #All of these must throw errors!
+                self.assertTrue(False, "ValueError expected for data: "+str(_type))
+
+    def test_constructor_4(self):
+        """Test #4: Test that the constructor fails when name is not a string"""
+        for _name in (None, 1, True, 6.7, (), [], {}):
+            try:
+                socket = socket_tools.Sockets("Socket", _name)
+
+            except ValueError:
+                #Expected.
+                pass
+
+            else:
+                #All of these must throw errors!
+                self.assertTrue(False, "ValueError expected for data: "+str(_name))
+
+    def test_set_portnumber_1(self):
+        """Test #1: Test that this works when valid portnumbers are passed."""
+        #Highest valid port is 65535.
+        for i in range(1, 65536):
+            self.socket.set_portnumber(i)
+            self.assertEqual(i, self.socket.port_number)
+
+    def test_set_portnumber_2(self):
+        """Test #2: Test that this fails with invalid portnumbers."""
+        for portnumber in (-100, -50, 0, 6.7, 65536, (), [], False, None, "Test"):
+            try:
+                self.socket.set_portnumber(portnumber)
+
+            except ValueError:
+                #Expected.
+                pass
+
+            else:
+                #This must fail for all of these values.
+                self.assertTrue(False, "ValueError expected for data: "+str(portnumber))
+
+    def test_set_server_address_1(self):
+        """Test #1: Test that this works when a valid IPv4 address is given"""
+        #Don't test with all of them, because that takes far too long.
+        for i in range(1, 255, 10):
+            for j in range(1, 255, 10):
+                for k in range(1, 255, 5):
+                    self.socket.set_server_address("192."+str(i)+"."
+                                                   + str(j)+"."+str(k))
+
+                    self.assertEqual(self.socket.server_address,
+                                     "192."+str(i)+"."+str(j)+"."
+                                     + str(k))
+
+    def test_set_server_address_2(self):
+        """Test #2: Test that this fails when given invalid IPv4 addresses"""
+        for ip in ("0.0.0.0", "255.255.255.255", "....", "", "192.168.1.255",
+                   "test", 0, False, None, (), [], {}, 5.6):
+
+            try:
+                self.socket.set_server_address(ip)
+
+            except ValueError:
+                #Expected.
+                pass
+
+            else:
+                #All of these must fail!
+                self.assertTrue(False, "ValueError expected for data: "+str(ip))
+
+    def test_set_console_output_1(self):
+        """Test #1: Test that this works when given boolean values."""
+        for _bool in (True, False):
+            self.socket.set_console_output(_bool)
+            self.assertEqual(self.socket.verbose, _bool)
+
+    def test_set_console_output_2(self):
+        """Test #2: Test that this fails when given invalid values."""
+        for value in (None, 5, 4.5, [], (), {}, "True"):
+            try:
+                self.socket.set_console_output(value)
+
+            except ValueError:
+                #Expected.
+                pass
+
+            else:
+                #All of these must fail!
+                self.assertTrue(False, "ValueError expected for data: "+str(value))
+
+    def test_reset_1(self):
+        """Test #1: Test that this works as expected."""
+        self.socket.reset()
+
+        self.assertFalse(self.socket.ready_to_send)
+        self.assertFalse(self.socket.reconnected)
+        self.assertFalse(self.socket.internal_request_exit)
+        self.assertFalse(self.socket.handler_exited)
+        self.assertEqual(self.socket.in_queue, deque())
+        self.assertEqual(self.socket.out_queue, deque())
+        self.assertEqual(self.socket.underlying_socket, None)
+        self.assertEqual(self.socket.server_socket, None)
 
 class TestSocketHandlerThread(unittest.TestCase):
     """

@@ -68,8 +68,16 @@ class Sockets:
         the_type (string):      The type of socket we are constructing.
                                 **MUST** be one of "Plug", or "Socket".
 
+    Kwargs:
+        name (string):          The human-readable name of the socket.
+                                Optional.
+
     Usage:
         >>> my_socket = Sockets("Plug")
+
+        OR
+
+        >>> my_socket = Sockets("Plug", "G4 Socket")
 
     .. note::
         On instantiation, messages to the commandline are enabled.
@@ -88,14 +96,18 @@ class Sockets:
         if _type not in ("Plug", "Socket"):
             raise ValueError("_type must be either 'Plug' or 'Socket'")
 
+        #Throw ValueError if name is invalid.
+        if not isinstance(name, str):
+            raise ValueError("_name must be of type str")
+
         #Core variables and socket.
         self.port_number = -1
         self.server_address = ""
         self.type = _type
         self.name = name
-        self.underlying_socket = ""
-        self.server_socket = ""
-        self.handler_thread = ""
+        self.underlying_socket = None
+        self.server_socket = None
+        self.handler_thread = None
 
         #Variables for tracking status of the handler, and the socket.
         self.verbose = True
@@ -127,6 +139,13 @@ class Sockets:
             >>> <Sockets-Obj>.set_portnumber(30000)
         """
 
+        #Check the port number is valid.
+        if (not isinstance(port_number, int)) or \
+            port_number <= 0 or \
+            port_number > 65535:
+
+            raise ValueError("Invalid port number: "+str(port_number))
+
         logger.debug("Sockets.set_portnumber(): Port number: "+str(port_number)+"...")
         self.port_number = port_number
 
@@ -145,6 +164,21 @@ class Sockets:
 
             >>> <Sockets-Obj>.set_server_address("192.168.0.2")"""
 
+        #Check the IP address is valid (basic check).
+        if not isinstance(server_address, str) or \
+            len(server_address.split(".")) != 4:
+
+            raise ValueError("Invalid IPv4 address: "+str(server_address))
+
+        #Advanced checks.
+        #Check that each octet is a integer and between 0 and 255 (exclusive).
+        for octet in server_address.split("."):
+            if not octet.isdigit() or \
+                int(octet) > 254 or \
+                int(octet) < 1:
+
+                raise ValueError("Invalid IPv4 address: "+str(server_address))
+
         logger.debug("Sockets.set_server_address(): Server address: "+server_address+"...")
         self.server_address = socket.gethostbyname(server_address)
 
@@ -162,6 +196,9 @@ class Sockets:
 
             >>> <Sockets-Obj>.set_console_output(False)
         """
+
+        if not isinstance(state, bool):
+            raise ValueError("state must be of type bool")
 
         logger.debug("Sockets.set_console_output(): Setting self.verbose to "+str(state)+"...")
         self.verbose = state
@@ -202,7 +239,8 @@ class Sockets:
             #yet. Never mind.
             pass
 
-        self.server_socket = ""
+        self.underlying_socket = None
+        self.server_socket = None
 
         logger.debug("Sockets.reset(): Done! Socket is now in its default state...")
 
