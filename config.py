@@ -250,9 +250,18 @@ SITE_SETTINGS = {
                     {
                         "Type": "Float Switch",
                         "ID":   "G4:FS0",
-                        "Name": "Wendy Street Butts Switch",
+                        "Name": "Wendy Butts High Float Switch",
                         "Class": Tools.deviceobjects.FloatSwitch,
                         "Pins":  (8),
+                    },
+
+                    "G4:FS1":
+                    {
+                        "Type": "Float Switch",
+                        "ID":   "G4:FS1",
+                        "Name": "Wendy Butts Low Float Switch",
+                        "Class": Tools.deviceobjects.FloatSwitch,
+                        "Pins":  (7),
                     }
                 },
 
