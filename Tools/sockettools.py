@@ -166,7 +166,8 @@ class Sockets:
 
         #Check the IP address is valid (basic check).
         if not isinstance(server_address, str) or \
-            len(server_address.split(".")) != 4:
+            len(server_address.split(".")) != 4 or \
+            server_address == "0.0.0.0":
 
             raise ValueError("Invalid IPv4 address: "+str(server_address))
 
@@ -175,7 +176,7 @@ class Sockets:
         for octet in server_address.split("."):
             if not octet.isdigit() or \
                 int(octet) > 254 or \
-                int(octet) < 1:
+                int(octet) < 0:
 
                 raise ValueError("Invalid IPv4 address: "+str(server_address))
 
@@ -232,14 +233,26 @@ class Sockets:
 
         #Sockets.
         try:
+            self.underlying_socket.shutdown(socket.SHUT_RDWR)
             self.underlying_socket.close()
 
-        except AttributeError:
-            #On server side, this may happen if the underlying socket was not created/connected
+        except (AttributeError, OSError):
+            #This may happen if the underlying socket was not created/connected
             #yet. Never mind.
             pass
 
         self.underlying_socket = None
+
+        if self.server_socket is not None:
+            try:
+                self.server_socket.shutdown(socket.SHUT_RDWR)
+                self.server_socket.close()
+
+            except (AttributeError, OSError):
+                #This may happen if the underlying socket was not created/connected
+                #yet. Never mind.
+                pass
+
         self.server_socket = None
 
         logger.debug("Sockets.reset(): Done! Socket is now in its default state...")
@@ -375,29 +388,29 @@ class Sockets:
                 self._connect_socket()
 
             #Make it non-blocking.
-            self.underlying_socket.setblocking(0)
+            self.underlying_socket.setblocking(False)
 
             #We are now connected.
             logger.debug("Sockets._create_and_connect(): Done!")
             self.ready_to_send = True
 
         except ConnectionRefusedError as err:
-            #Connection refused by peer.
+            #Connection refused by server.
             logger.error("Sockets._create_and_connect(): Error connecting:\n\n"
                          + str(traceback.format_exc()) + "\n\n")
 
             logger.error("Sockets._create_and_connect(): Retrying in 10 seconds...")
 
             if self.verbose:
-                print("Connecting Failed ("+self.name+"): "+str(err)
+                print("Connection Refused ("+self.name+"): "+str(err)
                       + ". Retrying in 10 seconds...")
 
             #Make the handler exit.
             logger.debug("Sockets._create_and_connect(): Asking handler to exit...")
             self.internal_request_exit = True
 
-        except TimeoutError as err:
-            #Connection timed out.
+        except (socket.timeout, TimeoutError, BlockingIOError) as err:
+            #Connection timed out (waiting for client to connect).
             logger.error("Sockets._create_and_connect(): Error connecting:\n\n"
                          + str(traceback.format_exc()) + "\n\n")
 
@@ -407,7 +420,7 @@ class Sockets:
             logger.error("Sockets._create_and_connect(): Retrying in 10 seconds...")
 
             if self.verbose:
-                print("Connecting Failed ("+self.name+"): "+str(err)
+                print("Connection Timed Out ("+self.name+"): "+str(err)
                       + ". Retrying in 10 seconds...")
 
             #Make the handler exit.
@@ -436,6 +449,7 @@ class Sockets:
         logger.info("Sockets._create_plug(): Creating the plug...")
 
         self.underlying_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.underlying_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         logger.info("Sockets._create_plug(): Done!")
 
@@ -443,7 +457,7 @@ class Sockets:
         """
         PRIVATE, implementation detail.
 
-        Waits until the plug has connected to a socket.
+        Attempts to connect the plug to a socket. Does not block.
         Should only be called by the handler thread.
 
         Usage:
@@ -473,8 +487,12 @@ class Sockets:
         logger.info("Sockets._create_socket(): Creating the socket...")
 
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server_socket.bind(('', self.port_number))
         self.server_socket.listen(10)
+
+        #Make it non-blocking.
+        self.server_socket.settimeout(15)
 
         logger.info("Sockets._create_socket(): Done!")
 
@@ -482,15 +500,13 @@ class Sockets:
         """
         PRIVATE, implementation detail.
 
-        Waits until the socket has connected to a plug.
+        Attempts to connect the socket to a plug. Does not block.
         Should only be called by the handler thread.
 
         Usage:
 
             >>> <Sockets-Obj>._connect_socket()
         """
-        #TODO Add timeout capability somehow.
-        #TODO If the socket never connects, this will stop the program from exiting.
 
         logger.info("Sockets._connect_socket(): Attempting to connect to the requested socket...")
 
@@ -628,6 +644,8 @@ class Sockets:
             >>> 0
         """
 
+        #FIXME this can hang forever if there is no data.
+
         logger.debug("Sockets._read_pending_messages(): Attempting to read from socket...")
 
         try:
@@ -636,9 +654,6 @@ class Sockets:
 
             data = b""
             pickled_obj_is_incomplete = True
-
-            #Use a 1-second timeout.
-            self.underlying_socket.settimeout(1.0)
 
             #While the socket is ready for reading, or there is any incomplete data,
             #keep trying to read small packets of data.
@@ -665,6 +680,8 @@ class Sockets:
                     #             + "Connection closed or peer gone. "
                     #             + "Attempting to reconnect...")
                     #return -1 #Connection closed cleanly by peer.
+
+                print(data)
 
                 if b"ENDMSG" in data:
                     objs = data.split(b"ENDMSG")

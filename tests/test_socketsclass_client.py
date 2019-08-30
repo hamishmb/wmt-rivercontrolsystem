@@ -36,7 +36,7 @@ def run_standalone():
 
     #Set the object up.
     socket.set_portnumber(30000)
-    socket.set_server_address("localhost")
+    socket.set_server_address("127.0.0.1")
 
     socket.start_handler()
 

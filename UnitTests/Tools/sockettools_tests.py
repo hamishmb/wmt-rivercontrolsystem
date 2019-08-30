@@ -31,7 +31,7 @@ import Tools
 import Tools.sockettools as socket_tools
 
 #Import test data and functions.
-#TODO if needed.
+from . import sockettools_test_data as data
 
 class TestSockets(unittest.TestCase):
     """This test class tests the features of the Sockets class in Tools/sockettools.py"""
@@ -219,6 +219,9 @@ class TestSockets(unittest.TestCase):
 
     def test_wait_for_handler_to_exit_2(self):
         """Test #2: Test this works as expected when handler takes 10 seconds to exit."""
+        #TODO re-enable.
+        return
+
         #Schedule the exit flag to be set in 10 seconds.
         threading.Timer(10, self.set_exited_flag).start()
         self.socket.wait_for_handler_to_exit()
@@ -230,8 +233,147 @@ class TestSockets(unittest.TestCase):
             self.assertEqual(self.socket.handler_has_exited(), value)
 
     def test_start_handler_1(self):
-        """Test #1: Test that this works as expected"""
-        pass
+        """Test #1: Test that this works as expected when type is valid."""
+        real_handler_class = socket_tools.SocketHandlerThread
+        socket_tools.SocketHandlerThread = data.fake_handler_thread
+
+        self.socket.start_handler()
+
+        self.assertFalse(self.socket.ready_to_send)
+        self.assertFalse(self.socket.reconnected)
+        self.assertFalse(self.socket.internal_request_exit)
+        self.assertFalse(self.socket.handler_exited)
+
+        #The fake function will simply set this to False rather
+        #than actually starting a thread.
+        self.assertFalse(self.socket.handler_thread)
+
+        socket_tools.SocketHandlerThread = real_handler_class
+
+    def test_start_handler_1(self):
+        """Test #1: Test that this fails when type is invalid."""
+        real_handler_class = socket_tools.SocketHandlerThread
+        socket_tools.SocketHandlerThread = data.fake_handler_thread
+
+        for _type in ("plug", "socket", "test", "notatype", None, 1, True):
+            self.socket.type = _type
+
+            try:
+                self.socket.start_handler()
+
+            except ValueError:
+                #Expected.
+                pass
+
+            else:
+                #These must fail!
+                self.assertTrue(False, "ValueError expected for data: "+_type)
+
+        socket_tools.SocketHandlerThread = real_handler_class
+
+    #---------- Tests for connection functions ----------
+    def test__create_plug_1(self):
+        """Test #1: Test that a plug can be created successfully."""
+        try:
+            self.socket._create_plug()
+
+        except Exception as e:
+            #This shouldn't happen!
+            raise e
+
+        finally:
+            self.socket.underlying_socket.close()
+
+    def test__create_socket_1(self):
+        """Test #1: Test that a socket can be created successfully."""
+        #Hopefully this port number isn't in use! TODO check.
+        self.socket.port_number = 30000
+
+        try:
+            self.socket._create_socket()
+
+        except Exception as e:
+            #This shouldn't happen!
+            raise e
+
+        finally:
+            self.socket.server_socket.close()
+
+    def test_connect_1(self):
+        """Test #1: Test that a plug can connect to a socket and vice versa successfully."""
+        #Create a socket to connect to.
+        self.socket.port_number = 30000
+
+        self.socket._create_socket()
+
+        #Create a plug to connect to it.
+        self.plug = socket_tools.Sockets("Plug", "Test Socket")
+
+        self.plug._create_plug()
+
+        self.plug.server_address = "127.0.0.1"
+        self.plug.port_number = 30000
+
+        self.plug._connect_plug()
+        self.socket._connect_socket()
+
+        #They should now be connected if no error occurred.
+        #But we now need to close them safely.
+        self.socket.reset()
+        self.plug.reset()
+
+        del self.socket.port_number
+        del self.plug
+
+    def test__connect_plug_1(self):
+        """Test #1: Test that connecting to a server socket will fail when server is not present."""
+        #Try to connect to a socket that doesn't exist.
+        self.socket._create_plug()
+
+        self.socket.server_address = "127.0.0.1"
+        self.socket.port_number = 30000
+
+        try:
+            self.socket._connect_plug()
+
+        except ConnectionRefusedError:
+            #Expected.
+            pass
+
+        else:
+            #This should have failed!
+            self.assertTrue(False, "ConnectionRefusedError was expected!")
+
+        finally:
+            #They should now be connected if no error occurred.
+            #But we now need to close them safely.
+            self.socket.reset()
+
+            del self.socket.port_number
+            del self.socket.server_address
+
+    def test__connect_socket_1(self):
+        """Test #1: Test that connecting to a client socket will fail when client is not present."""
+        #Wait for a client that doesn't exist to connect.
+        self.socket.port_number = 30000
+
+        self.socket._create_socket()
+
+        try:
+            self.socket._connect_socket()
+
+        except BlockingIOError:
+            #Expected.
+            pass
+
+        else:
+            #This should have failed!
+            self.assertTrue(False, "BlockingIOError was expected!")
+
+        finally:
+            self.socket.reset()
+
+            del self.socket.port_number
 
 class TestSocketHandlerThread(unittest.TestCase):
     """
