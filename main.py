@@ -292,10 +292,12 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
         #Wendy house butts.
         monitors.append(monitor_tools.SocketsMonitor(sockets["SOCK4"], "G4", "FS0"))
+        monitors.append(monitor_tools.SocketsMonitor(sockets["SOCK4"], "G4", "FS1"))
         monitors.append(monitor_tools.SocketsMonitor(sockets["SOCK4"], "G4", "M0"))
 
         #Stage butts.
         monitors.append(monitor_tools.SocketsMonitor(sockets["SOCK6"], "G6", "FS0"))
+        monitors.append(monitor_tools.SocketsMonitor(sockets["SOCK6"], "G6", "FS1"))
         monitors.append(monitor_tools.SocketsMonitor(sockets["SOCK6"], "G6", "M0"))
 
         #Gate valves.
