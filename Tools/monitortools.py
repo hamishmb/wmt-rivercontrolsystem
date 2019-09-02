@@ -660,6 +660,10 @@ class SocketsMonitor(BaseMonitorClass):
                             #Add it to the queue.
                             self.queue.append(reading)
 
+                    else:
+                        #Wait a bit for the other monitor(s) to pick it up.
+                        time.sleep(0.1)
+
                 #Check every 1 second (prevent delays in logging at sump pi end).
                 time.sleep(1)
 
