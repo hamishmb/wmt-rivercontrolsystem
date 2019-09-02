@@ -88,7 +88,6 @@ class Sockets:
 
     #pylint: disable=too-many-public-methods
     #We need all of these public methods too.
-    #TODO Ideally, we would simplify this, but we need to decide how.
 
     def __init__(self, _type, name="Unknown"):
         """The constructor, as documented above."""
@@ -429,9 +428,22 @@ class Sockets:
 
         except OSError as err:
             #Address already in use, probably.
-            #This will eventually fix itself, but I need to find a way of doing this manually.
-            #FIXME.
-            pass
+            #This shouldn't occur any more, but it may still happen from time to time.
+            logger.error("Sockets._create_and_connect(): Error connecting:\n\n"
+                         + str(traceback.format_exc()) + "\n\n")
+
+            logger.error("Sockets._create_and_connect(): Unknown error, possibly "
+                         + "address already in use?")
+
+            logger.error("Sockets._create_and_connect(): Retrying in 10 seconds...")
+
+            if self.verbose:
+                print("Connection Timed Out ("+self.name+"): "+str(err)
+                      + ". Retrying in 10 seconds...")
+
+            #Make the handler exit.
+            logger.debug("Sockets._create_and_connect(): Asking handler to exit...")
+            self.internal_request_exit = True
 
     # ---------- Connection Functions (Plugs) ----------
     def _create_plug(self):
@@ -559,6 +571,9 @@ class Sockets:
         if there are multiple readings sat here, we want to end up with the
         newest one, not the oldest!
 
+        Throws:
+            IndexError, if there is no data on the queue to read.
+
         Returns:
             string. The data.
 
@@ -619,6 +634,14 @@ class Sockets:
                 logger.debug("Sockets._send_pending_messages(): Clearing front of out_queue...")
                 self.out_queue.popleft()
 
+        except _pickle.PicklingError:
+            #Unable to pickle the object!
+            logger.error("Sockets._send_pending_messages(): Unable to pickle data to send to peer! "
+                         + "Error was:\n\n"+str(traceback.format_exc())
+                         + "\n\nContinuing...")
+
+            self.out_queue.popleft()
+
         except OSError:
             #Assume that network is down or client gone. Recreate the socket.
             logger.error("Sockets._send_pending_messages(): Connection closed or client gone. "
@@ -644,8 +667,6 @@ class Sockets:
             >>> 0
         """
 
-        #FIXME this can hang forever if there is no data.
-
         logger.debug("Sockets._read_pending_messages(): Attempting to read from socket...")
 
         try:
@@ -653,7 +674,9 @@ class Sockets:
             logger.debug("Sockets._read_pending_messages(): Waiting for data...")
 
             data = b""
-            pickled_obj_is_incomplete = True
+
+            #Don't hang forever if there's no data.
+            pickled_obj_is_incomplete = False
 
             #While the socket is ready for reading, or there is any incomplete data,
             #keep trying to read small packets of data.
@@ -667,21 +690,14 @@ class Sockets:
                         logger.error("Sockets._read_pending_messages(): Connection closed cleanly")
                         return -1 #Connection closed cleanly by peer.
 
+                    #Set this now, seeing as we have received at least part of an object.
+                    pickled_obj_is_incomplete = True
+
                     data += new_data
 
-                except socket.error:
-                    #TODO ignore for now.
+                except OSError:
+                    #Ignore this, it means the whole pickled object hasn't arrived just yet.
                     pass
-
-                    #Assume that the socket is closed,
-                    #or the network connection has failed.
-                    #Recreate the socket.
-                    #logger.error("Sockets._read_pending_messages(): "
-                    #             + "Connection closed or peer gone. "
-                    #             + "Attempting to reconnect...")
-                    #return -1 #Connection closed cleanly by peer.
-
-                print(data)
 
                 if b"ENDMSG" in data:
                     objs = data.split(b"ENDMSG")
@@ -713,9 +729,9 @@ class Sockets:
         try:
             self.in_queue.append(pickle.loads(obj))
 
-        except (_pickle.UnpicklingError, EOFError):
+        except (_pickle.UnpicklingError, TypeError, EOFError):
             logger.error("Sockets._process_obj(): Error unpickling data from socket: "+str(obj))
-            print(b"Unpickling error ("+bytes(self.name)+"):"+obj)
+            print("Unpickling error ("+self.name+"): "+str(obj))
 
 class SocketHandlerThread(threading.Thread):
     """
@@ -794,7 +810,6 @@ class SocketHandlerThread(threading.Thread):
             write_result = self.socket._send_pending_messages()
 
             #Receive messages if there are any.
-            #FIXME this can hang, preventing socket from being recreated when write fails!
             read_result = self.socket._read_pending_messages()
 
             #Check if the peer left.

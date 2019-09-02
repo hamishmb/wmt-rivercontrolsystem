@@ -22,7 +22,10 @@
 from collections import deque
 import unittest
 import sys
+import time
 import threading
+import select
+import socket
 
 #Import other modules.
 sys.path.append('../..') #Need to be able to import the Tools module from here.
@@ -196,6 +199,20 @@ class TestSockets(unittest.TestCase):
         self.assertEqual(self.socket.underlying_socket, None)
         self.assertEqual(self.socket.server_socket, None)
 
+    def test_reset_2(self):
+        self.socket.server_socket = data.fake_socket_oserror
+
+        self.socket.reset()
+
+        self.assertFalse(self.socket.ready_to_send)
+        self.assertFalse(self.socket.reconnected)
+        self.assertFalse(self.socket.internal_request_exit)
+        self.assertFalse(self.socket.handler_exited)
+        self.assertEqual(self.socket.in_queue, deque())
+        self.assertEqual(self.socket.out_queue, deque())
+        self.assertEqual(self.socket.underlying_socket, None)
+        self.assertEqual(self.socket.server_socket, None)
+
     def test_is_ready_1(self):
         """Test #1: Test that this works as expected."""
         for value in (True, False):
@@ -219,9 +236,6 @@ class TestSockets(unittest.TestCase):
 
     def test_wait_for_handler_to_exit_2(self):
         """Test #2: Test this works as expected when handler takes 10 seconds to exit."""
-        #TODO re-enable.
-        return
-
         #Schedule the exit flag to be set in 10 seconds.
         threading.Timer(10, self.set_exited_flag).start()
         self.socket.wait_for_handler_to_exit()
@@ -250,7 +264,7 @@ class TestSockets(unittest.TestCase):
 
         socket_tools.SocketHandlerThread = real_handler_class
 
-    def test_start_handler_1(self):
+    def test_start_handler_2(self):
         """Test #1: Test that this fails when type is invalid."""
         real_handler_class = socket_tools.SocketHandlerThread
         socket_tools.SocketHandlerThread = data.fake_handler_thread
@@ -353,7 +367,7 @@ class TestSockets(unittest.TestCase):
             del self.socket.server_address
 
     def test__connect_socket_1(self):
-        """Test #1: Test that connecting to a client socket will fail when client is not present."""
+        """Test #1: Test that waiting for a client socket will timeout when client is not present."""
         #Wait for a client that doesn't exist to connect.
         self.socket.port_number = 30000
 
@@ -362,7 +376,7 @@ class TestSockets(unittest.TestCase):
         try:
             self.socket._connect_socket()
 
-        except BlockingIOError:
+        except (BlockingIOError, socket.timeout):
             #Expected.
             pass
 
@@ -374,6 +388,273 @@ class TestSockets(unittest.TestCase):
             self.socket.reset()
 
             del self.socket.port_number
+
+    def test__create_and_connect_1(self):
+        """Test #1: Test that this method handles connection refused errors correctly."""
+        #Try to connect to a socket that doesn't exist.
+        self.socket.type = "Plug"
+
+        self.socket.server_address = "127.0.0.1"
+        self.socket.port_number = 30000
+
+        try:
+            self.socket._create_and_connect()
+
+            self.assertTrue(self.socket.internal_request_exit)
+
+        except Exception as e:
+            #Unexpected!
+            raise e
+
+        finally:
+            #Reset everything
+            self.socket.reset()
+
+            del self.socket.type
+            del self.socket.port_number
+            del self.socket.server_address
+
+    def test__create_and_connect_2(self):
+        """Test #2: Test that this method handles timeout errors correctly."""
+        #Wait for a client that doesn't exist.
+        self.socket.type = "Socket"
+
+        self.socket.port_number = 30000
+
+        try:
+            self.socket._create_and_connect()
+
+            self.assertTrue(self.socket.internal_request_exit)
+
+        except Exception as e:
+            #Unexpected!
+            raise e
+
+        finally:
+            #Reset everything
+            self.socket.reset()
+
+            del self.socket.type
+            del self.socket.server_address
+
+    def test__create_and_connect_3(self):
+        """Test #3: Test that this method handles OSError correctly."""
+        #Connection function is replaced to cause an OSError.
+        orig_create_socket = self.socket._create_socket
+        self.socket._create_socket = data.fake_create_socket_oserror
+
+        self.socket.type = "Socket"
+
+        self.socket.port_number = 30000
+
+        try:
+            self.socket._create_and_connect()
+
+            self.assertTrue(self.socket.internal_request_exit)
+
+        except Exception as e:
+            #Unexpected!
+            raise e
+
+        finally:
+            #Reset everything
+            self.socket.reset()
+
+            del self.socket.type
+            del self.socket.server_address
+
+            self.socket._create_socket = orig_create_socket
+
+    def test__create_and_connect_4(self):
+        """Test #4: Test that this method works as expected when everything connects."""
+        #NOTE: There are potential race conditions here, but it should do for the sake of this test.
+        self.socket.type = "Socket"
+        self.socket.port_number = 30000
+
+        self.plug = socket_tools.Sockets("Plug")
+        self.plug.server_address = "127.0.0.1"
+        self.plug.port_number = 30000
+
+        try:
+            #This needs to be concurrent to work.
+            threading.Timer(1, self.socket._create_and_connect).start()
+            threading.Timer(5, self.plug._create_and_connect).start()
+
+            time.sleep(15)
+
+            self.assertFalse(self.socket.internal_request_exit)
+            self.assertTrue(self.socket.ready_to_send)
+
+            self.assertFalse(self.plug.internal_request_exit)
+            self.assertTrue(self.plug.ready_to_send)
+
+        except Exception as e:
+            #Unexpected!
+            raise e
+
+        finally:
+            #Reset everything
+            self.socket.reset()
+            self.plug.reset()
+
+            del self.socket.type
+
+            del self.plug.server_address
+            del self.plug.port_number
+
+    def test_write_1(self):
+        """Test #1: Test this works correctly."""
+        #Any data type will work - they are pickled before being sent.
+        for data in (78, 56, 6.7, True, ("one"), [], {}, "string", None):
+            self.socket.write(data)
+            self.assertEqual(self.socket.out_queue.pop(), data)
+
+    def test_has_data_1(self):
+        """Test #1: Test this works correctly."""
+        self.assertFalse(self.socket.has_data())
+
+        self.socket.in_queue.append(1)
+
+        self.assertTrue(self.socket.has_data())
+
+    def test_read_1(self):
+        """Test #1: Test that this works as expected when there is data to read."""
+        datalist = (78, 56, 6.7, True, ("one"), [], {}, "string", None)
+
+        for data in datalist:
+            self.socket.in_queue.append(data)
+
+        for i in range(0, 9):
+            self.assertEqual(self.socket.read(), datalist[i])
+            self.socket.in_queue.popleft()
+
+    @unittest.expectedFailure
+    def test_read_2(self):
+        """Test #2: Test that this fails when there is nothing on the queue to read."""
+        self.socket.read()
+
+    def test_pop_1(self):
+        """Test #1: Test that this works as expected"""
+        for i in range(0, 9):
+            self.socket.in_queue.append(i)
+
+        for i in range(0, 9):
+            self.socket.pop()
+            self.assertTrue(i not in self.socket.in_queue)
+
+        #An extra pop when there's nothing there should also not throw an exception.
+        self.socket.pop()
+
+    def test__send_pending_messages_1(self):
+        """Test #1: Test this works as expected when there are no pending messages to send."""
+        self.socket.underlying_socket = data.fake_socket
+
+        self.assertTrue(self.socket._send_pending_messages())
+
+        self.socket.underlying_socket = None
+
+    def test__send_pending_messages_2(self):
+        """Test #2: Test this handles pickling errors correctly."""
+        self.socket.underlying_socket = data.fake_socket_error_pickling
+
+        self.socket.write("test")
+
+        self.assertTrue(self.socket._send_pending_messages())
+
+        self.socket.underlying_socket = None
+
+    def test__send_pending_messages_3(self):
+        """Test #3: This this handles OSError correctly."""
+        self.socket.underlying_socket = data.fake_socket_oserror
+
+        self.socket.write("test")
+
+        self.assertFalse(self.socket._send_pending_messages())
+
+        self.socket.underlying_socket = None
+
+    def test__send_pending_messages_4(self):
+        """Test #4: Test this sends data when it is present."""
+        data.unpickled_data = []
+
+        self.socket.underlying_socket = data.fake_socket_unpickle_data
+
+        datalist = (1, 2.3, "4", None, True, False, (), [], {})
+
+        for _data in datalist:
+            self.socket.write(_data)
+
+        #One call should send all the messages.
+        self.assertTrue(self.socket._send_pending_messages())
+
+        self.assertEqual(datalist, tuple(data.unpickled_data))
+        
+        self.socket.underlying_socket = None
+
+        data.unpickled_data = []
+
+    def test__read_pending_messages_1(self):
+        """Test #1: Test this works correctly when the connection was closed by the peer."""
+        socket_tools.select = data.select_ready
+        self.socket.underlying_socket = data.fake_socket_peer_gone
+
+        self.assertEqual(-1, self.socket._read_pending_messages())
+
+        self.socket.underlying_socket = None
+        socket_tools.select = select
+
+    def test__read_pending_messages_2(self):
+        """Test #2: Test this works correctly when the socket is not ready for reading."""
+        socket_tools.select = data.select_not_ready
+        self.socket.underlying_socket = data.fake_socket_peer_gone
+
+        self.assertEqual(0, self.socket._read_pending_messages())
+
+        self.socket.underlying_socket = None
+        socket_tools.select = select
+
+    def test__read_pending_messages_3(self):
+        """Test #3: Test this works correctly when there is data to read."""
+        socket_tools.select = data.select_ready_once
+        self.socket.underlying_socket = data.fake_socket_with_data
+
+        self.assertEqual(0, self.socket._read_pending_messages())
+
+        self.assertEqual(tuple(self.socket.in_queue),
+                         (0, 6.7, None, True, False, (), [], {}, "test"))
+
+        self.socket.underlying_socket = None
+        data.select_ready_once.reset()
+        socket_tools.select = select
+
+    def test__read_pending_messages_4(self):
+        """Test #4: Test this works correctly when there is an unhandled error."""
+        socket_tools.select = data.select_ready
+        self.socket.underlying_socket = data.fake_socket_unhandled_error
+
+        self.assertEqual(-1, self.socket._read_pending_messages())
+
+        self.socket.underlying_socket = None
+        socket_tools.select = select
+
+    def test__process_obj_1(self):
+        """Test #1: Test this works when everything is fine."""
+        datalist = data.fake_socket_with_data.recv(2048).split(b"ENDMSG")[:-1]
+
+        for _data in datalist:
+            self.socket._process_obj(_data)
+
+        self.assertEqual(tuple(self.socket.in_queue),
+                         (0, 6.7, None, True, False, (), [], {}, "test"))
+
+    def test__process_obj_2(self):
+        """Test #2: Test this works when the pickled data is corrupted."""
+        datalist = (0, 6.7, None, True, False, (), [], {}, "test")
+
+        for _data in datalist:
+            self.socket._process_obj(_data)
+
+        self.assertEqual(tuple(self.socket.in_queue), ())
 
 class TestSocketHandlerThread(unittest.TestCase):
     """

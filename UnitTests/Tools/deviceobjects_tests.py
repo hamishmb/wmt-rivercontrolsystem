@@ -149,7 +149,7 @@ class TestBaseDeviceClass(unittest.TestCase):
 
         else:
             #This should have failed!
-            self.assertTrue(False, "ValueError was expected for: "+str(pin))
+            self.assertTrue(False, "ValueError was expected for: "+str(pins))
 
 class TestMotor(unittest.TestCase):
     """
@@ -556,10 +556,6 @@ class TestGateValve(unittest.TestCase):
     def test_get_min_open(self):
         """Test that the get_min_open() method works as expected"""
         self.assertEqual(self.gatevalve.get_min_open(), 1)
-
-    def test_get_max_open(self):
-        """Test that the get_max_open() method works as expected"""
-        self.assertEqual(self.gatevalve.get_max_open(), 99)
 
     def test_get_ref_voltage(self):
         """Test that the get_ref_voltage() method works as expected"""

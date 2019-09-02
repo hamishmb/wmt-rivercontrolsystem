@@ -183,22 +183,6 @@ class TestReading(unittest.TestCase):
         self.assertEqual(self.reading_3.as_csv(), self.time
                          + ",6,SUMP:M0,100,OK")
 
-#TODO First move this class to another file in Tools/
-class TestActuatorPosition(unittest.TestCase):
-    """
-    This test class tests the features of the ActuatorPosition class in
-    Tools/coretools.py
-    """
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
-    def test_1(self):
-        pass
-
 class TestSumpPiControlLogic(unittest.TestCase):
     """
     This test class tests the sumppi control logic function in
