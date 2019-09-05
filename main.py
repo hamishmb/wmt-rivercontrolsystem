@@ -218,6 +218,14 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             #Import dummy class.
             from Tools.testingtools import GPIO
 
+    #Welcome message.
+    logger.info("River Control System Version "+config.VERSION+" ("+config.RELEASEDATE+")")
+    logger.info("System startup sequence initiated.")
+
+    print("River Control System Version "+config.VERSION+" ("+config.RELEASEDATE+")")
+    print("System Time: ", str(datetime.datetime.now()))
+    print("System startup sequence initiated.")
+
     #If this isn't sumppi, start synchronising time with sumppi.
     if system_id != "SUMP":
         core_tools.SyncTime()
@@ -257,9 +265,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     logger.debug("Done!")
 
-    #Print system time.
-    print("System Time: ", str(datetime.datetime.now()))
-
     if system_id[0] == "V":
         #This is a gate valve - setup is different.
         logger.info("Setting up the gate valve...")
@@ -280,8 +285,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     logger.info("Starting to take readings...")
     print("Starting to take readings. Please stand by...")
 
-    logger.info("Waiting for client(s) to connect...")
-    print("Waiting for client(s) to connect...")
+    logger.info("Waiting for peer(s) to connect...")
+    print("Waiting for peer(s) to connect...")
 
     monitors = []
 
