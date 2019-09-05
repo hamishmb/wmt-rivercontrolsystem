@@ -292,25 +292,23 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     #Start monitor threads for the sockets.
     if config.SITE_SETTINGS[system_id]["HostingSockets"]:
-        #FIXME Figure out what to do based on what is in config.py, rather
-        #than hardcoding it.
+        for site in config.SITE_SETTINGS:
+            site_settings = config.SITE_SETTINGS[site]
 
-        #Wendy house butts.
-        monitors.append(monitor_tools.SocketsMonitor(sockets["SOCK4"], "G4", "FS0"))
-        monitors.append(monitor_tools.SocketsMonitor(sockets["SOCK4"], "G4", "FS1"))
-        monitors.append(monitor_tools.SocketsMonitor(sockets["SOCK4"], "G4", "M0"))
+            #If no socket is defined for this site, skip it.
+            if "SocketName" not in site_settings:
+                continue
 
-        #Stage butts.
-        monitors.append(monitor_tools.SocketsMonitor(sockets["SOCK6"], "G6", "FS0"))
-        monitors.append(monitor_tools.SocketsMonitor(sockets["SOCK6"], "G6", "FS1"))
-        monitors.append(monitor_tools.SocketsMonitor(sockets["SOCK6"], "G6", "M0"))
+            #If there are probes to control, add monitors for all of them.
+            if "Probes" in site_settings:
+                for probe_name in site_settings["Probes"]:
+                    monitors.append(monitor_tools.SocketsMonitor(sockets[site_settings["SocketID"]],
+                                                                 probe_name.split(":")[0],
+                                                                 probe_name.split(":")[1]))
 
-        #Gate valves.
-        #Wendy Butts:
-        monitors.append(monitor_tools.SocketsMonitor(sockets["SOCK14"], "V4", "V4"))
-        #Stage Butts:
-        monitors.append(monitor_tools.SocketsMonitor(sockets["SOCK22"], "V12", "V12"))
-
+            elif site_settings["Type"] == "Gate Valve":
+                monitors.append(monitor_tools.SocketsMonitor(sockets[site_settings["SocketID"]],
+                                                             site, site))
 
     #And for our SUMP probe.
     for probe in probes:
@@ -415,7 +413,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                             logger.info("New valve position: "+str(valve_position))
                             print("New valve position: "+str(valve_position))
-                            
+
                             valve.set_position(valve_position)
 
                         socket.pop()

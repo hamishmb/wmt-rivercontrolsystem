@@ -143,7 +143,7 @@ import sys
 
 #Define global variables.
 VERSION = "0.11.0~pre3"
-RELEASEDATE = "4/9/2019"
+RELEASEDATE = "5/9/2019"
 
 #A strange approach, but it works and means we can import the modules for doc generation
 #without error. It also doesn't relax the checks on our actual deployments.
