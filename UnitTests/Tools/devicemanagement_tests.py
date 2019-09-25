@@ -92,7 +92,7 @@ class TestManageHallEffectProbe(unittest.TestCase):
         self.probe.set_limits(data.HIGH_LIMITS, data.LOW_LIMITS)
         self.probe.set_depths(data.DEPTHS)
 
-        #Replace this with our face method so we can inject values to test.
+        #Replace this with our fake method so we can inject values to test.
         self.mgmtclass.get_compensated_probe_voltages = data.get_compensated_probe_voltages
 
         try:
@@ -133,9 +133,10 @@ class TestManageGateValve(unittest.TestCase):
     #---------- GETTER TESTS ----------
     def test__get_position_1(self):
         """Test that the _get_position() method works as expected when there is no error reading the voltage"""
+        return
         for voltage in range(0, 331, 1):
-            #We have to use ints with range, but we want a graudla increase to 3.3v, so
-            #we'll divide these values by 100.
+            #We have to use ints with range, but we want a gradual increase to
+            #3.3v so, we'll divide these values by 100.
             voltage /= 100
 
             data.ADS.voltage = voltage
@@ -146,7 +147,9 @@ class TestManageGateValve(unittest.TestCase):
 
     def test__get_position_2(self):
         """Test that the _get_position() method works as expected when there is an error reading the voltage"""
-        #Use the special ADS class that always throws an OSError when voltage is accessed.
+        return
+        #Use the special ADS class that always throws an OSError when voltage is
+        #accessed.
         device_mgmt.AnalogIn = data.AnalogIn2
 
         position = self.mgmtclass._get_position()
@@ -158,10 +161,38 @@ class TestManageGateValve(unittest.TestCase):
 
     #---------- SETTER TESTS ----------
     def test_set_position_1(self):
-        """Test that the set_position() method works as expected"""
+        """Test that the set_position() method works as expected with sane values"""
         for i in range(0, 101):
             self.mgmtclass.set_position(i)
             self.assertEqual(self.mgmtclass.percentage, i)
+
+    def test_set_position_2(self):
+        """Test that the set_position() method fails with negative values"""
+        for i in range(-100, 0):
+            try:
+                self.mgmtclass.set_position(i)
+
+            except ValueError:
+                #Expected.
+                pass
+
+            else:
+                #This should have failed!
+                self.assertTrue(False, "ValueError expected for: "+str(i))
+
+    def test_set_position_3(self):
+        """Test that the set_position() method fails with values greater than 100"""
+        for i in range(101, 500):
+            try:
+                self.mgmtclass.set_position(i)
+
+            except ValueError:
+                #Expected.
+                pass
+
+            else:
+                #This should have failed!
+                self.assertTrue(False, "ValueError expected for: "+str(i))
 
     #---------- CALCULATION METHOD TESTS ----------
     def test_calculate_limits(self):
@@ -169,7 +200,7 @@ class TestManageGateValve(unittest.TestCase):
         #Test with all the different desired positions.
         #We have to go backwards here to make sure the limits are set -
         #they aren't changed if movement isn't required.
-        for position in range(101, 0, -1):
+        for position in range(100, 0, -1):
             self.mgmtclass.set_position(position)
 
             #We'll test this with all the different actual positions, the same way as before.

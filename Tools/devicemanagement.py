@@ -441,14 +441,19 @@ class ManageGateValve(threading.Thread):
         return self.actual_position
 
     #-------------------- SETTER METHODS --------------------
-    def set_position(self, new_percentage):
+    def set_position(self, percentage):
         """
-        Sets self.percentage to new_percentage.
+        Sets self.percentage to percentage.
 
         This no longer calculates the limits - doing this while the limits are
         being read could cause undefined behaviour.
         """
-        self.percentage = new_percentage
+        if percentage > 100 \
+            or percentage < 0:
+
+            raise ValueError("Percentage must be between 0 and 100")
+
+        self.percentage = percentage
 
     def clutch_engage(self):
         """
