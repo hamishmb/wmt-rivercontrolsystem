@@ -1004,4 +1004,4 @@ class GateValve(BaseDeviceClass):
 
         """
 
-        return (self.control_thread.get_position(), "OK")
+        return (self.control_thread.get_current_position(), "OK")

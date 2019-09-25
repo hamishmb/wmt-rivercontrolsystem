@@ -241,10 +241,20 @@ class ManageGateValve(threading.Thread):
         """This is the part of the code that runs in the thread"""
         while not config.EXITING:
             self.actual_position = self.get_position()
+            self.calculate_limits()
+
+            logger.debug("ManageGateValve: Actual position: "+str(self.actual_position)
+                         + " type: "+str(type(self.actual_position)))
+
+            logger.debug("ManageGateValve: High limit: "+str(self.high_limit)
+                         + " type: "+str(type(self.high_limit)))
+
+            logger.debug("ManageGateValve: Low limit: "+str(self.low_limit)
+                         + " type: "+str(type(self.low_limit)))
 
             if ((self.actual_position <= self.high_limit
                  and self.actual_position >= self.low_limit)
-                or (self.actual_position == -1)):
+                 or (self.actual_position == -1)):
 
                 #Hold current position
                 logger.debug("ManageGateValve: Hold at "+str(self.actual_position))
@@ -270,6 +280,23 @@ class ManageGateValve(threading.Thread):
                 GPIO.output(self.valve.forward_pin, GPIO.LOW)
                 GPIO.output(self.valve.reverse_pin, GPIO.HIGH)
 
+            else:
+                logger.critical("ManageGateValve: Critical error: valve is not in any of the three states!")
+                logger.critical("ManageGateValve: Actual position: "+str(self.actual_position)
+                                +" type: "+str(type(self.actual_position)))
+
+                logger.critical("ManageGateValve: High limit: "+str(self.high_limit)
+                                +" type: "+str(type(self.high_limit)))
+
+                logger.critical("ManageGateValve: Low limit: "+str(self.low_limit)
+                                +" type: "+str(type(self.low_limit)))
+
+                logger.critical("ManageGateValve: Shutting down river system software!")
+
+                config.EXITING = True
+
+                break
+
         self.clutch_disengage()
 
     def clutch_engage(self):
@@ -281,11 +308,15 @@ class ManageGateValve(threading.Thread):
     def get_position(self):
         #TODO This can be refactored - no need to return an instance variable.
         #Create the Analog reading object to read Ch 0 of the A/D
+        traceback.print_stack()
+
         chan = AnalogIn(ads, ADS.P0)
 
         try:
             #Get voltage reading for channel 0 (the position pot slider)
+            logger.debug("ManageGateValve: About to read voltage")
             voltage_0 = chan.voltage
+            logger.debug("ManageGateValve: Read voltage")
 
         except OSError:
             #An I/O error occured when trying to read from the A/D.
@@ -309,10 +340,21 @@ class ManageGateValve(threading.Thread):
 
         return self.actual_position
 
+    def get_current_position(self):
+        """
+        Returns the current position without querying the A2D.
+        """
+
+        return self.actual_position
+
     def set_position(self, new_percentage):
-        """Sets self.percentage to new_percentage."""
+        """
+        Sets self.percentage to new_percentage.
+
+        This no longer calculates the limits - doing this while the limits are being read could
+        cause undefined behaviour.
+        """
         self.percentage = new_percentage
-        self.calculate_limits()
 
     def calculate_limits(self):
         self.actualposition = self.get_position()
