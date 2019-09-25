@@ -64,18 +64,21 @@ try:
     # Create the ADC object using the I2C bus
     ads = ADS.ADS1115(i2c)
 
-except (ImportError, NotImplementedError, ValueError) as e:
-    if isinstance(e, ValueError):
+except (ImportError, NotImplementedError, ValueError) as error:
+    if isinstance(error, ValueError):
         #Occurs when no I2C device is present.
         logger.critical("ADS (I2C) device not found!")
         print("ADS (I2C) device not found!")
 
     if not config.TESTING:
-        logger.critical("Unable to import RPi.GPIO or ADS modules! Did you mean to use testing mode?")
+        logger.critical("Unable to import RPi.GPIO or ADS modules! "
+                        + "Did you mean to use testing mode?")
+
         logger.critical("Exiting...")
         logging.shutdown()
 
-        sys.exit("Unable to import RPi.GPIO or ADS modules! Did you mean to use testing mode? Exiting...")
+        sys.exit("Unable to import RPi.GPIO or ADS modules! "
+                 + "Did you mean to use testing mode? Exiting...")
 
     else:
         #Import dummy classes and methods.
@@ -99,6 +102,9 @@ class ManageHallEffectProbe(threading.Thread):
     one uses and ADC.
 
     Documentation for the constructor for objects of type ManageHallEffectProbe:
+
+    Args:
+        probe (BaseDeviceClass-Object).     The hall effect probe to manage.
 
     Usage:
         Use the constructor for this class the same way as for BaseDeviceClass.
@@ -124,12 +130,15 @@ class ManageHallEffectProbe(threading.Thread):
 
         self.start()
 
-    def run(self): #FIXME This is not a monitor thread! Fix documentation.
-        """The main body of the monitor thread for this probe"""
-        while not config.EXITING:
-            new_reading = self.test_levels()
+    def run(self):
+        """
+        The main body of the management thread for this probe.
+        """
 
-            if new_reading == 1000:
+        while not config.EXITING:
+            new_reading = self.get_level()
+
+            if new_reading == -1:
                 #No Sensors Triggered - leave the reading as it was.
                 logger.debug("Between levels - no sensors triggered")
 
@@ -141,19 +150,26 @@ class ManageHallEffectProbe(threading.Thread):
             time.sleep(0.5)
 
     def get_compensated_probe_voltages(self):
-        """This function performs the measurement of the four voltages and applies the compensation
-        to take out errors caused by the varying output impedance of the probe
         """
-         # Initialise Lists and variables to hold the working values in each column
-        v_meas = list()                                      # Actual voltages
-        v_comp = list()                                      # Compensated values
-        result = list()                                      # Measured value and column
+        This function performs the measurement of the four voltages and
+        applies the compensation to take out errors caused by the varying
+        output impedance of the probe.
 
-        # Prepare v_comp to hold 4 values (pre-populate to avoid errors).
-        for i in range(0, 4):
-            v_comp.append(0)
+        Returns:
+            A tuple:
+                1st element:        The compensated voltage.
+                2nd element:        The column the minimum voltage was found in.
 
-        # Measure the voltage in each chain
+        """
+
+        #Initialise Lists and variables to hold the working values in each column.
+        #Actual voltages
+        v_meas = []
+
+        #Compensated values - prefill with 4 zeros.
+        v_comp = [0, 0, 0, 0]
+
+        #Measure the voltage in each chain
         self.ads_lock.acquire()
         v_meas.append(self.chan0.voltage)
         v_meas.append(self.chan1.voltage)
@@ -161,20 +177,20 @@ class ManageHallEffectProbe(threading.Thread):
         v_meas.append(self.chan3.voltage)
         self.ads_lock.release()
 
-        # Find the minimum value
+        #Find the minimum value
         v_min = min(v_meas)
 
-        # Find the column that the minimum value is in
+        #Find the column that the minimum value is in
         min_column = v_meas.index(min(v_meas))
 
-        # Work out the average of the three highest measurements
+        #Work out the average of the three highest measurements
         #(thus ignoring the 'dipped' channel).
         v_tot = v_meas[0] + v_meas[1] + v_meas[2] + v_meas[3]
         v_avg = (v_tot - v_min)/3
 
-        # Calculate the compensated value for each channel.
+        #Calculate the compensated value for each channel.
         if v_min >= 3.0:
-            # Take a shortcut when the magnet is between sensors
+            #Take a shortcut when the magnet is between sensors
             v_comp[0] = v_comp[1] = v_comp[2] = v_comp[3] = v_avg - v_min
 
         else:
@@ -182,23 +198,40 @@ class ManageHallEffectProbe(threading.Thread):
                 v_comp[min_column] = v_avg - v_min
 
             else:
-                #NB: Will this ever happen? It seems impossible to me - Hamish.
+                #TODO: Will this ever happen? It seems impossible to me - Hamish.
                 v_comp[min_column] = v_avg
 
-        result = v_comp, min_column
+        return (v_comp, min_column)
 
-        return result
+    def get_level(self):
+        """
+        This method determines the probe float's position, and returns it.
 
-    def test_levels(self):
+        Returns:
+            int. The position.
+                -1:                         An error has occurred!
+                anything else:              The level in mm.
+
+        Usage:
+            >>> get_level()
+            >>> 475
+
+        """
+
         count = 0
-        level = 1000                                              # Value to return
+
+        #The value to return. This defaults to -1 if we couldn't detect
+        #the level.
+        level = -1
 
         v_comp, min_column = self.get_compensated_probe_voltages()
 
         while count < self.probe.length:
-            # Now test the channel with the dip to see if any of the sensors are triggered
-            if ((v_comp[min_column] <= self.probe.high_limits[count])
-                    and (v_comp[min_column] >= self.probe.low_limits[count])):
+            #Now test the channel with the dip to see if any of the
+            #sensors are triggered
+
+            if (v_comp[min_column] <= self.probe.high_limits[count]) \
+                and (v_comp[min_column] >= self.probe.low_limits[count]):
 
                 level = self.probe.depths[min_column][count]
 
@@ -217,8 +250,11 @@ class ManageGateValve(threading.Thread):
 
     Documentation for the constructor for objects of type ManageGateValve:
 
+    Args:
+        valve (BaseDeviceClass-Object).         The valve to manage.
+
     Usage:
-        Use the constructor for this class the same way as for BaseDeviceClass.
+        mgmt_thread = ManageGateValve(<valve-object>)
 
     """
 
@@ -252,8 +288,9 @@ class ManageGateValve(threading.Thread):
 
     def run(self):
         """This is the part of the code that runs in the thread"""
+
         while not config.EXITING:
-            self.actual_position = self.get_position()
+            self.actual_position = self._get_position()
             self.calculate_limits()
 
             logger.debug("ManageGateValve: Actual position: "+str(self.actual_position)
@@ -294,7 +331,9 @@ class ManageGateValve(threading.Thread):
                 GPIO.output(self.valve.reverse_pin, GPIO.HIGH)
 
             else:
-                logger.critical("ManageGateValve: Critical error: valve is not in any of the three states!")
+                logger.critical("ManageGateValve: Critical error: valve is not "
+                                + "in any of the three states!")
+
                 logger.critical("ManageGateValve: Actual position: "+str(self.actual_position)
                                 +" type: "+str(type(self.actual_position)))
 
@@ -312,17 +351,58 @@ class ManageGateValve(threading.Thread):
 
         self.clutch_disengage()
 
-    def clutch_engage(self):
-        GPIO.output(self.valve.clutch_pin, GPIO.HIGH)
+    def calculate_limits(self):
+        """
+        This method calculates the maximum and minimum values to accept for
+        for the position that was requested.
 
-    def clutch_disengage(self):
-        GPIO.output(self.valve.clutch_pin, GPIO.LOW)
+        This is required in order to provide some tolerance - the gate valve
+        may not have the accuracy to move to exactly, say, 50%. By having a
+        maximum and minimum limit, we can define what values are within
+        tolerance.
 
-    def get_position(self):
-        #TODO This can be refactored - no need to return an instance variable.
-        #Create the Analog reading object to read Ch 0 of the A/D
+        Usage:
+
+            >>> calculate_limits()
+        """
+
+        if self.actual_position != self.percentage:
+            if (self.percentage + self.valve.pos_tolerance) > \
+               (self.valve.max_open - self.valve.pos_tolerance):
+
+                self.high_limit = self.valve.max_open
+                #Subtract 6 to make sure the valve can close, but doesn't strain the
+                #motor if alignment isn't perfect.
+                self.low_limit = self.valve.max_open - 6
+
+            elif self.percentage - self.valve.pos_tolerance < self.valve.min_open:
+                self.low_limit = self.valve.min_open
+                #Add 1 to make sure the valve can close, but doesn't strain the
+                #motor if alignment isn't perfect.
+                #TODO The valve sometimes hunts a bit - increase tolerance a bit?
+                self.high_limit = self.valve.min_open + 1
+
+            else:
+                #Set the High Limit to the required percentage
+                self.high_limit = self.percentage + self.valve.pos_tolerance
+
+                #Set the Low Limit to the required percentage
+                self.low_limit = self.percentage - self.valve.pos_tolerance
+
+    #-------------------- GETTER METHODS --------------------
+    def _get_position(self):
+        """
+        This method queries the A2D to get the gate valve's position.
+
+        .. warning::
+            Do NOT run this method outside of the management thread.
+            Doing so can cause a deadlock. There are safety measures
+            built in to prevent this, but it can still happen.
+        """
+
         #traceback.print_stack()
 
+        #Create the Analog reading object to read Ch 0 of the A/D
         chan = AnalogIn(ads, ADS.P0)
 
         try:
@@ -351,9 +431,7 @@ class ManageGateValve(threading.Thread):
         if actual_position < 0:
             return -1
 
-        self.actual_position = actual_position
-
-        return self.actual_position
+        return actual_position
 
     def get_current_position(self):
         """
@@ -362,33 +440,35 @@ class ManageGateValve(threading.Thread):
 
         return self.actual_position
 
+    #-------------------- SETTER METHODS --------------------
     def set_position(self, new_percentage):
         """
         Sets self.percentage to new_percentage.
 
-        This no longer calculates the limits - doing this while the limits are being read could
-        cause undefined behaviour.
+        This no longer calculates the limits - doing this while the limits are
+        being read could cause undefined behaviour.
         """
         self.percentage = new_percentage
 
-    def calculate_limits(self):
-        self.actualposition = self.get_position()
-        if (self.actualposition) != self.percentage:
-            if ((self.percentage + self.valve.pos_tolerance) > (self.valve.max_open - self.valve.pos_tolerance)):
-                self.high_limit = self.valve.max_open
-                #Subtract 6 to make sure the valve can close, but doesn't strain the
-                #motor if alignment isn't perfect.
-                self.low_limit = self.valve.max_open - 6
+    def clutch_engage(self):
+        """
+        This method engages the clutch, in order for the motor to be able to move
+        the gate valve.
 
-            elif (self.percentage - self.valve.pos_tolerance < self.valve.min_open):
-                self.low_limit = self.valve.min_open
-                #Add 1 to make sure the valve can close, but doesn't strain the
-                #motor if alignment isn't perfect.
-                self.high_limit = self.valve.min_open + 1
+        Usage:
+            >>> clutch_engage()
+            >>>
+        """
 
-            else:
-                #Set the High Limit to the required percentage
-                self.high_limit = self.percentage + self.valve.pos_tolerance
+        GPIO.output(self.valve.clutch_pin, GPIO.HIGH)
 
-                #Set the Low Limit to the required percentage
-                self.low_limit = self.percentage - self.valve.pos_tolerance
+    def clutch_disengage(self):
+        """
+        This method disengages the clutch.
+
+        Usage:
+            >>> clutch_engage()
+            >>>
+        """
+
+        GPIO.output(self.valve.clutch_pin, GPIO.LOW)

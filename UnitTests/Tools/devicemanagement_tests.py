@@ -87,8 +87,8 @@ class TestManageHallEffectProbe(unittest.TestCase):
 
             self.assertEqual(results, data.TEST_MANAGEHALLEFFECTPROBE_COMP_VOLTAGES_RESULTS[index])
 
-    def test_test_levels_1(self):
-        """Test that the test_levels() function works as expected"""
+    def test_get_level_1(self):
+        """Test that the get_level() function works as expected"""
         self.probe.set_limits(data.HIGH_LIMITS, data.LOW_LIMITS)
         self.probe.set_depths(data.DEPTHS)
 
@@ -97,8 +97,8 @@ class TestManageHallEffectProbe(unittest.TestCase):
 
         try:
             while True:
-                level = self.mgmtclass.test_levels()
-                self.assertEqual(level, data.test_levels_result())
+                level = self.mgmtclass.get_level()
+                self.assertEqual(level, data.get_level_result())
                 data.voltages_position += 1
 
         except RuntimeError:
@@ -128,12 +128,11 @@ class TestManageGateValve(unittest.TestCase):
         self.assertFalse(mgmtclass._exit)
         self.assertEqual(mgmtclass.percentage, 0)
 
-        #NOTE: The other three variables are change immediately and are not trivial to determine.
-
+        #NOTE: The other three variables are changed immediately and are not trivial to determine.
 
     #---------- GETTER TESTS ----------
-    def test_get_position_1(self):
-        """Test that the get_position() method works as expected when there is no error reading the voltage"""
+    def test__get_position_1(self):
+        """Test that the _get_position() method works as expected when there is no error reading the voltage"""
         for voltage in range(0, 331, 1):
             #We have to use ints with range, but we want a graudla increase to 3.3v, so
             #we'll divide these values by 100.
@@ -141,16 +140,16 @@ class TestManageGateValve(unittest.TestCase):
 
             data.ADS.voltage = voltage
 
-            position = self.mgmtclass.get_position()
+            position = self.mgmtclass._get_position()
 
             self.assertEqual(position, int(voltage/3.3*100))
 
-    def test_get_position_2(self):
-        """Test that the get_position() method works as expected when there is an error reading the voltage"""
+    def test__get_position_2(self):
+        """Test that the _get_position() method works as expected when there is an error reading the voltage"""
         #Use the special ADS class that always throws an OSError when voltage is accessed.
         device_mgmt.AnalogIn = data.AnalogIn2
 
-        position = self.mgmtclass.get_position()
+        position = self.mgmtclass._get_position()
 
         #Revert the change.
         device_mgmt.AnalogIn = data.AnalogIn
@@ -168,7 +167,9 @@ class TestManageGateValve(unittest.TestCase):
     def test_calculate_limits(self):
         """Test that the calculate_limits() method works as expected"""
         #Test with all the different desired positions.
-        for position in range(0, 101):
+        #We have to go backwards here to make sure the limits are set -
+        #they aren't changed if movement isn't required.
+        for position in range(101, 0, -1):
             self.mgmtclass.set_position(position)
 
             #We'll test this with all the different actual positions, the same way as before.
@@ -178,6 +179,9 @@ class TestManageGateValve(unittest.TestCase):
                 voltage /= 100
 
                 data.ADS.voltage = voltage
+
+                self.mgmtclass._get_position()
+                self.mgmtclass.calculate_limits()
 
                 #This is a slightly simplified version of what is in the calculate_limits() method,
                 #because it's not super-easy to break it down into anything simpler to test with.

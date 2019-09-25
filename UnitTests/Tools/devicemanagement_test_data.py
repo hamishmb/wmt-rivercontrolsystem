@@ -102,9 +102,9 @@ def get_compensated_probe_voltages():
         return ([0.0, 0.0, 0.0, 0.0], 0)
 
 #Helper function to get corresponding result after running the above function.
-def test_levels_result():
+def get_level_result():
     try:
-        return TEST_MANAGEHALLEFFECTPROBE_TEST_LEVELS_RESULTS[voltages_position]
+        return TEST_MANAGEHALLEFFECTPROBE_GET_LEVEL_RESULTS[voltages_position]
 
     except IndexError:
         raise RuntimeError("No more test data")
@@ -164,12 +164,12 @@ TEST_MANAGEHALLEFFECTPROBE_COMP_VOLTAGES_RESULTS = [
 #Expected levels for the above results.
 #NB: Omm and between levels are reported as 1000 by this method (corrected later by
 #the thread).
-TEST_MANAGEHALLEFFECTPROBE_TEST_LEVELS_RESULTS = [
-    1000,
+TEST_MANAGEHALLEFFECTPROBE_GET_LEVEL_RESULTS = [
+    -1,
     100,
     800,
     600,
     750,
-    1000,
+    -1,
     775
 ]

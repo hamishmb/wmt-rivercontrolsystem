@@ -67,7 +67,7 @@ class ManageGateValve:
     def __init__(self, valve):
         pass
 
-    def get_position(self):
+    def get_current_position(self):
         return self.position
 
     def set_position(self, pos):
