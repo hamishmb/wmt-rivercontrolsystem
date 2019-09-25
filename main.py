@@ -196,6 +196,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #Handle cmdline options.
     system_id = handle_cmdline_options()
 
+    #Reconfigure logging for module imported before we set the logger up.
+    config.reconfigure_logging()
+
     #Do framework imports.
     from Tools import coretools as core_tools
     from Tools import sockettools as socket_tools

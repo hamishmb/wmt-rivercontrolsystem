@@ -87,6 +87,13 @@ except (ImportError, NotImplementedError, ValueError) as e:
         from Tools.testingtools import ads
         from Tools.testingtools import AnalogIn
 
+def reconfigure_logger():
+    """
+    Reconfigures the logging level for this module.
+    """
+
+    logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
+
 class ManageHallEffectProbe(threading.Thread):
     """
     This class is used to repeatedly poll the level of the hall effect probe, and
