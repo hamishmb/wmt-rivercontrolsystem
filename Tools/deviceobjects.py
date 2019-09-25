@@ -971,6 +971,16 @@ class GateValve(BaseDeviceClass):
             >>> <GateValve-Object>.set_position(100)
 
         """
+        if isinstance(percentage, bool) \
+            or not isinstance(percentage, int):
+
+            raise ValueError("Invalid value for percentage: "+str(percentage))
+
+        if percentage > 100:
+            percentage = 100
+
+        if percentage < 0:
+            percentage = 0
 
         self.control_thread.set_position(percentage)
 

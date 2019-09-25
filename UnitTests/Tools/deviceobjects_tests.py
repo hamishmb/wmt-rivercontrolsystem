@@ -579,3 +579,38 @@ class TestGateValve(unittest.TestCase):
         for position in range(0, 100):
             self.gatevalve.set_position(position)
             self.assertEqual(self.gatevalve.control_thread.position, position)
+
+    def test_set_position_2(self):
+        """Test that the set_position() method fails with negative values"""
+        #Start our fake thread.
+        self.gatevalve.start_thread()
+
+        for i in range(-100, 0):
+            self.gatevalve.set_position(i)
+            self.assertEqual(self.gatevalve.control_thread.position, 0)
+
+    def test_set_position_3(self):
+        """Test that the set_position() method fails with values greater than 100"""
+        #Start our fake thread.
+        self.gatevalve.start_thread()
+
+        for i in range(101, 500):
+            self.gatevalve.set_position(i)
+            self.assertEqual(self.gatevalve.control_thread.position, 100)
+
+    def test_set_position_4(self):
+        """Test that the set_position() method fails with values of the wrong type"""
+        #Start our fake thread.
+        self.gatevalve.start_thread()
+
+        for i in (0.0, False, None, (), [], {}, "test"):
+            try:
+                self.gatevalve.set_position(i)
+
+            except ValueError:
+                #Expected.
+                pass
+
+            else:
+                #This should have failed!
+                self.assertTrue(False, "ValueError expected for: "+str(i))

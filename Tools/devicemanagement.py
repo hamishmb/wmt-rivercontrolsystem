@@ -447,11 +447,18 @@ class ManageGateValve(threading.Thread):
 
         This no longer calculates the limits - doing this while the limits are
         being read could cause undefined behaviour.
+
+        Args:
+            percentage (int). The percentage between 0 and 100 to set the
+                              valve to.
         """
-        if percentage > 100 \
+
+        if isinstance(percentage, bool) \
+            or not isinstance(percentage, int) \
+            or percentage > 100 \
             or percentage < 0:
 
-            raise ValueError("Percentage must be between 0 and 100")
+            raise ValueError("Invalid value for percentage: "+str(percentage))
 
         self.percentage = percentage
 

@@ -194,6 +194,20 @@ class TestManageGateValve(unittest.TestCase):
                 #This should have failed!
                 self.assertTrue(False, "ValueError expected for: "+str(i))
 
+    def test_set_position_4(self):
+        """Test that the set_position() method fails with values of the wrong type"""
+        for i in (0.0, False, None, (), [], {}, "test"):
+            try:
+                self.mgmtclass.set_position(i)
+
+            except ValueError:
+                #Expected.
+                pass
+
+            else:
+                #This should have failed!
+                self.assertTrue(False, "ValueError expected for: "+str(i))
+
     #---------- CALCULATION METHOD TESTS ----------
     def test_calculate_limits(self):
         """Test that the calculate_limits() method works as expected"""
