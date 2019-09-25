@@ -64,6 +64,9 @@ try:
     # Create the ADC object using the I2C bus
     ads = ADS.ADS1115(i2c)
 
+    #Create a lock (or mutex) for the A2D.
+    ads_lock = threading.RLock()
+
 except (ImportError, NotImplementedError, ValueError) as e:
     if isinstance(e, ValueError):
         #Occurs when no I2C device is present.
@@ -144,10 +147,12 @@ class ManageHallEffectProbe(threading.Thread):
             v_comp.append(0)
 
         # Measure the voltage in each chain
+        ads_lock.acquire()
         v_meas.append(self.chan0.voltage)
         v_meas.append(self.chan1.voltage)
         v_meas.append(self.chan2.voltage)
         v_meas.append(self.chan3.voltage)
+        ads_lock.release()
 
         # Find the minimum value
         v_min = min(v_meas)
@@ -254,7 +259,7 @@ class ManageGateValve(threading.Thread):
 
             if ((self.actual_position <= self.high_limit
                  and self.actual_position >= self.low_limit)
-                 or (self.actual_position == -1)):
+                    or (self.actual_position == -1)):
 
                 #Hold current position
                 logger.debug("ManageGateValve: Hold at "+str(self.actual_position))
@@ -315,7 +320,9 @@ class ManageGateValve(threading.Thread):
         try:
             #Get voltage reading for channel 0 (the position pot slider)
             logger.debug("ManageGateValve: About to read voltage")
+            ads_lock.acquire()
             voltage_0 = chan.voltage
+            ads_lock.release()
             logger.debug("ManageGateValve: Read voltage")
 
         except OSError:
