@@ -243,8 +243,6 @@ class ManageGateValve(threading.Thread):
         #Initial value. Calculated from the percentage requested.
         self.low_limit = 0
 
-        self.calculate_limits()
-
         threading.Thread.__init__(self)
 
         self.start()
