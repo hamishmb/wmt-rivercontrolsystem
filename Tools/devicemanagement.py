@@ -321,7 +321,7 @@ class ManageGateValve(threading.Thread):
     def get_position(self):
         #TODO This can be refactored - no need to return an instance variable.
         #Create the Analog reading object to read Ch 0 of the A/D
-        traceback.print_stack()
+        #traceback.print_stack()
 
         chan = AnalogIn(ads, ADS.P0)
 
