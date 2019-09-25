@@ -64,9 +64,6 @@ try:
     # Create the ADC object using the I2C bus
     ads = ADS.ADS1115(i2c)
 
-    #Create a lock (or mutex) for the A2D.
-    ads_lock = threading.RLock()
-
 except (ImportError, NotImplementedError, ValueError) as e:
     if isinstance(e, ValueError):
         #Occurs when no I2C device is present.
@@ -116,6 +113,9 @@ class ManageHallEffectProbe(threading.Thread):
         #Make the probe object available to the rest of the class.
         self.probe = probe
 
+        #Create a lock (or mutex) for the A2D.
+        self.ads_lock = threading.RLock()
+
         # Create four single-ended inputs on channels 0 to 3
         self.chan0 = AnalogIn(ads, ADS.P0)
         self.chan1 = AnalogIn(ads, ADS.P1)
@@ -154,12 +154,12 @@ class ManageHallEffectProbe(threading.Thread):
             v_comp.append(0)
 
         # Measure the voltage in each chain
-        ads_lock.acquire()
+        self.ads_lock.acquire()
         v_meas.append(self.chan0.voltage)
         v_meas.append(self.chan1.voltage)
         v_meas.append(self.chan2.voltage)
         v_meas.append(self.chan3.voltage)
-        ads_lock.release()
+        self.ads_lock.release()
 
         # Find the minimum value
         v_min = min(v_meas)
@@ -243,6 +243,9 @@ class ManageGateValve(threading.Thread):
         #Initial value. Calculated from the percentage requested.
         self.low_limit = 0
 
+        #Create a lock (or mutex) for the A2D.
+        self.ads_lock = threading.RLock()
+
         threading.Thread.__init__(self)
 
         self.start()
@@ -325,9 +328,9 @@ class ManageGateValve(threading.Thread):
         try:
             #Get voltage reading for channel 0 (the position pot slider)
             logger.debug("ManageGateValve: About to read voltage")
-            ads_lock.acquire()
+            self.ads_lock.acquire()
             voltage_0 = chan.voltage
-            ads_lock.release()
+            self.ads_lock.release()
             logger.debug("ManageGateValve: Read voltage")
 
         except OSError:
