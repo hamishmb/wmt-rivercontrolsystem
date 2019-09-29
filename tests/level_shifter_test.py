@@ -3,8 +3,9 @@
 #      Wimborne Model Town
 #        River System
 #      Level Shifter Test Code:
-#       1.  Toggles GPIO Pins 5 and 18 at approx 0.1 Hz
-#       2.  Monitors Pin 8 to identify when the pin is connected to ground.
+#       1.  Toggles GPIO Pins 5 and 18 at approx 0.1 Hz (SSR drivers)
+#       2.  Monitors Pins 7 and 8 to identify when the pins are connected to ground.
+#           (Empty and Full Float switches respectively)
 #
 # Copyright (c) 2018 Wimborne Model Town http://www.wimborne-modeltown.com/
 #
@@ -28,15 +29,17 @@ from time import sleep
 
 ButtsPin = 5
 SumpPin = 18
-FloatSwitchPin = 8
+EmptyFloatSwitchPin = 7
+FullFloatSwitchPin = 8
 
 def setup():
-    GPIO.setmode(GPIO.BCM)              # Number GPIOs by Broadcom Numbers
-    GPIO.setup(ButtsPin, GPIO.OUT)      # Set ButtsPin's mode is output
-    GPIO.setup(SumpPin, GPIO.OUT)       # Set SumpPin's mode is output)
-    GPIO.output(ButtsPin, GPIO.HIGH)    # Set both pins high (0 V across a pulled-up
-    GPIO.output(SumpPin, GPIO.HIGH)     # open-collector output)
-    GPIO.setup(FloatSwitchPin, GPIO.IN) # Set Float Switch Pin's mode is input)
+    GPIO.setmode(GPIO.BCM)                      # Number GPIOs by Broadcom Numbers
+    GPIO.setup(ButtsPin, GPIO.OUT)              # Set ButtsPin's mode is output
+    GPIO.setup(SumpPin, GPIO.OUT)               # Set SumpPin's mode is output)
+    GPIO.output(ButtsPin, GPIO.HIGH)            # Set both pins high (0 V across a pulled-up
+    GPIO.output(SumpPin, GPIO.HIGH)             # open-collector output)
+    GPIO.setup(FullFloatSwitchPin, GPIO.IN)     # Set Butts Group Full Float Switch Pin's mode as input)
+    GPIO.setup(EmptyFloatSwitchPin, GPIO.IN)    # Set Butts Group Empty Float Switch Pin's mode as input)
 
 def loop():
         while True:
@@ -45,11 +48,14 @@ def loop():
                 print('...Sump SSR off')
                 GPIO.output(SumpPin, GPIO.HIGH)      # Sump SSR Off
                 print('')
-                if GPIO.input(FloatSwitchPin):
-                    print("Float Switch High")
+                if GPIO.input(FullFloatSwitchPin):
+                    print("Butts Group Full Float Switch High")
                 else:
-                    print("Float Switch Low")
-                sleep(10)
+                    print("Butts Group Full Float Switch Low")
+                if GPIO.input(EmptyFloatSwitchPin):
+                    print("Butts Group Empty Float Switch High")
+                else:
+                    print("Butts Group Empty Float Switch Low")
                 print('...Butts SSR off')
                 GPIO.output(ButtsPin, GPIO.HIGH)     # Butts SSR Off
                 print('...Sump SSR on')
