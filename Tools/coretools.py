@@ -36,6 +36,8 @@ import time
 import threading
 import subprocess
 import logging
+from collections import deque
+import MySQLdb as mysql
 
 import config
 
@@ -113,7 +115,7 @@ class Reading:
         #TODO Check that the time string is valid as well.
         if not isinstance(reading_time, str):
             raise ValueError("reading_time argument must be of type str")
- 
+
         self._time = reading_time
 
         #Check the tick is valid.
@@ -358,6 +360,374 @@ class SyncTime(threading.Thread):
             while count < sleep and not config.EXITING:
                 count += 1
                 time.sleep(1)
+
+class DatabaseConnection(threading.Thread):
+    """
+    This class represents each pi's connection to the database. Only this thread talks
+    directly to the DB server to prevent concurrent access. This also provides various
+    convenience methods to avoid errors and make it easy to use the database.
+
+    The methods that just send data to the database run asynchronously - the thread
+    requesting the operation is not made to wait. Methods that return data will cause
+    the calling thread to wait, though.
+    """
+
+    #TODO Argument validation.
+    #TODO Logging.
+
+    def __init__(self, site_id):
+        """The constructor"""
+        threading.Thread.__init__(self)
+
+        self.site_id = site_id
+        self.pi_name = config.SITE_SETTINGS[site_id]["Name"]
+
+        #As the thread itself sets up the connection to the database, we need
+        #a flag to show whether it's ready or not.
+        self.is_connected = False
+
+        #We need a queue for the asynchronous database write operations.
+        self.in_queue = deque()
+
+        #We need a variable to hold results from fetch queries.
+        self.result = None
+
+        #We also need a flag for when we fetch data - we need to make sure the
+        #other thread has got the data it needs before moving on to process
+        #any other queries.
+        self.client_thread_done = True
+
+        #We also need a lock, in case multiple clients try to fetch data
+        #at the same time.
+        self.client_lock = threading.RLock()
+
+        self.start()
+
+    def run(self):
+        """The main body of the thread"""
+        #First we need to find our connection settings from the config file.
+        user = config.SITE_SETTINGS[self.site_id]["DBUser"]
+        passwd = config.SITE_SETTINGS[self.site_id]["DBPasswd"]
+        host = config.SITE_SETTINGS[self.site_id]["DBHost"]
+        port = config.SITE_SETTINGS[self.site_id]["DBPort"]
+
+        while not config.EXITING:
+            while not self.is_connected:
+                #Attempt to connect to the database server.
+                logger.info("DatabaseConnection: Attempting to connect to database...")
+
+                database, cursor = self._connect(user, passwd, host, port)
+
+                time.sleep(10)
+
+            #We are now connected.
+            self.is_connected = True
+
+            #Do any requested operations on the queue.
+            while self.in_queue:
+                query = self.in_queue[0]
+
+                try:
+                    if "SELECT" not in query:
+                        #Nothing to return, can do this the usual way.
+                        cursor.execute(query)
+                        database.commit()
+
+                    else:
+                        #We need to return data now, so we must be careful.
+                        self.client_thread_done = False
+
+                        cursor.execute(query)
+                        self.result = cursor.fetchall()
+
+                        while not self.client_thread_done:
+                            time.sleep(0.01)
+
+                except mysql._exceptions.Error as error:
+                    logger.error("DatabaseConnection: Error executing query "+query+"! "
+                                 + "Error was: "+str(error))
+
+                    #Break out so we can check the connection again.
+                    #TODO
+                    break
+
+                else:
+                    self.in_queue.popleft()
+
+            time.sleep(1)
+
+        #Do clean up.
+        self._cleanup(database, cursor)
+
+    #-------------------- PRIVATE METHODS -------------------
+    def _connect(self, user, passwd, host, port):
+        """
+        PRIVATE, implementation detail.
+
+        Used to connect to the database.
+        """
+
+        try:
+            database = mysql.connect(host=host, port=port, user=user, passwd=passwd,
+                                     connect_timeout=10, db="rivercontrolsystem")
+
+            cursor = database.cursor()
+
+
+        except mysql._exceptions.Error as error:
+            logger.error("DatabaseConnection: Failed to connect! Error was: "+str(error)
+                         + "Retrying in 10 seconds...")
+
+            self._cleanup(database, cursor)
+
+        else:
+            #We are connected!
+            self.is_connected = True
+
+        return (database, cursor)
+
+    def _cleanup(self, database, cursor):
+        """
+        PRIVATE, implementation detail.
+
+        Used to do clean up when connection is closed, or dies.
+        """
+
+        try:
+            cursor.close()
+
+        except: pass
+
+        try:
+            database.close()
+
+        except: pass
+
+    #-------------------- GETTER METHODS --------------------
+    def is_ready(self):
+        """
+        This method returns True if the database is ready to use, otherwise False.
+        """
+
+        return self.is_connected
+
+    #-------------------- CONVENIENCE READER METHODS --------------------
+    def get_latest_reading(self, site_id, sensor_id):
+        """
+        This method returns the latest reading for the given sensor at the given site.
+
+        Args:
+            site_id.            The site we want the reading from.
+            sensor_id.          The sensor we want the reading for.
+
+        Returns:
+            A Reading object.       The latest reading for that sensor at that site.
+
+            OR
+
+            None.                   There is no reading available to return.
+
+        Usage example:
+            >>> get_latest_reading("G4", "M0")
+            >>> 'Reading at time 2019-09-30 12:01:12.227565, and tick 0, from probe: G4:M0, with value: 350, and status: OK'
+
+        """
+
+        query = """SELECT * FROM `"""+site_id+"""Readings` WHERE `Probe ID` = '"""+sensor_id \
+                + """' ORDER BY ID DESC LIMIT 0, 1;"""
+
+        #Acquire the lock for fetching data.
+        self.client_lock.acquire()
+
+        self.in_queue.append(query)
+
+        #Wait until the query is processed.
+        #TODO Could cause a deadlock if a prev query keeps failing!
+        while self.result is None:
+            time.sleep(0.01)
+
+        #Store the results.
+        result = self.result[0]
+        self.result = None
+
+        #Signal that the database thread can safely continue.
+        self.client_thread_done = True
+        self.client_lock.release()
+
+        try:
+            #Convert the result to a Reading object.
+            reading = Reading(str(result[3]), result[2], site_id+":"+result[1], result[4], result[5])
+
+        except IndexError:
+            reading = None
+
+        return reading
+
+    def get_n_latest_readings(self, site_id, sensor_id, number):
+        """
+        This method returns last n readings for the given sensor at the given site.
+        If the list is empty, or contains fewer readings than was asked for, this
+        means there aren't enough readings to return all of them.
+
+        Args:
+            site_id.            The site we want the reading from.
+            sensor_id.          The sensor we want the reading for.
+            number.             The number of readings.
+
+        Returns:
+            List of (Reading objects).       The latest readings for that sensor at that site.
+
+        Usage example:
+            >>> get_latest_reading("G4", "M0")
+            >>> 'Reading at time 2019-09-30 12:01:12.227565, and tick 0, from probe: G4:M0, with value: 350, and status: OK'
+
+        """
+
+        query = """SELECT * FROM `"""+site_id+"""Readings` WHERE `Probe ID` = '"""+sensor_id \
+                + """' ORDER BY ID DESC LIMIT 0, """+str(number)+""";"""
+
+        #Acquire the lock for fetching data.
+        self.client_lock.acquire()
+
+        self.in_queue.append(query)
+
+        #Wait until the query is processed.
+        #TODO Could cause a deadlock if a prev query keeps failing!
+        while self.result is None:
+            time.sleep(0.01)
+
+        #Store the results.
+        result = self.result
+        self.result = None
+
+        #Signal that the database thread can safely continue.
+        self.client_thread_done = True
+        self.client_lock.release()
+
+        readings = []
+
+        for reading_data in result:
+            try:
+                #Convert the result to a Reading object.
+                readings.append(Reading(str(reading_data[3]), reading_data[2],
+                                        site_id+":"+reading_data[1], reading_data[4],
+                                        reading_data[5]))
+
+            except IndexError:
+                pass
+
+        return readings
+
+    def get_state(self, site_id, sensor_id):
+        """
+        This method queries the state of the given sensor/device. Information is returned
+        such as what (if anything) has been requested, if it is Locked or Unlocked,
+        and which pi locked it, if any.
+
+        Args:
+            site_id.            The site that holds the device we're interested in.
+            sensor_id.          The sensor we want to know about.
+
+        Returns:
+            tuple.      1st element:        Device status (str) ("Locked" or "Unlocked").
+                        2nd element:        Request (str) (values depend on device).
+                        3rd element:        Locked by (str) (site id as defined in config.py).
+
+            OR
+
+            None.           No data available.
+
+        Usage:
+            >>> get_state("V4", "V4")
+            >>> ("Locked", "50%", "SUMP")
+
+        """
+        query = """SELECT * FROM `"""+site_id+"""Control` WHERE `Device ID` = '""" \
+                + sensor_id+"""' LIMIT 0, 1;"""
+
+        #Acquire the lock for fetching data.
+        self.client_lock.acquire()
+
+        self.in_queue.append(query)
+
+        #Wait until the query is processed.
+        #TODO Could cause a deadlock if a prev query keeps failing!
+        while self.result is None:
+            time.sleep(0.01)
+
+        #Store the results.
+        try:
+            result = self.result[0][2:]
+
+        except IndexError:
+            result = None
+
+        self.result = None
+
+        #Signal that the database thread can safely continue.
+        self.client_thread_done = True
+        self.client_lock.release()
+
+        return result
+
+    #-------------------- CONVENIENCE WRITER METHODS --------------------
+    def log_event(self, event):
+        """
+        This method logs the given event message in the database.
+
+        Args:
+            event (str).            The event to log.
+
+        Usage:
+            >>> log_event("test")
+            >>>
+        """
+
+        query = """INSERT INTO `EventLog`(`Site ID`, `Event`, `Time`) VALUES('"""+self.site_id \
+                +"""', '"""+event+"""', NOW());"""
+
+        self.in_queue.append(query)
+
+    def update_status(self, pi_status, sw_status, current_action):
+        """
+        This method logs the given statuses and action(s) in the database.
+
+        Args:
+            pi_status (str).            The current status of this pi.
+            sw_status (str).            The current status of the software on this pi.
+            current_action (str).       The software's current action(s).
+
+        Usage:
+            >>> update_status("Up", "OK", "None")
+            >>>
+        """
+
+        #TODO This assumes there is a record there. We must make sure there is one!
+        query = """UPDATE SystemStatus SET `Pi Status` = '"""+pi_status \
+                + """', `Software Status` = '"""+sw_status \
+                + """', `Current Action` =  '"""+current_action \
+                + """' WHERE `Pi Name` = '"""+self.pi_name+"""';"""
+
+        self.in_queue.append(query)
+
+    def store_reading(self, reading):
+        """
+        This method stores the given reading in the database.
+
+        Args:
+            reading (Reading). The reading to store.
+
+        Usage:
+            >>> store_reading(<Reading-Obj>)
+            >>>
+        """
+
+        query = """INSERT INTO `"""+self.site_id+"""Readings`(`Probe ID`, `Tick`, """ \
+                + """`Time`, `Value`, `Status`) VALUES('"""+reading.get_sensor_id() \
+                + """', """+str(reading.get_tick())+""", '"""+reading.get_time()+"""', '""" \
+                + reading.get_value()+"""', '"""+reading.get_status()+"""');"""
+
+        self.in_queue.append(query)
 
 # -------------------- CONTROL LOGIC FUNCTIONS --------------------
 #TODO update the documentation, this is old.
@@ -685,7 +1055,7 @@ def setup_devices(system_id, dictionary="Probes"):
             #Immediately disable the motor, as it seems they can turn on during
             #startup, if state is not initialised.
             device.disable()
-            
+
         else:
             pins = device_settings["Pins"]
             device.set_pins(pins)

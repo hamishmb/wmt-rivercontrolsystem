@@ -143,7 +143,10 @@ import sys
 
 #Define global variables.
 VERSION = "0.11.0~pre3"
-RELEASEDATE = "25/9/2019"
+RELEASEDATE = "30/9/2019"
+
+#Used to access the database connection object.
+DBCONNECTION = None
 
 #A strange approach, but it works and means we can import the modules for doc generation
 #without error. It also doesn't relax the checks on our actual deployments.
@@ -179,10 +182,15 @@ SITE_SETTINGS = {
     "SUMP":
         {
             "ID": "SUMP",
+            "Name": "Sump Pi",
             "Default Interval": 15,
             "IPAddress": "192.168.0.2",
             "HostingSockets": True,
             "ControlLogicFunction": "sumppi_control_logic",
+            "DBUser": "test",
+            "DBPasswd": "test",
+            "DBHost": "192.168.1.114",
+            "DBPort": 3306,
 
             #Local probes.
             "Probes":
@@ -231,9 +239,12 @@ SITE_SETTINGS = {
     "G4":
         {
             "ID": "G4",
+            "Name": "Wendy Butts Pi",
             "Default Interval": 15,
             "IPAddress": "192.168.0.4",
             "HostingSockets": False,
+            "DBUser": "test",
+            "DBPasswd": "test",
 
             #Local probes.
             "Probes":
@@ -286,9 +297,12 @@ SITE_SETTINGS = {
     "G6":
         {
             "ID": "G6",
+            "Name": "Stage Butts Pi",
             "Default Interval": 15,
             "IPAddress": "192.168.0.6",
             "HostingSockets": False,
+            "DBUser": "test",
+            "DBPasswd": "test",
 
             #Local probes.
             "Probes":
@@ -343,9 +357,12 @@ SITE_SETTINGS = {
         {
             "Type": "Gate Valve",
             "ID":   "V4",
+            "Name": "Wendy Butts Gate Valve Pi",
             "HostingSockets": False,
             "IPAddress": "192.168.0.14",
             "Default Interval": 15,
+            "DBUser": "test",
+            "DBPasswd": "test",
 
             "Name": "Butts Farm Gate Valve",
             "Class": Tools.deviceobjects.GateValve,
@@ -369,9 +386,12 @@ SITE_SETTINGS = {
         {
             "Type": "Gate Valve",
             "ID":   "V6",
+            "Name": "Stage Butts Gate Valve Pi",
             "HostingSockets": False,
             "IPAddress": "192.168.0.16",
             "Default Interval": 15,
+            "DBUser": "test",
+            "DBPasswd": "test",
 
             "Name": "Matrix Pump Gate Valve",
             "Class": Tools.deviceobjects.GateValve,
@@ -398,6 +418,8 @@ SITE_SETTINGS = {
             "HostingSockets": False,
             "IPAddress": "192.168.0.17",
             "Default Interval": 15,
+            "DBUser": "test",
+            "DBPasswd": "test",
 
             "Name": "Matrix Pump Gate Valve",
             "Class": Tools.deviceobjects.GateValve,
@@ -424,6 +446,8 @@ SITE_SETTINGS = {
             "HostingSockets": False,
             "IPAddress": "192.168.0.18",
             "Default Interval": 15,
+            "DBUser": "test",
+            "DBPasswd": "test",
 
             "Name": "Matrix Pump Gate Valve",
             "Class": Tools.deviceobjects.GateValve,
@@ -450,6 +474,8 @@ SITE_SETTINGS = {
             "HostingSockets": False,
             "IPAddress": "192.168.0.19",
             "Default Interval": 15,
+            "DBUser": "test",
+            "DBPasswd": "test",
 
             "Name": "Matrix Pump Gate Valve",
             "Class": Tools.deviceobjects.GateValve,
@@ -476,6 +502,8 @@ SITE_SETTINGS = {
             "HostingSockets": False,
             "IPAddress": "192.168.0.22",
             "Default Interval": 15,
+            "DBUser": "test",
+            "DBPasswd": "test",
 
             "Name": "Stage Butts Gate Valve",
             "Class": Tools.deviceobjects.GateValve,
