@@ -338,8 +338,8 @@ class SyncTime(threading.Thread):
     def run(self):
         """The main body of the thread"""
         while not config.EXITING:
-            cmd = subprocess.run(["sudo", "rdate", config.SITE_SETTINGS["SUMP"]["IPAddress"]], stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT)
+            cmd = subprocess.run(["sudo", "rdate", config.SITE_SETTINGS["SUMP"]["IPAddress"]],
+                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
             stdout = cmd.stdout.decode("UTF-8", errors="ignore")
 
@@ -373,7 +373,8 @@ class DatabaseConnection(threading.Thread):
     """
 
     #TODO Argument validation.
-    #TODO Logging.
+    #TODO Logging, especially debug logging.
+    #TODO Error handling and connection error detection.
 
     def __init__(self, site_id):
         """The constructor"""
@@ -397,6 +398,10 @@ class DatabaseConnection(threading.Thread):
         #any other queries.
         self.client_thread_done = True
 
+        #Used to store a reference to the DB thread so we can handle external
+        #and internal queries to the database correctly.
+        self.db_thread = None
+
         #We also need a lock, in case multiple clients try to fetch data
         #at the same time.
         self.client_lock = threading.RLock()
@@ -405,6 +410,8 @@ class DatabaseConnection(threading.Thread):
 
     def run(self):
         """The main body of the thread"""
+        self.db_thread = threading.current_thread()
+
         #First we need to find our connection settings from the config file.
         user = config.SITE_SETTINGS[self.site_id]["DBUser"]
         passwd = config.SITE_SETTINGS[self.site_id]["DBPasswd"]
@@ -418,10 +425,12 @@ class DatabaseConnection(threading.Thread):
 
                 database, cursor = self._connect(user, passwd, host, port)
 
-                time.sleep(10)
+                #Initialise the database.
+                self._initialise_db()
 
             #We are now connected.
             self.is_connected = True
+            config.DBCONNECTION = self
 
             #Do any requested operations on the queue.
             while self.in_queue:
@@ -449,6 +458,8 @@ class DatabaseConnection(threading.Thread):
 
                     #Break out so we can check the connection again.
                     #TODO
+                    config.DBCONNECTION = None
+
                     break
 
                 else:
@@ -459,7 +470,7 @@ class DatabaseConnection(threading.Thread):
         #Do clean up.
         self._cleanup(database, cursor)
 
-    #-------------------- PRIVATE METHODS -------------------
+    #-------------------- PRIVATE SETUP METHODS -------------------
     def _connect(self, user, passwd, host, port):
         """
         PRIVATE, implementation detail.
@@ -480,11 +491,48 @@ class DatabaseConnection(threading.Thread):
 
             self._cleanup(database, cursor)
 
+            time.sleep(10)
+
         else:
             #We are connected!
             self.is_connected = True
 
         return (database, cursor)
+
+    def _initialise_db(self):
+        """
+        PRIVATE, implementation detail.
+
+        Used to make sure that required records for this pi are present, and
+        resets them if needed eg by clearing locks and setting initial status.
+        """
+
+        #It doesn't matter that these aren't done immediately - every query is done on
+        #a first-come first-served basis.
+
+        #----- Remove and reset the status entry for this pi, if it exists -----
+        query = """DELETE FROM `SystemStatus` """ \
+                + """ WHERE `Pi Name` = '"""+self.pi_name+"""';"""
+
+        self.in_queue.append(query)
+
+        query = """INSERT INTO `SystemStatus`(`Pi Name`, `Pi Status`, """ \
+                + """`Software Status`, `Current Action`) VALUES('"""+self.pi_name \
+                + """', 'Up', 'Initialising...', 'None');"""
+
+        self.in_queue.append(query)
+
+        #----- Clear any locks we're holding and create control entries for devices -----
+        query = """DELETE FROM `"""+self.site_id+"""Control;"""
+
+        self.in_queue.append(query)
+
+        for device in config.SITE_SETTINGS[self.site_id]["Devices"]:
+            query = """INSERT INTO `"""+self.site_id+"""Control`(`Device ID`, """ \
+                    + """`Device Status`, `Request`, `Locked By`) VALUES('""" \
+                    + device.split(":")[1]+"""', 'Unlocked', 'None', 'None');"""
+
+            self.in_queue.append(query)
 
     def _cleanup(self, database, cursor):
         """
@@ -496,12 +544,14 @@ class DatabaseConnection(threading.Thread):
         try:
             cursor.close()
 
-        except: pass
+        except Exception:
+            pass
 
         try:
             database.close()
 
-        except: pass
+        except Exception:
+            pass
 
     #-------------------- GETTER METHODS --------------------
     def is_ready(self):
@@ -536,8 +586,9 @@ class DatabaseConnection(threading.Thread):
         query = """SELECT * FROM `"""+site_id+"""Readings` WHERE `Probe ID` = '"""+sensor_id \
                 + """' ORDER BY ID DESC LIMIT 0, 1;"""
 
-        #Acquire the lock for fetching data.
-        self.client_lock.acquire()
+        if threading.current_thread() is not self.db_thread:
+            #Acquire the lock for fetching data.
+            self.client_lock.acquire()
 
         self.in_queue.append(query)
 
@@ -552,11 +603,14 @@ class DatabaseConnection(threading.Thread):
 
         #Signal that the database thread can safely continue.
         self.client_thread_done = True
-        self.client_lock.release()
+
+        if threading.current_thread() is not self.db_thread:
+            self.client_lock.release()
 
         try:
             #Convert the result to a Reading object.
-            reading = Reading(str(result[3]), result[2], site_id+":"+result[1], result[4], result[5])
+            reading = Reading(str(result[3]), result[2], site_id+":"+result[1],
+                              result[4], result[5])
 
         except IndexError:
             reading = None
@@ -586,8 +640,9 @@ class DatabaseConnection(threading.Thread):
         query = """SELECT * FROM `"""+site_id+"""Readings` WHERE `Probe ID` = '"""+sensor_id \
                 + """' ORDER BY ID DESC LIMIT 0, """+str(number)+""";"""
 
-        #Acquire the lock for fetching data.
-        self.client_lock.acquire()
+        if threading.current_thread() is not self.db_thread:
+            #Acquire the lock for fetching data.
+            self.client_lock.acquire()
 
         self.in_queue.append(query)
 
@@ -602,7 +657,9 @@ class DatabaseConnection(threading.Thread):
 
         #Signal that the database thread can safely continue.
         self.client_thread_done = True
-        self.client_lock.release()
+
+        if threading.current_thread() is not self.db_thread:
+            self.client_lock.release()
 
         readings = []
 
@@ -645,8 +702,9 @@ class DatabaseConnection(threading.Thread):
         query = """SELECT * FROM `"""+site_id+"""Control` WHERE `Device ID` = '""" \
                 + sensor_id+"""' LIMIT 0, 1;"""
 
-        #Acquire the lock for fetching data.
-        self.client_lock.acquire()
+        if threading.current_thread() is not self.db_thread:
+            #Acquire the client thread lock for fetching data.
+            self.client_lock.acquire()
 
         self.in_queue.append(query)
 
@@ -666,11 +724,88 @@ class DatabaseConnection(threading.Thread):
 
         #Signal that the database thread can safely continue.
         self.client_thread_done = True
-        self.client_lock.release()
+
+        if threading.current_thread() is not self.db_thread:
+            self.client_lock.release()
 
         return result
 
     #-------------------- CONVENIENCE WRITER METHODS --------------------
+    def attempt_to_control(self, site_id, sensor_id, request):
+        """
+        This method attempts to lock the given sensor/device so we can take control.
+        First we check if the device is locked. If it isn't locked, or this pi locked it,
+        then we take control and note the requested action, and True is returned.
+
+        Otherwise, we don't take control, and False is returned.
+
+        Args:
+            site_id.            The site that holds the device we're interested in.
+            sensor_id.          The sensor we want to know about.
+            request (str).      What state we want the device to be in.
+
+        Returns:
+            boolean.        True - We are now in control of the device.
+                            False - The device is locked and in use by another pi.
+
+        Usage:
+            >>> attempt_to_control("SUMP", "P0", "On")
+            >>> True
+
+        """
+
+        state = self.get_state(site_id, sensor_id)
+
+        #If it's locked and we didn't lock it, return False.
+        if state is None or \
+            (state[0] == "Locked" and \
+             state[3] != self.site_id):
+
+            return False
+
+        #Otherwise we may now take control.
+        query = """UPDATE `"""+site_id+"""Control` SET `Device Status` = 'Locked', """ \
+                + """`Request` = '"""+request+"""', `Locked By` = '"""+self.site_id \
+                + """' WHERE `Device ID` = '"""+sensor_id+"""';"""
+
+        self.in_queue.append(query)
+
+        return True
+
+    def release_control(self, site_id, sensor_id):
+        """
+        This method attempts to release the given sensor/device so other pis can
+        take control. First we check if we locked the device. If it isn't locked,
+        or this pi didn't lock it, we return without doing anything.
+
+        Otherwise, we unlock the device.
+
+        Args:
+            site_id.            The site that holds the device we're interested in.
+            sensor_id.          The sensor we want to know about.
+
+        Usage:
+            >>> release_control("SUMP", "P0")
+            >>>
+
+        """
+
+        state = self.get_state(site_id, sensor_id)
+
+        #If it isn't locked, or we didn't lock it, return.
+        if state is None or \
+            state[0] == "Unlocked" or \
+            state[3] != self.site_id:
+
+            return
+
+        #Otherwise unlock it.
+        query = """UPDATE `"""+site_id+"""Control` SET `Device Status` = 'Unlocked', """ \
+                + """`Request` = 'None', `Locked By` = 'None' WHERE `Device ID` = '""" \
+                + sensor_id+"""';"""
+
+        self.in_queue.append(query)
+
     def log_event(self, event):
         """
         This method logs the given event message in the database.
@@ -702,7 +837,6 @@ class DatabaseConnection(threading.Thread):
             >>>
         """
 
-        #TODO This assumes there is a record there. We must make sure there is one!
         query = """UPDATE SystemStatus SET `Pi Status` = '"""+pi_status \
                 + """', `Software Status` = '"""+sw_status \
                 + """', `Current Action` =  '"""+current_action \
@@ -906,7 +1040,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
         print("Water level in the sump is between 300 and 400 mm!")
 
-        if (butts_reading >= 300):
+        if butts_reading >= 300:
             logger.info("Opening wendy butts gate valve to 25%...")
             print("Opening wendy butts gate valve to 25%...")
             sockets["SOCK14"].write("Valve Position 25")
@@ -932,7 +1066,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         #If the butts pump is on, turn it off.
         butts_pump.disable()
 
-        if (butts_reading >= 300):
+        if butts_reading >= 300:
             logger.info("Opening wendy butts gate valve to 50%...")
             print("Opening wendy butts gate valve to 50%...")
             sockets["SOCK14"].write("Valve Position 50")

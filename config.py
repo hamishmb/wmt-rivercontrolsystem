@@ -143,7 +143,7 @@ import sys
 
 #Define global variables.
 VERSION = "0.11.0~pre3"
-RELEASEDATE = "30/9/2019"
+RELEASEDATE = "1/10/2019"
 
 #Used to access the database connection object.
 DBCONNECTION = None
