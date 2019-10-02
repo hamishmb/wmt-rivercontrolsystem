@@ -46,6 +46,9 @@ import config
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
 
+for handler in logging.getLogger('River System Control Software').handlers:
+    logger.addHandler(handler)
+
 class Reading:
     """
     This class is used to represent a reading. Each reading has an ID, a time,
