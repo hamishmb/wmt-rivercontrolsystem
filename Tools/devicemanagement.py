@@ -379,8 +379,8 @@ class ManageGateValve(threading.Thread):
                 self.low_limit = self.valve.min_open
                 #Add 1 to make sure the valve can close, but doesn't strain the
                 #motor if alignment isn't perfect.
-                #TODO The valve sometimes hunts a bit - increase tolerance a bit?
-                self.high_limit = self.valve.min_open + 1
+                #TODO Tolerance increased to 2%, see if hunting stops.
+                self.high_limit = self.valve.min_open + 2
 
             else:
                 #Set the High Limit to the required percentage
