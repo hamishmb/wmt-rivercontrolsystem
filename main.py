@@ -469,7 +469,7 @@ if __name__ == "__main__":
     logger = logging.getLogger('River System Control Software')
     logging.basicConfig(filename='./logs/rivercontrolsystem.log',
                         format='%(asctime)s - %(name)s - %(levelname)s: %(message)s',
-                        datefmt='%d/%m/%Y %I:%M:%S %p')
+                        datefmt='%d/%m/%Y %H:%M:%S')
 
     #Default logging level of INFO.
     logger.setLevel(logging.INFO)
