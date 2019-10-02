@@ -465,14 +465,34 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         #Reset GPIO pins.
         GPIO.cleanup()
 
-if __name__ == "__main__":
+def init_logging():
+    #NB: Can't use getLogger() any more because we want a custom handler.
     logger = logging.getLogger('River System Control Software')
-    logging.basicConfig(filename='./logs/rivercontrolsystem.log',
-                        format='%(asctime)s - %(name)s - %(levelname)s: %(message)s',
-                        datefmt='%d/%m/%Y %H:%M:%S')
+
+    #Remove the console handler.
+    logger.removeHandler(logger.handlers[0])
+
+    #Set up the timed rotating file handler.
+    rotator = logging.handlers.TimedRotatingFileHandler(filename='./logs/rivercontrolsystem.log',
+                                                        when="midnight")
+
+    logger.addHandler(rotator)
+
+    #Set up the formatter.
+    formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s: %(message)s',
+                                  datefmt='%d/%m/%Y %H:%M:%S')
+
+    rotator.setFormatter(formatter)
 
     #Default logging level of INFO.
     logger.setLevel(logging.INFO)
+    rotator.setLevel(logging.INFO)
+
+    return logger
+
+if __name__ == "__main__":
+    #---------- SET UP THE LOGGER ----------
+    logger = init_logging()
 
     #Catch any unexpected errors and log them so we know what happened.
     try:
