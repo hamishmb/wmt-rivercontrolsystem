@@ -142,9 +142,11 @@ def handle_cmdline_options():
 
         elif opt in ["-d", "--debug"]:
             logger.setLevel(logging.DEBUG)
+            handler.setLevel(logging.DEBUG)
 
         elif opt in ["-q", "--quiet"]:
             logger.setLevel(logging.WARNING)
+            handler.setLevel(logging.WARNING)
 
         elif opt in ["-h", "--help"]:
             usage()
@@ -489,11 +491,11 @@ def init_logging():
     logger.setLevel(logging.INFO)
     rotator.setLevel(logging.INFO)
 
-    return logger
+    return logger, rotator
 
 if __name__ == "__main__":
     #---------- SET UP THE LOGGER ----------
-    logger = init_logging()
+    logger, handler = init_logging()
 
     #Catch any unexpected errors and log them so we know what happened.
     try:
