@@ -57,6 +57,7 @@ import logging
 import traceback
 
 import config
+from Tools import loggingtools
 
 def usage():
     """
@@ -470,11 +471,11 @@ def init_logging():
     logger = logging.getLogger('River System Control Software')
 
     #Remove the console handler.
-    logger.removeHandler(logger.handlers[0])
+    logger.handlers = []
 
     #Set up the timed rotating file handler.
-    rotator = logging.handlers.TimedRotatingFileHandler(filename='./logs/rivercontrolsystem.log',
-                                                        when="midnight")
+    rotator = loggingtools.CustomLoggingHandler(filename='./logs/rivercontrolsystem.log',
+                                                when="midnight")
 
     logger.addHandler(rotator)
 
