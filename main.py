@@ -57,6 +57,7 @@ import logging
 import traceback
 
 import config
+from Tools import loggingtools
 
 def usage():
     """
@@ -141,9 +142,11 @@ def handle_cmdline_options():
 
         elif opt in ["-d", "--debug"]:
             logger.setLevel(logging.DEBUG)
+            handler.setLevel(logging.DEBUG)
 
         elif opt in ["-q", "--quiet"]:
             logger.setLevel(logging.WARNING)
+            handler.setLevel(logging.WARNING)
 
         elif opt in ["-h", "--help"]:
             usage()
@@ -465,14 +468,34 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         #Reset GPIO pins.
         GPIO.cleanup()
 
-if __name__ == "__main__":
+def init_logging():
+    #NB: Can't use getLogger() any more because we want a custom handler.
     logger = logging.getLogger('River System Control Software')
-    logging.basicConfig(filename='./logs/rivercontrolsystem.log',
-                        format='%(asctime)s - %(name)s - %(levelname)s: %(message)s',
-                        datefmt='%d/%m/%Y %I:%M:%S %p')
+
+    #Remove the console handler.
+    logger.handlers = []
+
+    #Set up the timed rotating file handler.
+    rotator = loggingtools.CustomLoggingHandler(filename='./logs/rivercontrolsystem.log',
+                                                when="midnight")
+
+    logger.addHandler(rotator)
+
+    #Set up the formatter.
+    formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s: %(message)s',
+                                  datefmt='%d/%m/%Y %H:%M:%S')
+
+    rotator.setFormatter(formatter)
 
     #Default logging level of INFO.
     logger.setLevel(logging.INFO)
+    rotator.setLevel(logging.INFO)
+
+    return logger, rotator
+
+if __name__ == "__main__":
+    #---------- SET UP THE LOGGER ----------
+    logger, handler = init_logging()
 
     #Catch any unexpected errors and log them so we know what happened.
     try:

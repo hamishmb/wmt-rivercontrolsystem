@@ -46,6 +46,9 @@ import config
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
 
+for handler in logging.getLogger('River System Control Software').handlers:
+    logger.addHandler(handler)
+
 try:
     #Allow us to generate documentation on non-RPi systems.
     import RPi.GPIO as GPIO
@@ -379,8 +382,8 @@ class ManageGateValve(threading.Thread):
                 self.low_limit = self.valve.min_open
                 #Add 1 to make sure the valve can close, but doesn't strain the
                 #motor if alignment isn't perfect.
-                #TODO The valve sometimes hunts a bit - increase tolerance a bit?
-                self.high_limit = self.valve.min_open + 1
+                #TODO Tolerance increased to 2%, see if hunting stops.
+                self.high_limit = self.valve.min_open + 2
 
             else:
                 #Set the High Limit to the required percentage

@@ -49,6 +49,9 @@ from . import coretools
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
 
+for handler in logging.getLogger('River System Control Software').handlers:
+    logger.addHandler(handler)
+
 # ---------- BASE CLASS ----------
 class BaseMonitorClass(threading.Thread):
     """
