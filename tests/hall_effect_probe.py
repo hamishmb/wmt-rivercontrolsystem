@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# hall_effect_probe2.py - V05: 
+# hall_effect_probe2.py - V04: 
 #                Wimborne Model Town
 #      River System New Type Magnetic Probe Test Functions
 #
@@ -87,6 +87,7 @@ def measure_probe_voltages():
 
     # Find the column that the minimum value is in
     min_column = Vmeas.index(min(Vmeas))
+    print("Column containing the minimum value = " + str(min_column))
         
     # Work out the average of the three highest measurements (thus ignoring the 'dipped' channel.
     Vtot = Vmeas[0] + Vmeas[1] + Vmeas[2] + Vmeas[3]
@@ -107,30 +108,38 @@ def measure_probe_voltages():
         else:
             Vcomp[min_column] = Vav
 
+    print("Dip Value = " + str(Vcomp[min_column]))
+
     result = Vcomp,min_column
 
     return result
 
 def test_levels():
     count = 0
-    level = -1                                              # Value to return.  Defaults to -1 if no sensors are detected
+    level = 1000                                              # Value to return
 
     while count < length:
+        print("")
+        print("Count Number = " + str(count))
+
         Vcomp, min_column = measure_probe_voltages()
 
         # Now test the channel with the dip to see if any of the sensors are triggered
         if ((Vcomp[min_column] <= high_limit[count]) and (Vcomp[min_column] >= low_limit[count])):
             level = depth[min_column][count]
             print ("Depth = " + str(level))
+        elif level == 1000:
+            print("Between Sensors at this Depth")
 
         count += 1
+        time.sleep(2)
 
     return level
 
 def loop():
     while True:
         depth = test_levels()
-        if depth == -1:
+        if depth == 1000:
             print("No Sensors Triggered")
         else:
             print("Depth = " + str(depth))
