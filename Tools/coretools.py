@@ -383,12 +383,21 @@ class DatabaseConnection(threading.Thread):
         """The constructor"""
         threading.Thread.__init__(self)
 
+        #Check this is a valid site ID.
+        if not isinstance(site_id, str) or \
+            site_id not in config.SITE_SETTINGS:
+
+            raise ValueError("Invalid site ID: "+str(site_id))
+
         self.site_id = site_id
         self.pi_name = config.SITE_SETTINGS[site_id]["Name"]
 
         #As the thread itself sets up the connection to the database, we need
         #a flag to show whether it's ready or not.
         self.is_connected = False
+
+        #A flag to show if the DB thread is running or not.
+        self.is_running = False
 
         #We need a queue for the asynchronous database write operations.
         self.in_queue = deque()
@@ -415,6 +424,11 @@ class DatabaseConnection(threading.Thread):
         """The main body of the thread"""
         self.db_thread = threading.current_thread()
 
+        self.is_running = True
+
+        #Setup to avoid errors.
+        database = cursor = None
+
         #First we need to find our connection settings from the config file.
         user = config.SITE_SETTINGS[self.site_id]["DBUser"]
         passwd = config.SITE_SETTINGS[self.site_id]["DBPasswd"]
@@ -422,14 +436,22 @@ class DatabaseConnection(threading.Thread):
         port = config.SITE_SETTINGS[self.site_id]["DBPort"]
 
         while not config.EXITING:
-            while not self.is_connected:
+            while not self.is_connected and not config.EXITING:
                 #Attempt to connect to the database server.
                 logger.info("DatabaseConnection: Attempting to connect to database...")
 
                 database, cursor = self._connect(user, passwd, host, port)
 
+                #Avoids duplicating the initialisation commands in the queue.
+                if not self.is_connected:
+                    continue
+
                 #Initialise the database.
                 self._initialise_db()
+
+            #If we're exiting, break out of the loop.
+            if config.EXITING:
+                continue
 
             #We are now connected.
             self.is_connected = True
@@ -473,6 +495,8 @@ class DatabaseConnection(threading.Thread):
         #Do clean up.
         self._cleanup(database, cursor)
 
+        self.is_running = False
+
     #-------------------- PRIVATE SETUP METHODS -------------------
     def _connect(self, user, passwd, host, port):
         """
@@ -480,6 +504,8 @@ class DatabaseConnection(threading.Thread):
 
         Used to connect to the database.
         """
+
+        database = cursor = None
 
         try:
             database = mysql.connect(host=host, port=port, user=user, passwd=passwd,
@@ -563,6 +589,13 @@ class DatabaseConnection(threading.Thread):
         """
 
         return self.is_connected
+
+    def thread_running(self):
+        """
+        This method returns True if the database thread is running, otherwise False.
+        """
+
+        return self.is_running
 
     #-------------------- CONVENIENCE READER METHODS --------------------
     def get_latest_reading(self, site_id, sensor_id):
@@ -821,6 +854,11 @@ class DatabaseConnection(threading.Thread):
             >>>
         """
 
+        if not isinstance(event, str) or \
+            event == "":
+
+            raise ValueError("Invalid event message: "+str(event))
+
         query = """INSERT INTO `EventLog`(`Site ID`, `Event`, `Time`) VALUES('"""+self.site_id \
                 +"""', '"""+event+"""', NOW());"""
 
@@ -840,6 +878,21 @@ class DatabaseConnection(threading.Thread):
             >>>
         """
 
+        if not isinstance(pi_status, str) or \
+            pi_status == "":
+
+            raise ValueError("Invalid Pi Status: "+str(pi_status))
+
+        if not isinstance(sw_status, str) or \
+            sw_status == "":
+
+            raise ValueError("Invalid Software Status: "+str(sw_status))
+
+        if not isinstance(current_action, str) or \
+            current_action == "":
+
+            raise ValueError("Invalid Current Action: "+str(current_action))
+
         query = """UPDATE SystemStatus SET `Pi Status` = '"""+pi_status \
                 + """', `Software Status` = '"""+sw_status \
                 + """', `Current Action` =  '"""+current_action \
@@ -858,6 +911,9 @@ class DatabaseConnection(threading.Thread):
             >>> store_reading(<Reading-Obj>)
             >>>
         """
+
+        if not isinstance(reading, Reading):
+            raise ValueError("Invalid reading object: "+str(reading))
 
         query = """INSERT INTO `"""+self.site_id+"""Readings`(`Probe ID`, `Tick`, """ \
                 + """`Time`, `Value`, `Status`) VALUES('"""+reading.get_sensor_id() \

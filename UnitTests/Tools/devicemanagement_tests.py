@@ -236,7 +236,7 @@ class TestManageGateValve(unittest.TestCase):
 
                 elif (position - self.valve.pos_tolerance < self.valve.min_open):
                     low_limit = self.valve.min_open
-                    high_limit = self.valve.min_open + 1
+                    high_limit = self.valve.min_open + 2
 
                 else:
                     #Set the High Limit to the required percentage

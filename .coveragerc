@@ -3,3 +3,4 @@ omit =
     tests/*
     UnitTests/*
     unittests.py
+    /usr/*

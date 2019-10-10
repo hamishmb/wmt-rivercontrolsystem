@@ -22,10 +22,14 @@
 import unittest
 import sys
 import datetime
+import threading
+from collections import deque
+import time
 
 #Import other modules.
 sys.path.append('../..') #Need to be able to import the Tools module from here.
 
+import config
 import Tools
 import Tools.coretools as core_tools
 
@@ -182,6 +186,166 @@ class TestReading(unittest.TestCase):
 
         self.assertEqual(self.reading_3.as_csv(), self.time
                          + ",6,SUMP:M0,100,OK")
+
+class TestDatabaseConnection(unittest.TestCase):
+    """
+    This test class tests the DatabaseConnection class in
+    Tools/coretools.py
+    """
+
+    #TODO: Try to connect to 0.0.0.0, just in case there is a DB server with the
+    #right IP in the test environment.
+
+    def setUp(self):
+        config.EXITING = False
+
+        self.dbconn = core_tools.DatabaseConnection("SUMP")
+
+    def tearDown(self):
+        #Get the DB thread to stop.
+        config.EXITING = True
+
+        while self.dbconn.thread_running():
+            time.sleep(1)
+
+        config.EXITING = False
+
+    def test_constructor_1(self):
+        """Test that the constructor works as expected when valid IDs are passed"""
+
+        dbconn = core_tools.DatabaseConnection("SUMP")
+
+        self.assertEqual(dbconn.site_id, "SUMP")
+        self.assertEqual(dbconn.pi_name, "Sump Pi")
+        self.assertFalse(dbconn.is_connected)
+        self.assertEqual(dbconn.in_queue, deque())
+        self.assertEqual(dbconn.result, None)
+        self.assertTrue(dbconn.client_thread_done)
+        self.assertFalse(dbconn.db_thread == threading.current_thread())
+        self.assertTrue(isinstance(dbconn.client_lock, type(threading.RLock())))
+
+        #Get the DB thread to stop.
+        config.EXITING = True
+
+        while dbconn.thread_running():
+            time.sleep(1)
+
+    def test_constructor_2(self):
+        """Test that the constructor fails when invalid IDs are passed"""
+
+        for _id in (None, 0, False, (), "not_an_id", {}):
+            try:
+                dbconn = core_tools.DatabaseConnection(_id)
+
+            except ValueError:
+                #Expected.
+                pass
+
+            else:
+                #This should have failed!
+                self.assertTrue(False, "ValueError expected for data: "+str(id))
+
+        try:
+            #Get the DB thread to stop.
+            config.EXITING = True
+
+            while dbconn.thread_running():
+                time.sleep(1)
+
+        except Exception:
+            pass
+
+    def test_is_ready_1(self):
+        """Test that the is_ready method works as expected"""
+        #Changing this value will interfere with the DB thread, so stop it first.
+        config.EXITING = True
+
+        while self.dbconn.thread_running():
+            time.sleep(1)
+
+        for _bool in (True, False):
+            self.dbconn.is_connected = _bool
+            self.assertEqual(self.dbconn.is_ready(), _bool)
+
+    def test_thread_running_1(self):
+        """Test that the thread_running method works as expected"""
+        for _bool in (True, False):
+            self.dbconn.is_running = _bool
+            self.assertEqual(self.dbconn.thread_running(), _bool)
+
+        #Now set it back to True, so that we wait for it to exit in the teardown method.
+        self.dbconn.is_running = True
+
+    def test_log_event_1(self):
+        """Test this works when given valid arguments"""
+        for event in ("SUMP Rebooting", "P0 Enabled", "G6 is down"):
+            self.dbconn.log_event(event)
+
+        self.assertTrue(len(self.dbconn.in_queue) == 3)
+
+    def test_log_event_2(self):
+        """Test this fails when given invalid arguments"""
+        for event in ("", 7, True, 5.6, None, (), {}):
+            try:
+                self.dbconn.log_event(event)
+
+            except ValueError:
+                #Expected.
+                pass
+
+            else:
+                #This should have failed.
+                self.assertTrue(False, "ValueError expected for data: "+str(event))
+
+    def test_update_status_1(self):
+        """Test this works when given valid arguments"""
+        for args in (("Up", "OK", "None"), ("Up", "OK", "P0 Enabled"),
+                     ("Down", "Rebooting", "None"), ("Down", "No Connection", "None")):
+            self.dbconn.update_status(args[0], args[1], args[2])
+
+        self.assertTrue(len(self.dbconn.in_queue) == 4)
+
+    def test_update_status_2(self):
+        """Test this fails when given invalid arguments"""
+        for args in (("Up", "", "None"), (True, "OK", "P0 Enabled"),
+                     ("Down", 0.7, "None"), (None, "No Connection", "None"),
+                     ((), "test", "None"), ("Up", "Slow Connection", {})):
+            try:
+                self.dbconn.update_status(args[0], args[1], args[2])
+
+            except ValueError:
+                #Expected.
+                pass
+
+            else:
+                #This should have failed.
+                self.assertTrue(False, "ValueError expected for data: "+str(args))
+
+    def test_store_reading_1(self):
+        """Test this works when given valid arguments"""
+        time = str(datetime.datetime.now())
+        reading = core_tools.Reading(time, 1, "SUMP:M0", "100", "OK")
+        reading_2 = core_tools.Reading(time, 6, "SUMP:M1", "200", "OK")
+        reading_3 = core_tools.Reading(time, 6, "SUMP:M0", "100", "OK")
+
+        for reading_obj in (reading, reading_2, reading_3):
+            self.dbconn.store_reading(reading_obj)
+
+        self.assertTrue(len(self.dbconn.in_queue) == 3)
+
+    def test_store_reading_2(self):
+        """Test this fails when given invalid arguments"""
+        for reading_obj in ("", "test", 0, 9.8, True, None, {}, (), []):
+            try:
+                self.dbconn.store_reading(reading_obj)
+
+            except ValueError:
+                #Expected.
+                pass
+
+            else:
+                #This should have failed.
+                self.assertTrue(False, "ValueError expected for data: "+str(reading_obj))
 
 class TestSumpPiControlLogic(unittest.TestCase):
     """
