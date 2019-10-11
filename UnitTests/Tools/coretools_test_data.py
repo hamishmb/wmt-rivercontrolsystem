@@ -92,6 +92,76 @@ class Sockets:
     def write(self, data):
         self.out_queue.append(data)
 
+class FakeDatabase:
+    @classmethod
+    def cursor(cls):
+        return cls
+
+    @classmethod
+    def execute(cls, query):
+        pass
+
+    @classmethod
+    def commit(cls):
+        pass
+
+class FakeMysqlConnectionSuccess:
+    @classmethod
+    def connect(cls, host=None, port=None, user=None, passwd=None, connect_timeout=None, db=None):
+        return FakeDatabase
+
+class FakeMysqlConnectionFailure:
+    @classmethod
+    def connect(cls, host=None, port=None, user=None, passwd=None, connect_timeout=None, db=None):
+        raise cls._exceptions.Error()
+
+    class _exceptions(Exception):
+        #NB: These are in the heirarchy defined by PEP 249:
+        #https://www.python.org/dev/peps/pep-0249/#exceptions
+
+        class Warning(Exception):
+            pass
+
+        class Error(Exception):
+            pass
+
+        class InterfaceError(Error):
+            pass
+
+        class DatabaseError(Error):
+            pass
+
+        class DataError(DatabaseError):
+            pass
+
+        class OperationalError(DatabaseError):
+            pass
+
+        class IntegrityError(DatabaseError):
+            pass
+
+        class InternalError(DatabaseError):
+            pass
+
+        class ProgrammingError(DatabaseError):
+            pass
+
+        class NotSupportedError(DatabaseError):
+            pass
+
+#Dummy get_state methods for testing DatabaseConnection.
+def get_state_unlocked(site_id, sensor_id):
+    return ("Unlocked", "None", "None")
+
+def get_state_lockedbysumppi(site_id, sensor_id):
+    return ("Locked", "None", "SUMP")
+
+def get_state_lockedbybuttspi(site_id, sensor_id):
+    return ("Locked", "None", "G4")
+
+def get_state_unavailable(site_id, sensor_id):
+    return None
+
 #Sample values for the arguments to the Reading class constructor.
 TEST_READING_DATA = [
     [str(datetime.datetime.now()), 0, "G4:M0", "400", "OK"],
@@ -131,4 +201,116 @@ TEST_READING_BAD_DATA = [
     [str(datetime.datetime.now()), 1, "G4:M0", "400", 0],
     [str(datetime.datetime.now()), 1, "G4:M0", "400", True],
     [str(datetime.datetime.now()), 1, "G4:M0", "400", 7.8],
+]
+
+#Sample values for arguments to the DatabaseConnection._connect method.
+TEST__CONNECT_BAD_DATA = [
+    ["", "test", "0.1.0.0", 3306],
+    ["user", "", "0.1.0.0", 3306],
+    [2, "test", "0.1.0.0", 3306],
+    ["user", False, "0.1.0.0", 3306],
+    ["user", "test", "0.1.0.0", "3306"],
+    ["user", "test", "0.1.0.0", True],
+    ["user", "test", "0", 3306],
+    ["user", "test", "notanip", 3306],
+    ["user", "test", "0.0.0", 3306],
+    ["test", "test", "0000", 3306],
+    ["test", "test", "...", 3306],
+    ["test", "test", "", 3306],
+    ["", "test", {}, 3306],
+]
+
+#Sample values from the database when a reading has been requested.
+TEST_GET_N_LATEST_READINGS_DATA = [
+    [1, "M0", 5, "2019-10-11 14:12:37.725504", "400", "OK"],
+    [2, "M0", 5, "2019-10-11 14:12:37.725504", "375", "OK"],
+    [3, "M0", 5, "2019-10-11 14:12:37.725504", "350", "OK"],
+    [4, "FS0", 5, "2019-10-11 14:12:37.725504", "True", "OK"],
+    [5, "FS0", 5, "2019-10-11 14:12:37.725504", "False", "OK"],
+    [6, "FS1", 5, "2019-10-11 14:12:37.725504", "True", "OK"],
+    [7, "FS1", 5, "2019-10-11 14:12:37.725504", "False", "OK"],
+]
+
+#Sample mixed valid and invalid values from the database when a reading has been requested.
+TEST_GET_N_LATEST_READINGS_BAD_DATA = [
+    #This one is valid.
+    [1, "M0", 5, "2019-10-11 14:12:37.725504", "400", "OK"],
+
+    [2, 5, "2019-10-11 14:12:37.725504", "325", "OK"],
+    [3, "M0", 5, "2019-10-11 14:12:37.725504", "300", "OK", "extraelem"],
+    [4, "M0", "5", "2019-10-11 14:12:37.725504", "275", "OK"],
+
+    #This one is valid.
+    [5, "M0", 5, "2019-10-11 14:12:37.725504", "375", "OK"],
+
+    [6, "M0", 5, "2019-10-11 14:12:37.725504", 250, "OK"],
+
+    #This one is valid.
+    [7, "M0", 5, "2019-10-11 14:12:37.725504", "350", "OK"],
+
+    [8, "M0", 5, "225", "OK"],
+    [9, "M1", 5, "2019-10-11 14:12:37.725504", "200", "OK"],
+]
+
+#Sample values from the datavase when a state has been requested.
+TEST_GET_STATE_DATA = [
+    [[1, "P1", "Locked", "On", "SUMP"]],
+    [[2, "P1", "Locked", "Off", "SUMP"]],
+    [[3, "P1", "Unlocked", "None", "None"]],
+    [[4, "P1", "Locked", "On", "G4"]],
+]
+
+#Sample values for arguments to the DatabaseConnection.attempt_to_control and release_control methods.
+TEST_ATTEMPT_TO_CONTROL_DATA = [
+    ["SUMP", "P0", "On"],
+    ["SUMP", "P0", "Off"],
+    ["SUMP", "P1", "On"],
+    ["SUMP", "P1", "Off"],
+    ["V4", "V4", "1%"],
+    ["V4", "V4", "2%"],
+    ["V4", "V4", "3%"],
+    ["V4", "V4", "4%"],
+    ["V4", "V4", "5%"],
+    ["V4", "V4", "6%"],
+    ["V4", "V4", "7%"],
+    ["V4", "V4", "8%"],
+    ["V4", "V4", "9%"],
+    ["V4", "V4", "10%"],
+    ["V4", "V4", "11%"],
+]
+
+#Bad sample values for arguments to the DatabaseConnection.attempt_to_control method.
+TEST_ATTEMPT_TO_CONTROL_BAD_DATA = [
+    ["SMP", "P0", "On"],
+    ["test", "P0", "Off"],
+    ["", "P1", "On"],
+    [3, "P1", "Off"],
+    [True, "V4", "1%"],
+    ["V4", "", "2%"],
+    ["V4", "P4", 3],
+    ["V4", "V4", 12.4],
+    ["V4", "V4", {}],
+    ["V4", {}, "6%"],
+    [(), "V4", "7%"],
+    ["V4", None, "8%"],
+    [[], "V4", "9%"],
+    [False, "V4", True],
+    ["V4", "V4", None],
+]
+
+#Bad sample values for arguments to the DatabaseConnection.release_control method.
+TEST_RELEASE_CONTROL_BAD_DATA = [
+    ["SMP", "P0"],
+    ["test", "P0"],
+    ["", "P1"],
+    [3, "P1"],
+    [True, "V4"],
+    ["V4", ""],
+    ["V4", "P4"],
+    ["V4", {}],
+    [(), "V4"],
+    ["V4", None],
+    [[], "V4"],
+    [False, "V4"],
+    [3.14, "V4"],
 ]

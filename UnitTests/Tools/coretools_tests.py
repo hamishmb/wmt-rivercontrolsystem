@@ -193,23 +193,13 @@ class TestDatabaseConnection(unittest.TestCase):
     Tools/coretools.py
     """
 
-    #TODO: Try to connect to 0.0.0.0, just in case there is a DB server with the
-    #right IP in the test environment.
-
     def setUp(self):
-        config.EXITING = False
-
         self.dbconn = core_tools.DatabaseConnection("SUMP")
 
     def tearDown(self):
-        #Get the DB thread to stop.
-        config.EXITING = True
+        del self.dbconn
 
-        while self.dbconn.thread_running():
-            time.sleep(1)
-
-        config.EXITING = False
-
+    #---------- TEST CONSTRUCTOR ----------
     def test_constructor_1(self):
         """Test that the constructor works as expected when valid IDs are passed"""
 
@@ -223,12 +213,6 @@ class TestDatabaseConnection(unittest.TestCase):
         self.assertTrue(dbconn.client_thread_done)
         self.assertFalse(dbconn.db_thread == threading.current_thread())
         self.assertTrue(isinstance(dbconn.client_lock, type(threading.RLock())))
-
-        #Get the DB thread to stop.
-        config.EXITING = True
-
-        while dbconn.thread_running():
-            time.sleep(1)
 
     def test_constructor_2(self):
         """Test that the constructor fails when invalid IDs are passed"""
@@ -245,24 +229,87 @@ class TestDatabaseConnection(unittest.TestCase):
                 #This should have failed!
                 self.assertTrue(False, "ValueError expected for data: "+str(id))
 
-        try:
-            #Get the DB thread to stop.
-            config.EXITING = True
+    #---------- TEST THREAD BODY ----------
+    def test_thread_1(self):
+        """Test that the thread can be started and stopped without connecting and without error."""
+        #Change the database host IP to 127.0.0.1 and a strange port so we don't actually connect
+        #to a real database during this test.
+        original_dbhost = config.SITE_SETTINGS["SUMP"]["DBHost"]
+        original_dbport = config.SITE_SETTINGS["SUMP"]["DBPort"]
 
-            while dbconn.thread_running():
-                time.sleep(1)
+        config.SITE_SETTINGS["SUMP"]["DBHost"] = "127.0.0.1"
+        config.SITE_SETTINGS["SUMP"]["DBPort"] = 65534
 
-        except Exception:
-            pass
+        #Start the thread.
+        self.dbconn.start_thread()
 
-    def test_is_ready_1(self):
-        """Test that the is_ready method works as expected"""
-        #Changing this value will interfere with the DB thread, so stop it first.
+        self.assertTrue(self.dbconn.thread_running())
+
+        #Stop the thread.
         config.EXITING = True
 
         while self.dbconn.thread_running():
             time.sleep(1)
 
+        #Reset db host IP.
+        config.SITE_SETTINGS["SUMP"]["DBHost"] = original_dbhost
+        config.SITE_SETTINGS["SUMP"]["DBPort"] = original_dbport
+
+    def test__connect_1(self):
+        """Test this works as expected when connecting succeeds with valid arguments"""
+        #Replace the mysql import with a fake one so we can test without actually connecting.
+        original_mysql = core_tools.mysql
+        core_tools.mysql = data.FakeMysqlConnectionSuccess
+
+        database, cursor = self.dbconn._connect("test", "test", config.SITE_SETTINGS["SUMP"]["DBHost"], 3306)
+
+        self.assertTrue(self.dbconn.is_ready())
+        self.assertEqual(database, data.FakeDatabase)
+        self.assertEqual(cursor, data.FakeDatabase)
+
+        core_tools.mysql = original_mysql
+
+    def test__connect_2(self):
+        """Test this fails with invalid arguments"""
+        #Replace the mysql import with a fake one so we can test without actually connecting.
+        original_mysql = core_tools.mysql
+        core_tools.mysql = data.FakeMysqlConnectionSuccess
+
+        for args in data.TEST__CONNECT_BAD_DATA:
+            try:
+                self.dbconn._connect(args[0], args[1], args[2], args[3])
+
+            except ValueError:
+                #Expected.  
+                self.assertFalse(self.dbconn.is_ready())
+
+            else:
+                #This should have failed!
+                self.assertTrue(False, "ValueError expected for data: "+str(args))
+
+        core_tools.mysql = original_mysql
+
+    def test__connect_3(self):
+        """Test this works as expected when connecting fails with valid arguments"""
+        #Replace the mysql import with a fake one so we can test without actually connecting.
+        original_mysql = core_tools.mysql
+        core_tools.mysql = data.FakeMysqlConnectionFailure
+
+        database, cursor = self.dbconn._connect("test", "test", config.SITE_SETTINGS["SUMP"]["DBHost"], 3306)
+
+        self.assertFalse(self.dbconn.is_ready())
+        self.assertEqual(database, None)
+        self.assertEqual(cursor, None)
+
+        core_tools.mysql = original_mysql
+
+
+    #NB: Not directly testing _initialise_db yet because this may well need to be
+    #changed before deployment.
+    
+    #---------- TEST GETTER METHODS ----------
+    def test_is_ready_1(self):
+        """Test that the is_ready method works as expected"""
         for _bool in (True, False):
             self.dbconn.is_connected = _bool
             self.assertEqual(self.dbconn.is_ready(), _bool)
@@ -273,8 +320,333 @@ class TestDatabaseConnection(unittest.TestCase):
             self.dbconn.is_running = _bool
             self.assertEqual(self.dbconn.thread_running(), _bool)
 
-        #Now set it back to True, so that we wait for it to exit in the teardown method.
-        self.dbconn.is_running = True
+    #---------- TEST CONVENIENCE READER METHODS ----------
+    def test_get_latest_reading_1(self):
+        """Test this works as when there are readings"""
+        self.dbconn.result = [data.TEST_GET_N_LATEST_READINGS_DATA[0]]
+
+        reading = self.dbconn.get_latest_reading("SUMP", "M0")
+
+        self.assertTrue(isinstance(reading, core_tools.Reading))
+        self.assertEqual(self.dbconn.result, None)
+
+        #Check that the right query would have been executed.
+        self.assertTrue("SUMPReadings" in self.dbconn.in_queue[0])
+        self.assertTrue("M0" in self.dbconn.in_queue[0])
+        self.assertEqual(self.dbconn.in_queue[0].split(" ")[-1].replace(";", ""), "1")
+
+        #Check that the reading is equivelant to the data in the list.
+        element = data.TEST_GET_N_LATEST_READINGS_DATA[0]
+
+        self.assertEqual(reading.get_sensor_id(), element[1])
+        self.assertEqual(reading.get_tick(), element[2])
+        self.assertEqual(reading.get_time(), element[3])
+        self.assertEqual(reading.get_value(), element[4])
+        self.assertEqual(reading.get_status(), element[5])
+
+    def test_get_latest_reading_2(self):
+        """Test this works as when there no valid readings"""
+        self.dbconn.result = data.TEST_GET_N_LATEST_READINGS_BAD_DATA[1:4]
+
+        reading = self.dbconn.get_latest_reading("SUMP", "M0")
+
+        self.assertEqual(reading, None)
+        self.assertEqual(self.dbconn.result, None)
+
+        #Check that the right query would have been executed.
+        self.assertTrue("SUMPReadings" in self.dbconn.in_queue[0])
+        self.assertTrue("M0" in self.dbconn.in_queue[0])
+        self.assertEqual(self.dbconn.in_queue[0].split(" ")[-1].replace(";", ""), "1")
+
+    def test_get_n_latest_readings_1(self):
+        """Test this works when valid reading data is returned"""
+        #Set the result ahead of time so we don't get deadlocked - the DB thread
+        #isn't actually running.
+        self.dbconn.result = data.TEST_GET_N_LATEST_READINGS_DATA[0:3]
+
+        readings = self.dbconn.get_n_latest_readings("SUMP", "M0", 3)
+
+        self.assertEqual(len(readings), 3)
+        self.assertEqual(self.dbconn.result, None)
+
+        #Check that the right query would have been executed.
+        self.assertTrue("SUMPReadings" in self.dbconn.in_queue[0])
+        self.assertTrue("M0" in self.dbconn.in_queue[0])
+        self.assertEqual(self.dbconn.in_queue[0].split(" ")[-1].replace(";", ""), "3")
+
+        #Check that the readings are equivelant to the data in the list.
+        c = 0
+
+        for element in data.TEST_GET_N_LATEST_READINGS_DATA[0:3]:
+            self.assertEqual(readings[c].get_sensor_id(), element[1])
+            self.assertEqual(readings[c].get_tick(), element[2])
+            self.assertEqual(readings[c].get_time(), element[3])
+            self.assertEqual(readings[c].get_value(), element[4])
+            self.assertEqual(readings[c].get_status(), element[5])
+
+            c += 1
+
+    def test_get_n_latest_readings_2(self):
+        """Test this works when no reading data is returned"""
+        #Set the result ahead of time so we don't get deadlocked - the DB thread
+        #isn't actually running.
+        self.dbconn.result = []
+
+        readings = self.dbconn.get_n_latest_readings("SUMP", "M0", 3)
+
+        self.assertEqual(len(readings), 0)
+        self.assertEqual(self.dbconn.result, None)
+
+        #Check that the right query would have been executed.
+        self.assertTrue("SUMPReadings" in self.dbconn.in_queue[0])
+        self.assertTrue("M0" in self.dbconn.in_queue[0])
+        self.assertEqual(self.dbconn.in_queue[0].split(" ")[-1].replace(";", ""), "3")
+
+        #Check that the readings are equivelant to the data in the list.
+        self.assertEqual(readings, [])
+
+    def test_get_n_latest_readings_3(self):
+        """Test this works when some invalid reading data is returned"""
+        #Set the result ahead of time so we don't get deadlocked - the DB thread
+        #isn't actually running.
+        self.dbconn.result = data.TEST_GET_N_LATEST_READINGS_BAD_DATA
+
+        #All except 3 of these are malformed and should be rejected.
+        readings = self.dbconn.get_n_latest_readings("SUMP", "M0", 9)
+
+        self.assertEqual(len(readings), 3)
+        self.assertEqual(self.dbconn.result, None)
+
+        #Check that the right query would have been executed.
+        self.assertTrue("SUMPReadings" in self.dbconn.in_queue[0])
+        self.assertTrue("M0" in self.dbconn.in_queue[0])
+        self.assertEqual(self.dbconn.in_queue[0].split(" ")[-1].replace(";", ""), "9")
+
+        #Check that the readings are equivelant to the data in the list.
+        c = 0
+
+        for element in (data.TEST_GET_N_LATEST_READINGS_BAD_DATA[0],
+                        data.TEST_GET_N_LATEST_READINGS_BAD_DATA[4],
+                        data.TEST_GET_N_LATEST_READINGS_BAD_DATA[6]):
+
+            self.assertEqual(readings[c].get_sensor_id(), element[1])
+            self.assertEqual(readings[c].get_tick(), element[2])
+            self.assertEqual(readings[c].get_time(), element[3])
+            self.assertEqual(readings[c].get_value(), element[4])
+            self.assertEqual(readings[c].get_status(), element[5])
+
+            c += 1
+
+    def test_get_state_1(self):
+        """Test this works when the state is available"""
+        for result in data.TEST_GET_STATE_DATA:
+            self.dbconn.result = result
+
+            state = self.dbconn.get_state("SUMP", "P1")
+
+            self.assertEqual(self.dbconn.result, None)
+            self.assertEqual(state, result[0][2:])
+
+            #Check that the right query would have been executed.
+            self.assertTrue("SUMPControl" in self.dbconn.in_queue[0])
+            self.assertTrue("P1" in self.dbconn.in_queue[0])
+
+    def test_get_state_2(self):
+        """Test this fails when the state isn't available"""
+        self.dbconn.result = []
+
+        state = self.dbconn.get_state("SUMP", "P1")
+
+        self.assertEqual(self.dbconn.result, None)
+        self.assertEqual(state, None)
+
+        #Check that the right query would have been executed.
+        self.assertTrue("SUMPControl" in self.dbconn.in_queue[0])
+        self.assertTrue("P1" in self.dbconn.in_queue[0])
+
+    #---------- TEST CONVENIENCE WRITER METHODS ----------
+    def test_attempt_to_control_1(self):
+        """Test this works when device isn't locked, and args are valid"""
+        #Replace the get_state method with one that always returns the state we need to continue.
+        original_getstate = self.dbconn.get_state
+        self.dbconn.get_state = data.get_state_unlocked
+
+        for args in data.TEST_ATTEMPT_TO_CONTROL_DATA:
+            result = self.dbconn.attempt_to_control(args[0], args[1], args[2])
+
+            self.assertTrue(result)
+
+        #Test that the number of queries is what we expect.
+        self.assertEqual(len(self.dbconn.in_queue), len(data.TEST_ATTEMPT_TO_CONTROL_DATA))
+
+        #Change the get_state method back to the original.
+        self.dbconn.get_state = original_getstate
+
+    def test_attempt_to_control_2(self):
+        """Test this works when device is locked by the current pi, and args are valid"""
+        #NB: Current pi is pretending to be Sump Pi for this test (see setUp method).
+
+        #Replace the get_state method with one that always returns the state we need to continue.
+        original_getstate = self.dbconn.get_state
+        self.dbconn.get_state = data.get_state_lockedbysumppi
+
+        for args in data.TEST_ATTEMPT_TO_CONTROL_DATA:
+            result = self.dbconn.attempt_to_control(args[0], args[1], args[2])
+
+            self.assertTrue(result)
+
+        #Test that the number of queries is what we expect.
+        self.assertEqual(len(self.dbconn.in_queue), len(data.TEST_ATTEMPT_TO_CONTROL_DATA))
+
+        #Change the get_state method back to the original.
+        self.dbconn.get_state = original_getstate
+
+    def test_attempt_to_control_3(self):
+        """Test this works when device is locked by a different pi, and args are valid"""
+        #NB: Current pi is pretending to be Sump Pi for this test (see setUp method).
+
+        #Replace the get_state method with one that always returns the state we need to continue.
+        original_getstate = self.dbconn.get_state
+        self.dbconn.get_state = data.get_state_lockedbybuttspi
+
+        for args in data.TEST_ATTEMPT_TO_CONTROL_DATA:
+            result = self.dbconn.attempt_to_control(args[0], args[1], args[2])
+
+            self.assertFalse(result)
+
+        #Test that the number of queries is what we expect.
+        self.assertEqual(len(self.dbconn.in_queue), 0)
+
+        #Change the get_state method back to the original.
+        self.dbconn.get_state = original_getstate
+
+    def test_attempt_to_control_4(self):
+        """Test this works when state is unavailable, and args are valid"""
+        #NB: Current pi is pretending to be Sump Pi for this test (see setUp method).
+
+        #Replace the get_state method with one that always returns the state we need to continue.
+        original_getstate = self.dbconn.get_state
+        self.dbconn.get_state = data.get_state_unavailable
+
+        for args in data.TEST_ATTEMPT_TO_CONTROL_DATA:
+            result = self.dbconn.attempt_to_control(args[0], args[1], args[2])
+
+            self.assertFalse(result)
+
+        #Test that the number of queries is what we expect.
+        self.assertEqual(len(self.dbconn.in_queue), 0)
+
+        #Change the get_state method back to the original.
+        self.dbconn.get_state = original_getstate
+
+    def test_attempt_to_control_5(self):
+        """Test this fails when args are invalid"""
+        #Replace the get_state method with one that always returns the state we need to continue.
+        original_getstate = self.dbconn.get_state
+        self.dbconn.get_state = data.get_state_lockedbybuttspi
+
+        for args in data.TEST_ATTEMPT_TO_CONTROL_BAD_DATA:
+            try:
+                self.dbconn.attempt_to_control(args[0], args[1], args[2])
+
+            except ValueError:
+                #Expected.
+                pass
+
+            else:
+                #This should have failed!
+                self.assertTrue(False, "ValueError expected for data: "+str(args))
+
+        #Change the get_state method back to the original.
+        self.dbconn.get_state = original_getstate
+
+    def test_release_control_1(self):
+        """Test this works when the device is already unlocked, with valid arguments"""
+        #Replace the get_state method with one that always returns the state we need to continue.
+        original_getstate = self.dbconn.get_state
+        self.dbconn.get_state = data.get_state_unlocked
+
+        for args in data.TEST_ATTEMPT_TO_CONTROL_DATA:
+            self.dbconn.release_control(args[0], args[1])
+
+        #Test that the number of queries is what we expect.
+        self.assertEqual(len(self.dbconn.in_queue), 0)
+
+        #Change the get_state method back to the original.
+        self.dbconn.get_state = original_getstate
+
+    def test_release_control_2(self):
+        """Test this works when the device is locked by a different pi, with valid arguments"""
+        #Replace the get_state method with one that always returns the state we need to continue.
+        original_getstate = self.dbconn.get_state
+        self.dbconn.get_state = data.get_state_lockedbybuttspi
+
+        for args in data.TEST_ATTEMPT_TO_CONTROL_DATA:
+            self.dbconn.release_control(args[0], args[1])
+
+        #Test that the number of queries is what we expect.
+        self.assertEqual(len(self.dbconn.in_queue), 0)
+
+        #Change the get_state method back to the original.
+        self.dbconn.get_state = original_getstate
+
+    def test_release_control_3(self):
+        """Test this works when the device state is unavailable, with valid arguments"""
+        #Replace the get_state method with one that always returns the state we need to continue.
+        original_getstate = self.dbconn.get_state
+        self.dbconn.get_state = data.get_state_unavailable
+
+        for args in data.TEST_ATTEMPT_TO_CONTROL_DATA:
+            self.dbconn.release_control(args[0], args[1])
+
+        #Test that the number of queries is what we expect.
+        self.assertEqual(len(self.dbconn.in_queue), 0)
+
+        #Change the get_state method back to the original.
+        self.dbconn.get_state = original_getstate
+
+    def test_release_control_4(self):
+        """Test this works when the device was locked by this pi, with valid arguments"""
+        #NB: Current pi is pretending to be Sump Pi for this test (see setUp method).
+
+        #Replace the get_state method with one that always returns the state we need to continue.
+        original_getstate = self.dbconn.get_state
+        self.dbconn.get_state = data.get_state_lockedbysumppi
+
+        for args in data.TEST_ATTEMPT_TO_CONTROL_DATA:
+            self.dbconn.release_control(args[0], args[1])
+
+        #Test that the number of queries is what we expect.
+        self.assertEqual(len(self.dbconn.in_queue), len(data.TEST_ATTEMPT_TO_CONTROL_DATA))
+
+        #Change the get_state method back to the original.
+        self.dbconn.get_state = original_getstate
+
+    def test_release_control_5(self):
+        """Test this fails with invalid arguments"""
+        #NB: Current pi is pretending to be Sump Pi for this test (see setUp method).
+
+        #Replace the get_state method with one that always returns the state we need to continue.
+        original_getstate = self.dbconn.get_state
+        self.dbconn.get_state = data.get_state_lockedbysumppi
+
+        for args in data.TEST_RELEASE_CONTROL_BAD_DATA:
+            try:
+                self.dbconn.release_control(args[0], args[1])
+
+            except ValueError:
+                #Expected.
+                pass
+
+            else:
+                #This should have failed!
+                self.assertTrue(False, "ValueError was expected for data: "+str(args))
+
+        #Test that the number of queries is what we expect.
+        self.assertEqual(len(self.dbconn.in_queue), 0)
+
+        #Change the get_state method back to the original.
+        self.dbconn.get_state = original_getstate
 
     def test_log_event_1(self):
         """Test this works when given valid arguments"""

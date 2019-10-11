@@ -122,7 +122,9 @@ class Reading:
         self._time = reading_time
 
         #Check the tick is valid.
-        if not isinstance(reading_tick, int):
+        if not isinstance(reading_tick, int) or \
+            isinstance(reading_tick, bool):
+
             raise ValueError("reading_tick argument must be of type int")
 
         if not reading_tick >= 0:
@@ -418,6 +420,8 @@ class DatabaseConnection(threading.Thread):
         #at the same time.
         self.client_lock = threading.RLock()
 
+    def start_thread(self):
+        """Called to start the database thread"""
         self.start()
 
     def run(self):
@@ -505,6 +509,40 @@ class DatabaseConnection(threading.Thread):
         Used to connect to the database.
         """
 
+        if not isinstance(user, str) or \
+            user == "":
+
+            raise ValueError("Invalid username: "+str(user))
+
+        if not isinstance(passwd, str) or \
+            passwd == "":
+
+            raise ValueError("Invalid password: "+str(passwd))
+
+        #Check the IP address is valid (basic check).
+        if not isinstance(host, str) or \
+            len(host.split(".")) != 4 or \
+            host == "0.0.0.0":
+
+            raise ValueError("Invalid IPv4 address: "+str(host))
+
+        #Advanced checks.
+        #Check that each octet is a integer and between 0 and 255 (exclusive).
+        for octet in host.split("."):
+            if not octet.isdigit() or \
+                int(octet) > 254 or \
+                int(octet) < 0:
+
+                raise ValueError("Invalid IPv4 address: "+str(host))
+
+        #Check the port number is valid.
+        if (not isinstance(port, int)) or \
+            isinstance(port, bool) or \
+            port <= 0 or \
+            port > 65535:
+
+            raise ValueError("Invalid port number: "+str(port))
+
         database = cursor = None
 
         try:
@@ -552,6 +590,8 @@ class DatabaseConnection(threading.Thread):
         self.in_queue.append(query)
 
         #----- Clear any locks we're holding and create control entries for devices -----
+        #TODO should be done on NAS box, this isn't safe in case another pi is
+        #controlling something!
         query = """DELETE FROM `"""+self.site_id+"""Control;"""
 
         self.in_queue.append(query)
@@ -619,39 +659,13 @@ class DatabaseConnection(threading.Thread):
 
         """
 
-        query = """SELECT * FROM `"""+site_id+"""Readings` WHERE `Probe ID` = '"""+sensor_id \
-                + """' ORDER BY ID DESC LIMIT 0, 1;"""
+        result = self.get_n_latest_readings(site_id, sensor_id, 1)
 
-        if threading.current_thread() is not self.db_thread:
-            #Acquire the lock for fetching data.
-            self.client_lock.acquire()
+        if result != []:
+            return result[0]
 
-        self.in_queue.append(query)
-
-        #Wait until the query is processed.
-        #TODO Could cause a deadlock if a prev query keeps failing!
-        while self.result is None:
-            time.sleep(0.01)
-
-        #Store the results.
-        result = self.result[0]
-        self.result = None
-
-        #Signal that the database thread can safely continue.
-        self.client_thread_done = True
-
-        if threading.current_thread() is not self.db_thread:
-            self.client_lock.release()
-
-        try:
-            #Convert the result to a Reading object.
-            reading = Reading(str(result[3]), result[2], site_id+":"+result[1],
-                              result[4], result[5])
-
-        except IndexError:
-            reading = None
-
-        return reading
+        else:
+            return None
 
     def get_n_latest_readings(self, site_id, sensor_id, number):
         """
@@ -700,13 +714,20 @@ class DatabaseConnection(threading.Thread):
         readings = []
 
         for reading_data in result:
+            #Do some checks on each dataset before we use it.
+            if len(reading_data) != 6 or \
+                reading_data[1] != sensor_id:
+
+                continue
+
             try:
                 #Convert the result to a Reading object.
                 readings.append(Reading(str(reading_data[3]), reading_data[2],
                                         site_id+":"+reading_data[1], reading_data[4],
                                         reading_data[5]))
 
-            except IndexError:
+            except (IndexError, TypeError, ValueError):
+                #Values must be invalid. Ignore and deliver as many good readings as possible.
                 pass
 
         return readings
@@ -790,12 +811,31 @@ class DatabaseConnection(threading.Thread):
 
         """
 
+        if not isinstance(site_id, str) or \
+            site_id == "" or \
+            site_id not in config.SITE_SETTINGS:
+
+            raise ValueError("Invalid site ID: "+str(site_id))
+
+        if not isinstance(sensor_id, str) or \
+            sensor_id == "" or \
+            (site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Devices"] and \
+             site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Probes"] and \
+             not "V" in site_id):
+
+            raise ValueError("Invalid sensor ID: "+str(sensor_id))
+
+        if not isinstance(request, str) or \
+            request == "":
+
+            raise ValueError("Invalid request: "+str(request))
+
         state = self.get_state(site_id, sensor_id)
 
         #If it's locked and we didn't lock it, return False.
         if state is None or \
             (state[0] == "Locked" and \
-             state[3] != self.site_id):
+             state[2] != self.site_id):
 
             return False
 
@@ -826,12 +866,27 @@ class DatabaseConnection(threading.Thread):
 
         """
 
+        if not isinstance(site_id, str) or \
+            site_id == "" or \
+            site_id not in config.SITE_SETTINGS:
+
+            raise ValueError("Invalid site ID: "+str(site_id))
+
+        if not isinstance(sensor_id, str) or \
+            sensor_id == "" or \
+            (site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Devices"] and \
+             site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Probes"] and \
+             not "V" in site_id) or \
+             ("V" in site_id and site_id != sensor_id):
+
+            raise ValueError("Invalid sensor ID: "+str(sensor_id))
+
         state = self.get_state(site_id, sensor_id)
 
         #If it isn't locked, or we didn't lock it, return.
         if state is None or \
             state[0] == "Unlocked" or \
-            state[3] != self.site_id:
+            state[2] != self.site_id:
 
             return
 

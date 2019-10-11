@@ -143,6 +143,7 @@ class Sockets:
 
         #Check the port number is valid.
         if (not isinstance(port_number, int)) or \
+            isinstance(port_number, bool) or \
             port_number <= 0 or \
             port_number > 65535:
 

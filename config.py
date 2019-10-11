@@ -373,6 +373,10 @@ SITE_SETTINGS = {
             "minOpen": 1,
             "refVoltage": 3.3,
 
+            #Here for compatibility reasons.
+            "Probes": {},
+            "Devices": {},
+
             #Config for server connection.
             "ServerAddress": "192.168.0.2",
             "ServerPort": 30014,
@@ -402,6 +406,10 @@ SITE_SETTINGS = {
             "minOpen": 1,
             "refVoltage": 3.3,
 
+            #Here for compatibility reasons.
+            "Probes": {},
+            "Devices": {},
+
             #Config for server connection.
             "ServerAddress": "192.168.0.2",
             "ServerPort": 30016,
@@ -429,6 +437,10 @@ SITE_SETTINGS = {
             "maxOpen": 90,
             "minOpen": 1,
             "refVoltage": 3.3,
+
+            #Here for compatibility reasons.
+            "Probes": {},
+            "Devices": {},
 
             #Config for server connection.
             "ServerAddress": "192.168.0.2",
@@ -458,6 +470,10 @@ SITE_SETTINGS = {
             "minOpen": 1,
             "refVoltage": 3.3,
 
+            #Here for compatibility reasons.
+            "Probes": {},
+            "Devices": {},
+
             #Config for server connection.
             "ServerAddress": "192.168.0.2",
             "ServerPort": 30018,
@@ -486,6 +502,10 @@ SITE_SETTINGS = {
             "minOpen": 1,
             "refVoltage": 3.3,
 
+            #Here for compatibility reasons.
+            "Probes": {},
+            "Devices": {},
+
             #Config for server connection.
             "ServerAddress": "192.168.0.2",
             "ServerPort": 30019,
@@ -513,6 +533,10 @@ SITE_SETTINGS = {
             "maxOpen": 90,
             "minOpen": 1,
             "refVoltage": 3.3,
+
+            #Here for compatibility reasons.
+            "Probes": {},
+            "Devices": {},
 
             #Config for server connection.
             "ServerAddress": "192.168.0.2",
