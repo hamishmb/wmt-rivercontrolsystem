@@ -386,164 +386,164 @@ SITE_SETTINGS = {
 
         },
 
-    "V6":
-        {
-            "Type": "Gate Valve",
-            "ID":   "V6",
-            "Name": "Stage Butts Gate Valve Pi",
-            "HostingSockets": False,
-            "IPAddress": "192.168.0.16",
-            "Default Interval": 15,
-            "DBUser": "test",
-            "DBPasswd": "test",
+#    "V6":
+#        {
+#            "Type": "Gate Valve",
+#            "ID":   "V6",
+#            "Name": "Stage Butts Gate Valve Pi",
+#            "HostingSockets": False,
+#            "IPAddress": "192.168.0.16",
+#            "Default Interval": 15,
+#            "DBUser": "test",
+#            "DBPasswd": "test",
+#
+#            "Name": "Matrix Pump Gate Valve",
+#            "Class": Tools.deviceobjects.GateValve,
+#
+#            "Pins":  (17, 27, 19),
+#            "posTolerance": 1,
+#            "maxOpen": 90,
+#            "minOpen": 1,
+#            "refVoltage": 3.3,
+#
+#            #Here for compatibility reasons.
+#            "Probes": {},
+#            "Devices": {},
+#
+#            #Config for server connection.
+#            "ServerAddress": "192.168.0.2",
+#            "ServerPort": 30016,
+#            "ServerName": "SumpPi",
+#            "SocketName": "Matrix Pump Gate Valve V6 Socket",
+#            "SocketID": "SOCK16",
+#
+#        },
 
-            "Name": "Matrix Pump Gate Valve",
-            "Class": Tools.deviceobjects.GateValve,
+#    "V7":
+#        {
+#            "Type": "Gate Valve",
+#            "ID":   "V7",
+#            "HostingSockets": False,
+#            "IPAddress": "192.168.0.17",
+#            "Default Interval": 15,
+#            "DBUser": "test",
+#            "DBPasswd": "test",
+#
+#            "Name": "Matrix Pump Gate Valve",
+#            "Class": Tools.deviceobjects.GateValve,
+#
+#            "Pins":  (17, 27, 19),
+#            "posTolerance": 1,
+#            "maxOpen": 90,
+#            "minOpen": 1,
+#            "refVoltage": 3.3,
+#
+#            #Here for compatibility reasons.
+#            "Probes": {},
+#            "Devices": {},
+#
+#            #Config for server connection.
+#            "ServerAddress": "192.168.0.2",
+#            "ServerPort": 30017,
+#            "ServerName": "SumpPi",
+#            "SocketName": "Matrix Pump Gate Valve V7 Socket",
+#            "SocketID": "SOCK17",
+#
+#        },
 
-            "Pins":  (17, 27, 19),
-            "posTolerance": 1,
-            "maxOpen": 90,
-            "minOpen": 1,
-            "refVoltage": 3.3,
+#    "V8":
+#        {
+#            "Type": "Gate Valve",
+#            "ID":   "V8",
+#            "HostingSockets": False,
+#            "IPAddress": "192.168.0.18",
+#            "Default Interval": 15,
+#            "DBUser": "test",
+#            "DBPasswd": "test",
+#
+#            "Name": "Matrix Pump Gate Valve",
+#            "Class": Tools.deviceobjects.GateValve,
+#
+#            "Pins":  (17, 27, 19),
+#            "posTolerance": 1,
+#            "maxOpen": 90,
+#            "minOpen": 1,
+#            "refVoltage": 3.3,
+#
+#            #Here for compatibility reasons.
+#            "Probes": {},
+#            "Devices": {},
+#
+#            #Config for server connection.
+#            "ServerAddress": "192.168.0.2",
+#            "ServerPort": 30018,
+#            "ServerName": "SumpPi",
+#            "SocketName": "Matrix Pump Gate Valve V4 Socket",
+#            "SocketID": "SOCK18",
+#
+#        },
 
-            #Here for compatibility reasons.
-            "Probes": {},
-            "Devices": {},
+#    "V9":
+#        {
+#            "Type": "Gate Valve",
+#            "ID":   "V9",
+#            "HostingSockets": False,
+#            "IPAddress": "192.168.0.19",
+#            "Default Interval": 15,
+#            "DBUser": "test",
+#            "DBPasswd": "test",
+#
+#            "Name": "Matrix Pump Gate Valve",
+#            "Class": Tools.deviceobjects.GateValve,
+#
+#            "Pins":  (17, 27, 19),
+#            "posTolerance": 1,
+#            "maxOpen": 90,
+#            "minOpen": 1,
+#            "refVoltage": 3.3,
+#
+#            #Here for compatibility reasons.
+#            "Probes": {},
+#            "Devices": {},
+#
+#            #Config for server connection.
+#            "ServerAddress": "192.168.0.2",
+#            "ServerPort": 30019,
+#            "ServerName": "SumpPi",
+#            "SocketName": "Matrix Pump Gate Valve V9 Socket",
+#            "SocketID": "SOCK19",
+#
+#        },
 
-            #Config for server connection.
-            "ServerAddress": "192.168.0.2",
-            "ServerPort": 30016,
-            "ServerName": "SumpPi",
-            "SocketName": "Matrix Pump Gate Valve V6 Socket",
-            "SocketID": "SOCK16",
+#    "V12":
+#        {
+#            "Type": "Gate Valve",
+#            "ID":   "V12",
+#            "HostingSockets": False,
+#            "IPAddress": "192.168.0.22",
+#            "Default Interval": 15,
+#            "DBUser": "test",
+#            "DBPasswd": "test",
+#
+#            "Name": "Stage Butts Gate Valve",
+#            "Class": Tools.deviceobjects.GateValve,
+#
+#            "Pins":  (17, 27, 19),
+#            "posTolerance": 1,
+#            "maxOpen": 90,
+#            "minOpen": 1,
+#            "refVoltage": 3.3,
+#
+#            #Here for compatibility reasons.
+#            "Probes": {},
+#            "Devices": {},
 
-        },
-
-    "V7":
-        {
-            "Type": "Gate Valve",
-            "ID":   "V7",
-            "HostingSockets": False,
-            "IPAddress": "192.168.0.17",
-            "Default Interval": 15,
-            "DBUser": "test",
-            "DBPasswd": "test",
-
-            "Name": "Matrix Pump Gate Valve",
-            "Class": Tools.deviceobjects.GateValve,
-
-            "Pins":  (17, 27, 19),
-            "posTolerance": 1,
-            "maxOpen": 90,
-            "minOpen": 1,
-            "refVoltage": 3.3,
-
-            #Here for compatibility reasons.
-            "Probes": {},
-            "Devices": {},
-
-            #Config for server connection.
-            "ServerAddress": "192.168.0.2",
-            "ServerPort": 30017,
-            "ServerName": "SumpPi",
-            "SocketName": "Matrix Pump Gate Valve V7 Socket",
-            "SocketID": "SOCK17",
-
-        },
-
-    "V8":
-        {
-            "Type": "Gate Valve",
-            "ID":   "V8",
-            "HostingSockets": False,
-            "IPAddress": "192.168.0.18",
-            "Default Interval": 15,
-            "DBUser": "test",
-            "DBPasswd": "test",
-
-            "Name": "Matrix Pump Gate Valve",
-            "Class": Tools.deviceobjects.GateValve,
-
-            "Pins":  (17, 27, 19),
-            "posTolerance": 1,
-            "maxOpen": 90,
-            "minOpen": 1,
-            "refVoltage": 3.3,
-
-            #Here for compatibility reasons.
-            "Probes": {},
-            "Devices": {},
-
-            #Config for server connection.
-            "ServerAddress": "192.168.0.2",
-            "ServerPort": 30018,
-            "ServerName": "SumpPi",
-            "SocketName": "Matrix Pump Gate Valve V4 Socket",
-            "SocketID": "SOCK18",
-
-        },
-
-    "V9":
-        {
-            "Type": "Gate Valve",
-            "ID":   "V9",
-            "HostingSockets": False,
-            "IPAddress": "192.168.0.19",
-            "Default Interval": 15,
-            "DBUser": "test",
-            "DBPasswd": "test",
-
-            "Name": "Matrix Pump Gate Valve",
-            "Class": Tools.deviceobjects.GateValve,
-
-            "Pins":  (17, 27, 19),
-            "posTolerance": 1,
-            "maxOpen": 90,
-            "minOpen": 1,
-            "refVoltage": 3.3,
-
-            #Here for compatibility reasons.
-            "Probes": {},
-            "Devices": {},
-
-            #Config for server connection.
-            "ServerAddress": "192.168.0.2",
-            "ServerPort": 30019,
-            "ServerName": "SumpPi",
-            "SocketName": "Matrix Pump Gate Valve V9 Socket",
-            "SocketID": "SOCK19",
-
-        },
-
-    "V12":
-        {
-            "Type": "Gate Valve",
-            "ID":   "V12",
-            "HostingSockets": False,
-            "IPAddress": "192.168.0.22",
-            "Default Interval": 15,
-            "DBUser": "test",
-            "DBPasswd": "test",
-
-            "Name": "Stage Butts Gate Valve",
-            "Class": Tools.deviceobjects.GateValve,
-
-            "Pins":  (17, 27, 19),
-            "posTolerance": 1,
-            "maxOpen": 90,
-            "minOpen": 1,
-            "refVoltage": 3.3,
-
-            #Here for compatibility reasons.
-            "Probes": {},
-            "Devices": {},
-
-            #Config for server connection.
-            "ServerAddress": "192.168.0.2",
-            "ServerPort": 30022,
-            "ServerName": "SumpPi",
-            "SocketName": "Stage Butts Gate Valve V12 Socket",
-            "SocketID": "SOCK22",
-
-        }
+#            #Config for server connection.
+#            "ServerAddress": "192.168.0.2",
+#            "ServerPort": 30022,
+#            "ServerName": "SumpPi",
+#            "SocketName": "Stage Butts Gate Valve V12 Socket",
+#            "SocketID": "SOCK22",
+#
+#        },
 }
