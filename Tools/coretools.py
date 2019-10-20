@@ -38,6 +38,7 @@ import subprocess
 import logging
 from collections import deque
 #import MySQLdb as mysql
+import psutil
 
 import config
 
@@ -360,6 +361,48 @@ class SyncTime(threading.Thread):
                 sleep = 86400
 
             #Respond to system shutdown quickly.
+            count = 0
+
+            while count < sleep and not config.EXITING:
+                count += 1
+                time.sleep(1)
+
+class MonitorLoad(threading.Thread):
+    """
+    This class starts a thread that repeatedly monitors system load every 30
+    seconds and logs this information in the log file.
+    """
+
+    def __init__(self):
+        """The constructor"""
+        threading.Thread.__init__(self)
+
+        self.start()
+
+    def run(self):
+        """The main body of the thread"""
+        #First time around, this returns a meaningless value, so discard it.
+        psutil.cpu_percent()
+
+        while not config.EXITING:
+            try:
+                cpu_percent = psutil.cpu_percent()
+                used_memory_mb = (psutil.virtual_memory().used // 1024 // 1024)
+
+            except Exception:
+                pass
+
+            else:
+                logger.info("\n\nCPU Usage: "+str(cpu_percent)
+                            + "\nMemory Used (MB): "+str(used_memory_mb)
+                            +"\n\n")
+
+                print("\n\nCPU Usage: "+str(cpu_percent)
+                      + "\nMemory Used (MB): "+str(used_memory_mb)
+                      + "\n\n")
+
+            #Respond to system shutdown quickly.
+            sleep = 30
             count = 0
 
             while count < sleep and not config.EXITING:
