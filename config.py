@@ -357,14 +357,13 @@ SITE_SETTINGS = {
         {
             "Type": "Gate Valve",
             "ID":   "V4",
-            "Name": "Wendy Butts Gate Valve Pi",
             "HostingSockets": False,
             "IPAddress": "192.168.0.14",
             "Default Interval": 15,
             "DBUser": "test",
             "DBPasswd": "test",
 
-            "Name": "Butts Farm Gate Valve",
+            "Name": "Butts Farm Gate Valve V4",
             "Class": Tools.deviceobjects.GateValve,
 
             "Pins":  (17, 27, 19),
@@ -390,14 +389,13 @@ SITE_SETTINGS = {
 #        {
 #            "Type": "Gate Valve",
 #            "ID":   "V6",
-#            "Name": "Stage Butts Gate Valve Pi",
 #            "HostingSockets": False,
 #            "IPAddress": "192.168.0.16",
 #            "Default Interval": 15,
 #            "DBUser": "test",
 #            "DBPasswd": "test",
 #
-#            "Name": "Matrix Pump Gate Valve",
+#            "Name": "Matrix Pump Gate Valve V6",
 #            "Class": Tools.deviceobjects.GateValve,
 #
 #            "Pins":  (17, 27, 19),
@@ -429,7 +427,7 @@ SITE_SETTINGS = {
 #            "DBUser": "test",
 #            "DBPasswd": "test",
 #
-#            "Name": "Matrix Pump Gate Valve",
+#            "Name": "Matrix Pump Gate Valve V7",
 #            "Class": Tools.deviceobjects.GateValve,
 #
 #            "Pins":  (17, 27, 19),
@@ -461,7 +459,7 @@ SITE_SETTINGS = {
 #            "DBUser": "test",
 #            "DBPasswd": "test",
 #
-#            "Name": "Matrix Pump Gate Valve",
+#            "Name": "Matrix Pump Gate Valve V8",
 #            "Class": Tools.deviceobjects.GateValve,
 #
 #            "Pins":  (17, 27, 19),
@@ -493,7 +491,7 @@ SITE_SETTINGS = {
 #            "DBUser": "test",
 #            "DBPasswd": "test",
 #
-#            "Name": "Matrix Pump Gate Valve",
+#            "Name": "Matrix Pump Gate Valve V9",
 #            "Class": Tools.deviceobjects.GateValve,
 #
 #            "Pins":  (17, 27, 19),
@@ -525,7 +523,7 @@ SITE_SETTINGS = {
 #            "DBUser": "test",
 #            "DBPasswd": "test",
 #
-#            "Name": "Stage Butts Gate Valve",
+#            "Name": "Stage Butts Gate Valve V12",
 #            "Class": Tools.deviceobjects.GateValve,
 #
 #            "Pins":  (17, 27, 19),
