@@ -420,9 +420,10 @@ class DatabaseConnection(threading.Thread):
     the calling thread to wait, though.
     """
 
-    #TODO Argument validation.
+    #TODO Argument validation for remaining methods.
     #TODO Logging, especially debug logging.
     #TODO Error handling and connection error detection.
+    # ^ Has been written to some extent, but not tested thoroughly.
 
     def __init__(self, site_id):
         """The constructor"""
@@ -529,7 +530,10 @@ class DatabaseConnection(threading.Thread):
                                  + "Error was: "+str(error))
 
                     #Break out so we can check the connection again.
-                    #TODO
+                    #TODO Need to check that this works, and handles only the errors
+                    #we want it to handle.
+                    #TODO How to handle if a query fails, rather than if the database is
+                    #offline?
                     config.DBCONNECTION = None
 
                     break
@@ -633,8 +637,8 @@ class DatabaseConnection(threading.Thread):
         self.in_queue.append(query)
 
         #----- Clear any locks we're holding and create control entries for devices -----
-        #TODO should be done on NAS box, this isn't safe in case another pi is
-        #controlling something!
+        #TODO should be done on NAS box only, this isn't safe in case another pi is
+        #controlling something and this one just rebooted!
         query = """DELETE FROM `"""+self.site_id+"""Control;"""
 
         self.in_queue.append(query)
@@ -889,6 +893,10 @@ class DatabaseConnection(threading.Thread):
 
         self.in_queue.append(query)
 
+        #Log the event as well.
+        self.log_event("Taking control of "+site_id+":"+sensor_id
+                       + ", Request: "+request)
+
         return True
 
     def release_control(self, site_id, sensor_id):
@@ -939,6 +947,9 @@ class DatabaseConnection(threading.Thread):
                 + sensor_id+"""';"""
 
         self.in_queue.append(query)
+
+        #Log the event as well.
+        self.log_event("Releasing control of "+site_id+":"+sensor_id)
 
     def log_event(self, event):
         """
@@ -997,6 +1008,8 @@ class DatabaseConnection(threading.Thread):
                 + """' WHERE `Pi Name` = '"""+self.pi_name+"""';"""
 
         self.in_queue.append(query)
+
+        self.log_event("Updated status")
 
     def store_reading(self, reading):
         """
