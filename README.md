@@ -18,10 +18,11 @@ Documentation
 =============
 
 Most of the documentation for this project is available at
-http://www.hadrian-way.co.uk/WMT_River_System_Development/,
-along with the Design and Requirements documents. Old
-versions of the code from before this repository was opened
-can be found there as well.
+https://wmtprojectsforum.altervista.org/files/, along with
+the Design and Requirements documents. Old versions of the
+code from before this repository was opened can be found
+there as well. Some of the older files can also be found at
+http://www.hadrian-way.co.uk/WMT_River_System_Development/.
 
 API Documentation
 -----------------
