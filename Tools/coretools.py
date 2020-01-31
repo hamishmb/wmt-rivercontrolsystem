@@ -1266,7 +1266,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
     else:
         #Level in the sump is critically low!
-        #If the butts pump is on, turn it oactuaff.
+        #If the butts pump is on, turn it off.
         butts_pump.disable()
 
         if butts_reading >= 300:
