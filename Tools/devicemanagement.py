@@ -254,15 +254,13 @@ class ManageGateValve(threading.Thread):
     Documentation for the constructor for objects of type ManageGateValve:
 
     Args:
-        valve (BaseDeviceClass-Object).         The valve to manage.
+        valve (GateValve-Object).         The valve to manage.
 
     Usage:
         mgmt_thread = ManageGateValve(<valve-object>)
 
     """
 
-    #FIXME The documentation for this constructor is wrong -
-    #there are extra arguments that we need to explain in the docstring.
     def __init__(self, valve):
         """The constructor, set up some basic threading stuff."""
         #Store a reference to the GateValve object.
@@ -402,8 +400,6 @@ class ManageGateValve(threading.Thread):
             Doing so can cause a deadlock. There are safety measures
             built in to prevent this, but it can still happen.
         """
-
-        #traceback.print_stack()
 
         #Create the Analog reading object to read Ch 0 of the A/D
         chan = AnalogIn(ads, ADS.P0)

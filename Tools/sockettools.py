@@ -68,7 +68,7 @@ class Sockets:
     Documentation for constructor of objects of type Socket:
 
     Args:
-        the_type (string):      The type of socket we are constructing.
+        _type (string):      The type of socket we are constructing.
                                 **MUST** be one of "Plug", or "Socket".
 
     Kwargs:

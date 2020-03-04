@@ -221,7 +221,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             sys.exit("Unable to import RPi.GPIO! Did you mean to use testing mode? Exiting...")
 
         else:
-            #Import dummy class.
+            #Import dummy GPIO class to fake hardware access.
             from Tools.testingtools import GPIO
 
     #Welcome message.

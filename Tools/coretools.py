@@ -1034,7 +1034,6 @@ class DatabaseConnection(threading.Thread):
         self.in_queue.append(query)
 
 # -------------------- CONTROL LOGIC FUNCTIONS --------------------
-#TODO update the documentation, this is old.
 def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval):
     """
     This function is used to decides what action to take based
@@ -1075,8 +1074,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
     Usage:
 
         >>> reading_interval = sumppi_control_logic(<listofreadings>,
-        >>>                                     <listofprobes>, <listofmonitors>,
-        >>>                                     <listofsockets>, <areadinginterval)
+        >>>                                         <listofprobes>, <listofmonitors>,
+        >>>                                         <listofsockets>, <areadinginterval)
 
     """
 

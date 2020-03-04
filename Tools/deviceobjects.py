@@ -35,7 +35,7 @@ from the rest of the program.
 
 """
 
-#Standard Imports.
+#Standard imports.
 import time
 import sys
 import logging
@@ -52,8 +52,8 @@ import config
 
 from . import devicemanagement as device_mgmt
 
+#Allow us to generate documentation on non-RPi systems by wrapping in a try block.
 try:
-    #Allow us to generate documentation on non-RPi systems.
     import RPi.GPIO as GPIO                             # GPIO imports and setups
     GPIO.setmode(GPIO.BCM)
 
@@ -66,7 +66,7 @@ except (ImportError, NotImplementedError):
         sys.exit("Unable to import RPi.GPIO! Did you mean to use testing mode? Exiting...")
 
     else:
-        #Import dummy class.
+        #Import dummy fake hardware class.
         from Tools.testingtools import GPIO
 
 class BaseDeviceClass:
@@ -96,8 +96,13 @@ class BaseDeviceClass:
                                     Used to identify the
                                     probe. eg "G4:FS0"
 
+    KwArgs:
+        _name (string):             The probe's human-readable
+                                    name. If not given, defaults
+                                    to "<unspecified>".
+
     Usage:
-        >>> probe = BaseDeviceClass("myProbe")
+        >>> probe = BaseDeviceClass("G4:M0", "myProbe")
 
         .. note::
             Not useful unless you derive from it.
@@ -634,11 +639,7 @@ class HallEffectProbe(BaseDeviceClass):
     Board converts these voltages to four values, which this class then converts to depth.
     It has higher precision than the old type but only needs 6 wires to carry the signals.
 
-    Documentation for the constructor for objects of type HallEffectProbe:
-
-    Usage:
-        >>> probe = deviceobjects.HallEffectProbe(<a_time>, <a_tick>, <an_id>, <a_value>, <a_status>)
-
+    This constructor is the same as the one for BaseDeviceClass.
     """
 
     # ---------- CONSTRUCTORS ----------
@@ -712,7 +713,7 @@ class HallEffectProbe(BaseDeviceClass):
 
         Args:
             depths (list(list(int)):              The multidimensionl list of four rows of depths
-                                            to be used with this probe.
+                                                  to be used with this probe.
 
         Usage:
             >>> <Device-Object>.set_limits(<list<list(int)>>)
@@ -823,8 +824,34 @@ class HallEffectProbe(BaseDeviceClass):
 # ---------------------------------- HYBRID OBJECTS -----------------------------------------
 # (Objects that contain both controlled devices and sensors)
 class GateValve(BaseDeviceClass):
+    """
+    This class represents the gate valves that are used to control the flow of water.
+
+    Note that the lower-level management for these devices is in devicemanagement.py.
+
+    Documentation for the GateValve constructor:
+
+    Args:
+        _id (string):                       The gate valve's full ID.
+        _name (string):                     The valve's human-readable name.
+        pins (list or tuple):               The pins the valve uses. Must be
+                                            exactly 3 pins.
+
+        pos_tolerance (int):                The positional tolerance as a percentage,
+                                            must be between 1 and 10.
+
+        max_open (int):                     The maximum open value as a percentage,
+                                            must be between 90 and 99.
+
+        min_open (int):                     The minimum open value as a percentage,
+                                            must be between 1 and 10.
+
+        ref_voltage (float):                Voltage at the top of the position pot.
+                                            Must be between 2 and 5.5.
+    """
+
     def __init__(self, _id, _name, pins, pos_tolerance, max_open, min_open, ref_voltage):
-        """This is the constructor"""
+        """This is the constructor, as documented above"""
         #NB: ID will be repeated eg "V4:V4" so that BaseDeviceClass and the
         #rest of the software functions properly.
         BaseDeviceClass.__init__(self, _id+":"+_id, _name)
