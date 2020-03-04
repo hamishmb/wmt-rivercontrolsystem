@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # River System Control and Monitoring Software
-# Copyright (C) 2017-2019 Wimborne Model Town
+# Copyright (C) 2017-2020 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
 # at your option, any later version.
@@ -82,7 +82,7 @@ def usage():
     print("       -q, --quiet                   Log only warnings, errors, and critical errors")
     print("main.py is released under the GNU GPL Version 3")
     print("Version: "+config.VERSION+" ("+config.RELEASEDATE+")")
-    print("Copyright (C) Wimborne Model Town 2017-2019")
+    print("Copyright (C) Wimborne Model Town 2017-2020")
 
 def handle_cmdline_options():
     """
