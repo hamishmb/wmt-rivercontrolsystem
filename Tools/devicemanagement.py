@@ -64,8 +64,6 @@ try:
     # Create the I2C bus
     i2c = busio.I2C(board.SCL, board.SDA)
 
-    # Create the ADC object using the I2C bus
-    ads = ADS.ADS1115(i2c)
 
 except (ImportError, NotImplementedError, ValueError) as error:
     if isinstance(error, ValueError):
@@ -114,10 +112,13 @@ class ManageHallEffectProbe(threading.Thread):
 
     """
 
-    def __init__(self, probe):
+    def __init__(self, probe, i2c_address):
         """The constructor, set up some basic threading stuff"""
         #Initialise the thread.
         threading.Thread.__init__(self)
+        
+        # Create the ADC object using the I2C bus
+        self.ads = ADS.ADS1115(i2c, address=i2c_address)
 
         #Make the probe object available to the rest of the class.
         self.probe = probe
@@ -126,10 +127,10 @@ class ManageHallEffectProbe(threading.Thread):
         self.ads_lock = threading.RLock()
 
         # Create four single-ended inputs on channels 0 to 3
-        self.chan0 = AnalogIn(ads, ADS.P0)
-        self.chan1 = AnalogIn(ads, ADS.P1)
-        self.chan2 = AnalogIn(ads, ADS.P2)
-        self.chan3 = AnalogIn(ads, ADS.P3)
+        self.chan0 = AnalogIn(self.ads, ADS.P0)
+        self.chan1 = AnalogIn(self.ads, ADS.P1)
+        self.chan2 = AnalogIn(self.ads, ADS.P2)
+        self.chan3 = AnalogIn(self.ads, ADS.P3)
 
         self.start()
 
@@ -263,11 +264,14 @@ class ManageGateValve(threading.Thread):
 
     #FIXME The documentation for this constructor is wrong -
     #there are extra arguments that we need to explain in the docstring.
-    def __init__(self, valve):
+    def __init__(self, valve, i2c_address):
         """The constructor, set up some basic threading stuff."""
         #Store a reference to the GateValve object.
         self.valve = valve
 
+        # Create the ADC object using the I2C bus
+        self.ads = ADS.ADS1115(i2c, address=i2c_address)
+        
         self._exit = False
 
         #Set the valve closed initially.
@@ -406,7 +410,7 @@ class ManageGateValve(threading.Thread):
         #traceback.print_stack()
 
         #Create the Analog reading object to read Ch 0 of the A/D
-        chan = AnalogIn(ads, ADS.P0)
+        chan = AnalogIn(self.ads, ADS.P0)
 
         try:
             #Get voltage reading for channel 0 (the position pot slider)

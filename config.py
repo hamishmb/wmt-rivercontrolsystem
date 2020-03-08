@@ -42,40 +42,43 @@ Wendy Street Pi                - G4
 
 Gate Valve                     - V4
 
-Full List of Devices and their ID Data, IP Addresses, Master Pi server Port and
+Full List of Devices and their ID Data, IP Addresses, (i2C Addresses) Pi server Port and
 Socket Numbers where applicable:
 
 Sump Pi                                 - SUMP, 192.168.0.2
-    Hall Effect (magnetic) Probe          -     SUMP:M0
-    Other Probe (TBD)                     -     SUMP:TBD0
+    Hall Effect (magnetic) Probe          -     SUMP:M0 (0x48)
     Main circulation Pump                 -     SUMP:P1
     Butts Return Pump                     -     SUMP:P0
 
-Railway Room Butts Pi                   - GR, 192.168.0.3, 30003, SOCK3
-    Hall Effect (magnetic) Probe          -     G1:M0
-    Other Probe (TBD)                     -     G1:TBD0
-    Float Switch                          -     G1:FS0
-    Hall Effect (magnetic) Probe          -     G2:M0
-    Other Probe (TBD)                     -     G2:TBD0
-    Float Switch                          -     G2:FS0
-    Hall Effect (magnetic) Probe          -     G3:M0
-    Other Probe (TBD)                     -     G3:TBD0
-    Float Switch                          -     G3:FS0
+Lady Hanham Butts Pi                   - GR, 192.168.0.3, 30003, SOCK3
+    Hall Effect (magnetic) Probe          -     G1:M0 (0x48)
+    Float Switch (High)                   -     G1:FS0
+    Float Switch (Low)                    -     G1:FS1
+
+    Hall Effect (magnetic) Probe          -     G2:M0 (0x49)
+    Float Switch (High)                   -     G2:FS0
+    Float Switch (Low)                    -     G2:FS1
+
+    Hall Effect (magnetic) Probe          -     G3:M0 (0x4B)
+    Float Switch (High)                   -     G3:FS0
+    Float Switch (Low)                    -     G3:FS1
+
+    Mains Water Solenoid Valve            -     G1:S0
+
+Wendy Street Butts Pi                     - G4, 192.168.0.4, 30004, SOCK4
+    Hall Effect (magnetic) Probe          -     G4:M0
+    Float Switch (High)                   -     G4:FS0
+    Float Switch (Low)                    -     G4:FS1
+
+Gazebo Butts Pi                           - G5, 192.168.0.5, 30005, SOCK5
+    Hall Effect (magnetic) Probe          -     G5:M0
+    Float Switch (High)                   -     G5:FS0
+    Float Switch (Low)                    -     G5:FS1
 
 Stage Butts Pi                            - G6, 192.168.0.6, 30006, SOCK6
-    Hall Effect (magnetic) Probe          -     G4:M0
-    Other Probe (TBD)                     -     G4:TBD0
-    Float Switch                          -     G4:FS0
-
-Wendy Street Butts Pi                   - G4, 192.168.0.4, 30004, SOCK4
-    Hall Effect (magnetic) Probe          -     G4:M0
-    Other Probe (TBD)                     -     G4:TBD0
-    Float Switch                          -     G4:FS0
-
-Gazebo Butts Pi                         - G5, 192.168.0.5, 30005, SOCK5
-    Hall Effect (magnetic) Probe          -     G5:M0
-    Other Probe (TBD)                     -     G5:TBD0
-    Float Switch                          -     G5:FS0
+    Hall Effect (magnetic) Probe          -     G6:M0
+    Float Switch (High)                   -     G6:FS0
+    Float Switch (Low)                    -     G6:FS1
 
 Railway Room G1 Butts Group Gate Valve  - V1, 192.168.0.11, 30011, SOCK11
 
@@ -202,6 +205,7 @@ SITE_SETTINGS = {
                         "ID":               "SUMP:M0",
                         "Name":             "Sump Probe",
                         "Class":            Tools.deviceobjects.HallEffectProbe,
+                        "ADCAddress":       0x48,
                         "HighLimits":       (0.07, 0.17, 0.35, 0.56, 0.73, 0.92, 1.22, 1.54, 2.1, 2.45),
                         "LowLimits":        (0.05, 0.15, 0.33, 0.53, 0.7, 0.88, 1.18, 1.5, 2, 2.4),
                         "Depths100s":       (0, 100, 200, 300, 400, 500, 600, 700, 800, 900),
@@ -235,6 +239,143 @@ SITE_SETTINGS = {
                 },
         },
 
+    #Settings for the G3 site (client pi behind the Lady Hanham Building).
+    "G3":
+        {
+            "ID": "G3",
+            "Name": "Lady Hanham Butts Pi",
+            "Default Interval": 15,
+            "IPAddress": "192.168.0.3",
+            "HostingSockets": False,
+            "DBUser": "test",
+            "DBPasswd": "test",
+
+            #Local probes.
+            "Probes":
+                {
+
+                    "G3:M0":
+                    {
+                        "Type":             "Hall Effect Probe",
+                        "ID":               "G3:M0",
+                        "Name":             "Lady Hanaham Butts Probe (G1 Butts Group)",
+                        "Class":            Tools.deviceobjects.HallEffectProbe,
+                        "ADCAddress":       0x48,
+                        "HighLimits":       (0.07, 0.17, 0.35, 0.56, 0.73, 0.92, 1.22, 1.54, 2.1, 2.45),
+                        "LowLimits":        (0.05, 0.15, 0.33, 0.53, 0.7, 0.88, 1.18, 1.5, 2, 2.4),
+                        "Depths100s":       (0, 100, 200, 300, 400, 500, 600, 700, 800, 900),
+                        "Depths25s":        (25, 125, 225, 325, 425, 525, 625, 725, 825, 925),
+                        "Depths50s":        (50, 150, 250, 350, 450, 550, 650, 750, 850, 950),
+                        "Depths75s":        (75, 175, 275, 375, 475, 575, 675, 775, 875, 975),
+                    },
+
+                    "G3:FS0":
+                    {
+                        "Type": "Float Switch",
+                        "ID":   "G3:FS0",
+                        "Name": "Lady Hanaham High Float Switch (G1 Butts Group)",
+                        "Class": Tools.deviceobjects.FloatSwitch,
+                        "Pins":  (8),
+                    },
+
+                    "G3:FS1":
+                    {
+                        "Type": "Float Switch",
+                        "ID":   "G3:FS1",
+                        "Name": "Lady Hanaham Low Float Switch (G1 Butts Group)",
+                        "Class": Tools.deviceobjects.FloatSwitch,
+                        "Pins":  (7),
+                    },
+
+                    "G3:M1":
+                    {
+                        "Type":             "Hall Effect Probe",
+                        "ID":               "G3:M1",
+                        "Name":             "Lady Hanaham Butts Probe (G2 Butts Group)",
+                        "Class":            Tools.deviceobjects.HallEffectProbe,
+                        "ADCAddress":       0x49,
+                        "HighLimits":       (0.07, 0.17, 0.35, 0.56, 0.73, 0.92, 1.22, 1.54, 2.1, 2.45),
+                        "LowLimits":        (0.05, 0.15, 0.33, 0.53, 0.7, 0.88, 1.18, 1.5, 2, 2.4),
+                        "Depths100s":       (0, 100, 200, 300, 400, 500, 600, 700, 800, 900),
+                        "Depths25s":        (25, 125, 225, 325, 425, 525, 625, 725, 825, 925),
+                        "Depths50s":        (50, 150, 250, 350, 450, 550, 650, 750, 850, 950),
+                        "Depths75s":        (75, 175, 275, 375, 475, 575, 675, 775, 875, 975),
+                    },
+
+                    "G3:FS2":
+                    {
+                        "Type": "Float Switch",
+                        "ID":   "G3:FS2",
+                        "Name": "Lady Hanaham High Float Switch (FS2 Butts Group)",
+                        "Class": Tools.deviceobjects.FloatSwitch,
+                        "Pins":  (20),
+                    },
+
+                    "G3:FS3":
+                    {
+                        "Type": "Float Switch",
+                        "ID":   "G3:FS3",
+                        "Name": "Lady Hanaham High Low Switch (FS3 Butts Group)",
+                        "Class": Tools.deviceobjects.FloatSwitch,
+                        "Pins":  (6),
+                    },
+
+                    "G3:M2":
+                    {
+                        "Type":             "Hall Effect Probe",
+                        "ID":               "G3:M2",
+                        "Name":             "Lady Hanaham Butts Probe (G3 Butts Group)",
+                        "Class":            Tools.deviceobjects.HallEffectProbe,
+                        "ADCAddress":       0x4B,
+                        "HighLimits":       (0.07, 0.17, 0.35, 0.56, 0.73, 0.92, 1.22, 1.54, 2.1, 2.45),
+                        "LowLimits":        (0.05, 0.15, 0.33, 0.53, 0.7, 0.88, 1.18, 1.5, 2, 2.4),
+                        "Depths100s":       (0, 100, 200, 300, 400, 500, 600, 700, 800, 900),
+                        "Depths25s":        (25, 125, 225, 325, 425, 525, 625, 725, 825, 925),
+                        "Depths50s":        (50, 150, 250, 350, 450, 550, 650, 750, 850, 950),
+                        "Depths75s":        (75, 175, 275, 375, 475, 575, 675, 775, 875, 975),
+                    },
+
+                    "G3:FS4":
+                    {
+                        "Type": "Float Switch",
+                        "ID":   "G3:FS4",
+                        "Name": "Lady Hanaham High Float Switch (FS4 Butts Group)",
+                        "Class": Tools.deviceobjects.FloatSwitch,
+                        "Pins":  (26),
+                    },
+
+                    "G3:FS5":
+                    {
+                        "Type": "Float Switch",
+                        "ID":   "G3:FS5",
+                        "Name": "Lady Hanaham Low Float Switch (FS5 Butts Group)",
+                        "Class": Tools.deviceobjects.FloatSwitch,
+                        "Pins":  (19),
+                    }
+                },
+
+            #Devices to control.
+            "Devices": {
+
+                "G3:S0":
+                {
+                    "Type":  "Solenoid Valve",
+                    "ID":    "G3:S1",
+                    "Name":  "Mains Water Solenoid Valve (G1 Butts Group)",
+                    "Class": Tools.deviceobjects.Motor,
+                    "Pins":  (5)
+                },
+
+
+            },
+
+            "ServerAddress": "192.168.0.3",
+            "ServerPort": 30003,
+            "ServerName": "lhbutts",
+            "SocketName": "Lady Hanham Buttspi Socket",
+            "SocketID": "SOCK3"
+        },
+
     #Settings for the G4 site (client pi at Wendy Street).
     "G4":
         {
@@ -256,6 +397,7 @@ SITE_SETTINGS = {
                         "ID":               "G4:M0",
                         "Name":             "Wendy Street Butts Probe",
                         "Class":            Tools.deviceobjects.HallEffectProbe,
+                        "ADCAddress":       0x48,
                         "HighLimits":       (0.07, 0.17, 0.35, 0.56, 0.73, 0.92, 1.22, 1.54, 2.1, 2.45),
                         "LowLimits":        (0.05, 0.15, 0.33, 0.53, 0.7, 0.88, 1.18, 1.5, 2, 2.4),
                         "Depths100s":       (0, 100, 200, 300, 400, 500, 600, 700, 800, 900),
@@ -314,6 +456,7 @@ SITE_SETTINGS = {
                         "ID":               "G6:M0",
                         "Name":             "Stage Butts Probe",
                         "Class":            Tools.deviceobjects.HallEffectProbe,
+                        "ADCAddress":       0x48,
                         "HighLimits":       (0.07, 0.17, 0.35, 0.56, 0.73, 0.92, 1.22, 1.54, 2.1, 2.45),
                         "LowLimits":        (0.05, 0.15, 0.33, 0.53, 0.7, 0.88, 1.18, 1.5, 2, 2.4),
                         "Depths100s":       (0, 100, 200, 300, 400, 500, 600, 700, 800, 900),
@@ -365,6 +508,7 @@ SITE_SETTINGS = {
 
             "Name": "Butts Farm Gate Valve V4",
             "Class": Tools.deviceobjects.GateValve,
+            "ADCAddress":       0x48,
 
             "Pins":  (17, 27, 19),
             "posTolerance": 1,
@@ -397,6 +541,7 @@ SITE_SETTINGS = {
 #
 #            "Name": "Matrix Pump Gate Valve V6",
 #            "Class": Tools.deviceobjects.GateValve,
+#            "ADCAddress":       0x48,
 #
 #            "Pins":  (17, 27, 19),
 #            "posTolerance": 1,
@@ -429,6 +574,7 @@ SITE_SETTINGS = {
 #
 #            "Name": "Matrix Pump Gate Valve V7",
 #            "Class": Tools.deviceobjects.GateValve,
+#            "ADCAddress":       0x48,
 #
 #            "Pins":  (17, 27, 19),
 #            "posTolerance": 1,
@@ -461,6 +607,7 @@ SITE_SETTINGS = {
 #
 #            "Name": "Matrix Pump Gate Valve V8",
 #            "Class": Tools.deviceobjects.GateValve,
+#            "ADCAddress":       0x48,
 #
 #            "Pins":  (17, 27, 19),
 #            "posTolerance": 1,
@@ -493,6 +640,7 @@ SITE_SETTINGS = {
 #
 #            "Name": "Matrix Pump Gate Valve V9",
 #            "Class": Tools.deviceobjects.GateValve,
+#            "ADCAddress":       0x48,
 #
 #            "Pins":  (17, 27, 19),
 #            "posTolerance": 1,
@@ -525,6 +673,7 @@ SITE_SETTINGS = {
 #
 #            "Name": "Stage Butts Gate Valve V12",
 #            "Class": Tools.deviceobjects.GateValve,
+#            "ADCAddress":       0x48,
 #
 #            "Pins":  (17, 27, 19),
 #            "posTolerance": 1,

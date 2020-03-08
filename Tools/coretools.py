@@ -1337,6 +1337,9 @@ def setup_devices(system_id, dictionary="Probes"):
         device = device(device_id, device_name)
 
         if _type == "Hall Effect Probe":
+            i2c_address = device_settings["ADCAddress"]
+            device.set_address(i2c_address)
+            
             high_limits = device_settings["HighLimits"]
             low_limits = device_settings["LowLimits"]
 
@@ -1392,8 +1395,9 @@ def setup_valve(system_id):
     max_open = valve_settings["maxOpen"]
     min_open = valve_settings["minOpen"]
     ref_voltage = valve_settings["refVoltage"]
-
-    valve = valve(system_id, valve_name, pins, pos_tolerance, max_open, min_open, ref_voltage)
+    i2c_address = valve_settings["ADCAddress"]
+    
+    valve = valve(system_id, valve_name, pins, pos_tolerance, max_open, min_open, ref_voltage, i2c_address)
 
     valve.start_thread()
 

@@ -658,8 +658,22 @@ class HallEffectProbe(BaseDeviceClass):
 
     def start_thread(self):
         """Start the thread to keep polling the probe."""
-        device_mgmt.ManageHallEffectProbe(self)
+        device_mgmt.ManageHallEffectProbe(self, self.i2c_address)
 
+    def set_address(self, i2c_address):
+        """
+        This method is used to import the address this probe will use. The calling code must
+        already have established these from config.py
+
+        Args:
+            i2c_address (int):          The hardware address this probe will use.
+
+        Usage:
+            >>> <Device-Object>.set_address(<int>)
+        """
+        
+        self.i2c_address = i2c_address
+        
     def set_limits(self, high_limits, low_limits):
         """
         This method is used to import the limits this probe will use. The calling code must
@@ -823,7 +837,7 @@ class HallEffectProbe(BaseDeviceClass):
 # ---------------------------------- HYBRID OBJECTS -----------------------------------------
 # (Objects that contain both controlled devices and sensors)
 class GateValve(BaseDeviceClass):
-    def __init__(self, _id, _name, pins, pos_tolerance, max_open, min_open, ref_voltage):
+    def __init__(self, _id, _name, pins, pos_tolerance, max_open, min_open, ref_voltage, i2c_address):
         """This is the constructor"""
         #NB: ID will be repeated eg "V4:V4" so that BaseDeviceClass and the
         #rest of the software functions properly.
@@ -893,11 +907,13 @@ class GateValve(BaseDeviceClass):
 
             raise ValueError("Invalid value for ref_voltage: "+str(ref_voltage))
 
+        self.i2c_address = i2c_address      #The hardware address for the A2D (ADC)
+
         self.ref_voltage = ref_voltage
         
     def start_thread(self):
         """Start the thread to manage the thread."""
-        self.control_thread = device_mgmt.ManageGateValve(self)
+        self.control_thread = device_mgmt.ManageGateValve(self, self.i2c_address)
 
     def get_pos_tolerance(self):
         """
