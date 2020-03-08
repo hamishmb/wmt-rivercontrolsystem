@@ -262,13 +262,9 @@ class ManageGateValve(threading.Thread):
 
     """
 
-<<<<<<< HEAD
     #FIXME The documentation for this constructor is wrong -
     #there are extra arguments that we need to explain in the docstring.
     def __init__(self, valve, i2c_address):
-=======
-    def __init__(self, valve):
->>>>>>> 1ea1af8b3ce280a501b1f8218d34cbf4e901e291
         """The constructor, set up some basic threading stuff."""
         #Store a reference to the GateValve object.
         self.valve = valve
