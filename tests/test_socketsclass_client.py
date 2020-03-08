@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Sockets Class (client) test for the River System Control and Monitoring Software Version 0.10.0
 # This file is part of the River System Control and Monitoring Software.

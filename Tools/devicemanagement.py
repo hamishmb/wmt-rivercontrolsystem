@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Device management classes for the River System Control and Monitoring Software
-# Copyright (C) 2017-2019 Wimborne model Town
+# Copyright (C) 2017-2020 Wimborne model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
 # at your option, any later version.
@@ -255,16 +255,20 @@ class ManageGateValve(threading.Thread):
     Documentation for the constructor for objects of type ManageGateValve:
 
     Args:
-        valve (BaseDeviceClass-Object).         The valve to manage.
+        valve (GateValve-Object).         The valve to manage.
 
     Usage:
         mgmt_thread = ManageGateValve(<valve-object>)
 
     """
 
+<<<<<<< HEAD
     #FIXME The documentation for this constructor is wrong -
     #there are extra arguments that we need to explain in the docstring.
     def __init__(self, valve, i2c_address):
+=======
+    def __init__(self, valve):
+>>>>>>> 1ea1af8b3ce280a501b1f8218d34cbf4e901e291
         """The constructor, set up some basic threading stuff."""
         #Store a reference to the GateValve object.
         self.valve = valve
@@ -406,8 +410,6 @@ class ManageGateValve(threading.Thread):
             Doing so can cause a deadlock. There are safety measures
             built in to prevent this, but it can still happen.
         """
-
-        #traceback.print_stack()
 
         #Create the Analog reading object to read Ch 0 of the A/D
         chan = AnalogIn(self.ads, ADS.P0)

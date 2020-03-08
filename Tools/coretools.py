@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Core Tools for the River System Control and Monitoring Software
-# Copyright (C) 2017-2019 Wimborne Model Town
+# Copyright (C) 2017-2020 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
 # at your option, any later version.
@@ -702,7 +702,7 @@ class DatabaseConnection(threading.Thread):
 
         Usage example:
             >>> get_latest_reading("G4", "M0")
-            >>> 'Reading at time 2019-09-30 12:01:12.227565, and tick 0, from probe: G4:M0, with value: 350, and status: OK'
+            >>> 'Reading at time 2020-09-30 12:01:12.227565, and tick 0, from probe: G4:M0, with value: 350, and status: OK'
 
         """
 
@@ -730,7 +730,7 @@ class DatabaseConnection(threading.Thread):
 
         Usage example:
             >>> get_latest_reading("G4", "M0")
-            >>> 'Reading at time 2019-09-30 12:01:12.227565, and tick 0, from probe: G4:M0, with value: 350, and status: OK'
+            >>> 'Reading at time 2020-09-30 12:01:12.227565, and tick 0, from probe: G4:M0, with value: 350, and status: OK'
 
         """
 
@@ -1034,7 +1034,6 @@ class DatabaseConnection(threading.Thread):
         self.in_queue.append(query)
 
 # -------------------- CONTROL LOGIC FUNCTIONS --------------------
-#TODO update the documentation, this is old.
 def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval):
     """
     This function is used to decides what action to take based
@@ -1075,8 +1074,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
     Usage:
 
         >>> reading_interval = sumppi_control_logic(<listofreadings>,
-        >>>                                     <listofprobes>, <listofmonitors>,
-        >>>                                     <listofsockets>, <areadinginterval)
+        >>>                                         <listofprobes>, <listofmonitors>,
+        >>>                                         <listofsockets>, <areadinginterval)
 
     """
 

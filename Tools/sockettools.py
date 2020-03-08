@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Socket Tools for the River System Control and Monitoring Software
-# Copyright (C) 2017-2019 Wimborne Model Town
+# Copyright (C) 2017-2020 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
 # at your option, any later version.
@@ -68,7 +68,7 @@ class Sockets:
     Documentation for constructor of objects of type Socket:
 
     Args:
-        the_type (string):      The type of socket we are constructing.
+        _type (string):      The type of socket we are constructing.
                                 **MUST** be one of "Plug", or "Socket".
 
     Kwargs:

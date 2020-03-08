@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Configuration for the River System Control and Monitoring Software
-# Copyright (C) 2017-2019 Wimborne Model Town
+# Copyright (C) 2017-2020 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
 # at your option, any later version.
@@ -50,18 +50,18 @@ Sump Pi                                 - SUMP, 192.168.0.2
     Main circulation Pump                 -     SUMP:P1
     Butts Return Pump                     -     SUMP:P0
 
-Lady Hanham Butts Pi                   - GR, 192.168.0.3, 30003, SOCK3
-    Hall Effect (magnetic) Probe          -     G1:M0 (0x48)
-    Float Switch (High)                   -     G1:FS0
-    Float Switch (Low)                    -     G1:FS1
-
-    Hall Effect (magnetic) Probe          -     G2:M0 (0x49)
-    Float Switch (High)                   -     G2:FS0
-    Float Switch (Low)                    -     G2:FS1
-
-    Hall Effect (magnetic) Probe          -     G3:M0 (0x4B)
+Lady Hanham Butts Pi                   - G3, 192.168.0.3, 30003, SOCK3
+    Hall Effect (magnetic) Probe          -     G3:M0 (0x48)
     Float Switch (High)                   -     G3:FS0
     Float Switch (Low)                    -     G3:FS1
+
+    Hall Effect (magnetic) Probe          -     G3:M1 (0x49)
+    Float Switch (High)                   -     G3:FS2
+    Float Switch (Low)                    -     G3:FS3
+
+    Hall Effect (magnetic) Probe          -     G3:M1 (0x4B)
+    Float Switch (High)                   -     G3:FS4
+    Float Switch (Low)                    -     G3:FS5
 
     Mains Water Solenoid Valve            -     G1:S0
 
