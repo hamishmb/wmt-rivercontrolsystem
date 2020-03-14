@@ -369,7 +369,7 @@ SITE_SETTINGS = {
 
             },
 
-            "ServerAddress": "192.168.0.3",
+            "ServerAddress": "192.168.0.2",
             "ServerPort": 30003,
             "ServerName": "lhbutts",
             "SocketName": "Lady Hanham Buttspi Socket",
