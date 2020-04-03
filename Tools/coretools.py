@@ -29,6 +29,7 @@ functions in here to reduce code duplication.
     :synopsis: Contains tools used by all parts of the software.
 
 .. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
+.. and Patrick Wigmore <pwbugreports@gmx.com>
 """
 
 import sys
@@ -39,6 +40,8 @@ import logging
 from collections import deque
 #import MySQLdb as mysql
 import psutil
+from abc import ABCMeta, abstractmethod
+import inspect
 
 import config
 
@@ -1033,7 +1036,236 @@ class DatabaseConnection(threading.Thread):
 
         self.in_queue.append(query)
 
-# -------------------- CONTROL LOGIC FUNCTIONS --------------------
+# -------------------- CONTROL LOGIC FUNCTIONS AND CLASSES --------------------
+class ControlStateABC(metaclass=ABCMeta, controlStateMachine):
+    """
+    Abstract Base Class for control states.
+    
+    Defines a template for classes that represent a state in a control logic
+    state machine. Forms part of an implementation of the well-known Design
+    Pattern named the "State Pattern".
+    
+    Don't instantiate objects of this class; use a subclass instead.
+    """
+    def __init__(self, controlStateMachine):
+        """
+        Initialiser for control state objects
+        
+        Args:
+            controlStateMachine (ControlStateMachineABC):   A reference to the control state machine that this state belongs to.
+        """
+        self.csm = controlStateMachine
+    
+    @abstractmethod
+    def setupState(self):
+        """
+        Performs actions required when entering this state. (e.g. set
+        valves and pumps.)
+        
+        Abstract method: should raise NotImplementedError in base
+        class. Implement in subclasses.
+        """
+        raise NotImplementedError
+    
+    @staticmethod
+    def getPreferredReadingInterval():
+        """
+        Returns the preferred reading interval for this state.
+        
+        Subclasses should override if they require a non-default
+        reading interval.
+        
+        Returns:
+            int     The preferred reading interval in seconds
+        """
+        return 60
+    
+    @abstractmethod
+    def doLogic(self, readings, devices, monitors, sockets, reading_interval):
+        """
+        Performs control logic appropriate to this state, returns an
+        updated reading_interval, and transitions to another state if
+        appropriate.
+        
+        Abstract method: should raise NotImplementedError in base
+        class. Implement in subclasses.
+        
+        Returns:
+            int     The reading interval requested by the logic
+        """
+        raise NotImplementedError
+    
+    @abstractmethod
+    @staticmethod
+    def getStateName():
+        """
+        Returns the name of the state represented by this class.
+        
+        Abstract method: raises NotImplementedError in base class.
+        Implement in subclasses.
+        
+        Returns:
+            string: state name
+        """
+        raise NotImplementedError
+
+class ControlStateMachineABC(metaclass=ABCMeta):
+    """
+    Abstract Base Class representing a state-machine-based control logic
+    strategy for a Pi.
+    
+    Provides a doLogic static method which can be executed in the main loop of
+    the river control system on a given Pi.
+    
+    Don't instantiate objects of this class; use a subclass instead.
+    
+    To create a new control logic strategy, create a new subclass that inherits
+    from this class. Child classes will need to instantiate their full range of possible states in their initialiser and then enter an initial state. States should be subclasses of ControlStateABC and should each implement doLogic for that state.
+    
+    This class endeavours to implement the well-known Object-Oriented Design
+    Pattern named the "State Pattern".
+    """
+    def __init__(self):
+        """
+        Initialiser to peform initialisation that's common to all
+        subclasses.
+        
+        Subclass initialisers can call this using super().__init__().
+        """
+        self.states = {} # initialise dictionary to hold list of states
+    
+    def _addState(self, state):
+        """
+        Adds a new state to this machine's dictionary of possible
+        states. This method is only for use in subclass initialisers.
+        
+        Adding a state using this method facilitates the automatic
+        functioning of getNamedState.
+        
+        Args:
+            state (ControlStateABC): state to add
+        """
+        self.states[state.getStateName()] = state
+    
+    def setState(self, stateClass):
+        """
+        Sets the current state of the state machine to the state having
+        the specificed class. State objects may use this method to
+        execute a state transition.
+        
+        Args:
+            stateClass (Class (ControlStateABC)): the state to make current
+        
+        Returns:
+            int     The preferred reading interval of the new state in seconds
+        """
+        #TODO: throw a more meaningful exception if there is no
+        #      matching state in self.states. (Currently will throw an
+        #      index out of bounds exception.)
+        self.setNamedState(stateClass.getStateName())
+        return stateClass.getPreferredReadingInterval()
+    
+    def setStateBy(self, stateClass, requester):
+        """
+        As setState, sets the current state of the state machine to the
+        state having the specified class, but prints and logs a message
+        saying which class requested the state transition. State
+        objects should use this method to execute a state transition.
+        
+        Args:
+            stateClass (Class (ControlStateABC)): the state to make current
+            requester (ControlStateABC): the state requesting the transition
+        
+        Returns:
+            int     The preferred reading interval of the new state in seconds
+        """
+        msg = (requester.getStateName()
+               + " requests transition into "
+               + stateClass.getStateName())
+        logger.info(msg)
+        print(msg)
+        
+        self.setState(stateClass)
+    
+    def setNamedState(self, stateName):
+        """
+        Sets the current state of the state machine to the state
+        corresponding to the specified name.
+        
+        This method is primarily intended for restoring the state from
+        persistent storage, where it is more convenient to deal with a
+        text string than a state object.
+        
+        Args:
+            stateName (string): the name of the state to make current
+        """
+        stateChangeMsg = (self.getStateMachineName() + ": Transitioning from "
+                          + self.getCurrentStateName() + " to "
+                          + stateClass.getStateName())
+        
+        logger.info(stateChangeMsg)
+        print(stateChangeMsg)
+        
+        self.state = self.getNamedState(stateName)
+    
+    def getCurrentStateName(self):
+        """
+        Returns the name of the current state of the state machine.
+        
+        This method is primarily intended for storing the current
+        state in persistent storage, where it is more convenient to
+        deal with a text string than a state object
+        
+        Returns:
+            string: the name of the current state
+        """
+        return state.getStateName()
+    
+    @abstractmethod
+    @staticmethod
+    def getStateMachineName():
+        """
+        Returns the human-readable identifier of this state machine,
+        for use in logs and console output.
+        
+        Abstract method: raises NotImplementedError in base class.
+        Implement in subclasses.
+        """
+        raise NotImplementedError
+    
+    def doLogic(self, readings, devices, monitors, sockets, reading_interval):
+        """
+        Executes the control logic of this control strategy.
+
+        Delegated to the object that represents the current state.
+        
+        Args:
+            readings (list):                A list of the latest readings for each probe/device.
+
+            devices  (list):                A list of all master pi device objects.
+
+            monitors (list):                A list of all master pi monitor objects.
+
+            sockets (list of Socket):       A list of Socket objects that represent
+                                            the data connections between pis. Passed
+                                            here so we can control the reading
+                                            interval at that end.
+
+            reading_interval (int):     The current reading interval, in
+                                        seconds.
+
+        Returns:
+            int: The reading interval, in seconds.
+
+        Usage:
+
+            >>> reading_interval = sumppi_control_logic(<listofreadings>,
+            >>>                                     <listofprobes>, <listofmonitors>,
+            >>>                                     <listofsockets>, <areadinginterval)
+
+        """
+        return state.doLogic()
+
 #TODO update the documentation, this is old.
 def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval):
     """
@@ -1306,6 +1538,461 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         each_socket.write("Reading Interval: "+str(reading_interval))
 
     return reading_interval
+
+class StagePiReadingsParser(readings):
+    """
+    This class extracts data from a readings dictionary and presents it
+    in a format that's convenient for the Stage Pi control logic
+    """
+    def __init__(self, readings):
+        """
+        Initialiser. Puts relevant readings data into instance variables.
+        """
+        
+        #Check that the float switch readings are sane.
+        assert self.G4_full.get_value() in ("True", "False")
+        assert self.G6_full.get_value() in ("True", "False")
+        
+        #Load readings into self
+        self.G4_level = int(readings["G4:M0"].get_value().replace("m", ""))
+        self.G4_full = readings["G4:FS0"].get_value() == "True"
+        
+        self.G6_level = int(readings["G6:M0"].get_value().replace("m", ""))
+        self.G6_full = readings["G6:FS0"].get_value() == "True"
+    
+    def g6Full():
+        """
+        Returns true if G6 is full
+        """
+        return (G6_full or G6_level > 975)
+    
+    def g6Empty():
+        """
+        Returns true if G6 is empty (<25mm)
+        """
+        return (not G6_full and G6_level <= 25)
+    
+    def g4Overfull():
+        """
+        Returns true if G4 is overfull (full to the limit)
+        """
+        return (G4_full or G4_level > 975)
+    
+    def g4FullOrMore():
+        """
+        Returns true if G4 is full (>900mm)
+        """
+        return (not G4_full or G4_level > 900)
+    
+    def g4VeryNearlyFullOrMore():
+        """
+        Returns true if G4 level is very nearly full or more (>800mm)
+        """
+        return (not G4_full and G4_level > 800)
+    
+    def g4NearlyFullOrMore():
+        """
+        Returns true if G4 level is nearly full or more (>700mm)
+        """
+        return (not G4_full and G4_level > 700)
+
+# -------------------- Stage Pi control states ---------------------
+# Each state class defines the behaviour of the control logic in that state,
+# and the possible state transitions away from that state.
+
+class StagePiInitState(ControlStateABC):
+    """
+    An initial state for the Stage Pi control logic, which doesn't do
+    anything except transition into the appropriate state after a cold
+    start.
+    """
+    @staticmethod
+    def getStateName():
+        return "StagePiInitState"
+    
+    def setupState(self):
+        logger.info("Setting up " + self.getStateName())
+        print("Setting up " + self.getStateName())
+    
+    @staticmethod
+    def getPreferredReadingInterval():
+        # Prefer a fast reading interval until we're in the right state
+        return 15
+    
+    def doLogic(self, readings, devices, monitors, sockets, reading_interval):
+        initmsg = "Control logic state is StagePiInitState."
+        logger.info(initmsg)
+        print(initmsg)
+        
+        #Create readings parser
+        parser = StagePiReadingsParser(readings)
+        
+        #Prepare to transition to new state
+        ri = self.getPreferredReadingInterval()
+        
+        if parser.g4Overfull():
+            ri = csm.setStateBy(StagePiG4OverfilledState, self)
+ 
+        else:
+            if parser.g6Empty():
+                ri = csm.setStateBy(StagePiG6EmptyState, self)
+                
+            else if parser.g4FullOrMore():
+                ri = csm.setStateBy(StagePiG4FilledState, self)
+                
+            else if parser.g4VeryNearlyFullOrMore():
+                ri = csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
+                
+            else if parser.g4NearlyFullOrMore():
+                ri = csm.setStateBy(StagePiG4NearlyFilledState, self)
+                
+            else:
+                ri = csm.setStateBy(StagePiG4FillingState, self)
+
+
+        return ri
+
+class StagePiG4OverfilledState(ControlStateABC):
+    """
+    Stage Pi control logic state when G4 is overfilled
+    """
+    @staticmethod
+    def getStateName():
+        return "StagePiG4OverfilledState"
+    
+    def setupState(self):
+        logger.info("Setting up state " + self.getStateName())
+        print("Setting up state " + self.getStateName())
+        
+        #Close V12 to stop V6/V4 water flow
+        sockets["SOCK22"].write("Valve Position 0")
+        
+        #TODO: When the matrix pump is implemented, instead of closing
+        #V12, we should check here whether G6 is full. If it is, we
+        #should just close the valve. If it isn't full, then we should
+        #pump water in reverse, from G4 to G6.
+        
+        #TODO: When the matrix pump is implemented, remember to include
+        #a check that the reference we get from the devices dictionary
+        #is not a reference to nothing.
+    
+    def doLogic(self, readings, devices, monitors, sockets, reading_interval):
+        parser = StagePiReadingsParser(readings)
+        
+        ri = self.getPreferredReadingInterval()
+        
+        #Evaluate possible transitions to new states
+        if not parser.g6Empty():
+            if not parser.g4Overfull():
+                ri = csm.setStateBy(StagePiG4FilledState, self)
+                
+        #In the event that G6 is empty, then we want to stay in
+        #G4OverfilledState, so that water can be pumped back into G6.
+        
+        return ri
+    
+class StagePiG4FilledState(ControlStateABC):
+    """
+    Stage Pi control logic state when G4 is filled
+    """
+    @staticmethod
+    def getStateName():
+        return "StagePiG4FilledState"
+    
+    def setupState(self):
+        logger.info("Setting up state " + self.getStateName())
+        print("Setting up state " + self.getStateName())
+        
+        #Close V12 to stop V6/V4 water flow
+        sockets["SOCK22"].write("Valve Position 0")
+        
+        #TODO: when the matrix pump is implemented, we need to request it to
+        #be turned off and release any lock this Pi holds on using the pump.
+        
+        #TODO: When the matrix pump is implemented, remember to include
+        #a check that the reference we get from the devices dictionary
+        #is not a reference to nothing.
+    
+    def doLogic(self, readings, devices, monitors, sockets, reading_interval):
+        parser = StagePiReadingsParser(readings)
+        
+        ri = self.getPreferredReadingInterval()
+        
+        #Evaluate possible transitions to new states
+        if not parser.g6Empty():
+            if parser.g4Overfull():
+                ri = csm.setStateBy(StagePiG4OverfilledState, self)
+                
+            else if not parser.g4FullOrMore():
+                ri = csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
+            
+        else:
+            ri = csm.setStateBy(StagePiG6EmptyState, self)
+        
+        return ri
+
+class StagePiG4VeryNearlyFilledState(ControlStateABC):
+    """
+    Stage Pi control logic state when G4 is very nearly filled
+    """
+    @staticmethod
+    def getStateName():
+        return "StagePiG4VeryNearlyFilledState"
+    
+    @staticmethod
+    def getPreferredReadingInterval():
+        # Prefer a fast reading interval, since we're so close to full
+        return 15
+    
+    def setupState(self):
+        logger.info("Setting up state " + self.getStateName())
+        print("Setting up state " + self.getStateName())
+        
+        #Open V12 slightly to allow some water flow from V6 to V4
+        sockets["SOCK22"].write("Valve Position 25")
+        
+        #TODO: when the matrix pump is implemented, we need to:
+        #    (a) get the lock to control the pump before we open V12
+        #    (b) either open the pump's valves to allow passive water flow,
+        #        or start pumping downstream at a low rate
+        
+        #TODO: When the matrix pump is implemented, remember to include
+        #a check that the reference we get from the devices dictionary
+        #is not a reference to nothing.
+    
+    def doLogic(self, readings, devices, monitors, sockets, reading_interval):
+        parser = StagePiReadingsParser(readings)
+        
+        ri = self.getPreferredReadingInterval()
+        
+        #Evaluate possible transitions to new states
+        if not parser.g6Empty():
+            if parser.g4FullOrMore():
+                ri = csm.setStateBy(StagePiG4FilledState, self)
+                
+            else if not parser.g4VeryNearlyFullOrMore():
+                ri = csm.setStateBy(StagePiG4NearlyFilledState, self)
+            
+        else:
+            ri = csm.setStateBy(StagePiG6EmptyState, self)
+        
+        return ri
+
+class StagePiG4NearlyFilledState(ControlStateABC):
+    """
+    Stage Pi control state when G4 is nearly filled
+    """
+    @staticmethod
+    def getStateName():
+        return "StagePiG4NearlyFilledState"
+    
+    @staticmethod
+    def getPreferredReadingInterval():
+        # Prefer a fastish reading interval since we're near full
+        return 30
+    
+    def setupState(self):
+        logger.info("Setting up state " + self.getStateName())
+        print("Setting up state " + self.getStateName())
+        
+        #Open V12 a bit to allow some water flow from V6 to V4
+        sockets["SOCK22"].write("Valve Position 50")
+        
+        #TODO: when the matrix pump is implemented, we need to:
+        #    (a) get the lock to control the pump before we open V12
+        #    (b) either open the pump's valves to allow passive water flow,
+        #        or start pumping downstream at a medium rate
+        
+        #TODO: When the matrix pump is implemented, remember to include
+        #a check that the reference we get from the devices dictionary
+        #is not a reference to nothing.
+    
+    def doLogic(self, readings, devices, monitors, sockets, reading_interval):
+        parser = StagePiReadingsParser(readings)
+        
+        ri = self.getPreferredReadingInterval()
+        
+        #Evaluate possible transitions to new states
+        if not parser.g6Empty():
+            if parser.g4VeryNearlyFullOrMore():
+                ri = csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
+                
+            else if not parser.g4NearlyFullOrMore():
+                ri = csm.setStateBy(StagePiG4FillingState, self)
+            
+        else:
+            ri = csm.setStateBy(StagePiG6EmptyState, self)
+        
+        return ri
+
+class StagePiG4FillingState(ControlStateABC):
+    """
+    Stage Pi control state when G4 is filling and not nearly full
+    """
+    @staticmethod
+    def getStateName():
+        return "StagePiG4FillingState"
+    
+    def setupState(self):
+        logger.info("Setting up state " + self.getStateName())
+        print("Setting up state " + self.getStateName())
+        
+        #Open V12 fully to allow water flow from V6 to V4
+        sockets["SOCK22"].write("Valve Position 100")
+        
+        #TODO: when the matrix pump is implemented, we need to:
+        #    (a) get the lock to control the pump before we open V12
+        #    (b) either open the pump's valves to allow passive water flow,
+        #        or start pumping downstream at a high rate
+        
+        #TODO: When the matrix pump is implemented, remember to include
+        #a check that the reference we get from the devices dictionary
+        #is not a reference to nothing.
+    
+    def doLogic(self, readings, devices, monitors, sockets, reading_interval):
+        parser = StagePiReadingsParser(readings)
+        
+        ri = self.getPreferredReadingInterval()
+        
+        #Evaluate possible transitions to new states
+        if not parser.g6Empty():
+            if parser.g4NearlyFullOrMore():
+                ri = csm.setStateBy(StagePiG4NearlyFilledState, self)
+                
+        else:
+            ri = csm.setStateBy(StagePiG6EmptyState, self)
+        
+        return ri
+    
+class StagePiG6EmptyState(ControlStateABC):
+    """
+    Stage Pi control state when G6 is empty and G4 is NOT overfilled
+    """
+    @staticmethod
+    def getStateName():
+        return "StagePiG6EmptyState"
+    
+    def setupState(self):
+        logger.info("Setting up state " + self.getStateName())
+        print("Setting up state " + self.getStateName())
+        
+        #Close V12 fully, since there's no water to flow either direction
+        sockets["SOCK22"].write("Valve Position 100")
+        
+        #TODO: when the matrix pump is implemented, we need to request it to
+        #be turned off and release any lock this Pi holds on using the pump.
+        
+        #TODO: When the matrix pump is implemented, remember to include
+        #a check that the reference we get from the devices dictionary
+        #is not a reference to nothing.
+    
+    def doLogic(self, readings, devices, monitors, sockets, reading_interval):
+        parser = StagePiReadingsParser(readings)
+        
+        ri = self.getPreferredReadingInterval()
+        
+        #Evaluate possible transitions to new states
+        
+        #Unlike the other four states, we can enter G4OverfilledState even if
+        #G6 remains empty
+        if(parser.g4Overfull()):
+            ri = csm.setState(StagePiG4OverfilledState)
+        
+        #If G6 is no longer empty, enter the appropriate filling state for
+        #the current G4 fill level
+        else if not parser.g6Empty():
+            if parser.g4FullOrMore():
+                ri = csm.setStateBy(StagePiG4FilledState, self)
+            
+            else if parser.g4VeryNearlyFullOrMore():
+                ri = csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
+            
+            else if parser.g4NearlyFullOrMore():
+                ri = csm.setStateBy(StagePiG4NearlyFilledState, self)
+            
+            else:
+                ri = csm.setStateBy(StagePiG4FillingState, self)
+        
+        return ri
+
+class StagePiControlLogic:
+    """
+    This class represents the control logic for stagepi.
+    
+    It inherits its main public method "doLogic" from
+    ControlStateMachineABC, which, in turn, delegates entirely to the
+    object representing the current state.
+    """
+    def __init__(self):
+        #Run superclass initialiser
+        super().__init__()
+        
+        #Initialise dictionary of allowable states
+        self._addState(StagePiInitState)
+        self._addState(StagePiG4OverfilledState)
+        self._addState(StagePiG4FilledState)
+        self._addState(StagePiG4VeryNearlyFilledState)
+        self._addState(StagePiG4NearlyFilledState)
+        self._addState(StagePiG4FillingState)
+        self._addState(StagePiG6EmptyState)
+        
+        #Set initial state
+        self.setState(StagePiInitState)
+    
+    @staticmethod
+    def getStateMachineName():
+        return "StagePiControlLogic"
+
+def stagepi_control_logic(readings, devices, monitors, sockets, reading_interval):
+    """
+    Control logic for stagepi's zone of responsibility.
+    
+    This just wraps StagePiControlLogic.doLogic().
+    
+    See StagePiValveOnlyControlLogic for documentation.
+
+    Args:
+        readings (list):                A list of the latest readings for each probe/device.
+
+        devices  (list):                A list of all master pi device objects.
+
+        monitors (list):                A list of all master pi monitor objects.
+
+        sockets (list of Socket):       A list of Socket objects that represent
+                                        the data connections between pis. Passed
+                                        here so we can control the reading
+                                        interval at that end.
+
+        reading_interval (int):     The current reading interval, in
+                                    seconds.
+
+    Returns:
+        int: The reading interval, in seconds.
+
+    Usage:
+
+        >>> reading_interval = sumppi_control_logic(<listofreadings>,
+        >>>                                     <listofprobes>, <listofmonitors>,
+        >>>                                     <listofsockets>, <areadinginterval)
+
+    """
+    #Check that the devices list is not empty.
+    assert devices
+
+    #Check that the sockets list is not empty.
+    assert sockets
+    
+    #Check that the reading interval is positive, and greater than 0.
+    assert reading_interval > 0
+    
+    #Don't check any specific devices or readings here. That's
+    #delegated to the state classes that deal with those devices.
+    
+    #TODO: Refactor config.py and main.py to run a set-up function
+    #      before the logic, which will instantiate the control logic
+    #      state machine somewhere where this function can reference it
+    
+    return StagePiControlLogic.doLogic(readings, devices, monitors, sockets, reading_interval)
 
 # -------------------- MISCELLANEOUS FUNCTIONS --------------------
 def setup_devices(system_id, dictionary="Probes"):
