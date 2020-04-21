@@ -386,9 +386,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                 reading_interval = function(readings, devices, monitors, sockets, reading_interval)
 
-            #Sumppi sets the reading interval, so it doesn't need to check if it is changing.
-            #TODO: Do we still want this?
-            if system_id == "SUMP":
+            #The NAS box sets the reading interval, so it doesn't need to check if it is changing.
+            if system_id == "NAS":
                 #Wait until it's time to check for another reading.
                 time.sleep(reading_interval)
 

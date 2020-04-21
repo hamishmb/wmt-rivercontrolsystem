@@ -181,14 +181,35 @@ def reconfigure_logging():
 
 SITE_SETTINGS = {
 
-    #Settings for the SUMP site (master pi).
+    #Settings for the NAS site.
+    "NAS":
+        {
+            "ID": "NAS",
+            "Name": "NAS Box",
+            "Default Interval": 15,
+            "IPAddress": "192.168.1.237",
+            "HostingSockets": True,
+
+            #TODO Set up another account for this.
+            "DBUser": "admin",
+            "DBPasswd": "admin",
+
+            #Local probes.
+            "Probes":
+                {},
+
+            #Devices to control.
+            "Devices": {},
+        },
+
+    #Settings for the SUMP site.
     "SUMP":
         {
             "ID": "SUMP",
             "Name": "Sump Pi",
             "Default Interval": 15,
             "IPAddress": "192.168.0.2",
-            "HostingSockets": True,
+            "HostingSockets": False,
             "ControlLogicFunction": "sumppi_control_logic",
             "DBUser": "sumppi",
             "DBPasswd": "river20",
@@ -237,6 +258,13 @@ SITE_SETTINGS = {
                         "Pins":  (18)
                     }
                 },
+
+            "ServerAddress": "192.168.1.237",
+            "ServerPort": 30004,
+            "ServerName": "NASBox",
+            "SocketName": "Wendy Street Buttspi Socket",
+            "SocketID": "SOCK4"
+
         },
 
     #Settings for the G3 site (client pi behind the Lady Hanham Building).
@@ -369,7 +397,7 @@ SITE_SETTINGS = {
 
             },
 
-            "ServerAddress": "192.168.0.2",
+            "ServerAddress": "192.168.1.237",
             "ServerPort": 30003,
             "ServerName": "lhbutts",
             "SocketName": "Lady Hanham Buttspi Socket",
@@ -428,9 +456,9 @@ SITE_SETTINGS = {
             #Devices to control.
             "Devices": {},
 
-            "ServerAddress": "192.168.0.2",
+            "ServerAddress": "192.168.1.237",
             "ServerPort": 30004,
-            "ServerName": "SumpPi",
+            "ServerName": "NASBox",
             "SocketName": "Wendy Street Buttspi Socket",
             "SocketID": "SOCK4"
         },
@@ -487,9 +515,9 @@ SITE_SETTINGS = {
             #Devices to control.
             "Devices": {},
 
-            "ServerAddress": "192.168.0.2",
+            "ServerAddress": "192.168.1.237",
             "ServerPort": 30006,
-            "ServerName": "SumpPi",
+            "ServerName": "NASBox",
             "SocketName": "Wendy Street Stagepi Socket",
             "SocketID": "SOCK6"
 
@@ -521,9 +549,9 @@ SITE_SETTINGS = {
             "Devices": {},
 
             #Config for server connection.
-            "ServerAddress": "192.168.0.2",
+            "ServerAddress": "192.168.1.237",
             "ServerPort": 30014,
-            "ServerName": "SumpPi",
+            "ServerName": "NASBox",
             "SocketName": "Wendy Street Butts Gate Valve V4 Socket",
             "SocketID": "SOCK14",
 
@@ -554,9 +582,9 @@ SITE_SETTINGS = {
 #            "Devices": {},
 #
 #            #Config for server connection.
-#            "ServerAddress": "192.168.0.2",
+#            "ServerAddress": "192.168.1.237",
 #            "ServerPort": 30016,
-#            "ServerName": "SumpPi",
+#            "ServerName": "NASBox",
 #            "SocketName": "Matrix Pump Gate Valve V6 Socket",
 #            "SocketID": "SOCK16",
 #
@@ -587,9 +615,9 @@ SITE_SETTINGS = {
 #            "Devices": {},
 #
 #            #Config for server connection.
-#            "ServerAddress": "192.168.0.2",
+#            "ServerAddress": "192.168.1.237",
 #            "ServerPort": 30017,
-#            "ServerName": "SumpPi",
+#            "ServerName": "NASBox",
 #            "SocketName": "Matrix Pump Gate Valve V7 Socket",
 #            "SocketID": "SOCK17",
 #
@@ -620,9 +648,9 @@ SITE_SETTINGS = {
 #            "Devices": {},
 #
 #            #Config for server connection.
-#            "ServerAddress": "192.168.0.2",
+#            "ServerAddress": "192.168.1.237",
 #            "ServerPort": 30018,
-#            "ServerName": "SumpPi",
+#            "ServerName": "NASBox",
 #            "SocketName": "Matrix Pump Gate Valve V4 Socket",
 #            "SocketID": "SOCK18",
 #
@@ -653,9 +681,9 @@ SITE_SETTINGS = {
 #            "Devices": {},
 #
 #            #Config for server connection.
-#            "ServerAddress": "192.168.0.2",
+#            "ServerAddress": "192.168.1.237",
 #            "ServerPort": 30019,
-#            "ServerName": "SumpPi",
+#            "ServerName": "NASBox",
 #            "SocketName": "Matrix Pump Gate Valve V9 Socket",
 #            "SocketID": "SOCK19",
 #
@@ -686,9 +714,9 @@ SITE_SETTINGS = {
 #            "Devices": {},
 
 #            #Config for server connection.
-#            "ServerAddress": "192.168.0.2",
+#            "ServerAddress": "192.168.1.237",
 #            "ServerPort": 30022,
-#            "ServerName": "SumpPi",
+#            "ServerName": "NASBox",
 #            "SocketName": "Stage Butts Gate Valve V12 Socket",
 #            "SocketID": "SOCK22",
 #
