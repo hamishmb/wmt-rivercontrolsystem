@@ -38,7 +38,7 @@ import subprocess
 import logging
 from collections import deque
 #import MySQLdb as mysql
-import psutil
+#import psutil
 
 import config
 
