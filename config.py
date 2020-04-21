@@ -260,10 +260,10 @@ SITE_SETTINGS = {
                 },
 
             "ServerAddress": "192.168.1.237",
-            "ServerPort": 30004,
+            "ServerPort": 30002,
             "ServerName": "NASBox",
-            "SocketName": "Wendy Street Buttspi Socket",
-            "SocketID": "SOCK4"
+            "SocketName": "Sumppi Socket",
+            "SocketID": "SOCK2"
 
         },
 
