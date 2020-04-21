@@ -68,5 +68,9 @@ class ADS:
     #Voltage.
     voltage = 0
 
+    @classmethod
+    def ADS1115(i2c, address=None):
+        pass
+
 def AnalogIn(ads, pin):
     return ADS
