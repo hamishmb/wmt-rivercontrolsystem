@@ -1102,9 +1102,6 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
     #Check that the devices list is not empty.
     assert devices
 
-    #Check that the sockets list is not empty.
-    assert sockets
-
     #Check that the reading interval is positive, and greater than 0.
     assert reading_interval > 0
 
@@ -1123,7 +1120,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         #Close the wendy butts gate valve.
         logger.info("Closing the wendy butts gate valve...")
         print("Closing the wendy butts gate valve...")
-        sockets["SOCK14"].write("Valve Position 0")
+        #sockets["SOCK14"].write("Valve Position 0")
 
         main_pump.enable()
 
@@ -1169,7 +1166,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         #Close gate valve.
         logger.info("Closing wendy butts gate valve...")
         print("Closing wendy butts gate valve...")
-        sockets["SOCK14"].write("Valve Position 0")
+        #sockets["SOCK14"].write("Valve Position 0")
 
         main_pump.enable()
 
@@ -1191,7 +1188,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         #Close gate valve.
         logger.info("Closing wendy butts gate valve...")
         print("Closing wendy butts gate valve...")
-        sockets["SOCK14"].write("Valve Position 0")
+        #sockets["SOCK14"].write("Valve Position 0")
 
         main_pump.enable()
 
@@ -1212,12 +1209,12 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         if butts_reading >= 300:
             logger.info("Opening wendy butts gate valve to 25%...")
             print("Opening wendy butts gate valve to 25%...")
-            sockets["SOCK14"].write("Valve Position 25")
+            #sockets["SOCK14"].write("Valve Position 25")
 
         else:
             logger.warning("Insufficient water in wendy butts...")
             print("Insufficient water in wendy butts...")
-            sockets["SOCK14"].write("Valve Position 0")
+            #sockets["SOCK14"].write("Valve Position 0")
 
         #Make sure the main circulation pump is on.
         logger.info("Turning the main cirulation pump on, if it was off...")
@@ -1238,12 +1235,12 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         if butts_reading >= 300:
             logger.info("Opening wendy butts gate valve to 50%...")
             print("Opening wendy butts gate valve to 50%...")
-            sockets["SOCK14"].write("Valve Position 50")
+            #sockets["SOCK14"].write("Valve Position 50")
 
         else:
             logger.error("Insufficient water in wendy butts...")
             print("Insufficient water in wendy butts...")
-            sockets["SOCK14"].write("Valve Position 0")
+            #sockets["SOCK14"].write("Valve Position 0")
 
             logger.error("*** NOTICE ***: Water level in the sump is between 200 and 300 mm!")
             logger.error("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: "
@@ -1271,12 +1268,12 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         if butts_reading >= 300:
             logger.info("Opening wendy butts gate valve to 100%...")
             print("Opening wendy butts gate valve to 100%...")
-            sockets["SOCK14"].write("Valve Position 100")
+            #sockets["SOCK14"].write("Valve Position 100")
 
         else:
             logger.warning("Insufficient water in wendy butts...")
             print("Insufficient water in wendy butts...")
-            sockets["SOCK14"].write("Valve Position 0")
+            #sockets["SOCK14"].write("Valve Position 0")
 
             logger.critical("*** CRITICAL ***: Water level in the sump less than 200 mm!")
             logger.critical("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to system.")
@@ -1300,9 +1297,6 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
     #Set the reading interval in the monitors, and send it down the sockets to the peers.
     for monitor in monitors:
         monitor.set_reading_interval(reading_interval)
-
-    for each_socket in sockets.values():
-        each_socket.write("Reading Interval: "+str(reading_interval))
 
     return reading_interval
 
