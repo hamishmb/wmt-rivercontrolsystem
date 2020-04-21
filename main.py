@@ -345,6 +345,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "0mm",
                                              "OK")
 
+    readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "0mm",
+                                             "OK")
+
     readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "True",
                                             "OK")
 
