@@ -88,6 +88,8 @@ except (ImportError, NotImplementedError, ValueError) as error:
         from Tools.testingtools import ads
         from Tools.testingtools import AnalogIn
 
+        i2c = None
+
 def reconfigure_logger():
     """
     Reconfigures the logging level for this module.
