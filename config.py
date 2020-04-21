@@ -145,8 +145,8 @@ import os
 import sys
 
 #Define global variables.
-VERSION = "0.11.0~pre3"
-RELEASEDATE = "2/10/2019"
+VERSION = "0.11.0~pre4"
+RELEASEDATE = "21/0/2020"
 
 #Used to access the database connection object.
 DBCONNECTION = None
@@ -156,7 +156,7 @@ DBCONNECTION = None
 if not "TESTING" in globals():
     #If running on a raspberry pi (architecture check), default to False,
     #unless the testing flag is present.
-    if os.uname()[4][:3] == "arm" and \
+    if os.uname()[4][:3] in ("arm", "aar") and \
         "-t" not in sys.argv and \
         "--testing" not in sys.argv:
 
