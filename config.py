@@ -190,8 +190,8 @@ SITE_SETTINGS = {
             "IPAddress": "192.168.0.2",
             "HostingSockets": True,
             "ControlLogicFunction": "sumppi_control_logic",
-            "DBUser": "test",
-            "DBPasswd": "test",
+            "DBUser": "sumppi",
+            "DBPasswd": "river20",
             "DBHost": "192.168.1.114",
             "DBPort": 3306,
 
@@ -247,8 +247,8 @@ SITE_SETTINGS = {
             "Default Interval": 15,
             "IPAddress": "192.168.0.3",
             "HostingSockets": False,
-            "DBUser": "test",
-            "DBPasswd": "test",
+            "DBUser": "hanhampi",
+            "DBPasswd": "river20",
 
             #Local probes.
             "Probes":
@@ -384,8 +384,8 @@ SITE_SETTINGS = {
             "Default Interval": 15,
             "IPAddress": "192.168.0.4",
             "HostingSockets": False,
-            "DBUser": "test",
-            "DBPasswd": "test",
+            "DBUser": "wbuttspi",
+            "DBPasswd": "river20",
 
             #Local probes.
             "Probes":
@@ -443,8 +443,8 @@ SITE_SETTINGS = {
             "Default Interval": 15,
             "IPAddress": "192.168.0.6",
             "HostingSockets": False,
-            "DBUser": "test",
-            "DBPasswd": "test",
+            "DBUser": "sbuttspi",
+            "DBPasswd": "river20",
 
             #Local probes.
             "Probes":
@@ -503,8 +503,8 @@ SITE_SETTINGS = {
             "HostingSockets": False,
             "IPAddress": "192.168.0.14",
             "Default Interval": 15,
-            "DBUser": "test",
-            "DBPasswd": "test",
+            "DBUser": "valvev4",
+            "DBPasswd": "river20",
 
             "Name": "Butts Farm Gate Valve V4",
             "Class": Tools.deviceobjects.GateValve,
@@ -536,8 +536,8 @@ SITE_SETTINGS = {
 #            "HostingSockets": False,
 #            "IPAddress": "192.168.0.16",
 #            "Default Interval": 15,
-#            "DBUser": "test",
-#            "DBPasswd": "test",
+#            "DBUser": "valvev6",
+#            "DBPasswd": "river20",
 #
 #            "Name": "Matrix Pump Gate Valve V6",
 #            "Class": Tools.deviceobjects.GateValve,
@@ -569,8 +569,8 @@ SITE_SETTINGS = {
 #            "HostingSockets": False,
 #            "IPAddress": "192.168.0.17",
 #            "Default Interval": 15,
-#            "DBUser": "test",
-#            "DBPasswd": "test",
+#            "DBUser": "valvev7",
+#            "DBPasswd": "river20",
 #
 #            "Name": "Matrix Pump Gate Valve V7",
 #            "Class": Tools.deviceobjects.GateValve,
@@ -602,8 +602,8 @@ SITE_SETTINGS = {
 #            "HostingSockets": False,
 #            "IPAddress": "192.168.0.18",
 #            "Default Interval": 15,
-#            "DBUser": "test",
-#            "DBPasswd": "test",
+#            "DBUser": "valvev8",
+#            "DBPasswd": "river20",
 #
 #            "Name": "Matrix Pump Gate Valve V8",
 #            "Class": Tools.deviceobjects.GateValve,
@@ -635,8 +635,8 @@ SITE_SETTINGS = {
 #            "HostingSockets": False,
 #            "IPAddress": "192.168.0.19",
 #            "Default Interval": 15,
-#            "DBUser": "test",
-#            "DBPasswd": "test",
+#            "DBUser": "valvev9",
+#            "DBPasswd": "river20",
 #
 #            "Name": "Matrix Pump Gate Valve V9",
 #            "Class": Tools.deviceobjects.GateValve,
@@ -668,8 +668,8 @@ SITE_SETTINGS = {
 #            "HostingSockets": False,
 #            "IPAddress": "192.168.0.22",
 #            "Default Interval": 15,
-#            "DBUser": "test",
-#            "DBPasswd": "test",
+#            "DBUser": "valvev12",
+#            "DBPasswd": "river20",
 #
 #            "Name": "Stage Butts Gate Valve V12",
 #            "Class": Tools.deviceobjects.GateValve,
