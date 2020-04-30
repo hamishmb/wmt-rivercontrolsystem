@@ -234,7 +234,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     #If this isn't the NAS box, start synchronising time with the NAS box.
     if system_id != "NAS":
-        core_tools.SyncTime()
+        core_tools.SyncTime(system_id)
 
     #Start monitoring system load.
     #core_tools.MonitorLoad()

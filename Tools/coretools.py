@@ -333,11 +333,15 @@ class SyncTime(threading.Thread):
     This class starts a thread that repeatedly synchronises the system time of
     all the pis with Sump Pi's hardware clock every day. Note that special permissions
     need to have been granted to normal users for this to work when not run as root.
+
+    Constructor args:
+        system_id (String):             The system ID of this pi.
     """
 
-    def __init__(self):
+    def __init__(self, system_id):
         """The constructor"""
         threading.Thread.__init__(self)
+        self.system_id = system_id
 
         self.start()
 
@@ -350,10 +354,31 @@ class SyncTime(threading.Thread):
             stdout = cmd.stdout.decode("UTF-8", errors="ignore")
 
             if cmd.returncode != 0:
-                logger.error("Unable to sync system time. Error was: "+str(stdout))
-                print("Unable to sync system time. Error was: "+str(stdout))
-                logger.error("Retrying time sync in 10 seconds...")
-                sleep = 10
+                logger.error("Unable to sync system time with NAS box. Error was: "+str(stdout))
+                print("Unable to sync system time with NAS box. Error was: "+str(stdout))
+
+                #If this isn't Sump Pi, try to sync with Sump Pi instead.
+                if self.system_id != "SUMP":
+                    logger.error("Falling back to Sump Pi...")
+
+                    cmd = subprocess.run(["sudo", "rdate", config.SITE_SETTINGS["SUMP"]["IPAddress"]],
+                                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+                    stdout = cmd.stdout.decode("UTF-8", errors="ignore")
+
+                    if cmd.returncode != 0:
+                        logger.error("Unable to sync system time with Sump Pi. Error was: "+str(stdout))
+                        print("Unable to sync system time with Sump Pi. Error was: "+str(stdout))
+                        logger.error("Retrying time sync in 10 seconds...")
+                        sleep = 10
+
+                    else:
+                        logger.error("Retrying time sync in 10 seconds...")
+                        sleep = 10
+
+                else:
+                    logger.error("Retrying time sync in 10 seconds...")
+                    sleep = 10
 
             else:
                 logger.info("System time synchronised, now set to "+str(stdout))
