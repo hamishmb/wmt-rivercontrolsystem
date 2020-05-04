@@ -255,6 +255,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
             socket = socket_tools.Sockets("Socket", site_settings["SocketName"])
             socket.set_portnumber(site_settings["ServerPort"])
+            socket.set_server_address(site_settings["IPAddress"])
             sockets[site_settings["SocketID"]] = socket
 
             socket.start_handler()
