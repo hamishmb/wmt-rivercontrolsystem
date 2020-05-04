@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Sockets Class (client) test for the River System Control and Monitoring Software Version 0.10.0
+# Sockets Class (client) test for the River System Control and Monitoring Software
 # This file is part of the River System Control and Monitoring Software.
-# Copyright (C) 2017-2018 Wimborne Model Town
+# Copyright (C) 2017-2020 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
 # at your option, any later version.
@@ -19,12 +19,67 @@ import logging
 import time
 import sys
 import os
+import getopt
 
 sys.path.insert(0, os.path.abspath('../../'))
 sys.path.insert(0, os.path.abspath('../'))
 
+def usage():
+    """
+    This function is used to output help information to the standard output
+    if the user passes invalid/incorrect commandline arguments.
+
+    Usage:
+
+    >>> usage()
+    """
+
+    print("\nUsage: test_socketsclass_client.py [OPTION]\n\n")
+    print("Options:\n")
+    print("       -h, --help:                   Show this help message")
+    print("       -a, --address:                The IP address to connect to")
+    print("       -p, --portnumber:             The port number to use")
+    print("test_socketsclass_client.py is released under the GNU GPL Version 3")
+    print("Copyright (C) Wimborne Model Town 2017-2020")
+
 def run_standalone():
+    ip_address = None
+    port = None
+
+    #Check all cmdline options are valid.
+    try:
+        opts = getopt.getopt(sys.argv[1:], "ha:p:",
+                             ["help", "address=", "portnumber="])[0]
+
+    except getopt.GetoptError as err:
+        #Invalid option. Show the help message and then exit.
+        #Show the error.
+        print(str(err))
+        usage()
+        sys.exit(2)
+
+    #Do setup. o=option, a=argument.
+    for opt, arg in opts:
+        if opt in ("-a", "--address"):
+            ip_address = arg
+
+        elif opt in ("-p", "--portnumber"):
+            #Enable testing mode.
+            port = int(arg)
+
+        elif opt in ("-h", "--help"):
+            usage()
+            sys.exit()
+
+        else:
+            assert False, "unhandled option"
+
+    #Check ip and port were specified.
+    assert ip_address is not None, "You must specify the IP address to connect to"
+    assert port is not None, "You must specify the port number to connect to"
+
     #Do required imports.
+    import config
     import Tools.sockettools as socket_tools
 
     socket_tools.logger = logger
@@ -35,8 +90,8 @@ def run_standalone():
     socket = socket_tools.Sockets("Plug")
 
     #Set the object up.
-    socket.set_portnumber(30000)
-    socket.set_server_address("127.0.0.1")
+    socket.set_portnumber(port)
+    socket.set_server_address(ip_address)
 
     socket.start_handler()
 
@@ -50,9 +105,8 @@ def run_standalone():
 
     except KeyboardInterrupt:
         #Clean up.
-        socket.request_handler_exit()
+        config.EXITING = True
         socket.wait_for_handler_to_exit()
-        socket.reset()
 
 if __name__ == "__main__":
     #Set up basic logging to stdout.
