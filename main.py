@@ -316,7 +316,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                                                                  probe_name.split(":")[0],
                                                                  probe_name.split(":")[1]))
 
-            elif site_settings["Type"] == "Gate Valve":
+            if site_settings["Type"] == "Gate Valve":
                 monitors.append(monitor_tools.SocketsMonitor(sockets[site_settings["SocketID"]],
                                                              site, site))
 

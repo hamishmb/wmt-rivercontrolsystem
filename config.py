@@ -184,6 +184,7 @@ SITE_SETTINGS = {
     #Settings for the SUMP site (master pi).
     "SUMP":
         {
+            "Type": "Site",
             "ID": "SUMP",
             "Name": "Sump Pi",
             "Default Interval": 15,
@@ -242,6 +243,7 @@ SITE_SETTINGS = {
     #Settings for the G3 site (client pi behind the Lady Hanham Building).
     "G3":
         {
+            "Type": "Site",
             "ID": "G3",
             "Name": "Lady Hanham Butts Pi",
             "Default Interval": 15,
@@ -379,6 +381,7 @@ SITE_SETTINGS = {
     #Settings for the G4 site (client pi at Wendy Street).
     "G4":
         {
+            "Type": "Site",
             "ID": "G4",
             "Name": "Wendy Butts Pi",
             "Default Interval": 15,
@@ -438,6 +441,7 @@ SITE_SETTINGS = {
     #Settings for the G6 site (client pi behind the stage).
     "G6":
         {
+            "Type": "Site",
             "ID": "G6",
             "Name": "Stage Butts Pi",
             "Default Interval": 15,
