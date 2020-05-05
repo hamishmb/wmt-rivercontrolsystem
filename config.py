@@ -371,7 +371,7 @@ SITE_SETTINGS = {
 
             "ServerAddress": "192.168.0.2",
             "ServerPort": 30003,
-            "ServerName": "lhbutts",
+            "ServerName": "SumpPi",
             "SocketName": "Lady Hanham Buttspi Socket",
             "SocketID": "SOCK3"
         },
@@ -496,6 +496,102 @@ SITE_SETTINGS = {
         },
 
     #Gate Valves.
+    "V1":
+        {
+            "Type": "Gate Valve",
+            "ID":   "V1",
+            "HostingSockets": False,
+            "IPAddress": "192.168.0.11",
+            "Default Interval": 15,
+            "DBUser": "test",
+            "DBPasswd": "test",
+
+            "Name": "Lady Hanham Butts Farm Gate Valve V1",
+            "Class": Tools.deviceobjects.GateValve,
+            "ADCAddress":       0x48,
+
+            "Pins":  (17, 27, 19),
+            "posTolerance": 1,
+            "maxOpen": 90,
+            "minOpen": 1,
+            "refVoltage": 3.3,
+
+            #Here for compatibility reasons.
+            "Probes": {},
+            "Devices": {},
+
+            #Config for server connection.
+            "ServerAddress": "192.168.0.2",
+            "ServerPort": 30011,
+            "ServerName": "SumpPi",
+            "SocketName": "Lady Hanham Butts Gate Valve V1 Socket",
+            "SocketID": "SOCK11",
+
+        },
+    "V2":
+        {
+            "Type": "Gate Valve",
+            "ID":   "V2",
+            "HostingSockets": False,
+            "IPAddress": "192.168.0.12",
+            "Default Interval": 15,
+            "DBUser": "test",
+            "DBPasswd": "test",
+
+            "Name": "Lady Hanham Butts Farm Gate Valve V2",
+            "Class": Tools.deviceobjects.GateValve,
+            "ADCAddress":       0x48,
+
+            "Pins":  (17, 27, 19),
+            "posTolerance": 1,
+            "maxOpen": 90,
+            "minOpen": 1,
+            "refVoltage": 3.3,
+
+            #Here for compatibility reasons.
+            "Probes": {},
+            "Devices": {},
+
+            #Config for server connection.
+            "ServerAddress": "192.168.0.2",
+            "ServerPort": 30012,
+            "ServerName": "SumpPi",
+            "SocketName": "Lady Hanham Butts Gate Valve V2 Socket",
+            "SocketID": "SOCK12",
+
+        },
+    "V3":
+        {
+            "Type": "Gate Valve",
+            "ID":   "V3",
+            "HostingSockets": False,
+            "IPAddress": "192.168.0.13",
+            "Default Interval": 15,
+            "DBUser": "test",
+            "DBPasswd": "test",
+
+            "Name": "Lady Hanham Butts Farm Gate Valve V3",
+            "Class": Tools.deviceobjects.GateValve,
+            "ADCAddress":       0x48,
+
+            "Pins":  (17, 27, 19),
+            "posTolerance": 1,
+            "maxOpen": 90,
+            "minOpen": 1,
+            "refVoltage": 3.3,
+
+            #Here for compatibility reasons.
+            "Probes": {},
+            "Devices": {},
+
+            #Config for server connection.
+            "ServerAddress": "192.168.0.2",
+            "ServerPort": 30013,
+            "ServerName": "SumpPi",
+            "SocketName": "Lady Hanham Butts Gate Valve V3 Socket",
+            "SocketID": "SOCK13",
+
+        },
     "V4":
         {
             "Type": "Gate Valve",
@@ -506,7 +602,7 @@ SITE_SETTINGS = {
             "DBUser": "test",
             "DBPasswd": "test",
 
-            "Name": "Butts Farm Gate Valve V4",
+            "Name": "Wendy Street Butts Farm Gate Valve V4",
             "Class": Tools.deviceobjects.GateValve,
             "ADCAddress":       0x48,
 
