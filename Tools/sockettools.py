@@ -392,6 +392,11 @@ class Sockets:
         except subprocess.CalledProcessError:
             #Non-zero exit status.
             logger.warning("Sockets.peer_alive(): ("+self.name+"): Peer is down!")
+
+            if self.verbose:
+                print("Connection Failed, peer down ("+self.name+"). "
+                      + "Retrying in 10 seconds...")
+
             return False
 
     def _create_and_connect(self):
