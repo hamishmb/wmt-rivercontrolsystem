@@ -206,7 +206,6 @@ class TestDatabaseConnection(unittest.TestCase):
         dbconn = core_tools.DatabaseConnection("SUMP")
 
         self.assertEqual(dbconn.site_id, "SUMP")
-        self.assertEqual(dbconn.pi_name, "Sump Pi")
         self.assertFalse(dbconn.is_connected)
         self.assertEqual(dbconn.in_queue, deque())
         self.assertEqual(dbconn.result, None)
@@ -477,7 +476,8 @@ class TestDatabaseConnection(unittest.TestCase):
             self.assertTrue(result)
 
         #Test that the number of queries is what we expect.
-        self.assertEqual(len(self.dbconn.in_queue), len(data.TEST_ATTEMPT_TO_CONTROL_DATA))
+        #Double the length of the data list, because we log the event each time.
+        self.assertEqual(len(self.dbconn.in_queue), 2*len(data.TEST_ATTEMPT_TO_CONTROL_DATA))
 
         #Change the get_state method back to the original.
         self.dbconn.get_state = original_getstate
@@ -496,7 +496,8 @@ class TestDatabaseConnection(unittest.TestCase):
             self.assertTrue(result)
 
         #Test that the number of queries is what we expect.
-        self.assertEqual(len(self.dbconn.in_queue), len(data.TEST_ATTEMPT_TO_CONTROL_DATA))
+        #Double the length of the data list, because we log the event each time.
+        self.assertEqual(len(self.dbconn.in_queue), 2*len(data.TEST_ATTEMPT_TO_CONTROL_DATA))
 
         #Change the get_state method back to the original.
         self.dbconn.get_state = original_getstate
@@ -617,7 +618,8 @@ class TestDatabaseConnection(unittest.TestCase):
             self.dbconn.release_control(args[0], args[1])
 
         #Test that the number of queries is what we expect.
-        self.assertEqual(len(self.dbconn.in_queue), len(data.TEST_ATTEMPT_TO_CONTROL_DATA))
+        #Double the length of the data list, because we log the event each time.
+        self.assertEqual(len(self.dbconn.in_queue), 2*len(data.TEST_ATTEMPT_TO_CONTROL_DATA))
 
         #Change the get_state method back to the original.
         self.dbconn.get_state = original_getstate
@@ -675,7 +677,8 @@ class TestDatabaseConnection(unittest.TestCase):
                      ("Down", "Rebooting", "None"), ("Down", "No Connection", "None")):
             self.dbconn.update_status(args[0], args[1], args[2])
 
-        self.assertTrue(len(self.dbconn.in_queue) == 4)
+        #Double the length of the data list, because we log the event each time.
+        self.assertTrue(len(self.dbconn.in_queue) == 8)
 
     def test_update_status_2(self):
         """Test this fails when given invalid arguments"""
@@ -779,7 +782,7 @@ class TestSumpPiControlLogic(unittest.TestCase):
 
         self.assertFalse(self.butts_pump.is_enabled())
         self.assertTrue(self.sump_pump.is_enabled())
-        self.assertEqual(self.gate_valve_socket.get_queue(), ["Valve Position 0", "Reading Interval: 60"])
+        self.assertEqual(self.gate_valve_socket.get_queue(), [])
         self.assertEqual(reading_interval, 60)
         self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
 
@@ -803,7 +806,7 @@ class TestSumpPiControlLogic(unittest.TestCase):
 
         self.assertTrue(self.butts_pump.is_enabled())
         self.assertTrue(self.sump_pump.is_enabled())
-        self.assertEqual(self.gate_valve_socket.get_queue(), ["Valve Position 0", "Reading Interval: 30"])
+        self.assertEqual(self.gate_valve_socket.get_queue(), [])
         self.assertEqual(reading_interval, 30)
         self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
 
@@ -827,7 +830,7 @@ class TestSumpPiControlLogic(unittest.TestCase):
 
         self.assertTrue(self.butts_pump.is_enabled())
         self.assertTrue(self.sump_pump.is_enabled())
-        self.assertEqual(self.gate_valve_socket.get_queue(), ["Valve Position 0", "Reading Interval: 30"])
+        self.assertEqual(self.gate_valve_socket.get_queue(), [])
         self.assertEqual(reading_interval, 30)
         self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
 
@@ -850,7 +853,7 @@ class TestSumpPiControlLogic(unittest.TestCase):
 
         self.assertTrue(self.butts_pump.is_enabled())
         self.assertTrue(self.sump_pump.is_enabled())
-        self.assertEqual(self.gate_valve_socket.get_queue(), ["Valve Position 0", "Reading Interval: 30"])
+        self.assertEqual(self.gate_valve_socket.get_queue(), [])
         self.assertEqual(reading_interval, 30)
         self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
 
@@ -878,7 +881,7 @@ class TestSumpPiControlLogic(unittest.TestCase):
         self.assertTrue(self.sump_pump.is_enabled())
 
         #The test sets the interval as 15 seconds. This should not have been changed.
-        self.assertEqual(self.gate_valve_socket.get_queue(), ["Valve Position 0", "Reading Interval: 15"])
+        self.assertEqual(self.gate_valve_socket.get_queue(), [])
         self.assertEqual(reading_interval, 15)
         self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
 
@@ -909,7 +912,7 @@ class TestSumpPiControlLogic(unittest.TestCase):
         self.assertTrue(self.sump_pump.is_enabled())
 
         #The test sets the interval as 15 seconds. This should not have been changed.
-        self.assertEqual(self.gate_valve_socket.get_queue(), ["Valve Position 0", "Reading Interval: 15"])
+        self.assertEqual(self.gate_valve_socket.get_queue(), [])
         self.assertEqual(reading_interval, 15)
         self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
 
@@ -933,7 +936,7 @@ class TestSumpPiControlLogic(unittest.TestCase):
 
         self.assertFalse(self.butts_pump.is_enabled())
         self.assertTrue(self.sump_pump.is_enabled())
-        self.assertEqual(self.gate_valve_socket.get_queue(), ["Valve Position 0", "Reading Interval: 60"])
+        self.assertEqual(self.gate_valve_socket.get_queue(), [])
         self.assertEqual(reading_interval, 60)
         self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
 
@@ -957,7 +960,7 @@ class TestSumpPiControlLogic(unittest.TestCase):
 
         self.assertFalse(self.butts_pump.is_enabled())
         self.assertTrue(self.sump_pump.is_enabled())
-        self.assertEqual(self.gate_valve_socket.get_queue(), ["Valve Position 25", "Reading Interval: 60"])
+        self.assertEqual(self.gate_valve_socket.get_queue(), [])
         self.assertEqual(reading_interval, 60)
         self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
 
@@ -980,7 +983,7 @@ class TestSumpPiControlLogic(unittest.TestCase):
 
         self.assertFalse(self.butts_pump.is_enabled())
         self.assertTrue(self.sump_pump.is_enabled())
-        self.assertEqual(self.gate_valve_socket.get_queue(), ["Valve Position 0", "Reading Interval: 60"])
+        self.assertEqual(self.gate_valve_socket.get_queue(), [])
         self.assertEqual(reading_interval, 60)
         self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
 
@@ -1004,7 +1007,7 @@ class TestSumpPiControlLogic(unittest.TestCase):
 
         self.assertFalse(self.butts_pump.is_enabled())
         self.assertFalse(self.sump_pump.is_enabled())
-        self.assertEqual(self.gate_valve_socket.get_queue(), ["Valve Position 50", "Reading Interval: 30"])
+        self.assertEqual(self.gate_valve_socket.get_queue(), [])
         self.assertEqual(reading_interval, 30)
         self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
 
@@ -1028,7 +1031,7 @@ class TestSumpPiControlLogic(unittest.TestCase):
 
         self.assertFalse(self.butts_pump.is_enabled())
         self.assertFalse(self.sump_pump.is_enabled())
-        self.assertEqual(self.gate_valve_socket.get_queue(), ["Valve Position 0", "Reading Interval: 30"])
+        self.assertEqual(self.gate_valve_socket.get_queue(), [])
         self.assertEqual(reading_interval, 30)
         self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
 
@@ -1052,7 +1055,7 @@ class TestSumpPiControlLogic(unittest.TestCase):
 
         self.assertFalse(self.butts_pump.is_enabled())
         self.assertFalse(self.sump_pump.is_enabled())
-        self.assertEqual(self.gate_valve_socket.get_queue(), ["Valve Position 0", "Reading Interval: 15"])
+        self.assertEqual(self.gate_valve_socket.get_queue(), [])
         self.assertEqual(reading_interval, 15)
         self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
 
@@ -1076,7 +1079,7 @@ class TestSumpPiControlLogic(unittest.TestCase):
 
         self.assertFalse(self.butts_pump.is_enabled())
         self.assertFalse(self.sump_pump.is_enabled())
-        self.assertEqual(self.gate_valve_socket.get_queue(), ["Valve Position 100", "Reading Interval: 15"])
+        self.assertEqual(self.gate_valve_socket.get_queue(), [])
         self.assertEqual(reading_interval, 15)
         self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
 
@@ -1128,9 +1131,9 @@ class TestSumpPiControlLogic(unittest.TestCase):
                                                            self.monitors, self.sockets,
                                                            self.reading_interval)
 
-    @unittest.expectedFailure
     def test_sumppi_control_logic_bad_4(self):
         """Test this fails when there are no sockets in the list."""
+        #FIXME sockets not used here any more, so doesn't fail.
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "100mm", "OK")

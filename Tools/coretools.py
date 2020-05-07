@@ -774,8 +774,7 @@ class DatabaseConnection(threading.Thread):
         if not isinstance(sensor_id, str) or \
             sensor_id == "" or \
             (site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Devices"] and \
-             site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Probes"] and \
-             not "V" in site_id):
+             site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Probes"]):
 
             raise ValueError("Invalid sensor ID: "+str(sensor_id))
 
@@ -864,8 +863,7 @@ class DatabaseConnection(threading.Thread):
         if not isinstance(sensor_id, str) or \
             sensor_id == "" or \
             (site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Devices"] and \
-             site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Probes"] and \
-             not "V" in site_id):
+             site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Probes"]):
 
             raise ValueError("Invalid sensor ID: "+str(sensor_id))
 
@@ -933,13 +931,13 @@ class DatabaseConnection(threading.Thread):
         if not isinstance(sensor_id, str) or \
             sensor_id == "" or \
             (site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Devices"] and \
-             site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Probes"] and \
-             not "V" in site_id):
+             site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Probes"]):
 
             raise ValueError("Invalid sensor ID: "+str(sensor_id))
 
         if not isinstance(request, str) or \
-            request not in ("Manual", "Update", "Reboot", "Shutdown"):
+            (sensor_id == site_id and \
+             request not in ("Manual", "Update", "Reboot", "Shutdown")):
 
             raise ValueError("Invalid request: "+str(request))
 
@@ -992,9 +990,7 @@ class DatabaseConnection(threading.Thread):
         if not isinstance(sensor_id, str) or \
             sensor_id == "" or \
             (site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Devices"] and \
-             site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Probes"] and \
-             not "V" in site_id) or \
-             ("V" in site_id and site_id != sensor_id):
+             site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Probes"]):
 
             raise ValueError("Invalid sensor ID: "+str(sensor_id))
 
@@ -1044,7 +1040,7 @@ class DatabaseConnection(threading.Thread):
             raise ValueError("Invalid severity: "+str(severity))
 
         query = """INSERT INTO `EventLog`(`Site ID`, `Severity`, `Event`, `Device Time`) VALUES('"""+self.site_id \
-                +"""', '"""+severity+"""', '"""+event+"""', '"""+datetime.datetime.now()+"""');"""
+                +"""', '"""+severity+"""', '"""+event+"""', '"""+str(datetime.datetime.now())+"""');"""
 
         self.in_queue.append(query)
 

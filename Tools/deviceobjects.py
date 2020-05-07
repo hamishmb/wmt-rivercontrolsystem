@@ -853,6 +853,12 @@ class GateValve(BaseDeviceClass):
 
     def set_pins(self, pins, _input=True):
         """Wrapper for BaseDeviceClass that also sets forward_pin, reverse_pin, and clutch_pin."""
+        if (not isinstance(pins, list) and \
+            not isinstance(pins, tuple)) or \
+            len(pins) != 3:
+
+            raise ValueError("Invalid value for pins: "+str(pins))
+
         #Call the BaseDeviceClass method.
         super().set_pins(pins, _input)
 

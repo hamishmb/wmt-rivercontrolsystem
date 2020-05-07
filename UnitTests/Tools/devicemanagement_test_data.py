@@ -62,6 +62,9 @@ class GPIO:
 
 #Define two dummy ADC classes for testing.
 class ADS:
+    def ADS1115(i2c, address):
+        pass
+
     #Constants.
     P0 = 0
     P1 = 0

@@ -489,7 +489,14 @@ class TestGateValve(unittest.TestCase):
     def setUp(self):
         #Don't specify the other arguments because they're only used in the
         #ManageGateValve class.
-        self.gatevalve = device_objects.GateValve("V4", "Test", (2, 3, 4), 5, 99, 1, 3.3)
+        self.gatevalve = device_objects.GateValve("VALVE4:V4", "Test")
+
+        self.gatevalve.set_pins((2, 3, 4))
+        self.gatevalve.set_pos_tolerance(5)
+        self.gatevalve.set_max_open(99)
+        self.gatevalve.set_min_open(1)
+        self.gatevalve.set_ref_voltage(3.3)
+        self.gatevalve.set_i2c_address(0x48)
 
     def tearDown(self):
         del self.gatevalve
@@ -510,8 +517,12 @@ class TestGateValve(unittest.TestCase):
             min_open = dataset[5]
             ref_voltage = dataset[6]
 
-            gatevalve = device_objects.GateValve(_id, _name, pins, pos_tolerance, max_open,
-                                                 min_open, ref_voltage)
+            gatevalve = device_objects.GateValve(_id, _name)
+            gatevalve.set_pins(pins)
+            gatevalve.set_pos_tolerance(pos_tolerance)
+            gatevalve.set_max_open(max_open)
+            gatevalve.set_min_open(min_open)
+            gatevalve.set_ref_voltage(ref_voltage)
 
             self.assertEqual(gatevalve.forward_pin, pins[0])
             self.assertEqual(gatevalve.reverse_pin, pins[1])
@@ -533,8 +544,12 @@ class TestGateValve(unittest.TestCase):
             ref_voltage = dataset[6]
 
             try:
-                gatevalve = device_objects.GateValve(_id, _name, pins, pos_tolerance, max_open,
-                                                 min_open, ref_voltage)
+                gatevalve = device_objects.GateValve(_id, _name)
+                gatevalve.set_pins(pins)
+                gatevalve.set_pos_tolerance(pos_tolerance)
+                gatevalve.set_max_open(max_open)
+                gatevalve.set_min_open(min_open)
+                gatevalve.set_ref_voltage(ref_voltage)
 
             except ValueError:
                 #Expected.
