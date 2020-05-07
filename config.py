@@ -40,7 +40,7 @@ Wendy Street Pi                - G4
     Hall Effect (magnetic) Probe -     M0
     Float Switch                 -     FS0
 
-Gate Valve                     - V4
+Gate Valve                     - VALVE4:V4
 
 Full List of Devices and their ID Data, IP Addresses, (i2C Addresses) Pi server Port and
 Socket Numbers where applicable:
@@ -80,29 +80,29 @@ Stage Butts Pi                            - G6, 192.168.0.6, 30006, SOCK6
     Float Switch (High)                   -     G6:FS0
     Float Switch (Low)                    -     G6:FS1
 
-Railway Room G1 Butts Group Gate Valve  - V1, 192.168.0.11, 30011, SOCK11
+Railway Room G1 Butts Group Gate Valve  - VALVE1:V1, 192.168.0.11, 30011, SOCK11
 
-Railway Room G2 Butts Group Gate Valve  - V2, 192.168.0.12, 30012, SOCK12
+Railway Room G2 Butts Group Gate Valve  - VALVE1:V2, 192.168.0.12, 30012, SOCK12
 
-Railway Room G3 Butts Group Gate Valve  - V3, 192.168.0.13, 30013, SOCK13
+Railway Room G3 Butts Group Gate Valve  - VALVE3:V3, 192.168.0.13, 30013, SOCK13
 
-Wendy Street G4 Butts Group Gate Valve  - V4, 192.168.0.14, 30014, SOCK14
+Wendy Street G4 Butts Group Gate Valve  - VALVE4:V4, 192.168.0.14, 30014, SOCK14
 
-Gazebo G5 Butts Group Gate Valve        - V5, 192.168.0.15, 30015, SOCK15
+Gazebo G5 Butts Group Gate Valve        - VALVE5:V5, 192.168.0.15, 30015, SOCK15
 
-Matrix Pump V6 Gate Valve               - V6, 192.168.0.16, 30016, SOCK16
+Matrix Pump V6 Gate Valve               - VALVE6:V6, 192.168.0.16, 30016, SOCK16
 
-Matrix Pump V7 Gate Valve               - V7, 192.168.0.17, 30017, SOCK17
+Matrix Pump V7 Gate Valve               - VALVE7:V7, 192.168.0.17, 30017, SOCK17
 
-Matrix Pump V8 Gate Valve               - V8, 192.168.0.18, 30018, SOCK18
+Matrix Pump V8 Gate Valve               - VALVE8:V8, 192.168.0.18, 30018, SOCK18
 
-Matrix Pump V9 Gate Valve               - V9, 192.168.0.19, 30019, SOCK19
+Matrix Pump V9 Gate Valve               - VALVE9:V9, 192.168.0.19, 30019, SOCK19
 
-TBD Gate Valve                          - V10, 192.168.0.20, 30020, SOCK20
+TBD Gate Valve                          - VALVE10:V10, 192.168.0.20, 30020, SOCK20
 
-TBD Loctn Gardeners Supply Gate Valve   - V11, 192.168.0.21, 30021, SOCK21
+TBD Loctn Gardeners Supply Gate Valve   - VALVE11:V11, 192.168.0.21, 30021, SOCK21
 
-Stage Butts Group G6 Gate Valve         - V12, 192.168.0.22, 30022, SOCK22
+Stage Butts Group G6 Gate Valve         - VALVE12:V12, 192.168.0.22, 30022, SOCK22
 
 Staff & Visitor GUI Pi                  - GUI, 192.168.0.9
 

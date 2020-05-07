@@ -655,6 +655,7 @@ class HallEffectProbe(BaseDeviceClass):
         self.low_limits = None                     #The low limits to be used with this probe.
         self.depths = None                         #The multidimensional list of 4 rows or depths.
         self.length = None                         #The number of sensors in each stack.
+        self.i2c_address = None                    #The i2c address of the probe.
 
     def start_thread(self):
         """Start the thread to keep polling the probe."""
@@ -671,9 +672,9 @@ class HallEffectProbe(BaseDeviceClass):
         Usage:
             >>> <Device-Object>.set_address(<int>)
         """
-        
+
         self.i2c_address = i2c_address
-        
+
     def set_limits(self, high_limits, low_limits):
         """
         This method is used to import the limits this probe will use. The calling code must
@@ -688,17 +689,13 @@ class HallEffectProbe(BaseDeviceClass):
 
         """
 
-        #NB: Removed the []s around these - we don't want a list with a tuple
-        #inside!
 
         #Check the limits are valid.
         #Basic check.
-        if not (isinstance(high_limits, list) or isinstance(high_limits, tuple)) or \
-            not (isinstance(low_limits, list) or isinstance(low_limits, tuple)) or \
+        if not (isinstance(high_limits, (list, tuple))) or \
+            not (isinstance(low_limits, (list, tuple))) or \
             len(high_limits) != 10 or \
-            len(low_limits) != 10 or \
-            high_limits in ((), []) or \
-            low_limits in ((), []):
+            len(low_limits) != 10:
 
             raise ValueError("Invalid limits: "+str(high_limits)+", "+str(low_limits))
 
@@ -706,7 +703,7 @@ class HallEffectProbe(BaseDeviceClass):
         #Check that all the limits are floats or ints.
         for limits in (high_limits, low_limits):
             for limit in limits:
-                if not (isinstance(limit, float) or isinstance(limit, int)) or \
+                if not (isinstance(limit, (float, int))) or \
                     isinstance(limit, bool):
 
                     raise ValueError("Invalid limits: "+str(high_limits)+", "+str(low_limits))
@@ -739,7 +736,7 @@ class HallEffectProbe(BaseDeviceClass):
         #Check the depths are valid.
         #Basic checks.
         for depthlist in depths:
-            if not (isinstance(depthlist, list) or isinstance(depthlist, tuple)) or \
+            if not (isinstance(depthlist, (list, tuple))) or \
                 depthlist in ((), []) or \
                 len(depthlist) != 10 or \
                 len(depths) != 4:
@@ -837,40 +834,42 @@ class HallEffectProbe(BaseDeviceClass):
 # ---------------------------------- HYBRID OBJECTS -----------------------------------------
 # (Objects that contain both controlled devices and sensors)
 class GateValve(BaseDeviceClass):
-    def __init__(self, _id, _name, pins, pos_tolerance, max_open, min_open, ref_voltage, i2c_address):
+    def __init__(self, _id, _name):
         """This is the constructor"""
         BaseDeviceClass.__init__(self, _id, _name)
 
         self.control_thread = None
 
-        #NOTE: Valid BCM pins range from 2 to 27.
-        #Check that the pins specified are valid.
-        if (not isinstance(pins, list) and \
-            not isinstance(pins, tuple)) or \
-            len(pins) != 3:
+        self.forward_pin = None #The pin to set the motor direction to backwards (opening gate).
+        self.reverse_pin = None #The pin to set the motor direction to backwards (closing gate).
+        self.clutch_pin = None #The pin to engage the clutch.
 
-            raise ValueError("Invalid value for pins: "+str(pins))
+        self.pos_tolerance = None #Positional tolerance in %.
+        self.max_open = None #Max open value in %.
+        self.min_open = None #Min open value in %.
 
-        for pin in pins:
-            if not isinstance(pin, int) or \
-                pin < 2 or \
-                pin > 27:
+        self.ref_voltage = None #Reference voltage.
+        self.i2c_address = None #The hardware address for the A2D (ADC)
 
-                raise ValueError("Invalid pin(s): "+str(pins))
+    def set_pins(self, pins, _input=True):
+        """Wrapper for BaseDeviceClass that also sets forward_pin, reverse_pin, and clutch_pin."""
+        #Call the BaseDeviceClass method.
+        super().set_pins(pins, _input)
 
-        #Set all pins as outputs.
-        self.set_pins(pins, _input=False)
-
-        #The pin to set the motor direction to forwards (opening gate).
         self.forward_pin = pins[0]
-
-        #The pin to set the motor direction to backwards (closing gate).
         self.reverse_pin = pins[1]
-
-        #The pin to engage the clutch.
         self.clutch_pin = pins[2]
 
-        #Positional Tolerance in percent
+    def set_pos_tolerance(self, pos_tolerance):
+        """
+        This method sets the positional tolerance of this valve as a percentage.
+
+        Args:
+            pos_tolerance (int). Must be between 1 and 10.
+
+        Usage:
+            >>> <GateValve-Object>.set_pos_tolerance(5)
+        """
         if not isinstance(pos_tolerance, int) or \
             isinstance(pos_tolerance, bool) or \
             pos_tolerance < 1 or \
@@ -880,7 +879,18 @@ class GateValve(BaseDeviceClass):
 
         self.pos_tolerance = pos_tolerance
 
-        #Upper limit of valve position in percent
+    def set_max_open(self, max_open):
+        """
+        This method sets the maximum percentage the gate valve will open.
+
+        Args:
+            max_open (int). The maximum open value of this gate valve.
+                            Must be between 90 and 99.
+
+        Usage:
+
+            >>> <GateValve-Object>.set_max_open(95)
+        """
         if not isinstance(max_open, int) or \
             max_open < 90 or \
             max_open > 99:
@@ -889,7 +899,18 @@ class GateValve(BaseDeviceClass):
 
         self.max_open = max_open
 
-        #Lower limit of valve position in percent
+    def set_min_open(self, min_open):
+        """
+        This method sets the minimum percentage the gate valve will open.
+
+        Args:
+            min_open (int). The minimum open value of this gate valve.
+                            Must be between 1 and 10.
+
+        Usage:
+
+            >>> <GateValve-Object>.set_min_open(5)
+        """
         if not isinstance(min_open, int) or \
             min_open < 1 or \
             min_open > 10:
@@ -898,17 +919,41 @@ class GateValve(BaseDeviceClass):
 
         self.min_open = min_open
 
-        #Voltage at the top of the position pot
-        if not (isinstance(ref_voltage, int) or isinstance(ref_voltage, float)) or \
+    def set_ref_voltage(self, ref_voltage):
+        """
+        This method sets the reference voltage of the gate valve.
+
+        Args:
+            ref_voltage(float). The reference voltage of this gate valve.
+
+        Usage:
+
+            >>> <GateValve-Object>.set_ref_voltage(3.3)
+        """
+        if not isinstance(ref_voltage, (int, float)) or \
             ref_voltage < 2 or \
             ref_voltage > 5.5:
 
             raise ValueError("Invalid value for ref_voltage: "+str(ref_voltage))
 
-        self.i2c_address = i2c_address      #The hardware address for the A2D (ADC)
-
         self.ref_voltage = ref_voltage
-        
+
+    def set_i2c_address(self, i2c_address):
+        """
+        This method sets the address of the valve on the i2c bus.
+
+        Args:
+            i2c_address(int). The address of this gate valve.
+
+        Usage:
+
+            >>> <GateValve-Object>.set_i2c_address(0x48)
+        """
+        if not isinstance(i2c_address, int):
+            raise ValueError("Invalid value for i2c_address: "+str(i2c_address))
+
+        self.i2c_address = i2c_address
+
     def start_thread(self):
         """Start the thread to manage the thread."""
         self.control_thread = device_mgmt.ManageGateValve(self, self.i2c_address)
@@ -949,7 +994,7 @@ class GateValve(BaseDeviceClass):
 
         Returns:
 
-            float. The reference voltage of this gate valve.
+            int. The minimum open value of this gate valve.
 
         Usage:
 
@@ -964,15 +1009,16 @@ class GateValve(BaseDeviceClass):
 
         Returns:
 
-            int. The maximum open value of this gate valve.
+            float. The reference voltage of this gate valve.
 
         Usage:
 
-            >>> <GateValve-Object>.get_max_open()
+            >>> <GateValve-Object>.get_ref_voltage()
             >>> 3.3
         """
         return self.ref_voltage
 
+    # ---------- CONTROL METHODS ----------
     def set_position(self, percentage):
         """
         This method sets the position of the gate valve to the given percentage.

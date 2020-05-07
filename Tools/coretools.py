@@ -843,7 +843,7 @@ class DatabaseConnection(threading.Thread):
             None.           No data available.
 
         Usage:
-            >>> get_state("V4", "V4")
+            >>> get_state("VALVE4", "V4")
             >>> ("Locked", "50%", "SUMP")
 
         """
@@ -1397,9 +1397,7 @@ def setup_devices(system_id, dictionary="Probes"):
         _type = device_settings["Type"]
         device = device_settings["Class"]
 
-        #FIXME make consistent: Gate valve constructors need more arguments.
-        if _type != "Gate Valve":
-            device = device(device_id, device_name)
+        device = device(device_id, device_name)
 
         if _type == "Hall Effect Probe":
             i2c_address = device_settings["ADCAddress"]
@@ -1436,8 +1434,12 @@ def setup_devices(system_id, dictionary="Probes"):
             ref_voltage = device_settings["refVoltage"]
             i2c_address = device_settings["ADCAddress"]
 
-            device = device(device_id, device_name, pins, pos_tolerance,
-                            max_open, min_open, ref_voltage, i2c_address)
+            device.set_pins(pins)
+            device.set_pos_tolerance(pos_tolerance)
+            device.set_max_open(max_open)
+            device.set_min_open(min_open)
+            device.set_ref_voltage(ref_voltage)
+            device.set_i2c_address(i2c_address)
 
             device.start_thread()
 
@@ -1448,21 +1450,6 @@ def setup_devices(system_id, dictionary="Probes"):
         devices.append(device)
 
     return devices
-
-def setup_valve(system_id):
-    """
-    This function is used to set up gate valves.
-
-    Args:
-        system_id (str):              The system (pi) that we're setting up for.
-
-    Returns:
-        A reference to the GateValve object created.
-
-    Usage:
-        >>> setup_valve("V4")
-
-    """
 
 def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None):
     """
