@@ -424,9 +424,9 @@ class MonitorLoad(threading.Thread):
                             + "\nMemory Used (MB): "+str(used_memory_mb)
                             +"\n\n")
 
-                print("\n\nCPU Usage: "+str(cpu_percent)
-                      + "\nMemory Used (MB): "+str(used_memory_mb)
-                      + "\n\n")
+                print("\nCPU Usage: "+str(cpu_percent)
+                      + " Memory Used (MB): "+str(used_memory_mb)
+                      + "\n")
 
             #Respond to system shutdown quickly.
             sleep = 30
@@ -649,7 +649,7 @@ class DatabaseConnection(threading.Thread):
         #It doesn't matter that these aren't done immediately - every query is done on
         #a first-come first-served basis.
 
-        #----- Remove and reset the status entry for this pi, if it exists -----
+        #----- Remove and reset the status entry for this device, if it exists -----
         query = """DELETE FROM `SystemStatus` """ \
                 + """ WHERE `System ID` = '"""+self.site_id+"""';"""
 
@@ -665,6 +665,12 @@ class DatabaseConnection(threading.Thread):
         if self.site_id == "NAS":
             for site_id in config.SITE_SETTINGS:
                 query = """DELETE FROM `"""+site_id+"""Control;"""
+
+                self.in_queue.append(query)
+
+                query = """INSERT INTO `"""+site_id+"""Control`(`Device ID`, """ \
+                            + """`Device Status`, `Request`, `Locked By`) VALUES('""" \
+                            + site_id+"""', 'Unlocked', 'None', 'None');"""
 
                 self.in_queue.append(query)
 
