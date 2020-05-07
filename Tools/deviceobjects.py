@@ -839,9 +839,7 @@ class HallEffectProbe(BaseDeviceClass):
 class GateValve(BaseDeviceClass):
     def __init__(self, _id, _name, pins, pos_tolerance, max_open, min_open, ref_voltage, i2c_address):
         """This is the constructor"""
-        #NB: ID will be repeated eg "V4:V4" so that BaseDeviceClass and the
-        #rest of the software functions properly.
-        BaseDeviceClass.__init__(self, _id+":"+_id, _name)
+        BaseDeviceClass.__init__(self, _id, _name)
 
         self.control_thread = None
 

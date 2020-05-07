@@ -261,7 +261,7 @@ SITE_SETTINGS = {
 
             "ServerAddress": "192.168.1.237",
             "ServerPort": 30002,
-            "ServerName": "NASBox",
+            "ServerName": "NAS",
             "SocketName": "Sumppi Socket",
             "SocketID": "SOCK2"
 
@@ -458,7 +458,7 @@ SITE_SETTINGS = {
 
             "ServerAddress": "192.168.1.237",
             "ServerPort": 30004,
-            "ServerName": "NASBox",
+            "ServerName": "NAS",
             "SocketName": "Wendy Street Buttspi Socket",
             "SocketID": "SOCK4"
         },
@@ -517,208 +517,257 @@ SITE_SETTINGS = {
 
             "ServerAddress": "192.168.1.237",
             "ServerPort": 30006,
-            "ServerName": "NASBox",
+            "ServerName": "NAS",
             "SocketName": "Wendy Street Stagepi Socket",
             "SocketID": "SOCK6"
 
         },
 
     #Gate Valves.
-    "V4":
+    "VALVE4":
         {
-            "Type": "Gate Valve",
-            "ID":   "V4",
-            "HostingSockets": False,
-            "IPAddress": "192.168.0.14",
+            "ID":   "VALVE4",
+            "Name": "Gate Valve V4 Pi",
             "Default Interval": 15,
+            "IPAddress": "192.168.0.14",
+            "HostingSockets": False,
             "DBUser": "valvev4",
             "DBPasswd": "river20",
 
-            "Name": "Butts Farm Gate Valve V4",
-            "Class": Tools.deviceobjects.GateValve,
-            "ADCAddress":       0x48,
-
-            "Pins":  (17, 27, 19),
-            "posTolerance": 1,
-            "maxOpen": 90,
-            "minOpen": 1,
-            "refVoltage": 3.3,
-
             #Here for compatibility reasons.
             "Probes": {},
-            "Devices": {},
+
+            #Devices to control.
+            "Devices":
+                {
+                    "VALVE4:V4":
+                        {
+                            "Type": "Gate Valve",
+                            "ID": "VALVE4:V4",
+                            "Name": "Gate Valve V4",
+                            "Class": Tools.deviceobjects.GateValve,
+                            "ADCAddress": 0x48,
+
+                            "Pins":  (17, 27, 19),
+                            "posTolerance": 1,
+                            "maxOpen": 90,
+                            "minOpen": 1,
+                            "refVoltage": 3.3,
+                        },
+                },
 
             #Config for server connection.
             "ServerAddress": "192.168.1.237",
             "ServerPort": 30014,
-            "ServerName": "NASBox",
+            "ServerName": "NAS",
             "SocketName": "Wendy Street Butts Gate Valve V4 Socket",
             "SocketID": "SOCK14",
 
         },
 
-#    "V6":
+#    "VALVE6":
 #        {
-#            "Type": "Gate Valve",
-#            "ID":   "V6",
-#            "HostingSockets": False,
-#            "IPAddress": "192.168.0.16",
+#            "ID":   "VALVE6",
+#            "Name": "Gate Valve V6 Pi",
 #            "Default Interval": 15,
+#            "IPAddress": "192.168.0.16",
+#            "HostingSockets": False,
 #            "DBUser": "valvev6",
 #            "DBPasswd": "river20",
 #
-#            "Name": "Matrix Pump Gate Valve V6",
-#            "Class": Tools.deviceobjects.GateValve,
-#            "ADCAddress":       0x48,
-#
-#            "Pins":  (17, 27, 19),
-#            "posTolerance": 1,
-#            "maxOpen": 90,
-#            "minOpen": 1,
-#            "refVoltage": 3.3,
-#
 #            #Here for compatibility reasons.
 #            "Probes": {},
-#            "Devices": {},
+#
+#            #Devices to control.
+#            "Devices":
+#                {
+#                    "VALVE6:V6":
+#                        {
+#                            "Type": "Gate Valve",
+#                            "ID": "VALVE6:V6",
+#                            "Name": "Gate Valve V6",
+#                            "Class": Tools.deviceobjects.GateValve,
+#                            "ADCAddress": 0x48,
+#
+#                            "Pins":  (17, 27, 19),
+#                            "posTolerance": 1,
+#                            "maxOpen": 90,
+#                            "minOpen": 1,
+#                            "refVoltage": 3.3,
+#                        },
+#                },
 #
 #            #Config for server connection.
 #            "ServerAddress": "192.168.1.237",
 #            "ServerPort": 30016,
-#            "ServerName": "NASBox",
+#            "ServerName": "NAS",
 #            "SocketName": "Matrix Pump Gate Valve V6 Socket",
 #            "SocketID": "SOCK16",
 #
 #        },
 
-#    "V7":
+#    "VALVE7":
 #        {
-#            "Type": "Gate Valve",
-#            "ID":   "V7",
-#            "HostingSockets": False,
-#            "IPAddress": "192.168.0.17",
+#            "ID":   "VALVE7",
+#            "Name": "Gate Valve V7 Pi",
 #            "Default Interval": 15,
+#            "IPAddress": "192.168.0.17",
+#            "HostingSockets": False,
 #            "DBUser": "valvev7",
 #            "DBPasswd": "river20",
 #
-#            "Name": "Matrix Pump Gate Valve V7",
-#            "Class": Tools.deviceobjects.GateValve,
-#            "ADCAddress":       0x48,
-#
-#            "Pins":  (17, 27, 19),
-#            "posTolerance": 1,
-#            "maxOpen": 90,
-#            "minOpen": 1,
-#            "refVoltage": 3.3,
-#
 #            #Here for compatibility reasons.
 #            "Probes": {},
-#            "Devices": {},
+#
+#            #Devices to control.
+#            "Devices":
+#                {
+#                    "VALVE7:V7":
+#                        {
+#                            "Type": "Gate Valve",
+#                            "ID": "VALVE7:V7",
+#                            "Name": "Gate Valve V7",
+#                            "Class": Tools.deviceobjects.GateValve,
+#                            "ADCAddress": 0x48,
+#
+#                            "Pins":  (17, 27, 19),
+#                            "posTolerance": 1,
+#                            "maxOpen": 90,
+#                            "minOpen": 1,
+#                            "refVoltage": 3.3,
+#                        },
+#                },
 #
 #            #Config for server connection.
 #            "ServerAddress": "192.168.1.237",
 #            "ServerPort": 30017,
-#            "ServerName": "NASBox",
+#            "ServerName": "NAS",
 #            "SocketName": "Matrix Pump Gate Valve V7 Socket",
 #            "SocketID": "SOCK17",
 #
 #        },
 
-#    "V8":
+#    "VALVE8":
 #        {
-#            "Type": "Gate Valve",
-#            "ID":   "V8",
-#            "HostingSockets": False,
-#            "IPAddress": "192.168.0.18",
+#            "ID":   "VALVE8",
+#            "Name": "Gate Valve V8 Pi",
 #            "Default Interval": 15,
+#            "IPAddress": "192.168.0.18",
+#            "HostingSockets": False,
 #            "DBUser": "valvev8",
 #            "DBPasswd": "river20",
 #
-#            "Name": "Matrix Pump Gate Valve V8",
-#            "Class": Tools.deviceobjects.GateValve,
-#            "ADCAddress":       0x48,
-#
-#            "Pins":  (17, 27, 19),
-#            "posTolerance": 1,
-#            "maxOpen": 90,
-#            "minOpen": 1,
-#            "refVoltage": 3.3,
-#
 #            #Here for compatibility reasons.
 #            "Probes": {},
-#            "Devices": {},
+#
+#            #Devices to control.
+#            "Devices":
+#                {
+#                    "VALVE8:V8":
+#                        {
+#                            "Type": "Gate Valve",
+#                            "ID": "VALVE8:V8",
+#                            "Name": "Gate Valve V8",
+#                            "Class": Tools.deviceobjects.GateValve,
+#                            "ADCAddress": 0x48,
+#
+#                            "Pins":  (17, 27, 19),
+#                            "posTolerance": 1,
+#                            "maxOpen": 90,
+#                            "minOpen": 1,
+#                            "refVoltage": 3.3,
+#                        },
+#                },
 #
 #            #Config for server connection.
 #            "ServerAddress": "192.168.1.237",
 #            "ServerPort": 30018,
-#            "ServerName": "NASBox",
-#            "SocketName": "Matrix Pump Gate Valve V4 Socket",
+#            "ServerName": "NAS",
+#            "SocketName": "Matrix Pump Gate Valve V8 Socket",
 #            "SocketID": "SOCK18",
 #
 #        },
 
-#    "V9":
+#    "VALVE9":
 #        {
-#            "Type": "Gate Valve",
-#            "ID":   "V9",
-#            "HostingSockets": False,
-#            "IPAddress": "192.168.0.19",
+#            "ID":   "VALVE9",
+#            "Name": "Gate Valve V9 Pi",
 #            "Default Interval": 15,
+#            "IPAddress": "192.168.0.19",
+#            "HostingSockets": False,
 #            "DBUser": "valvev9",
 #            "DBPasswd": "river20",
 #
-#            "Name": "Matrix Pump Gate Valve V9",
-#            "Class": Tools.deviceobjects.GateValve,
-#            "ADCAddress":       0x48,
-#
-#            "Pins":  (17, 27, 19),
-#            "posTolerance": 1,
-#            "maxOpen": 90,
-#            "minOpen": 1,
-#            "refVoltage": 3.3,
-#
 #            #Here for compatibility reasons.
 #            "Probes": {},
-#            "Devices": {},
+#
+#            #Devices to control.
+#            "Devices":
+#                {
+#                    "VALVE9:V9":
+#                        {
+#                            "Type": "Gate Valve",
+#                            "ID": "VALVE9:V9",
+#                            "Name": "Gate Valve V9",
+#                            "Class": Tools.deviceobjects.GateValve,
+#                            "ADCAddress": 0x48,
+#
+#                            "Pins":  (17, 27, 19),
+#                            "posTolerance": 1,
+#                            "maxOpen": 90,
+#                            "minOpen": 1,
+#                            "refVoltage": 3.3,
+#                        },
+#                },
 #
 #            #Config for server connection.
 #            "ServerAddress": "192.168.1.237",
 #            "ServerPort": 30019,
-#            "ServerName": "NASBox",
+#            "ServerName": "NAS",
 #            "SocketName": "Matrix Pump Gate Valve V9 Socket",
 #            "SocketID": "SOCK19",
 #
 #        },
 
-#    "V12":
+#    "VALVE12":
 #        {
-#            "Type": "Gate Valve",
-#            "ID":   "V12",
-#            "HostingSockets": False,
-#            "IPAddress": "192.168.0.22",
+#            "ID":   "VALVE8",
+#            "Name": "Gate Valve V12 Pi",
 #            "Default Interval": 15,
+#            "IPAddress": "192.168.0.22",
+#            "HostingSockets": False,
 #            "DBUser": "valvev12",
 #            "DBPasswd": "river20",
 #
-#            "Name": "Stage Butts Gate Valve V12",
-#            "Class": Tools.deviceobjects.GateValve,
-#            "ADCAddress":       0x48,
-#
-#            "Pins":  (17, 27, 19),
-#            "posTolerance": 1,
-#            "maxOpen": 90,
-#            "minOpen": 1,
-#            "refVoltage": 3.3,
-#
 #            #Here for compatibility reasons.
 #            "Probes": {},
-#            "Devices": {},
-
+#
+#            #Devices to control.
+#            "Devices":
+#                {
+#                    "VALVE12:V12":
+#                        {
+#                            "Type": "Gate Valve",
+#                            "ID": "VALVE12:V12",
+#                            "Name": "Gate Valve V12",
+#                            "Class": Tools.deviceobjects.GateValve,
+#                            "ADCAddress": 0x48,
+#
+#                            "Pins":  (17, 27, 19),
+#                            "posTolerance": 1,
+#                            "maxOpen": 90,
+#                            "minOpen": 1,
+#                            "refVoltage": 3.3,
+#                        },
+#                },
+#
 #            #Config for server connection.
 #            "ServerAddress": "192.168.1.237",
 #            "ServerPort": 30022,
-#            "ServerName": "NASBox",
+#            "ServerName": "NAS",
 #            "SocketName": "Stage Butts Gate Valve V12 Socket",
 #            "SocketID": "SOCK22",
 #
 #        },
+
 }

@@ -274,19 +274,11 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     logger.debug("Done!")
 
-    if system_id[0] == "V":
-        #This is a gate valve - setup is different.
-        logger.info("Setting up the gate valve...")
-        valve = core_tools.setup_valve(system_id)
+    #Create the probe(s).
+    probes = core_tools.setup_devices(system_id)
 
-        probes = []
-
-    else:
-        #Create the probe(s).
-        probes = core_tools.setup_devices(system_id)
-
-        #Create the device(s).
-        devices = core_tools.setup_devices(system_id, dictionary="Devices")
+    #Create the device(s).
+    devices = core_tools.setup_devices(system_id, dictionary="Devices")
 
     #Default reading interval for all probes.
     reading_interval = config.SITE_SETTINGS[system_id]["Default Interval"]
@@ -325,7 +317,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     #Add monitor for the gate valve if needed.
     if system_id[0] == "V":
-        monitors.append(monitor_tools.Monitor(valve, reading_interval, system_id))
+        for device in devices:
+            monitors.append(monitor_tools.Monitor(device, reading_interval, system_id))
 
     #Wait until the first readings have come in so we are synchronised.
     #TODO: We probably want to remove this - this was only ever meant to be temporary.

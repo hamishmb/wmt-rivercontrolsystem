@@ -1396,7 +1396,10 @@ def setup_devices(system_id, dictionary="Probes"):
         device_name = device_settings["Name"]
         _type = device_settings["Type"]
         device = device_settings["Class"]
-        device = device(device_id, device_name)
+
+        #FIXME make consistent: Gate valve constructors need more arguments.
+        if _type != "Gate Valve":
+            device = device(device_id, device_name)
 
         if _type == "Hall Effect Probe":
             i2c_address = device_settings["ADCAddress"]
@@ -1425,6 +1428,19 @@ def setup_devices(system_id, dictionary="Probes"):
             #startup, if state is not initialised.
             device.disable()
 
+        elif _type == "Gate Valve":
+            pins = device_settings["Pins"]
+            pos_tolerance = device_settings["posTolerance"]
+            max_open = device_settings["maxOpen"]
+            min_open = device_settings["minOpen"]
+            ref_voltage = device_settings["refVoltage"]
+            i2c_address = device_settings["ADCAddress"]
+
+            device = device(device_id, device_name, pins, pos_tolerance,
+                            max_open, min_open, ref_voltage, i2c_address)
+
+            device.start_thread()
+
         else:
             pins = device_settings["Pins"]
             device.set_pins(pins)
@@ -1447,23 +1463,6 @@ def setup_valve(system_id):
         >>> setup_valve("V4")
 
     """
-    valve_settings = config.SITE_SETTINGS[system_id]
-
-    valve_name = valve_settings["Name"]
-    _type = valve_settings["Type"]
-    valve = valve_settings["Class"]
-    pins = valve_settings["Pins"]
-    pos_tolerance = valve_settings["posTolerance"]
-    max_open = valve_settings["maxOpen"]
-    min_open = valve_settings["minOpen"]
-    ref_voltage = valve_settings["refVoltage"]
-    i2c_address = valve_settings["ADCAddress"]
-    
-    valve = valve(system_id, valve_name, pins, pos_tolerance, max_open, min_open, ref_voltage, i2c_address)
-
-    valve.start_thread()
-
-    return valve
 
 def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None):
     """
