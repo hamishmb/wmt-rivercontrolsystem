@@ -332,7 +332,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     #Make a readings dictionary for temporary storage for the control logic function.
     #TODO Set up with default readings - need discussion first for some of these.
-    #NB: datetime.datetime.now() is actually the wrong function to call, fix this.
     readings = {}
 
     readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "0mm",

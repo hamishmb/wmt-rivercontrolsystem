@@ -37,9 +37,10 @@ import threading
 import subprocess
 import logging
 from collections import deque
+import datetime
+
 import MySQLdb as mysql
 import psutil
-import datetime
 
 import config
 
@@ -660,19 +661,19 @@ class DatabaseConnection(threading.Thread):
 
         self.in_queue.append(query)
 
-        #----- Clear any locks we're holding and create control entries for devices -----
-        #TODO should be done on NAS box only, this isn't safe in case another pi is
-        #controlling something and this one just rebooted!
-        query = """DELETE FROM `"""+self.site_id+"""Control;"""
+        #----- NAS box: Clear any locks we're holding and create control entries for devices -----
+        if self.site_id == "NAS":
+            for site_id in config.SITE_SETTINGS:
+                query = """DELETE FROM `"""+site_id+"""Control;"""
 
-        self.in_queue.append(query)
+                self.in_queue.append(query)
 
-        for device in config.SITE_SETTINGS[self.site_id]["Devices"]:
-            query = """INSERT INTO `"""+self.site_id+"""Control`(`Device ID`, """ \
-                    + """`Device Status`, `Request`, `Locked By`) VALUES('""" \
-                    + device.split(":")[1]+"""', 'Unlocked', 'None', 'None');"""
+                for device in config.SITE_SETTINGS[site_id]["Devices"]:
+                    query = """INSERT INTO `"""+site_id+"""Control`(`Device ID`, """ \
+                            + """`Device Status`, `Request`, `Locked By`) VALUES('""" \
+                            + device.split(":")[1]+"""', 'Unlocked', 'None', 'None');"""
 
-            self.in_queue.append(query)
+                    self.in_queue.append(query)
 
     def _cleanup(self, database, cursor):
         """
