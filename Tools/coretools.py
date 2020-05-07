@@ -37,8 +37,9 @@ import threading
 import subprocess
 import logging
 from collections import deque
-#import MySQLdb as mysql
-#import psutil
+import MySQLdb as mysql
+import psutil
+import datetime
 
 import config
 
@@ -445,7 +446,6 @@ class DatabaseConnection(threading.Thread):
     the calling thread to wait, though.
     """
 
-    #TODO Argument validation for remaining methods.
     #TODO Logging, especially debug logging.
     #TODO Error handling and connection error detection.
     # ^ Has been written to some extent, but not tested thoroughly.
@@ -461,7 +461,6 @@ class DatabaseConnection(threading.Thread):
             raise ValueError("Invalid site ID: "+str(site_id))
 
         self.site_id = site_id
-        self.pi_name = config.SITE_SETTINGS[site_id]["Name"]
 
         #As the thread itself sets up the connection to the database, we need
         #a flag to show whether it's ready or not.
@@ -651,12 +650,12 @@ class DatabaseConnection(threading.Thread):
 
         #----- Remove and reset the status entry for this pi, if it exists -----
         query = """DELETE FROM `SystemStatus` """ \
-                + """ WHERE `Pi Name` = '"""+self.pi_name+"""';"""
+                + """ WHERE `System ID` = '"""+self.site_id+"""';"""
 
         self.in_queue.append(query)
 
-        query = """INSERT INTO `SystemStatus`(`Pi Name`, `Pi Status`, """ \
-                + """`Software Status`, `Current Action`) VALUES('"""+self.pi_name \
+        query = """INSERT INTO `SystemStatus`(`System ID`, `Pi Status`, """ \
+                + """`Software Status`, `Current Action`) VALUES('"""+self.site_id \
                 + """', 'Up', 'Initialising...', 'None');"""
 
         self.in_queue.append(query)
@@ -730,7 +729,7 @@ class DatabaseConnection(threading.Thread):
             >>> 'Reading at time 2020-09-30 12:01:12.227565, and tick 0, from probe: G4:M0, with value: 350, and status: OK'
 
         """
-
+        #NOTE: argument validation done in get_n_latest_readings.
         result = self.get_n_latest_readings(site_id, sensor_id, 1)
 
         if result != []:
@@ -758,6 +757,26 @@ class DatabaseConnection(threading.Thread):
             >>> 'Reading at time 2020-09-30 12:01:12.227565, and tick 0, from probe: G4:M0, with value: 350, and status: OK'
 
         """
+
+        if not isinstance(site_id, str) or \
+            site_id == "" or \
+            site_id not in config.SITE_SETTINGS:
+
+            raise ValueError("Invalid site ID: "+str(site_id))
+
+        if not isinstance(sensor_id, str) or \
+            sensor_id == "" or \
+            (site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Devices"] and \
+             site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Probes"] and \
+             not "V" in site_id):
+
+            raise ValueError("Invalid sensor ID: "+str(sensor_id))
+
+        if not isinstance(number, int) or \
+            number < 0 or \
+            number == 0:
+
+            raise ValueError("Invalid number of readings: "+str(number))
 
         query = """SELECT * FROM `"""+site_id+"""Readings` WHERE `Probe ID` = '"""+sensor_id \
                 + """' ORDER BY ID DESC LIMIT 0, """+str(number)+""";"""
@@ -828,6 +847,21 @@ class DatabaseConnection(threading.Thread):
             >>> ("Locked", "50%", "SUMP")
 
         """
+
+        if not isinstance(site_id, str) or \
+            site_id == "" or \
+            site_id not in config.SITE_SETTINGS:
+
+            raise ValueError("Invalid site ID: "+str(site_id))
+
+        if not isinstance(sensor_id, str) or \
+            sensor_id == "" or \
+            (site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Devices"] and \
+             site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Probes"] and \
+             not "V" in site_id):
+
+            raise ValueError("Invalid sensor ID: "+str(sensor_id))
+
         query = """SELECT * FROM `"""+site_id+"""Control` WHERE `Device ID` = '""" \
                 + sensor_id+"""' LIMIT 0, 1;"""
 
@@ -897,6 +931,7 @@ class DatabaseConnection(threading.Thread):
 
             raise ValueError("Invalid sensor ID: "+str(sensor_id))
 
+        #TODO validate request strings.
         if not isinstance(request, str) or \
             request == "":
 
@@ -976,15 +1011,19 @@ class DatabaseConnection(threading.Thread):
         #Log the event as well.
         self.log_event("Releasing control of "+site_id+":"+sensor_id)
 
-    def log_event(self, event):
+    def log_event(self, event, severity="INFO"):
         """
         This method logs the given event message in the database.
 
         Args:
-            event (str).            The event to log.
+            event (str).                The event to log.
+
+        Kwargs:
+            severity[="INFO"] (str).    The severity of the event.
+                                        "DEBUG", "INFO", "WARNING", "ERROR", or "CRITICAL".
 
         Usage:
-            >>> log_event("test")
+            >>> log_event("test", "INFO")
             >>>
         """
 
@@ -993,8 +1032,13 @@ class DatabaseConnection(threading.Thread):
 
             raise ValueError("Invalid event message: "+str(event))
 
-        query = """INSERT INTO `EventLog`(`Site ID`, `Event`, `Time`) VALUES('"""+self.site_id \
-                +"""', '"""+event+"""', NOW());"""
+        if not isinstance(severity, str) or \
+            event == "":
+
+            raise ValueError("Invalid severity: "+str(severity))
+
+        query = """INSERT INTO `EventLog`(`Site ID`, `Severity`, `Event`, `Device Time`) VALUES('"""+self.site_id \
+                +"""', '"""+severity+"""', '"""+event+"""', '"""+datetime.datetime.now()+"""');"""
 
         self.in_queue.append(query)
 
@@ -1030,7 +1074,7 @@ class DatabaseConnection(threading.Thread):
         query = """UPDATE SystemStatus SET `Pi Status` = '"""+pi_status \
                 + """', `Software Status` = '"""+sw_status \
                 + """', `Current Action` =  '"""+current_action \
-                + """' WHERE `Pi Name` = '"""+self.pi_name+"""';"""
+                + """' WHERE `SYSTEM ID` = '"""+self.site_id+"""';"""
 
         self.in_queue.append(query)
 
