@@ -932,9 +932,8 @@ class DatabaseConnection(threading.Thread):
 
             raise ValueError("Invalid sensor ID: "+str(sensor_id))
 
-        #TODO validate request strings.
         if not isinstance(request, str) or \
-            request == "":
+            request not in ("Manual", "Update", "Reboot", "Shutdown"):
 
             raise ValueError("Invalid request: "+str(request))
 
