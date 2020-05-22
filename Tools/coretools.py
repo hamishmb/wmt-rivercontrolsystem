@@ -489,6 +489,8 @@ class DatabaseConnection(threading.Thread):
         #at the same time.
         self.client_lock = threading.RLock()
 
+        config.DBCONNECTION = self
+
     def start_thread(self):
         """Called to start the database thread"""
         self.start()
@@ -532,7 +534,6 @@ class DatabaseConnection(threading.Thread):
             print("Connected to database.")
             logger.info("DatabaseConnection: Done!")
             self.is_connected = True
-            config.DBCONNECTION = self
 
             #Do any requested operations on the queue.
             while self.in_queue:
@@ -566,7 +567,6 @@ class DatabaseConnection(threading.Thread):
                     #we want it to handle.
                     #TODO How to handle if a query fails, rather than if the database is
                     #offline?
-                    config.DBCONNECTION = None
 
                     break
 
