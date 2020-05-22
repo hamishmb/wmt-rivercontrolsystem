@@ -1037,7 +1037,7 @@ class DatabaseConnection(threading.Thread):
         self.in_queue.append(query)
 
 # -------------------- CONTROL LOGIC FUNCTIONS AND CLASSES --------------------
-class ControlStateABC(metaclass=ABCMeta, controlStateMachine):
+class ControlStateABC(metaclass=ABCMeta):
     """
     Abstract Base Class for control states.
     
@@ -1096,13 +1096,12 @@ class ControlStateABC(metaclass=ABCMeta, controlStateMachine):
         raise NotImplementedError
     
     @abstractmethod
-    @staticmethod
     def getStateName():
         """
         Returns the name of the state represented by this class.
         
         Abstract method: raises NotImplementedError in base class.
-        Implement in subclasses.
+        Implement as static method in subclasses.
         
         Returns:
             string: state name
@@ -1222,14 +1221,13 @@ class ControlStateMachineABC(metaclass=ABCMeta):
         return state.getStateName()
     
     @abstractmethod
-    @staticmethod
     def getStateMachineName():
         """
         Returns the human-readable identifier of this state machine,
         for use in logs and console output.
         
         Abstract method: raises NotImplementedError in base class.
-        Implement in subclasses.
+        Implement as static method in subclasses.
         """
         raise NotImplementedError
     
@@ -1539,7 +1537,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
     return reading_interval
 
-class StagePiReadingsParser(readings):
+class StagePiReadingsParser():
     """
     This class extracts data from a readings dictionary and presents it
     in a format that's convenient for the Stage Pi control logic
@@ -1637,13 +1635,13 @@ class StagePiInitState(ControlStateABC):
             if parser.g6Empty():
                 ri = csm.setStateBy(StagePiG6EmptyState, self)
                 
-            else if parser.g4FullOrMore():
+            elif parser.g4FullOrMore():
                 ri = csm.setStateBy(StagePiG4FilledState, self)
                 
-            else if parser.g4VeryNearlyFullOrMore():
+            elif parser.g4VeryNearlyFullOrMore():
                 ri = csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
                 
-            else if parser.g4NearlyFullOrMore():
+            elif parser.g4NearlyFullOrMore():
                 ri = csm.setStateBy(StagePiG4NearlyFilledState, self)
                 
             else:
@@ -1723,7 +1721,7 @@ class StagePiG4FilledState(ControlStateABC):
             if parser.g4Overfull():
                 ri = csm.setStateBy(StagePiG4OverfilledState, self)
                 
-            else if not parser.g4FullOrMore():
+            elif not parser.g4FullOrMore():
                 ri = csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
             
         else:
@@ -1770,7 +1768,7 @@ class StagePiG4VeryNearlyFilledState(ControlStateABC):
             if parser.g4FullOrMore():
                 ri = csm.setStateBy(StagePiG4FilledState, self)
                 
-            else if not parser.g4VeryNearlyFullOrMore():
+            elif not parser.g4VeryNearlyFullOrMore():
                 ri = csm.setStateBy(StagePiG4NearlyFilledState, self)
             
         else:
@@ -1817,7 +1815,7 @@ class StagePiG4NearlyFilledState(ControlStateABC):
             if parser.g4VeryNearlyFullOrMore():
                 ri = csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
                 
-            else if not parser.g4NearlyFullOrMore():
+            elif not parser.g4NearlyFullOrMore():
                 ri = csm.setStateBy(StagePiG4FillingState, self)
             
         else:
@@ -1900,14 +1898,14 @@ class StagePiG6EmptyState(ControlStateABC):
         
         #If G6 is no longer empty, enter the appropriate filling state for
         #the current G4 fill level
-        else if not parser.g6Empty():
+        elif not parser.g6Empty():
             if parser.g4FullOrMore():
                 ri = csm.setStateBy(StagePiG4FilledState, self)
             
-            else if parser.g4VeryNearlyFullOrMore():
+            elif parser.g4VeryNearlyFullOrMore():
                 ri = csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
             
-            else if parser.g4NearlyFullOrMore():
+            elif parser.g4NearlyFullOrMore():
                 ri = csm.setStateBy(StagePiG4NearlyFilledState, self)
             
             else:
@@ -1915,7 +1913,7 @@ class StagePiG6EmptyState(ControlStateABC):
         
         return ri
 
-class StagePiControlLogic:
+class StagePiControlLogic(ControlStateMachineABC):
     """
     This class represents the control logic for stagepi.
     
@@ -1992,7 +1990,10 @@ def stagepi_control_logic(readings, devices, monitors, sockets, reading_interval
     #      before the logic, which will instantiate the control logic
     #      state machine somewhere where this function can reference it
     
-    return StagePiControlLogic.doLogic(readings, devices, monitors, sockets, reading_interval)
+    #For now, just initialise the object here. It will constatnly reset
+    #to its initial state, but it's enough for a simple test run
+    csm = StagePiControlLogic()
+    return csm.doLogic(readings, devices, monitors, sockets, reading_interval)
 
 # -------------------- MISCELLANEOUS FUNCTIONS --------------------
 def setup_devices(system_id, dictionary="Probes"):
