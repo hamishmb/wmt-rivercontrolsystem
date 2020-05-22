@@ -331,12 +331,11 @@ class BaseMonitorClass(threading.Thread):
 
         write_failed = False
 
-        if self.system_id != "NAS":
+        if self.system_id != "NAS" and config.DBCONNECTION != None:
             #Write readings to the database as well as to the files.
-            #If the database isn't yet ready, this will ensure that the
-            #readings get there when it is.
             config.DBCONNECTION.store_reading(reading)
             #TODO how to handle errors?
+            #TODO make sure previous readings arrive when database connection is ready.
 
         try:
             if reading == previous_reading:
