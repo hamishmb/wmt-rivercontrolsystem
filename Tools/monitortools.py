@@ -331,6 +331,12 @@ class BaseMonitorClass(threading.Thread):
 
         write_failed = False
 
+        #Write readings to the database as well as to the files.
+        #If the database isn't yet ready, this will ensure that the
+        #readings get there when it is.
+        config.DBCONNECTION.store_reading(reading)
+        #TODO how to handle errors?
+
         try:
             if reading == previous_reading:
                 #Write a . to the file.

@@ -193,6 +193,8 @@ SITE_SETTINGS = {
             #TODO Set up another account for this.
             "DBUser": "admin",
             "DBPasswd": "admin",
+            "DBHost": "127.0.0.1",
+            "DBPort": 3306,
 
             #Local probes.
             "Probes":

@@ -517,6 +517,7 @@ class DatabaseConnection(threading.Thread):
 
                 #Avoids duplicating the initialisation commands in the queue.
                 if not self.is_connected:
+                    logger.error("DatabaseConnection: Could not connect! Retrying...")
                     continue
 
                 #Initialise the database.

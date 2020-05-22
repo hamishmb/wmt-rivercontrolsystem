@@ -283,6 +283,11 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #Default reading interval for all probes.
     reading_interval = config.SITE_SETTINGS[system_id]["Default Interval"]
 
+    logger.info("Connecting to database...")
+    print("Connecting to database...")
+
+    core_tools.DatabaseConnection(system_id)
+
     logger.info("Starting to take readings...")
     print("Starting to take readings. Please stand by...")
 
