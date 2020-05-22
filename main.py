@@ -286,7 +286,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     logger.info("Connecting to database...")
     print("Connecting to database...")
 
-    core_tools.DatabaseConnection(system_id)
+    core_tools.DatabaseConnection(system_id).start_thread()
 
     logger.info("Starting to take readings...")
     print("Starting to take readings. Please stand by...")
