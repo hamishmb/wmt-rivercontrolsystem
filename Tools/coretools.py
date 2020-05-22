@@ -517,6 +517,7 @@ class DatabaseConnection(threading.Thread):
 
                 #Avoids duplicating the initialisation commands in the queue.
                 if not self.is_connected:
+                    print("Could not connect to database! Retrying...")
                     logger.error("DatabaseConnection: Could not connect! Retrying...")
                     continue
 
@@ -528,6 +529,8 @@ class DatabaseConnection(threading.Thread):
                 continue
 
             #We are now connected.
+            print("Connected to database.")
+            logger.info("DatabaseConnection: Done!")
             self.is_connected = True
             config.DBCONNECTION = self
 
@@ -552,6 +555,9 @@ class DatabaseConnection(threading.Thread):
                             time.sleep(0.01)
 
                 except mysql._exceptions.Error as error:
+                    print("DatabaseConnection: Error executing query "+query+"! "
+                          + "Error was: "+str(error))
+
                     logger.error("DatabaseConnection: Error executing query "+query+"! "
                                  + "Error was: "+str(error))
 
