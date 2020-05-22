@@ -243,21 +243,21 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     logger.info("Creating sockets...")
     sockets = {}
 
-    if config.SITE_SETTINGS[system_id]["HostingSockets"]: pass
+    if config.SITE_SETTINGS[system_id]["HostingSockets"]:
         #We are a server, and we are hosting sockets.
         #Use information from the other sites to figure out what sockets to create.
-        #for site in config.SITE_SETTINGS:
-        #    site_settings = config.SITE_SETTINGS[site]
+        for site in config.SITE_SETTINGS:
+            site_settings = config.SITE_SETTINGS[site]
 
-        #    #If no server is defined for this site, skip it.
-        #    if "SocketName" not in site_settings:
-        #        continue
+            #If no server is defined for this site, skip it.
+            if "SocketName" not in site_settings:
+                continue
 
-        #    socket = socket_tools.Sockets("Socket", site_settings["SocketName"])
-        #    socket.set_portnumber(site_settings["ServerPort"])
-        #    sockets[site_settings["SocketID"]] = socket
+            socket = socket_tools.Sockets("Socket", site_settings["SocketName"])
+            socket.set_portnumber(site_settings["ServerPort"])
+            sockets[site_settings["SocketID"]] = socket
 
-        #    socket.start_handler()
+            socket.start_handler()
 
     #If a server is defined for this pi, connect to it.
     if "SocketName" in config.SITE_SETTINGS[system_id]:
