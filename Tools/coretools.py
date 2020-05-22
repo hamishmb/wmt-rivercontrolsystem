@@ -523,17 +523,18 @@ class DatabaseConnection(threading.Thread):
                     logger.error("DatabaseConnection: Could not connect! Retrying...")
                     continue
 
+                else:
+                    #We are now connected.
+                    print("Connected to database.")
+                    logger.info("DatabaseConnection: Done!")
+                    self.is_connected = True
+
                 #Initialise the database.
                 self._initialise_db()
 
             #If we're exiting, break out of the loop.
             if config.EXITING:
                 continue
-
-            #We are now connected.
-            print("Connected to database.")
-            logger.info("DatabaseConnection: Done!")
-            self.is_connected = True
 
             #Do any requested operations on the queue.
             while self.in_queue:
