@@ -673,7 +673,7 @@ class DatabaseConnection(threading.Thread):
             for site_id in config.SITE_SETTINGS:
                 #Ignore the NAS site.
                 if site_id == "NAS":
-                    pass
+                    continue
 
                 query = """DELETE FROM `"""+site_id+"""Control;"""
 
