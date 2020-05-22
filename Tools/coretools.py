@@ -1112,7 +1112,7 @@ class DatabaseConnection(threading.Thread):
             raise ValueError("Invalid reading object: "+str(reading))
 
         query = """INSERT INTO `"""+self.site_id+"""Readings`(`Probe ID`, `Tick`, """ \
-                + """`Time`, `Value`, `Status`) VALUES('"""+reading.get_sensor_id() \
+                + """`Measure Time`, `Value`, `Status`) VALUES('"""+reading.get_sensor_id() \
                 + """', """+str(reading.get_tick())+""", '"""+reading.get_time()+"""', '""" \
                 + reading.get_value()+"""', '"""+reading.get_status()+"""');"""
 
