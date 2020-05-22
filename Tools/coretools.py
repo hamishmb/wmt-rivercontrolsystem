@@ -931,7 +931,8 @@ class DatabaseConnection(threading.Thread):
         if not isinstance(sensor_id, str) or \
             sensor_id == "" or \
             (site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Devices"] and \
-             site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Probes"]):
+             site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Probes"] and \
+             site_id != sensor_id):
 
             raise ValueError("Invalid sensor ID: "+str(sensor_id))
 
@@ -990,7 +991,8 @@ class DatabaseConnection(threading.Thread):
         if not isinstance(sensor_id, str) or \
             sensor_id == "" or \
             (site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Devices"] and \
-             site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Probes"]):
+             site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Probes"] and \
+             site_id != sensor_id):
 
             raise ValueError("Invalid sensor ID: "+str(sensor_id))
 
