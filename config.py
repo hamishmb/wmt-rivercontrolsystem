@@ -187,7 +187,7 @@ SITE_SETTINGS = {
             "ID": "NAS",
             "Name": "NAS Box",
             "Default Interval": 15,
-            "IPAddress": "192.168.1.237",
+            "IPAddress": "192.168.0.25",
             "HostingSockets": True,
 
             #TODO Set up another account for this.
@@ -213,7 +213,7 @@ SITE_SETTINGS = {
             "ControlLogicFunction": "sumppi_control_logic",
             "DBUser": "sumppi",
             "DBPasswd": "river20",
-            "DBHost": "192.168.1.114",
+            "DBHost": "192.168.0.25",
             "DBPort": 3306,
 
             #Local probes.
@@ -277,6 +277,8 @@ SITE_SETTINGS = {
             "HostingSockets": False,
             "DBUser": "hanhampi",
             "DBPasswd": "river20",
+            "DBHost": "192.168.0.25",
+            "DBPort": 3306,
 
             #Local probes.
             "Probes":
@@ -414,6 +416,8 @@ SITE_SETTINGS = {
             "HostingSockets": False,
             "DBUser": "wbuttspi",
             "DBPasswd": "river20",
+            "DBHost": "192.168.0.25",
+            "DBPort": 3306,
 
             #Local probes.
             "Probes":
@@ -473,6 +477,8 @@ SITE_SETTINGS = {
             "HostingSockets": False,
             "DBUser": "sbuttspi",
             "DBPasswd": "river20",
+            "DBHost": "192.168.0.25",
+            "DBPort": 3306,
 
             #Local probes.
             "Probes":
@@ -533,6 +539,8 @@ SITE_SETTINGS = {
             "HostingSockets": False,
             "DBUser": "valvev4",
             "DBPasswd": "river20",
+            "DBHost": "192.168.0.25",
+            "DBPort": 3306,
 
             #Here for compatibility reasons.
             "Probes": {},
@@ -574,6 +582,8 @@ SITE_SETTINGS = {
 #            "HostingSockets": False,
 #            "DBUser": "valvev6",
 #            "DBPasswd": "river20",
+#            "DBHost": "192.168.0.25",
+#            "DBPort": 3306,
 #
 #            #Here for compatibility reasons.
 #            "Probes": {},
@@ -615,6 +625,8 @@ SITE_SETTINGS = {
 #            "HostingSockets": False,
 #            "DBUser": "valvev7",
 #            "DBPasswd": "river20",
+#            "DBHost": "192.168.0.25",
+#            "DBPort": 3306,
 #
 #            #Here for compatibility reasons.
 #            "Probes": {},
@@ -656,6 +668,8 @@ SITE_SETTINGS = {
 #            "HostingSockets": False,
 #            "DBUser": "valvev8",
 #            "DBPasswd": "river20",
+#            "DBHost": "192.168.0.25",
+#            "DBPort": 3306,
 #
 #            #Here for compatibility reasons.
 #            "Probes": {},
@@ -697,6 +711,8 @@ SITE_SETTINGS = {
 #            "HostingSockets": False,
 #            "DBUser": "valvev9",
 #            "DBPasswd": "river20",
+#            "DBHost": "192.168.0.25",
+#            "DBPort": 3306,
 #
 #            #Here for compatibility reasons.
 #            "Probes": {},
@@ -738,6 +754,8 @@ SITE_SETTINGS = {
 #            "HostingSockets": False,
 #            "DBUser": "valvev12",
 #            "DBPasswd": "river20",
+#            "DBHost": "192.168.0.25",
+#            "DBPort": 3306,
 #
 #            #Here for compatibility reasons.
 #            "Probes": {},
