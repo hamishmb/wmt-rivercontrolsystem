@@ -401,7 +401,7 @@ SITE_SETTINGS = {
 
             "ServerAddress": "192.168.0.25",
             "ServerPort": 30003,
-            "ServerName": "lhbutts",
+            "ServerName": "NAS",
             "SocketName": "Lady Hanham Buttspi Socket",
             "SocketID": "SOCK3"
         },

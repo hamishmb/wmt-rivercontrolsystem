@@ -237,7 +237,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         core_tools.SyncTime(system_id)
 
     #Start monitoring system load.
-    #core_tools.MonitorLoad()
+    core_tools.MonitorLoad()
 
     #Create all sockets.
     logger.info("Creating sockets...")
