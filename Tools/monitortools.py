@@ -331,8 +331,9 @@ class BaseMonitorClass(threading.Thread):
 
         write_failed = False
 
-        if self.system_id != "NAS" and config.DBCONNECTION != None:
-            #Write readings to the database as well as to the files.
+        if not hasattr(self, "socket") and config.DBCONNECTION != None:
+            #Write readings to the database as well as to the files, as long as this
+            #isn't just a sockets monitor running on the NAS box.
             config.DBCONNECTION.store_reading(reading)
             #TODO how to handle errors?
             #TODO make sure previous readings arrive when database connection is ready.
