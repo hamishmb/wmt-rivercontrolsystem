@@ -259,7 +259,7 @@ SITE_SETTINGS = {
                     }
                 },
 
-            "ServerAddress": "192.168.1.237",
+            "ServerAddress": "192.168.0.25",
             "ServerPort": 30002,
             "ServerName": "NAS",
             "SocketName": "Sumppi Socket",
@@ -399,7 +399,7 @@ SITE_SETTINGS = {
 
             },
 
-            "ServerAddress": "192.168.1.237",
+            "ServerAddress": "192.168.0.25",
             "ServerPort": 30003,
             "ServerName": "lhbutts",
             "SocketName": "Lady Hanham Buttspi Socket",
@@ -460,7 +460,7 @@ SITE_SETTINGS = {
             #Devices to control.
             "Devices": {},
 
-            "ServerAddress": "192.168.1.237",
+            "ServerAddress": "192.168.0.25",
             "ServerPort": 30004,
             "ServerName": "NAS",
             "SocketName": "Wendy Street Buttspi Socket",
@@ -521,7 +521,7 @@ SITE_SETTINGS = {
             #Devices to control.
             "Devices": {},
 
-            "ServerAddress": "192.168.1.237",
+            "ServerAddress": "192.168.0.25",
             "ServerPort": 30006,
             "ServerName": "NAS",
             "SocketName": "Wendy Street Stagepi Socket",
@@ -565,7 +565,7 @@ SITE_SETTINGS = {
                 },
 
             #Config for server connection.
-            "ServerAddress": "192.168.1.237",
+            "ServerAddress": "192.168.0.25",
             "ServerPort": 30014,
             "ServerName": "NAS",
             "SocketName": "Wendy Street Butts Gate Valve V4 Socket",
@@ -608,7 +608,7 @@ SITE_SETTINGS = {
 #                },
 #
 #            #Config for server connection.
-#            "ServerAddress": "192.168.1.237",
+#            "ServerAddress": "192.168.0.25",
 #            "ServerPort": 30016,
 #            "ServerName": "NAS",
 #            "SocketName": "Matrix Pump Gate Valve V6 Socket",
@@ -651,7 +651,7 @@ SITE_SETTINGS = {
 #                },
 #
 #            #Config for server connection.
-#            "ServerAddress": "192.168.1.237",
+#            "ServerAddress": "192.168.0.25",
 #            "ServerPort": 30017,
 #            "ServerName": "NAS",
 #            "SocketName": "Matrix Pump Gate Valve V7 Socket",
@@ -694,7 +694,7 @@ SITE_SETTINGS = {
 #                },
 #
 #            #Config for server connection.
-#            "ServerAddress": "192.168.1.237",
+#            "ServerAddress": "192.168.0.25",
 #            "ServerPort": 30018,
 #            "ServerName": "NAS",
 #            "SocketName": "Matrix Pump Gate Valve V8 Socket",
@@ -737,7 +737,7 @@ SITE_SETTINGS = {
 #                },
 #
 #            #Config for server connection.
-#            "ServerAddress": "192.168.1.237",
+#            "ServerAddress": "192.168.0.25",
 #            "ServerPort": 30019,
 #            "ServerName": "NAS",
 #            "SocketName": "Matrix Pump Gate Valve V9 Socket",
@@ -780,7 +780,7 @@ SITE_SETTINGS = {
 #                },
 #
 #            #Config for server connection.
-#            "ServerAddress": "192.168.1.237",
+#            "ServerAddress": "192.168.0.25",
 #            "ServerPort": 30022,
 #            "ServerName": "NAS",
 #            "SocketName": "Stage Butts Gate Valve V12 Socket",
