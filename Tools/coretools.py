@@ -559,11 +559,13 @@ class DatabaseConnection(threading.Thread):
                 try:
                     if "SELECT" not in query:
                         #Nothing to return, can do this the usual way.
+                        logger.debug("DatabaseConnection: Executing query: "+query+"...")
                         cursor.execute(query)
                         database.commit()
 
                     else:
                         #We need to return data now, so we must be careful.
+                        logger.debug("DatabaseConnection: Executing query: "+query+", and returning data...")
                         self.client_thread_done = False
 
                         cursor.execute(query)
@@ -581,6 +583,7 @@ class DatabaseConnection(threading.Thread):
 
                     #Make sure we dump the query if it was a request for information to avoid deadlocks.
                     if "SELECT" in query:
+                        logger.warning("DatabaseConnection: Dropping data-returning query: "+query+"...")
                         self.result = "Error"
                         self.in_queue.popleft()
 
@@ -596,6 +599,7 @@ class DatabaseConnection(threading.Thread):
                     break
 
                 else:
+                    logger.debug("DatabaseConnection: Done.")
                     self.in_queue.popleft()
 
             count += 1
