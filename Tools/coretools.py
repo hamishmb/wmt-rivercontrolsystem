@@ -503,6 +503,7 @@ class DatabaseConnection(threading.Thread):
 
         #Setup to avoid errors.
         database = cursor = None
+        count = 0
 
         #First we need to find our connection settings from the config file.
         user = config.SITE_SETTINGS[self.site_id]["DBUser"]
@@ -515,12 +516,14 @@ class DatabaseConnection(threading.Thread):
                 #Attempt to connect to the database server.
                 logger.info("DatabaseConnection: Attempting to connect to database...")
 
-                database, cursor = self._connect(user, passwd, host, port)
+                if self.peer_alive():
+                    database, cursor = self._connect(user, passwd, host, port)
 
                 #Avoids duplicating the initialisation commands in the queue.
                 if not self.is_connected:
                     print("Could not connect to database! Retrying...")
                     logger.error("DatabaseConnection: Could not connect! Retrying...")
+                    time.sleep(10)
                     continue
 
                 else:
@@ -533,8 +536,21 @@ class DatabaseConnection(threading.Thread):
                 self._initialise_db()
 
             #If we're exiting, break out of the loop.
+            #This prevents us from executing tons of queries at this point and delaying exit.
             if config.EXITING:
                 continue
+
+            #Check if peer is alive roughly every 60 seconds.
+            if count > 60:
+                count = 0
+
+                if not self.peer_alive():
+                    #We need to reconnect.
+                    print("Database connection lost! Reconnecting...")
+                    logger.error("DatabaseConnection: Connection lost! Reconnecting...")
+
+                    self.is_connected = False
+                    self._cleanup(database, cursor)
 
             #Do any requested operations on the queue.
             while self.in_queue:
@@ -563,17 +579,26 @@ class DatabaseConnection(threading.Thread):
                     logger.error("DatabaseConnection: Error executing query "+query+"! "
                                  + "Error was: "+str(error))
 
+                    #Make sure we dump the query if it was a request for information to avoid deadlocks.
+                    if "SELECT" in query:
+                        self.result = "Error"
+                        self.in_queue.popleft()
+
+                        while not self.client_thread_done:
+                            time.sleep(0.01)
+
                     #Break out so we can check the connection again.
                     #TODO Need to check that this works, and handles only the errors
                     #we want it to handle.
-                    #TODO How to handle if a query fails, rather than if the database is
-                    #offline?
+                    self.is_connected = False
+                    self._cleanup(database, cursor)
 
                     break
 
                 else:
                     self.in_queue.popleft()
 
+            count += 1
             time.sleep(1)
 
         #Do clean up.
@@ -582,6 +607,35 @@ class DatabaseConnection(threading.Thread):
         self.is_running = False
 
     #-------------------- PRIVATE SETUP METHODS -------------------
+    def peer_alive(self):
+        """
+        Used to ping peer once at other end of the connection to check if it is still up.
+
+        Used on first connection, and periodically so we know if a host goes down.
+
+        Returns:
+            boolean.        True = peer is online
+                            False = peer is offline
+
+        Usage:
+            >>> <DatabaseConnection-Obj>.peer_alive()
+            >>> True
+        """
+        try:
+            #Ping the peer one time.
+            subprocess.run(["ping", "-c", "1", "-W", "2", config.SITE_SETTINGS[self.site_id]["DBHost"]],
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
+
+            #If there was no error, this was fine.
+            logger.debug("DatabaseConnection.peer_alive(): ("+self.name+"): Peer is up...")
+            return True
+
+        except subprocess.CalledProcessError:
+            #Non-zero exit status.
+            logger.warning("DatabaseConnection.peer_alive(): ("+self.name+"): Peer is down!")
+
+            return False
+
     def _connect(self, user, passwd, host, port):
         """
         PRIVATE, implementation detail.
@@ -771,6 +825,9 @@ class DatabaseConnection(threading.Thread):
         Returns:
             List of (Reading objects).       The latest readings for that sensor at that site.
 
+        Throws:
+            RuntimeError, if the query failed.
+
         Usage example:
             >>> get_latest_reading("G4", "M0")
             >>> 'Reading at time 2020-09-30 12:01:12.227565, and tick 0, from probe: G4:M0, with value: 350, and status: OK'
@@ -806,7 +863,6 @@ class DatabaseConnection(threading.Thread):
         self.in_queue.append(query)
 
         #Wait until the query is processed.
-        #TODO Could cause a deadlock if a prev query keeps failing!
         while self.result is None:
             time.sleep(0.01)
 
@@ -819,6 +875,10 @@ class DatabaseConnection(threading.Thread):
 
         if threading.current_thread() is not self.db_thread:
             self.client_lock.release()
+
+        #Throw RuntimeError if the query failed.
+        if result == "Error":
+            raise RuntimeError("Query Failed")
 
         readings = []
 
@@ -860,6 +920,9 @@ class DatabaseConnection(threading.Thread):
 
             None.           No data available.
 
+        Throws:
+            RuntimeError, if the query failed.
+
         Usage:
             >>> get_state("VALVE4", "V4")
             >>> ("Locked", "50%", "SUMP")
@@ -889,7 +952,6 @@ class DatabaseConnection(threading.Thread):
         self.in_queue.append(query)
 
         #Wait until the query is processed.
-        #TODO Could cause a deadlock if a prev query keeps failing!
         while self.result is None:
             time.sleep(0.01)
 
@@ -907,6 +969,10 @@ class DatabaseConnection(threading.Thread):
 
         if threading.current_thread() is not self.db_thread:
             self.client_lock.release()
+
+        #Throw RuntimeError if the query failed.
+        if result == "Error":
+            raise RuntimeError("Query Failed")
 
         return result
 

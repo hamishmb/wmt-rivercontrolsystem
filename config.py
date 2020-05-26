@@ -215,7 +215,7 @@ SITE_SETTINGS = {
             "ControlLogicFunction": "sumppi_control_logic",
             "DBUser": "sumppi",
             "DBPasswd": "river20",
-            "DBHost": "192.168.0.25",
+            "DBHost": "192.168.1.237",
             "DBPort": 3306,
 
             #Local probes.
