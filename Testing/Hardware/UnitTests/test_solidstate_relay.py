@@ -20,21 +20,22 @@ import logging
 import sys
 import os
 
-sys.path.insert(0, os.path.abspath('../../'))
-sys.path.insert(0, os.path.abspath('../'))
+sys.path.insert(0, os.path.abspath('../../../../'))
+sys.path.insert(0, os.path.abspath('../../../'))
 
 def run_standalone():
     #Do required imports.
+    import config
     import Tools
 
-    from Tools import sensorobjects
+    from Tools import deviceobjects
 
-    from Tools.sensorobjects import Motor
+    from Tools.deviceobjects import Motor
 
     print("Testing. Please stand by...")
 
     #Create the motor object.
-    ssr = Motor("Motorey")
+    ssr = Motor("SUMP:P0", "Motorey")
 
     #Set the motor up.
     ssr.set_pins(5, _input=False)

@@ -21,9 +21,10 @@
 #Import modules
 import unittest
 import sys
+import os
 
 #Import other modules.
-sys.path.append('../..') #Need to be able to import the Tools module from here.
+sys.path.insert(0, os.path.abspath('../../../')) #Need to be able to import the Tools module from here.
 
 import Tools
 import Tools.deviceobjects as device_objects

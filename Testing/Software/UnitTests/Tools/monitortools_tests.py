@@ -29,7 +29,7 @@ import threading
 import subprocess
 
 #Import other modules.
-sys.path.append('../..') #Need to be able to import the Tools module from here.
+sys.path.insert(0, os.path.abspath('../../../')) #Need to be able to import the Tools module from here.
 
 import Tools
 import Tools.monitortools as monitor_tools
@@ -300,7 +300,7 @@ class TestBaseMonitorClass(unittest.TestCase):
         previous_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
 
         #Just a hack to make sure that the file is reported to exist.
-        self.basemonitor.current_file_name = "main.py"
+        self.basemonitor.current_file_name = "unittests.py"
 
         #Set the expiration time to midnight so we can rotate readings files.
         #This uses the datetime class cos it's easier to compare times that way.

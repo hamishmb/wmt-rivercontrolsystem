@@ -21,13 +21,14 @@
 #Import modules
 import unittest
 import sys
+import os
 import datetime
 import threading
 from collections import deque
 import time
 
 #Import other modules.
-sys.path.append('../..') #Need to be able to import the Tools module from here.
+sys.path.insert(0, os.path.abspath('../../../')) #Need to be able to import the Tools module from here.
 
 import config
 import Tools
