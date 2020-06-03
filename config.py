@@ -151,6 +151,9 @@ RELEASEDATE = "21/0/2020"
 #Used to access the database connection object.
 DBCONNECTION = None
 
+#List of sockets objects.
+SOCKETSLIST = []
+
 #A strange approach, but it works and means we can import the modules for doc generation
 #without error. It also doesn't relax the checks on our actual deployments.
 if not "TESTING" in globals():

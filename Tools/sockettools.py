@@ -69,19 +69,21 @@ class Sockets:
     Documentation for constructor of objects of type Socket:
 
     Args:
-        _type (string):      The type of socket we are constructing.
+        _type (string):         The type of socket we are constructing.
                                 **MUST** be one of "Plug", or "Socket".
+
+        system_id (str):        The system ID.
 
     Kwargs:
         name (string):          The human-readable name of the socket.
                                 Optional.
 
     Usage:
-        >>> my_socket = Sockets("Plug")
+        >>> my_socket = Sockets("Plug", "G4")
 
         OR
 
-        >>> my_socket = Sockets("Plug", "G4 Socket")
+        >>> my_socket = Sockets("Plug", "G4", "G4 Socket")
 
     .. note::
         On instantiation, messages to the commandline are enabled.
@@ -93,10 +95,14 @@ class Sockets:
     #pylint: disable=too-many-public-methods
     #We need all of these public methods too.
 
-    def __init__(self, _type, name="Unknown"):
+    def __init__(self, _type, system_id, name="Unknown"):
         """The constructor, as documented above."""
         #Throw ValueError if _type is invalid.
         if _type not in ("Plug", "Socket"):
+            raise ValueError("_type must be either 'Plug' or 'Socket'")
+
+        #Throw ValueError if system_id is invalid.
+        if system_id not in config.SITE_SETTINGS:
             raise ValueError("_type must be either 'Plug' or 'Socket'")
 
         #Throw ValueError if name is invalid.
@@ -108,6 +114,7 @@ class Sockets:
         self.server_address = ""
         self.type = _type
         self.name = name
+        self.system_id = system_id
         self.underlying_socket = None
         self.server_socket = None
         self.handler_thread = None
@@ -122,6 +129,10 @@ class Sockets:
         #Message queues (actually lists).
         self.in_queue = deque()
         self.out_queue = deque()
+        self.forward_queue = deque()
+
+        #Add this sockets object to the list.
+        config.SOCKETSLIST.append(self)
 
     # ---------- Setup Functions ----------
     def set_portnumber(self, port_number):
@@ -230,9 +241,7 @@ class Sockets:
         self.internal_request_exit = False
         self.handler_exited = False
 
-        #Queues.
-        self.in_queue = deque()
-        self.out_queue = deque()
+        #Don't reset queues, as this will drop pending data!
 
         #Sockets.
         try:
@@ -691,6 +700,53 @@ class Sockets:
         logger.debug("Sockets._send_pending_messages(): ("+self.name+"): Done.")
         return True
 
+    def _forward_messages(self):
+        """
+        PRIVATE, implementation detail.
+
+        Puts any messages that we need to forward on the correct socket's queue.
+        Should only be used by the handler thread.
+        Returns True if successful, False if not/queue empty.
+
+        Usage:
+
+            >>> <Sockets-Obj>._forward_messages()
+            >>> True
+        """
+
+        logger.debug("Sockets._forward_messages(): ("+self.name+"): Forwarding any pending messages...")
+
+        #Forward all pending messages, if there are any.
+        while self.forward_queue:
+            #Write the oldest message first.
+            logger.info("Sockets._forward_messages():: ("+self.name+"): Forwarding data...")
+
+            msg = self.forward_queue[0]
+
+            #Find the correct socket to send the message to.
+            dest_sysid = msg.split(" ")[0].replace("*", "")
+            dest_ipaddr = config.SITE_SETTINGS[dest_sysid]["IPAddress"]
+
+            dest_socket = None
+
+            for _socket in config.SOCKETSLIST:
+                if _socket.server_address == dest_ipaddr:
+                    dest_socket = _socket
+
+            if dest_socket is None:
+                #Couldn't find the socket to forward this message to!
+                logger.error("Sockets._forward_messages(): ("+self.name+"): Cannot forward message for "+dest_sysid+"! Dropping message.")
+
+            else:
+                dest_socket.write(msg)
+
+            #Remove the oldest message from message queue.
+            logger.debug("Sockets._forward_messages(): ("+self.name+"): Clearing front of forward_queue...")
+            self.forward_queue.popleft()
+
+        logger.debug("Sockets._forward_messages(): ("+self.name+"): Done.")
+        return True
+
     def _read_pending_messages(self):
         """
         PRIVATE, implementation detail.
@@ -763,14 +819,25 @@ class Sockets:
     def _process_obj(self, obj):
         #Push the unpickled objects to the message queue.
         #We need to un-serialize the data first.
-        logger.debug("Sockets._process_obj(): ("+self.name+"): Pushing message to IncomingQueue...")
-
         try:
-            self.in_queue.append(pickle.loads(obj))
+            msg = pickle.loads(obj)
 
         except (_pickle.UnpicklingError, TypeError, EOFError):
             logger.error("Sockets._process_obj(): ("+self.name+"): Error unpickling data from socket: "+str(obj))
             print("Unpickling error ("+self.name+"): "+str(obj))
+
+        potential_sysid = msg.split(" ")[0].replace("*", "")
+
+        #Append to the appropriate queue.
+        if potential_sysid != self.system_id and potential_sysid in config.SITE_SETTINGS:
+            #Needs to be sent to another device.
+            logger.debug("Sockets._process_obj(): ("+self.name+"): Pushing message to forward queue...")
+            self.forward_queue.append(msg)
+
+        else:
+            #This message is intended for us.
+            logger.debug("Sockets._process_obj(): ("+self.name+"): Pushing message to incoming queue...")
+            self.in_queue.append(msg.split(" ")[1:])
 
 class SocketHandlerThread(threading.Thread):
     """
@@ -853,6 +920,9 @@ class SocketHandlerThread(threading.Thread):
         while not config.EXITING:
             #Send any pending messages.
             write_result = self.socket._send_pending_messages()
+
+            #Queue any messages to forward on the correct socket.
+            self.socket._forward_messages()
 
             #Receive messages if there are any.
             read_result = self.socket._read_pending_messages()
