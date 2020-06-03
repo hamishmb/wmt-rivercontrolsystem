@@ -271,7 +271,7 @@ class Reading:
                     and self._value == other.get_value()
                     and self._status == other.get_status())
 
-        except:
+        except Exception:
             return False
 
     def __ne__(self, other):
@@ -466,6 +466,7 @@ class DatabaseConnection(threading.Thread):
         #As the thread itself sets up the connection to the database, we need
         #a flag to show whether it's ready or not.
         self.is_connected = False
+        self.init_done = False
 
         #A flag to show if the DB thread is running or not.
         self.is_running = False
@@ -532,9 +533,6 @@ class DatabaseConnection(threading.Thread):
                     logger.info("DatabaseConnection: Done!")
                     self.is_connected = True
 
-                #Initialise the database.
-                self._initialise_db()
-
             #If we're exiting, break out of the loop.
             #This prevents us from executing tons of queries at this point and delaying exit.
             if config.EXITING:
@@ -560,8 +558,19 @@ class DatabaseConnection(threading.Thread):
                     if "SELECT" not in query:
                         #Nothing to return, can do this the usual way.
                         logger.debug("DatabaseConnection: Executing query: "+query+"...")
+                        self.client_thread_done = False
+
                         cursor.execute(query)
                         database.commit()
+
+                        #If there's no error by this point, we succeeded.
+                        self.result = "Success"
+
+                        while not self.client_thread_done:
+                            time.sleep(0.01)
+
+                        #Make sure the result is cleared at this point.
+                        self.result = None
 
                     else:
                         #We need to return data now, so we must be careful.
@@ -574,6 +583,9 @@ class DatabaseConnection(threading.Thread):
                         while not self.client_thread_done:
                             time.sleep(0.01)
 
+                        #Make sure the result is cleared at this point.
+                        self.result = None
+
                 except mysql._exceptions.Error as error:
                     print("DatabaseConnection: Error executing query "+query+"! "
                           + "Error was: "+str(error))
@@ -581,14 +593,12 @@ class DatabaseConnection(threading.Thread):
                     logger.error("DatabaseConnection: Error executing query "+query+"! "
                                  + "Error was: "+str(error))
 
-                    #Make sure we dump the query if it was a request for information to avoid deadlocks.
-                    if "SELECT" in query:
-                        logger.warning("DatabaseConnection: Dropping data-returning query: "+query+"...")
-                        self.result = "Error"
-                        self.in_queue.popleft()
+                    #Drop the query so we can try again or move on without deadlocking.
+                    self.result = "Error"
+                    self.in_queue.popleft()
 
-                        while not self.client_thread_done:
-                            time.sleep(0.01)
+                    while not self.client_thread_done:
+                        time.sleep(0.01)
 
                     #Break out so we can check the connection again.
                     #TODO Need to check that this works, and handles only the errors
@@ -704,10 +714,8 @@ class DatabaseConnection(threading.Thread):
 
         return (database, cursor)
 
-    def _initialise_db(self):
+    def initialise_db(self):
         """
-        PRIVATE, implementation detail.
-
         Used to make sure that required records for this pi are present, and
         resets them if needed eg by clearing locks and setting initial status.
         """
@@ -719,13 +727,13 @@ class DatabaseConnection(threading.Thread):
         query = """DELETE FROM `SystemStatus` """ \
                 + """ WHERE `System ID` = '"""+self.site_id+"""';"""
 
-        self.in_queue.append(query)
+        self.do_query(query, 0)
 
         query = """INSERT INTO `SystemStatus`(`System ID`, `Pi Status`, """ \
                 + """`Software Status`, `Current Action`) VALUES('"""+self.site_id \
                 + """', 'Up', 'Initialising...', 'None');"""
 
-        self.in_queue.append(query)
+        self.do_query(query, 0)
 
         #----- NAS box: Clear any locks we're holding and create control entries for devices -----
         if self.site_id == "NAS":
@@ -736,20 +744,22 @@ class DatabaseConnection(threading.Thread):
 
                 query = """DELETE FROM `"""+site_id+"""Control;"""
 
-                self.in_queue.append(query)
+                self.do_query(query, 0)
 
                 query = """INSERT INTO `"""+site_id+"""Control`(`Device ID`, """ \
                             + """`Device Status`, `Request`, `Locked By`) VALUES('""" \
                             + site_id+"""', 'Unlocked', 'None', 'None');"""
 
-                self.in_queue.append(query)
+                self.do_query(query, 0)
 
                 for device in config.SITE_SETTINGS[site_id]["Devices"]:
                     query = """INSERT INTO `"""+site_id+"""Control`(`Device ID`, """ \
                             + """`Device Status`, `Request`, `Locked By`) VALUES('""" \
                             + device.split(":")[1]+"""', 'Unlocked', 'None', 'None');"""
 
-                    self.in_queue.append(query)
+                    self.do_query(query, 0)
+
+        self.init_done = True
 
     def _cleanup(self, database, cursor):
         """
@@ -786,13 +796,67 @@ class DatabaseConnection(threading.Thread):
         return self.is_running
 
     #-------------------- CONVENIENCE READER METHODS --------------------
-    def get_latest_reading(self, site_id, sensor_id):
+    def do_query(self, query, retries):
+        """
+        This method executes the query with the specified number of retries.
+
+        Args:
+            query (str).            The query to execute.
+            retries (int).          The number of retries.
+
+        Returns:
+            result (str).           The result.
+
+        Throws:
+            RuntimeError, if the query failed too many times.
+        """
+        count = 0
+
+        while count <= retries:
+            if threading.current_thread() is not self.db_thread:
+                #Acquire the lock for fetching data.
+                self.client_lock.acquire()
+
+            self.in_queue.append(query)
+
+            #Wait until the query is processed.
+            while self.result is None:
+                time.sleep(0.01)
+
+            #Store the results.
+            result = self.result
+            self.result = None
+
+            #Signal that the database thread can safely continue.
+            self.client_thread_done = True
+
+            if threading.current_thread() is not self.db_thread:
+                self.client_lock.release()
+
+            #Keep trying until we succeed or we hit the maximum number of retries.
+            if result == "Error":
+                count += 1
+
+            else:
+                break
+
+        #Throw RuntimeError if the query still failed.
+        if result == "Error":
+            raise RuntimeError("Query Failed")
+
+        return result
+
+    def get_latest_reading(self, site_id, sensor_id, retries=3):
         """
         This method returns the latest reading for the given sensor at the given site.
 
         Args:
-            site_id.            The site we want the reading from.
-            sensor_id.          The sensor we want the reading for.
+            site_id (str).            The site we want the reading from.
+            sensor_id (str).          The sensor we want the reading for.
+
+        KWargs:
+            retries[=3] (int).        The number of times to retry before giving up
+                                      and raising an error.
 
         Returns:
             A Reading object.       The latest reading for that sensor at that site.
@@ -801,21 +865,23 @@ class DatabaseConnection(threading.Thread):
 
             None.                   There is no reading available to return.
 
+        Throws:
+            RuntimeError, if the query failed too many times.
+
         Usage example:
             >>> get_latest_reading("G4", "M0")
             >>> 'Reading at time 2020-09-30 12:01:12.227565, and tick 0, from probe: G4:M0, with value: 350, and status: OK'
 
         """
         #NOTE: argument validation done in get_n_latest_readings.
-        result = self.get_n_latest_readings(site_id, sensor_id, 1)
+        result = self.get_n_latest_readings(site_id, sensor_id, 1, retries)
 
         if result != []:
             return result[0]
 
-        else:
-            return None
+        return None
 
-    def get_n_latest_readings(self, site_id, sensor_id, number):
+    def get_n_latest_readings(self, site_id, sensor_id, number, retries=3):
         """
         This method returns last n readings for the given sensor at the given site.
         If the list is empty, or contains fewer readings than was asked for, this
@@ -826,11 +892,15 @@ class DatabaseConnection(threading.Thread):
             sensor_id.          The sensor we want the reading for.
             number.             The number of readings.
 
+        KWargs:
+            retries[=3] (int).        The number of times to retry before giving up
+                                      and raising an error.
+
         Returns:
             List of (Reading objects).       The latest readings for that sensor at that site.
 
         Throws:
-            RuntimeError, if the query failed.
+            RuntimeError, if the query failed too many times.
 
         Usage example:
             >>> get_latest_reading("G4", "M0")
@@ -860,29 +930,7 @@ class DatabaseConnection(threading.Thread):
         query = """SELECT * FROM `"""+site_id+"""Readings` WHERE `Probe ID` = '"""+sensor_id \
                 + """' ORDER BY ID DESC LIMIT 0, """+str(number)+""";"""
 
-        if threading.current_thread() is not self.db_thread:
-            #Acquire the lock for fetching data.
-            self.client_lock.acquire()
-
-        self.in_queue.append(query)
-
-        #Wait until the query is processed.
-        while self.result is None:
-            time.sleep(0.01)
-
-        #Store the results.
-        result = self.result
-        self.result = None
-
-        #Signal that the database thread can safely continue.
-        self.client_thread_done = True
-
-        if threading.current_thread() is not self.db_thread:
-            self.client_lock.release()
-
-        #Throw RuntimeError if the query failed.
-        if result == "Error":
-            raise RuntimeError("Query Failed")
+        result = self.do_query(query, retries)
 
         readings = []
 
@@ -905,7 +953,7 @@ class DatabaseConnection(threading.Thread):
 
         return readings
 
-    def get_state(self, site_id, sensor_id):
+    def get_state(self, site_id, sensor_id, retries=3):
         """
         This method queries the state of the given sensor/device. Information is returned
         such as what (if anything) has been requested, if it is Locked or Unlocked,
@@ -914,6 +962,10 @@ class DatabaseConnection(threading.Thread):
         Args:
             site_id.            The site that holds the device we're interested in.
             sensor_id.          The sensor we want to know about.
+
+        KWargs:
+            retries[=3] (int).        The number of times to retry before giving up
+                                      and raising an error.
 
         Returns:
             tuple.      1st element:        Device status (str) ("Locked" or "Unlocked").
@@ -925,7 +977,7 @@ class DatabaseConnection(threading.Thread):
             None.           No data available.
 
         Throws:
-            RuntimeError, if the query failed.
+            RuntimeError, if the query failed too many times.
 
         Usage:
             >>> get_state("VALVE4", "V4")
@@ -949,39 +1001,19 @@ class DatabaseConnection(threading.Thread):
         query = """SELECT * FROM `"""+site_id+"""Control` WHERE `Device ID` = '""" \
                 + sensor_id+"""' LIMIT 0, 1;"""
 
-        if threading.current_thread() is not self.db_thread:
-            #Acquire the client thread lock for fetching data.
-            self.client_lock.acquire()
+        result = self.do_query(query, retries)
 
-        self.in_queue.append(query)
-
-        #Wait until the query is processed.
-        while self.result is None:
-            time.sleep(0.01)
-
-        #Store the results.
+        #Store the part of the results that we want.
         try:
-            result = self.result[0][2:]
+            result = result[0][2:]
 
         except IndexError:
             result = None
 
-        self.result = None
-
-        #Signal that the database thread can safely continue.
-        self.client_thread_done = True
-
-        if threading.current_thread() is not self.db_thread:
-            self.client_lock.release()
-
-        #Throw RuntimeError if the query failed.
-        if result == "Error":
-            raise RuntimeError("Query Failed")
-
         return result
 
     #-------------------- CONVENIENCE WRITER METHODS --------------------
-    def attempt_to_control(self, site_id, sensor_id, request):
+    def attempt_to_control(self, site_id, sensor_id, request, retries=3):
         """
         This method attempts to lock the given sensor/device so we can take control.
         First we check if the device is locked. If it isn't locked, or this pi locked it,
@@ -994,9 +1026,16 @@ class DatabaseConnection(threading.Thread):
             sensor_id.          The sensor we want to know about.
             request (str).      What state we want the device to be in.
 
+        KWargs:
+            retries[=3] (int).        The number of times to retry before giving up
+                                      and raising an error.
+
         Returns:
             boolean.        True - We are now in control of the device.
                             False - The device is locked and in use by another pi.
+
+        Throws:
+            RuntimeError, if the query failed too many times.
 
         Usage:
             >>> attempt_to_control("SUMP", "P0", "On")
@@ -1038,7 +1077,7 @@ class DatabaseConnection(threading.Thread):
                 + """`Request` = '"""+request+"""', `Locked By` = '"""+self.site_id \
                 + """' WHERE `Device ID` = '"""+sensor_id+"""';"""
 
-        self.in_queue.append(query)
+        self.do_query(query, retries)
 
         #Log the event as well.
         self.log_event("Taking control of "+site_id+":"+sensor_id
@@ -1046,7 +1085,7 @@ class DatabaseConnection(threading.Thread):
 
         return True
 
-    def release_control(self, site_id, sensor_id):
+    def release_control(self, site_id, sensor_id, retries=3):
         """
         This method attempts to release the given sensor/device so other pis can
         take control. First we check if we locked the device. If it isn't locked,
@@ -1057,6 +1096,13 @@ class DatabaseConnection(threading.Thread):
         Args:
             site_id.            The site that holds the device we're interested in.
             sensor_id.          The sensor we want to know about.
+
+        KWargs:
+            retries[=3] (int).        The number of times to retry before giving up
+                                      and raising an error.
+
+        Throws:
+            RuntimeError, if the query failed too many times.
 
         Usage:
             >>> release_control("SUMP", "P0")
@@ -1092,12 +1138,12 @@ class DatabaseConnection(threading.Thread):
                 + """`Request` = 'None', `Locked By` = 'None' WHERE `Device ID` = '""" \
                 + sensor_id+"""';"""
 
-        self.in_queue.append(query)
+        self.do_query(query, retries)
 
         #Log the event as well.
         self.log_event("Releasing control of "+site_id+":"+sensor_id)
 
-    def log_event(self, event, severity="INFO"):
+    def log_event(self, event, severity="INFO", retries=3):
         """
         This method logs the given event message in the database.
 
@@ -1107,6 +1153,12 @@ class DatabaseConnection(threading.Thread):
         Kwargs:
             severity[="INFO"] (str).    The severity of the event.
                                         "DEBUG", "INFO", "WARNING", "ERROR", or "CRITICAL".
+
+            retries[=3] (int).          The number of times to retry before giving up
+                                        and raising an error.
+
+        Throws:
+            RuntimeError, if the query failed too many times.
 
         Usage:
             >>> log_event("test", "INFO")
@@ -1126,9 +1178,9 @@ class DatabaseConnection(threading.Thread):
         query = """INSERT INTO `EventLog`(`Site ID`, `Severity`, `Event`, `Device Time`) VALUES('"""+self.site_id \
                 +"""', '"""+severity+"""', '"""+event+"""', '"""+str(datetime.datetime.now())+"""');"""
 
-        self.in_queue.append(query)
+        self.do_query(query, retries)
 
-    def update_status(self, pi_status, sw_status, current_action):
+    def update_status(self, pi_status, sw_status, current_action, retries=3):
         """
         This method logs the given statuses and action(s) in the database.
 
@@ -1136,6 +1188,13 @@ class DatabaseConnection(threading.Thread):
             pi_status (str).            The current status of this pi.
             sw_status (str).            The current status of the software on this pi.
             current_action (str).       The software's current action(s).
+
+        Kwargs:
+            retries[=3] (int).          The number of times to retry before giving up
+                                        and raising an error.
+
+        Throws:
+            RuntimeError, if the query failed too many times.
 
         Usage:
             >>> update_status("Up", "OK", "None")
@@ -1162,16 +1221,23 @@ class DatabaseConnection(threading.Thread):
                 + """', `Current Action` =  '"""+current_action \
                 + """' WHERE `SYSTEM ID` = '"""+self.site_id+"""';"""
 
-        self.in_queue.append(query)
+        self.do_query(query, retries)
 
         self.log_event("Updated status")
 
-    def store_reading(self, reading):
+    def store_reading(self, reading, retries=3):
         """
         This method stores the given reading in the database.
 
         Args:
             reading (Reading). The reading to store.
+
+        Kwargs:
+            retries[=3] (int).          The number of times to retry before giving up
+                                        and raising an error.
+
+        Throws:
+            RuntimeError, if the query failed too many times.
 
         Usage:
             >>> store_reading(<Reading-Obj>)
@@ -1186,7 +1252,7 @@ class DatabaseConnection(threading.Thread):
                 + """', """+str(reading.get_tick())+""", '"""+reading.get_time()+"""', '""" \
                 + reading.get_value()+"""', '"""+reading.get_status()+"""');"""
 
-        self.in_queue.append(query)
+        self.do_query(query, retries)
 
 # -------------------- CONTROL LOGIC FUNCTIONS --------------------
 def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval):
@@ -1488,7 +1554,7 @@ def setup_devices(system_id, dictionary="Probes"):
         if _type == "Hall Effect Probe":
             i2c_address = device_settings["ADCAddress"]
             device.set_address(i2c_address)
-            
+
             high_limits = device_settings["HighLimits"]
             low_limits = device_settings["LowLimits"]
 
