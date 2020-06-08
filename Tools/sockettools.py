@@ -103,7 +103,7 @@ class Sockets:
 
         #Throw ValueError if system_id is invalid.
         if system_id not in config.SITE_SETTINGS:
-            raise ValueError("_type must be either 'Plug' or 'Socket'")
+            raise ValueError("Invalid system ID")
 
         #Throw ValueError if name is invalid.
         if not isinstance(name, str):
@@ -719,7 +719,7 @@ class Sockets:
         #Forward all pending messages, if there are any.
         while self.forward_queue:
             #Write the oldest message first.
-            logger.info("Sockets._forward_messages():: ("+self.name+"): Forwarding data...")
+            logger.info("Sockets._forward_messages(): ("+self.name+"): Forwarding data...")
 
             msg = self.forward_queue[0]
 
@@ -825,8 +825,13 @@ class Sockets:
         except (_pickle.UnpicklingError, TypeError, EOFError):
             logger.error("Sockets._process_obj(): ("+self.name+"): Error unpickling data from socket: "+str(obj))
             print("Unpickling error ("+self.name+"): "+str(obj))
+            return
 
-        potential_sysid = msg.split(" ")[0].replace("*", "")
+        if isinstance(msg, str):
+            potential_sysid = msg.split(" ")[0].replace("*", "")
+
+        else:
+            potential_sysid = None
 
         #Append to the appropriate queue.
         if potential_sysid != self.system_id and potential_sysid in config.SITE_SETTINGS:
@@ -838,7 +843,7 @@ class Sockets:
             #This message is intended for us.
             logger.debug("Sockets._process_obj(): ("+self.name+"): Pushing message to incoming queue...")
 
-            if "*" in msg:
+            if isinstance(msg, str) and "*" in msg:
                 self.in_queue.append(' '.join(msg.split(" ")[1:]))
 
             else:

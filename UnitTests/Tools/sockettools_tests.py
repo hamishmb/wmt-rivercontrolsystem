@@ -40,7 +40,7 @@ class TestSockets(unittest.TestCase):
     """This test class tests the features of the Sockets class in Tools/sockettools.py"""
 
     def setUp(self):
-        self.socket = socket_tools.Sockets("Plug")
+        self.socket = socket_tools.Sockets("Plug", "ST0")
 
     def tearDown(self):
         del self.socket
@@ -51,7 +51,7 @@ class TestSockets(unittest.TestCase):
     def test_constructor_1(self):
         """Test #1: Test that the constructor works when no name is specified"""
         for _type in ("Plug", "Socket"):
-            socket = socket_tools.Sockets(_type)
+            socket = socket_tools.Sockets(_type, "ST0")
 
             self.assertEqual(socket.port_number, -1)
             self.assertEqual(socket.server_address, "")
@@ -71,7 +71,7 @@ class TestSockets(unittest.TestCase):
     def test_constructor_2(self):
         """Test #2: Test that the constructor works when a name is specified"""
         for _type in ("Plug", "Socket"):
-            socket = socket_tools.Sockets(_type, "Test Socket")
+            socket = socket_tools.Sockets(_type, "ST0", "Test Socket")
 
             self.assertEqual(socket.port_number, -1)
             self.assertEqual(socket.server_address, "")
@@ -92,7 +92,7 @@ class TestSockets(unittest.TestCase):
         """Test #3: Test that the constructor fails when _type is not 'Plug' or 'Socket'"""
         for _type in ("plug", "socket", "test", "notatype", None, 1, True):
             try:
-                socket = socket_tools.Sockets(_type, "Test Socket")
+                socket = socket_tools.Sockets(_type, "ST0", "Test Socket")
 
             except ValueError:
                 #Expected.
@@ -106,7 +106,7 @@ class TestSockets(unittest.TestCase):
         """Test #4: Test that the constructor fails when name is not a string"""
         for _name in (None, 1, True, 6.7, (), [], {}):
             try:
-                socket = socket_tools.Sockets("Socket", _name)
+                socket = socket_tools.Sockets("Socket", "ST0", _name)
 
             except ValueError:
                 #Expected.
@@ -321,7 +321,7 @@ class TestSockets(unittest.TestCase):
         self.socket._create_socket()
 
         #Create a plug to connect to it.
-        self.plug = socket_tools.Sockets("Plug", "Test Socket")
+        self.plug = socket_tools.Sockets("Plug", "ST1", "Test Socket")
 
         self.plug._create_plug()
 
@@ -471,7 +471,7 @@ class TestSockets(unittest.TestCase):
         self.socket.type = "Socket"
         self.socket.port_number = 30000
 
-        self.plug = socket_tools.Sockets("Plug")
+        self.plug = socket_tools.Sockets("Plug", "ST1")
         self.plug.server_address = "127.0.0.1"
         self.plug.port_number = 30000
 
