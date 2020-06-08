@@ -796,4 +796,29 @@ SITE_SETTINGS = {
 #            "SocketID": "SOCK22",
 #
 #        },
+
+    #--------------- DUMMY SITE IDs for TESTING ---------------
+    "ST0":
+        {
+            "Type": "Site",
+            "ID": "ST0",
+            "Name": "Sockets Test Site",
+            "Default Interval": 15,
+            "IPAddress": "127.0.0.1",
+            "HostingSockets": False,
+            "DBUser": "none",
+            "DBPasswd": "none",
+
+            #Local probes.
+            "Probes": {},
+
+            #Devices to control.
+            "Devices": {},
+
+            "ServerAddress": "127.0.0.1",
+            "ServerPort": 30000,
+            "ServerName": "test",
+            "SocketName": "Test Socket",
+            "SocketID": "SOCK0"
+        },
 }

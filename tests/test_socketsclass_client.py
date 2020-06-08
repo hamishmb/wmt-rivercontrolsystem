@@ -87,7 +87,7 @@ def run_standalone():
     print("Testing. Please stand by...")
 
     #Create the sockets object.
-    socket = socket_tools.Sockets("Plug")
+    socket = socket_tools.Sockets("Plug", "ST0")
 
     #Set the object up.
     socket.set_portnumber(port)
