@@ -837,7 +837,12 @@ class Sockets:
         else:
             #This message is intended for us.
             logger.debug("Sockets._process_obj(): ("+self.name+"): Pushing message to incoming queue...")
-            self.in_queue.append(msg.split(" ")[1:])
+
+            if "*" in msg:
+                self.in_queue.append(' '.join(msg.split(" ")[1:]))
+
+            else:
+                self.in_queue.append(msg)
 
 class SocketHandlerThread(threading.Thread):
     """
