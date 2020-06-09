@@ -301,6 +301,7 @@ SITE_SETTINGS = {
             "Default Interval": 15,
             "IPAddress": "192.168.0.6",
             "HostingSockets": False,
+            "ControlLogicFunction": "stagepi_control_logic",
             "DBUser": "test",
             "DBPasswd": "test",
 

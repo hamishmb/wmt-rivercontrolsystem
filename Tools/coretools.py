@@ -1144,7 +1144,16 @@ class ControlStateMachineABC(metaclass=ABCMeta):
         Args:
             state (ControlStateABC): state to add
         """
-        self.states[state.getStateName()] = state
+        self.states[state.getStateName()] = state(self)
+    
+    def _getNamedState(self, stateName):
+        """
+        Returns a reference to a named state of this machine.
+        
+        Args:
+            stateName (string): name of state to get
+        """
+        return self.states[stateName]
     
     def setState(self, stateClass):
         """
@@ -1198,14 +1207,22 @@ class ControlStateMachineABC(metaclass=ABCMeta):
         Args:
             stateName (string): the name of the state to make current
         """
-        stateChangeMsg = (self.getStateMachineName() + ": Transitioning from "
-                          + self.getCurrentStateName() + " to "
-                          + stateClass.getStateName())
+        try:
+            stateChangeMsg = (self.getStateMachineName() + ": Transitioning from "
+                            + self.getCurrentStateName() + " to "
+                            + stateName)
+            
+        except (NameError, AttributeError):
+            #This exception is expected when setting the initial state
+            #(i.e. when self.state does not exist)
+            stateChangeMsg = (self.getStateMachineName()
+                            + ": Setting initial state "
+                            + stateName)
         
         logger.info(stateChangeMsg)
         print(stateChangeMsg)
         
-        self.state = self.getNamedState(stateName)
+        self.state = self._getNamedState(stateName)
     
     def getCurrentStateName(self):
         """
@@ -1218,7 +1235,7 @@ class ControlStateMachineABC(metaclass=ABCMeta):
         Returns:
             string: the name of the current state
         """
-        return state.getStateName()
+        return self.state.getStateName()
     
     @abstractmethod
     def getStateMachineName():
@@ -1262,7 +1279,7 @@ class ControlStateMachineABC(metaclass=ABCMeta):
             >>>                                     <listofsockets>, <areadinginterval)
 
         """
-        return state.doLogic()
+        return self.state.doLogic(readings, devices, monitors, sockets, reading_interval)
 
 #TODO update the documentation, this is old.
 def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval):
@@ -1546,10 +1563,10 @@ class StagePiReadingsParser():
         """
         Initialiser. Puts relevant readings data into instance variables.
         """
-        
         #Check that the float switch readings are sane.
-        assert self.G4_full.get_value() in ("True", "False")
-        assert self.G6_full.get_value() in ("True", "False")
+        assert readings["G4:FS0"].get_value() in ("True", "False")
+        assert readings["G6:FS0"].get_value() in ("True", "False")
+        assert readings["G6:FS1"].get_value() in ("True", "False")
         
         #Load readings into self
         self.G4_level = int(readings["G4:M0"].get_value().replace("m", ""))
@@ -1557,42 +1574,67 @@ class StagePiReadingsParser():
         
         self.G6_level = int(readings["G6:M0"].get_value().replace("m", ""))
         self.G6_full = readings["G6:FS0"].get_value() == "True"
+        self.G6_empty = readings["G6:FS1"].get_value() == "True"
     
-    def g6Full():
+    def g6Full(self):
         """
         Returns true if G6 is full
         """
-        return (G6_full or G6_level > 975)
+        if(self.G6_full or self.G6_level > 975):
+            try:
+                assert self.G6_empty == False
+                return true
+            except:
+                logger.error("ERROR! G6 Stage Butts Group reads as full and "
+                             "empty simultaneously, with sensor readings:\n"
+                             "G6:FS0 (high) = " + self.G6_full + "\n"
+                             "G6:FS1 (low) = " + self.G6_empty + "\n"
+                             "G6:M0 (float) = " + self.G6_level + "mm\n"
+                             "Check for sensor faults in G6.")
+        else:
+            return false
     
-    def g6Empty():
+    def g6Empty(self):
         """
         Returns true if G6 is empty (<25mm)
         """
-        return (not G6_full and G6_level <= 25)
+        if(self.G6_empty or self.G6_level <= 25):
+            try:
+                assert self.G6_full == False
+                return true
+            except:
+                logger.error("ERROR! G6 Stage Butts Group reads as full and "
+                             "empty simultaneously, with sensor readings:\n"
+                             "G6:FS0 (high) = " + self.G6_full + "\n"
+                             "G6:FS1 (low) = " + self.G6_empty + "\n"
+                             "G6:M0 (float) = " + self.G6_level + "mm\n"
+                             "Check for sensor faults in G6.")
+        else:
+            return false
     
-    def g4Overfull():
+    def g4Overfull(self):
         """
         Returns true if G4 is overfull (full to the limit)
         """
-        return (G4_full or G4_level > 975)
+        return (self.G4_full or self.G4_level > 975)
     
-    def g4FullOrMore():
+    def g4FullOrMore(self):
         """
         Returns true if G4 is full (>900mm)
         """
-        return (not G4_full or G4_level > 900)
+        return (not self.G4_full or self.G4_level > 900)
     
-    def g4VeryNearlyFullOrMore():
+    def g4VeryNearlyFullOrMore(self):
         """
         Returns true if G4 level is very nearly full or more (>800mm)
         """
-        return (not G4_full and G4_level > 800)
+        return (not self.G4_full and self.G4_level > 800)
     
-    def g4NearlyFullOrMore():
+    def g4NearlyFullOrMore(self):
         """
         Returns true if G4 level is nearly full or more (>700mm)
         """
-        return (not G4_full and G4_level > 700)
+        return (not self.G4_full and self.G4_level > 700)
 
 # -------------------- Stage Pi control states ---------------------
 # Each state class defines the behaviour of the control logic in that state,
@@ -1629,23 +1671,23 @@ class StagePiInitState(ControlStateABC):
         ri = self.getPreferredReadingInterval()
         
         if parser.g4Overfull():
-            ri = csm.setStateBy(StagePiG4OverfilledState, self)
+            ri = self.csm.setStateBy(StagePiG4OverfilledState, self)
  
         else:
             if parser.g6Empty():
-                ri = csm.setStateBy(StagePiG6EmptyState, self)
+                ri = self.csm.setStateBy(StagePiG6EmptyState, self)
                 
             elif parser.g4FullOrMore():
-                ri = csm.setStateBy(StagePiG4FilledState, self)
+                ri = self.csm.setStateBy(StagePiG4FilledState, self)
                 
             elif parser.g4VeryNearlyFullOrMore():
-                ri = csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
+                ri = self.csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
                 
             elif parser.g4NearlyFullOrMore():
-                ri = csm.setStateBy(StagePiG4NearlyFilledState, self)
+                ri = self.csm.setStateBy(StagePiG4NearlyFilledState, self)
                 
             else:
-                ri = csm.setStateBy(StagePiG4FillingState, self)
+                ri = self.csm.setStateBy(StagePiG4FillingState, self)
 
 
         return ri
@@ -1682,7 +1724,7 @@ class StagePiG4OverfilledState(ControlStateABC):
         #Evaluate possible transitions to new states
         if not parser.g6Empty():
             if not parser.g4Overfull():
-                ri = csm.setStateBy(StagePiG4FilledState, self)
+                ri = self.csm.setStateBy(StagePiG4FilledState, self)
                 
         #In the event that G6 is empty, then we want to stay in
         #G4OverfilledState, so that water can be pumped back into G6.
@@ -1719,13 +1761,13 @@ class StagePiG4FilledState(ControlStateABC):
         #Evaluate possible transitions to new states
         if not parser.g6Empty():
             if parser.g4Overfull():
-                ri = csm.setStateBy(StagePiG4OverfilledState, self)
+                ri = self.csm.setStateBy(StagePiG4OverfilledState, self)
                 
             elif not parser.g4FullOrMore():
-                ri = csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
+                ri = self.csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
             
         else:
-            ri = csm.setStateBy(StagePiG6EmptyState, self)
+            ri = self.csm.setStateBy(StagePiG6EmptyState, self)
         
         return ri
 
@@ -1766,13 +1808,13 @@ class StagePiG4VeryNearlyFilledState(ControlStateABC):
         #Evaluate possible transitions to new states
         if not parser.g6Empty():
             if parser.g4FullOrMore():
-                ri = csm.setStateBy(StagePiG4FilledState, self)
+                ri = self.csm.setStateBy(StagePiG4FilledState, self)
                 
             elif not parser.g4VeryNearlyFullOrMore():
-                ri = csm.setStateBy(StagePiG4NearlyFilledState, self)
+                ri = self.csm.setStateBy(StagePiG4NearlyFilledState, self)
             
         else:
-            ri = csm.setStateBy(StagePiG6EmptyState, self)
+            ri = self.csm.setStateBy(StagePiG6EmptyState, self)
         
         return ri
 
@@ -1813,13 +1855,13 @@ class StagePiG4NearlyFilledState(ControlStateABC):
         #Evaluate possible transitions to new states
         if not parser.g6Empty():
             if parser.g4VeryNearlyFullOrMore():
-                ri = csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
+                ri = self.csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
                 
             elif not parser.g4NearlyFullOrMore():
-                ri = csm.setStateBy(StagePiG4FillingState, self)
+                ri = self.csm.setStateBy(StagePiG4FillingState, self)
             
         else:
-            ri = csm.setStateBy(StagePiG6EmptyState, self)
+            ri = self.csm.setStateBy(StagePiG6EmptyState, self)
         
         return ri
 
@@ -1855,10 +1897,10 @@ class StagePiG4FillingState(ControlStateABC):
         #Evaluate possible transitions to new states
         if not parser.g6Empty():
             if parser.g4NearlyFullOrMore():
-                ri = csm.setStateBy(StagePiG4NearlyFilledState, self)
+                ri = self.csm.setStateBy(StagePiG4NearlyFilledState, self)
                 
         else:
-            ri = csm.setStateBy(StagePiG6EmptyState, self)
+            ri = self.csm.setStateBy(StagePiG6EmptyState, self)
         
         return ri
     
@@ -1894,22 +1936,22 @@ class StagePiG6EmptyState(ControlStateABC):
         #Unlike the other four states, we can enter G4OverfilledState even if
         #G6 remains empty
         if(parser.g4Overfull()):
-            ri = csm.setState(StagePiG4OverfilledState)
+            ri = self.csm.setState(StagePiG4OverfilledState)
         
         #If G6 is no longer empty, enter the appropriate filling state for
         #the current G4 fill level
         elif not parser.g6Empty():
             if parser.g4FullOrMore():
-                ri = csm.setStateBy(StagePiG4FilledState, self)
+                ri = self.csm.setStateBy(StagePiG4FilledState, self)
             
             elif parser.g4VeryNearlyFullOrMore():
-                ri = csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
+                ri = self.csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
             
             elif parser.g4NearlyFullOrMore():
-                ri = csm.setStateBy(StagePiG4NearlyFilledState, self)
+                ri = self.csm.setStateBy(StagePiG4NearlyFilledState, self)
             
             else:
-                ri = csm.setStateBy(StagePiG4FillingState, self)
+                ri = self.csm.setStateBy(StagePiG4FillingState, self)
         
         return ri
 
@@ -1969,16 +2011,14 @@ def stagepi_control_logic(readings, devices, monitors, sockets, reading_interval
 
     Usage:
 
-        >>> reading_interval = sumppi_control_logic(<listofreadings>,
+        >>> reading_interval = stagepi_control_logic(<listofreadings>,
         >>>                                     <listofprobes>, <listofmonitors>,
         >>>                                     <listofsockets>, <areadinginterval)
 
     """
-    #Check that the devices list is not empty.
-    assert devices
+    #G6 Stage Pi doesn't have any devices, so devices list will be empty.
 
-    #Check that the sockets list is not empty.
-    assert sockets
+    #G6 Stage Pi doesn't host any sockets, so sockets list will be empty.
     
     #Check that the reading interval is positive, and greater than 0.
     assert reading_interval > 0

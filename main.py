@@ -347,6 +347,17 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "True",
                                             "OK")
+    
+    #TESTING FUDGE: Creat some dummy readings to enable Stage Pi Control logic
+    #to be tested using old version of main.py.
+    #NO CODE FROM BETWEEN THE FOLLOWING TWO HORIZONTAL DASHED LINES SHOULD GET
+    #COMITTED INTO THE GITLAB REPOSITORY. IF FOUND OUTSIDE OF PATRICK'S LAPTOP,
+    #PLEASE REMOVE THIS PART.
+    #---------------------------------------------------------------------------
+    
+    readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "0mm", "OK")
+    
+    #---------------------------------------------------------------------------
 
     #Keep tabs on its progress so we can write new readings to the file.
     try:
@@ -395,6 +406,11 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             else:
                 #I know we could use a long time.sleep(),
                 #but this MUST be responsive to changes in the reading interval.
+                #
+                #What would be really useful here is if the sockets library
+                #provided a function that just sleeps until either the socket
+                #has data or a specified timeout expires, and then returns
+                #true/false. Does such a function exist?
                 count = 0
 
                 while count < reading_interval:
