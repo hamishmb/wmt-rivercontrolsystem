@@ -102,7 +102,7 @@ class Sockets:
             raise ValueError("_type must be either 'Plug' or 'Socket'")
 
         #Throw ValueError if system_id is invalid.
-        if system_id not in config.SITE_SETTINGS:
+        if not isinstance(system_id, str) or system_id not in config.SITE_SETTINGS:
             raise ValueError("Invalid system ID")
 
         #Throw ValueError if name is invalid.
