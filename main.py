@@ -288,7 +288,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     core_tools.DatabaseConnection(system_id)
     config.DBCONNECTION.start_thread()
-    config.DBCONNECTION.initialise_db()
+    config.DBCONNECTION.initialise_db() #NB: Currently causes a hang if database never connects.
 
     logger.info("Starting to take readings...")
     print("Starting to take readings. Please stand by...")
@@ -334,9 +334,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         while not each_monitor.has_data():
             time.sleep(0.5)
 
-    #Set to sensible defaults to avoid errors.
-    old_reading_interval = 0
-
     #Make a readings dictionary for temporary storage for the control logic function.
     #TODO Set up with default readings - need discussion first for some of these.
     readings = {}
@@ -345,10 +342,17 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                                              "OK")
 
     readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "0mm",
-                                             "OK")
+                                           "OK")
 
     readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "True",
                                             "OK")
+
+    #Make a reading intervals dictionary for temporary storage of the reading intervals.
+    #Assume 15 seconds by default.
+    reading_intervals = {}
+
+    for _siteid in config.SITE_SETTINGS:
+        reading_intervals[_siteid] = 15
 
     #Keep tabs on its progress so we can write new readings to the file.
     try:
@@ -388,48 +392,62 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                 reading_interval = function(readings, devices, monitors, sockets, reading_interval)
 
-            #The NAS box sets the reading interval, so it doesn't need to check if it is changing.
-            if system_id == "NAS":
-                #Wait until it's time to check for another reading.
-                time.sleep(reading_interval)
+            #I know we could use a long time.sleep(),
+            #but we need to be able to respond to messages from the sockets.
+            #TODO refactor into a separate function.
+            count = 0
 
-            else:
-                #I know we could use a long time.sleep(),
-                #but this MUST be responsive to changes in the reading interval.
-                count = 0
+            while count < reading_interval:
+                #This way, if our reading interval changes,
+                #the code will respond to the change immediately.
+                #Check if we have a new reading interval.
+                for socket_id in sockets:
+                    socket = sockets[socket_id]
 
-                while count < reading_interval:
-                    #This way, if our reading interval changes,
-                    #the code will respond to the change immediately.
-                    #Check if we have a new reading interval.
                     if socket.has_data():
                         data = socket.read()
 
-                        if "Reading Interval" in data:
-                            reading_interval = int(data.split()[-1])
+                        #-------------------- READING INTERVAL HANDLING --------------------
+                        if "Interval:" in data:
+                            #Save the reading interval to our list.
+                            #Get the site id that this interval corresponds to.
+                            _site = data.split(" ")[1]
 
-                            #Only add a new line to the log if the reading interval changed.
-                            if reading_interval != old_reading_interval:
-                                old_reading_interval = reading_interval
-                                logger.info("New reading interval: "+str(reading_interval))
-                                print("\nNew reading interval: "+str(reading_interval))
+                            #Save the interval to our list.
+                            reading_intervals[_site] = int(data.split(" ")[2])
 
-                                #Make sure all monitors use the new reading interval.
-                                for monitor in monitors:
-                                    monitor.set_reading_interval(reading_interval)
+                        elif "Interval?:" in data and system_id == "NAS":
+                            #NAS box only: reply with the reading interval we have for that site.
+                            requested_site = data.split(" ")[1]
 
+                            socket.write("Interval: "+requested_site+" "+str(reading_intervals[requested_site]))
+
+                        #-------------------- SYSTEM TICK HANDLING --------------------
+                        elif data == "Tick?" and system_id == "NAS":
+                            #NAS box only: reply with the current system tick when asked.
+                            socket.write("Tick: "+str(config.TICK))
+
+                        elif "Tick:" in data and system_id != "NAS":
+                            #Everything except NAS box: store tick sent from the NAS box.
+                            config.TICK = data.split(" ")[1]
+
+                        #-------------------- MISC --------------------
                         elif "Valve Position" in data:
-                            valve_position = int(data.split()[-1])
+                            valve_position = int(data.split(" ")[3])
+                            valve_id = data.split(" ")[2]
 
                             logger.info("New valve position: "+str(valve_position))
                             print("New valve position: "+str(valve_position))
 
-                            valve.set_position(valve_position)
+                            #Change the position of the valve specified.
+                            for device in devices:
+                                if device.get_device_id() == valve_id:
+                                    device.set_position(valve_position)
 
                         socket.pop()
 
-                    time.sleep(1)
-                    count += 1
+                time.sleep(1)
+                count += 1
 
             #Check if at least one monitor is running.
             at_least_one_monitor_running = False

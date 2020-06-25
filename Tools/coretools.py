@@ -1255,6 +1255,53 @@ class DatabaseConnection(threading.Thread):
         self.do_query(query, retries)
 
 # -------------------- CONTROL LOGIC FUNCTIONS --------------------
+def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
+    """
+    This control logic runs on the NAS box, and is responsible for:
+
+    - Setting and restoring the system tick.
+    - Freeing locks that have expired (locks can only be held for a maximum of TBD minutes).
+    - Monitoring the temperature of the NAS box and its drives.
+
+    """
+    #---------- System tick ----------
+    #Restore the system tick from the database if needed.
+    if config.TICK == 0:
+        #TODO
+        pass
+
+    #Increment the system tick by 1.
+    config.TICK += 1
+
+    #---------- Free locks that have expired ----------
+    #TODO
+
+    #---------- Monitor the temperature of the NAS box and the drives ----------
+    #System board temp.
+    cmd = subprocess.run(["temperature_monitor", "-b"],
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+    sys_temp = cmd.stdout.decode("UTF-8", errors="ignore").split(" ")[-1]
+    
+    #HDD 0 temp.
+    cmd = subprocess.run(["temperature_monitor", "-c", "0"],
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+    hdd0_temp = cmd.stdout.decode("UTF-8", errors="ignore").split(" ")[-1]
+
+    #HDD 1 temp.
+    cmd = subprocess.run(["temperature_monitor", "-c", "1"],
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+    hdd1_temp = cmd.stdout.decode("UTF-8", errors="ignore").split(" ")[-1]
+
+    #Log temperatures and update in system status table.
+    logger.info("Temperatures: sys: "+sys_temp+", hdd0: "+hdd0_temp+", hdd1: "+hdd1_temp)
+    config.DBCONNECTION.update_status("Up, temps: ("+sys_temp+"/"+hdd0_temp+"/"+hdd1_temp+")", "OK", "None")
+
+    #NAS/tick interval is 15 seconds.
+    return 15
+
 def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval):
     """
     This function is used to decides what action to take based

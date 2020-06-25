@@ -151,6 +151,9 @@ RELEASEDATE = "21/0/2020"
 #Used to access the database connection object.
 DBCONNECTION = None
 
+#Current system tick.
+TICK = 0
+
 #A strange approach, but it works and means we can import the modules for doc generation
 #without error. It also doesn't relax the checks on our actual deployments.
 if not "TESTING" in globals():
@@ -189,6 +192,7 @@ SITE_SETTINGS = {
             "Default Interval": 15,
             "IPAddress": "192.168.0.25",
             "HostingSockets": True,
+            "ControlLogicFunction": "nas_control_logic",
 
             #TODO Set up another account for this.
             "DBUser": "admin",
