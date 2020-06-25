@@ -537,7 +537,7 @@ class Monitor(BaseMonitorClass):
                 #Construct a Reading object to hold this info.
                 #Args in order: Time, Tick, ID, Value, Status
                 reading = coretools.Reading(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-                                            0,
+                                            config.TICK,
                                             self.probe.get_id(),
                                             str(the_reading), status_text)
 
