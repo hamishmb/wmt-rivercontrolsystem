@@ -427,12 +427,20 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             #I know we could use a long time.sleep(),
             #but we need to be able to respond to messages from the sockets.
             #TODO refactor into a separate function.
+            asked_for_tick = False
             count = 0
 
             while count < reading_interval:
                 #This way, if our reading interval changes,
                 #the code will respond to the change immediately.
                 #Check if we have a new reading interval.
+
+                
+                if not asked_for_tick and (reading_interval - count) < 5 and system_id != "NAS":
+                    #Get the latest system tick if we're in the last 5 seconds of the interval.
+                    asked_for_tick = True
+                    socket.write("Tick?")
+
                 for socket_id in sockets:
                     _socket = sockets[socket_id]
 
