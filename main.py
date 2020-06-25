@@ -269,6 +269,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         socket.set_server_address(config.SITE_SETTINGS[system_id]["ServerAddress"])
         socket.start_handler()
 
+        sockets[config.SITE_SETTINGS[system_id]["SocketID"]] = socket
+
         logger.info("Will connect to server as soon as it becomes available.")
         print("Will connect to server as soon as it becomes available.")
 
