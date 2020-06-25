@@ -416,28 +416,40 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                             #Save the interval to our list.
                             reading_intervals[_site] = int(data.split(" ")[2])
 
+                            print("Received new interval from "+_site+": "+data.split(" ")[2])
+                            logger.info("Received new interval from "+_site+": "+data.split(" ")[2])
+
                         elif "Interval?:" in data and system_id == "NAS":
                             #NAS box only: reply with the reading interval we have for that site.
                             requested_site = data.split(" ")[1]
 
                             socket.write("Interval: "+requested_site+" "+str(reading_intervals[requested_site]))
 
+                            print("Received new interval request for "+requested_site)
+                            logger.info("Received new interval request for "+requested_site)
+
                         #-------------------- SYSTEM TICK HANDLING --------------------
                         elif data == "Tick?" and system_id == "NAS":
                             #NAS box only: reply with the current system tick when asked.
                             socket.write("Tick: "+str(config.TICK))
 
+                            print("Received request for current system tick")
+                            logger.info("Received request for current system tick")
+
                         elif "Tick:" in data and system_id != "NAS":
                             #Everything except NAS box: store tick sent from the NAS box.
-                            config.TICK = data.split(" ")[1]
+                            config.TICK = int(data.split(" ")[1])
+
+                            print("New tick: "+data.split(" ")[1])
+                            logger.info("New tick: "+data.split(" ")[1])
 
                         #-------------------- MISC --------------------
                         elif "Valve Position" in data:
                             valve_position = int(data.split(" ")[3])
                             valve_id = data.split(" ")[2]
 
-                            logger.info("New valve position: "+str(valve_position))
-                            print("New valve position: "+str(valve_position))
+                            logger.info("New valve position ("+valve_id+"): "+str(valve_position))
+                            print("New valve position ("+valve_id+"): "+str(valve_position))
 
                             #Change the position of the valve specified.
                             for device in devices:

@@ -1281,19 +1281,19 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
     cmd = subprocess.run(["temperature_monitor", "-b"],
                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-    sys_temp = cmd.stdout.decode("UTF-8", errors="ignore").split(" ")[-1]
+    sys_temp = cmd.stdout.decode("UTF-8", errors="ignore").split()[-1]
     
     #HDD 0 temp.
     cmd = subprocess.run(["temperature_monitor", "-c", "0"],
                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-    hdd0_temp = cmd.stdout.decode("UTF-8", errors="ignore").split(" ")[-1]
+    hdd0_temp = cmd.stdout.decode("UTF-8", errors="ignore").split()[-1]
 
     #HDD 1 temp.
     cmd = subprocess.run(["temperature_monitor", "-c", "1"],
                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-    hdd1_temp = cmd.stdout.decode("UTF-8", errors="ignore").split(" ")[-1]
+    hdd1_temp = cmd.stdout.decode("UTF-8", errors="ignore").split()[-1]
 
     #Log temperatures and update in system status table.
     logger.info("Temperatures: sys: "+sys_temp+", hdd0: "+hdd0_temp+", hdd1: "+hdd1_temp)
@@ -1388,7 +1388,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         #Close the wendy butts gate valve.
         logger.info("Closing the wendy butts gate valve...")
         print("Closing the wendy butts gate valve...")
-        #sockets["SOCK14"].write("Valve Position 0")
+        config.DBCONNECTION.attempt_to_control("VALVE4", "V4", "Valve Position 0")
 
         main_pump.enable()
 
@@ -1434,7 +1434,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         #Close gate valve.
         logger.info("Closing wendy butts gate valve...")
         print("Closing wendy butts gate valve...")
-        #sockets["SOCK14"].write("Valve Position 0")
+        config.DBCONNECTION.attempt_to_control("VALVE4", "V4", "Valve Position 0")
 
         main_pump.enable()
 
@@ -1456,7 +1456,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         #Close gate valve.
         logger.info("Closing wendy butts gate valve...")
         print("Closing wendy butts gate valve...")
-        #sockets["SOCK14"].write("Valve Position 0")
+        config.DBCONNECTION.attempt_to_control("VALVE4", "V4", "Valve Position 0")
 
         main_pump.enable()
 
@@ -1477,12 +1477,12 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         if butts_reading >= 300:
             logger.info("Opening wendy butts gate valve to 25%...")
             print("Opening wendy butts gate valve to 25%...")
-            #sockets["SOCK14"].write("Valve Position 25")
+            config.DBCONNECTION.attempt_to_control("VALVE4", "V4", "Valve Position 25")
 
         else:
             logger.warning("Insufficient water in wendy butts...")
             print("Insufficient water in wendy butts...")
-            #sockets["SOCK14"].write("Valve Position 0")
+            config.DBCONNECTION.attempt_to_control("VALVE4", "V4", "Valve Position 0")
 
         #Make sure the main circulation pump is on.
         logger.info("Turning the main cirulation pump on, if it was off...")
@@ -1503,12 +1503,12 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         if butts_reading >= 300:
             logger.info("Opening wendy butts gate valve to 50%...")
             print("Opening wendy butts gate valve to 50%...")
-            #sockets["SOCK14"].write("Valve Position 50")
+            config.DBCONNECTION.attempt_to_control("VALVE4", "V4", "Valve Position 50")
 
         else:
             logger.error("Insufficient water in wendy butts...")
             print("Insufficient water in wendy butts...")
-            #sockets["SOCK14"].write("Valve Position 0")
+            config.DBCONNECTION.attempt_to_control("VALVE4", "V4", "Valve Position 0")
 
             logger.error("*** NOTICE ***: Water level in the sump is between 200 and 300 mm!")
             logger.error("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: "
@@ -1536,12 +1536,12 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         if butts_reading >= 300:
             logger.info("Opening wendy butts gate valve to 100%...")
             print("Opening wendy butts gate valve to 100%...")
-            #sockets["SOCK14"].write("Valve Position 100")
+            config.DBCONNECTION.attempt_to_control("VALVE4", "V4", "Valve Position 100")
 
         else:
             logger.warning("Insufficient water in wendy butts...")
             print("Insufficient water in wendy butts...")
-            #sockets["SOCK14"].write("Valve Position 0")
+            config.DBCONNECTION.attempt_to_control("VALVE4", "V4", "Valve Position 0")
 
             logger.critical("*** CRITICAL ***: Water level in the sump less than 200 mm!")
             logger.critical("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to system.")
