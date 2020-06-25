@@ -333,6 +333,39 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #for each_monitor in monitors:
     #    while not each_monitor.has_data():
     #        time.sleep(0.5)
+    
+    #Request the latest system tick value and wait 60 seconds for it to come in.
+    logger.info("Waiting up to 60 seconds for the system tick...")
+    print("Waiting up to 60 seconds for the system tick...")
+
+    if system_id != "NAS":
+        socket.write("Tick?")
+
+        count = 0
+
+        while config.TICK == 0 and count < 60:
+            if socket.has_data():
+                data = socket.read()
+
+                if "Tick:" in data:
+                    #Store tick sent from the NAS box.
+                    config.TICK = int(data.split(" ")[1])
+
+                    print("New tick: "+data.split(" ")[1])
+                    logger.info("New tick: "+data.split(" ")[1])
+
+                socket.pop()
+
+            time.sleep(1)
+            count += 1
+
+    if config.TICK != 0:
+        logger.info("Received tick")
+        print("Received tick")
+
+    else:
+        logger.error("Could not get tick within 60 seconds!")
+        print("Could not get tick within 60 seconds!")
 
     #Make a readings dictionary for temporary storage for the control logic function.
     #TODO Set up with default readings - need discussion first for some of these.
@@ -402,10 +435,10 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                 #the code will respond to the change immediately.
                 #Check if we have a new reading interval.
                 for socket_id in sockets:
-                    socket = sockets[socket_id]
+                    _socket = sockets[socket_id]
 
-                    if socket.has_data():
-                        data = socket.read()
+                    if _socket.has_data():
+                        data = _socket.read()
 
                         #-------------------- READING INTERVAL HANDLING --------------------
                         if "Interval:" in data:
@@ -423,7 +456,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                             #NAS box only: reply with the reading interval we have for that site.
                             requested_site = data.split(" ")[1]
 
-                            socket.write("Interval: "+requested_site+" "+str(reading_intervals[requested_site]))
+                            _socket.write("Interval: "+requested_site+" "+str(reading_intervals[requested_site]))
 
                             print("Received new interval request for "+requested_site)
                             logger.info("Received new interval request for "+requested_site)
@@ -431,7 +464,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                         #-------------------- SYSTEM TICK HANDLING --------------------
                         elif data == "Tick?" and system_id == "NAS":
                             #NAS box only: reply with the current system tick when asked.
-                            socket.write("Tick: "+str(config.TICK))
+                            _socket.write("Tick: "+str(config.TICK))
 
                             print("Received request for current system tick")
                             logger.info("Received request for current system tick")
@@ -442,19 +475,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                             print("New tick: "+data.split(" ")[1])
                             logger.info("New tick: "+data.split(" ")[1])
-
-                        #-------------------- MISC --------------------
-                        elif "Valve Position" in data:
-                            valve_position = int(data.split(" ")[3])
-                            valve_id = data.split(" ")[2]
-
-                            logger.info("New valve position ("+valve_id+"): "+str(valve_position))
-                            print("New valve position ("+valve_id+"): "+str(valve_position))
-
-                            #Change the position of the valve specified.
-                            for device in devices:
-                                if device.get_device_id() == valve_id:
-                                    device.set_position(valve_position)
 
                         socket.pop()
 
