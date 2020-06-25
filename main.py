@@ -403,14 +403,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                 #Check for new readings.
                 #NOTE: Later on, use the readings returned from this
                 #for state history generation etc.
-                if "SocketName" in config.SITE_SETTINGS[system_id]:
-                    reading = core_tools.get_and_handle_new_reading(monitor, "test",
-                                                                    config.SITE_SETTINGS
-                                                                    [system_id]["ServerAddress"],
-                                                                    socket)
-
-                else:
-                    reading = core_tools.get_and_handle_new_reading(monitor, "test")
+                reading = core_tools.get_and_handle_new_reading(monitor, "test")
 
                 #Ignore empty readings.
                 if reading is None:
@@ -436,8 +429,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                 #This way, if our reading interval changes,
                 #the code will respond to the change immediately.
                 #Check if we have a new reading interval.
-
-                
                 if not asked_for_tick and (reading_interval - count) < 5 and system_id != "NAS":
                     #Get the latest system tick if we're in the last 5 seconds of the interval.
                     asked_for_tick = True
@@ -448,6 +439,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                     if _socket.has_data():
                         data = _socket.read()
+
+                        if not isinstance(data, str):
+                            continue
 
                         #-------------------- READING INTERVAL HANDLING --------------------
                         if "Interval:" in data:

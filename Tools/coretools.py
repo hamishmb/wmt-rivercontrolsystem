@@ -1650,38 +1650,22 @@ def setup_devices(system_id, dictionary="Probes"):
 
     return devices
 
-def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None):
+def get_and_handle_new_reading(monitor, _type):
     """
     This function is used to get, handle, and return new readings from the
     monitors. It checks each monitor to see if there is data, then prints
-    and logs it if needed, before writing the new reading down the socket
-    to the master pi, if a connection has been set up.
+    and logs it if needed.
 
     Args:
         monitor (BaseMonitorClass):     The monitor we're checking.
         _type (str):                    The type of probe we're monitoring.
-
-    KWargs:
-        server_address (str):           The server address. Set to None if
-                                        not specified.
-
-        socket (Sockets):               The socket connected to the master pi.
-                                        Set to None if not specified.
 
     Returns:
         A Reading object.
 
     Usage:
 
-        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>)
-
-        OR
-
-        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, "192.168.0.2")
-
-        OR
-
-        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, "192.168.0.2", <Socket-Obj>)
+        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, "test")
     """
 
     reading = None
@@ -1705,8 +1689,5 @@ def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None)
 
         #Flush buffers.
         sys.stdout.flush()
-
-        if server_address is not None:
-            socket.write(reading)
 
     return reading
