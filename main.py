@@ -330,9 +330,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #Wait until the first readings have come in so we are synchronised.
     #TODO: We probably want to remove this - this was only ever meant to be temporary.
     #NB: Will now wait for the client connections.
-    for each_monitor in monitors:
-        while not each_monitor.has_data():
-            time.sleep(0.5)
+    #for each_monitor in monitors:
+    #    while not each_monitor.has_data():
+    #        time.sleep(0.5)
 
     #Make a readings dictionary for temporary storage for the control logic function.
     #TODO Set up with default readings - need discussion first for some of these.
