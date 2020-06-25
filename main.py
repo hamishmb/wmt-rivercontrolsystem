@@ -333,14 +333,13 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #for each_monitor in monitors:
     #    while not each_monitor.has_data():
     #        time.sleep(0.5)
-    
-    #Request the latest system tick value and wait 60 seconds for it to come in.
-    logger.info("Waiting up to 60 seconds for the system tick...")
-    print("Waiting up to 60 seconds for the system tick...")
 
     if system_id != "NAS":
-        socket.write("Tick?")
+        #Request the latest system tick value and wait 60 seconds for it to come in.
+        logger.info("Waiting up to 60 seconds for the system tick...")
+        print("Waiting up to 60 seconds for the system tick...")
 
+        socket.write("Tick?")
         count = 0
 
         while config.TICK == 0 and count < 60:
@@ -359,13 +358,13 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             time.sleep(1)
             count += 1
 
-    if config.TICK != 0:
-        logger.info("Received tick")
-        print("Received tick")
+        if config.TICK != 0:
+            logger.info("Received tick")
+            print("Received tick")
 
-    else:
-        logger.error("Could not get tick within 60 seconds!")
-        print("Could not get tick within 60 seconds!")
+        else:
+            logger.error("Could not get tick within 60 seconds!")
+            print("Could not get tick within 60 seconds!")
 
     #Make a readings dictionary for temporary storage for the control logic function.
     #TODO Set up with default readings - need discussion first for some of these.
