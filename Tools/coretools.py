@@ -695,7 +695,7 @@ class DatabaseConnection(threading.Thread):
 
         try:
             database = mysql.connect(host=host, port=port, user=user, passwd=passwd,
-                                     connect_timeout=10, db="rivercontrolsystem")
+                                     connect_timeout=30, db="rivercontrolsystem")
 
             cursor = database.cursor()
 
