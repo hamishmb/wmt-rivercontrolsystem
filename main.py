@@ -475,7 +475,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                             print("New tick: "+data.split(" ")[1])
                             logger.info("New tick: "+data.split(" ")[1])
 
-                        socket.pop()
+                        _socket.pop()
 
                 time.sleep(1)
                 count += 1

@@ -651,6 +651,9 @@ class SocketsMonitor(BaseMonitorClass):
                     except IndexError:
                         break
 
+                    if not isinstance(reading, coretools.Reading):
+                        break
+
                     #Check the reading is from the right probe.
                     #NB: Could check site ID, but we'll have a socket for each one, so a non-issue.
                     if reading.get_sensor_id() == self.probe_id:
