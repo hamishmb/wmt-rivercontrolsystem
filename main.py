@@ -198,6 +198,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     #Handle cmdline options.
     system_id = handle_cmdline_options()
+    config.SYSTEM_ID = system_id
 
     #Reconfigure logging for module imported before we set the logger up.
     config.reconfigure_logging()

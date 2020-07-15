@@ -146,7 +146,10 @@ import sys
 
 #Define global variables.
 VERSION = "0.11.0~pre4"
-RELEASEDATE = "21/0/2020"
+RELEASEDATE = "15/7/2020"
+
+#System ID of this Pi.
+SYSTEM_ID = None
 
 #Used to access the database connection object.
 DBCONNECTION = None

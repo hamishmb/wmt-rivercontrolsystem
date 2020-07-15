@@ -1262,7 +1262,7 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
     This control logic runs on the NAS box, and is responsible for:
 
     - Setting and restoring the system tick.
-    - Freeing locks that have expired (locks can only be held for a maximum of TBD minutes).
+    - Freeing locks that have expired (locks can only be held for a maximum of TBD minutes). NYI.
     - Monitoring the temperature of the NAS box and its drives.
 
     """
@@ -1336,6 +1336,34 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
                                  + ", hdd1: "+hdd1_temp, severity="WARNING")
 
     #NAS/tick interval is 15 seconds.
+    return 15
+
+def valve_control_logic(readings, devices, monitors, sockets, reading_interval):
+    """
+    This control logic is generic and runs on all the gate valves. It does the following:
+
+    - Polls the database and sets valve positions upon request.
+
+    """
+
+    #Get the sensor name for this valve.
+    for valve in config.SITE_SETTINGS[config.SYSTEM_ID]["Devices"]:
+        valve_id = valve.split(":")[1] 
+
+    #Check if there's a request for a new valve position.
+    state = logiccoretools.get_state(config.SYSTEM_ID, valve_id)
+
+    if state is not None:
+        position = int(state[1].replace("%", ""))
+
+        #There's only one device for gate valve pis, the gate valve, so take a shortcut.
+        devices[0].set_position(position)
+
+        logger.info("New valve position: "+str(position))
+        print("New valve position: "+str(position))
+        logiccoretools.log_event(config.SYSTEM_ID+": New valve position: "+str(position))
+
+    #Unsure how to decide the interval, so just setting to 15 seconds TODO.
     return 15
 
 def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval):
