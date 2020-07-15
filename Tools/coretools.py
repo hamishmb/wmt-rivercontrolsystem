@@ -120,7 +120,6 @@ class Reading:
         """This is the constructor as defined above"""
         #Set some semi-private variables.
         #Check the time is a string.
-        #TODO Check that the time string is valid as well.
         if not isinstance(reading_time, str):
             raise ValueError("reading_time argument must be of type str")
 
