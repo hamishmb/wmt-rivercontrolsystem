@@ -295,6 +295,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     if system_id != "NAS":
         #Request the latest system tick value and wait 60 seconds for it to come in.
+        #FIXME sometimes fails, make multiple requests?
         logger.info("Waiting up to 60 seconds for the system tick...")
         print("Waiting up to 60 seconds for the system tick...")
 
