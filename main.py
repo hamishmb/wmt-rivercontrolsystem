@@ -391,8 +391,19 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             #Check for new readings from all monitors.
             for monitor in monitors:
                 #Skip over any monitors that have stopped.
-                #TODO: This should never happen, moan in log file?
                 if not monitor.is_running():
+                    logger.error("Monitor for "+monitor.get_system_id()+":"+monitor.get_probe_id()
+                                 + " is not running!")
+
+                    print("Monitor for "+monitor.get_system_id()+":"+monitor.get_probe_id()
+                          + " is not running!")
+
+                    logiccoretools.log_event("Monitor for "+monitor.get_system_id()+":"
+                                             + monitor.get_probe_id()+" is not running!",
+                                             severity="ERROR")
+
+                    #TODO add to pi status?
+
                     continue
 
                 #Check for new readings.
