@@ -1357,11 +1357,13 @@ def valve_control_logic(readings, devices, monitors, sockets, reading_interval):
         position = int(state[1].replace("%", ""))
 
         #There's only one device for gate valve pis, the gate valve, so take a shortcut.
-        devices[0].set_position(position)
+        #Only do anything if the position has changed.
+        if position != devices[0].get_requested_position():
+            devices[0].set_position(position)
 
-        logger.info("New valve position: "+str(position))
-        print("New valve position: "+str(position))
-        logiccoretools.log_event(config.SYSTEM_ID+": New valve position: "+str(position))
+            logger.info("New valve position: "+str(position))
+            print("New valve position: "+str(position))
+            logiccoretools.log_event(config.SYSTEM_ID+": New valve position: "+str(position))
 
     #Unsure how to decide the interval, so just setting to 15 seconds TODO.
     return 15

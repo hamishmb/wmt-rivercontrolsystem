@@ -447,6 +447,13 @@ class ManageGateValve(threading.Thread):
 
         return self.actual_position
 
+    def get_requested_position(self):
+        """
+        Returns the most recent requested position for the gate valve.
+        """
+
+        return self.percentage
+
     #-------------------- SETTER METHODS --------------------
     def set_position(self, percentage):
         """

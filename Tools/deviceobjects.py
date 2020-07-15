@@ -1024,6 +1024,21 @@ class GateValve(BaseDeviceClass):
         """
         return self.ref_voltage
 
+    def get_requested_position(self):
+        """
+        This method returns the most recent requested position for the gate valve.
+
+        Returns:
+
+            int. The position (0 - 100).
+
+        Usage:
+
+            >>> <GateValve-Object>.get_requested_position()
+            >>> 50
+        """
+        return self.control_thread.get_requested_position()
+
     # ---------- CONTROL METHODS ----------
     def set_position(self, percentage):
         """
