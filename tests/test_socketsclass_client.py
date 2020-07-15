@@ -24,6 +24,57 @@ import getopt
 sys.path.insert(0, os.path.abspath('../../'))
 sys.path.insert(0, os.path.abspath('../'))
 
+TEST_SITES = {
+    #--------------- DUMMY SITE IDs for TESTING ---------------
+    "ST0":
+        {
+            "Type": "Site",
+            "ID": "ST0",
+            "Name": "Sockets Test Site",
+            "Default Interval": 15,
+            "IPAddress": "127.0.0.1",
+            "HostingSockets": False,
+            "DBUser": "none",
+            "DBPasswd": "none",
+
+            #Local probes.
+            "Probes": {},
+
+            #Devices to control.
+            "Devices": {},
+
+            "ServerAddress": "127.0.0.1",
+            "ServerPort": 30000,
+            "ServerName": "test",
+            "SocketName": "Test Socket",
+            "SocketID": "SOCK0"
+        },
+
+    "ST1":
+        {
+            "Type": "Site",
+            "ID": "ST1",
+            "Name": "Sockets Test Site",
+            "Default Interval": 15,
+            "IPAddress": "127.0.0.1",
+            "HostingSockets": False,
+            "DBUser": "none",
+            "DBPasswd": "none",
+
+            #Local probes.
+            "Probes": {},
+
+            #Devices to control.
+            "Devices": {},
+
+            "ServerAddress": "127.0.0.1",
+            "ServerPort": 30000,
+            "ServerName": "test",
+            "SocketName": "Test Socket",
+            "SocketID": "SOCK0"
+        },
+}
+
 def usage():
     """
     This function is used to output help information to the standard output
@@ -81,6 +132,8 @@ def run_standalone():
     #Do required imports.
     import config
     import Tools.sockettools as socket_tools
+
+    config.SITE_SETTINGS.update(TEST_SITES)
 
     socket_tools.logger = logger
 
