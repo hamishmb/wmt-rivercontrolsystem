@@ -42,6 +42,7 @@ import datetime
 import MySQLdb as mysql
 import psutil
 
+import logiccoretools
 import config
 
 #Don't ask for a logger name, so this works with both main.py
@@ -1296,8 +1297,27 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
     hdd1_temp = cmd.stdout.decode("UTF-8", errors="ignore").split()[-1]
 
     #Log temperatures and update in system status table.
-    logger.info("Temperatures: sys: "+sys_temp+", hdd0: "+hdd0_temp+", hdd1: "+hdd1_temp)
-    config.DBCONNECTION.update_status("Up, temps: ("+sys_temp+"/"+hdd0_temp+"/"+hdd1_temp+")", "OK", "None")
+    #Check if any of the temps are > 50C.
+    hot = False
+
+    for temp in (sys_temp, hdd0_temp, hdd1_temp):
+        if int(temp) > 50:
+            hot = True
+
+    if not hot:
+        logger.info("Temperatures: sys: "+sys_temp+", hdd0: "+hdd0_temp+", hdd1: "+hdd1_temp)
+        logiccoretools.update_status("Up, temps: ("+sys_temp+"/"+hdd0_temp+"/"+hdd1_temp
+                                     + ")", "OK", "None")
+
+    else:
+        logger.warning("High Temperatures! sys: "+sys_temp+", hdd0: "+hdd0_temp
+                       + ", hdd1: "+hdd1_temp)
+
+        logiccoretools.update_status("Up, HIGH temps: ("+sys_temp+"/"+hdd0_temp+"/"+hdd1_temp
+                                     + ")", "OK", "None")
+
+        logiccoretools.log_event("NAS Box getting hot! Temps: sys: "+sys_temp+", hdd0: "+hdd0_temp
+                                 + ", hdd1: "+hdd1_temp)
 
     #NAS/tick interval is 15 seconds.
     return 15
