@@ -290,7 +290,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     core_tools.DatabaseConnection(system_id)
     config.DBCONNECTION.start_thread()
-    config.DBCONNECTION.initialise_db() #NB: Currently causes a hang if database never connects.
+    config.DBCONNECTION.initialise_db() #FIXME: Currently causes a hang if database never connects.
 
     if system_id != "NAS":
         #Request the latest system tick value and wait 60 seconds for it to come in.

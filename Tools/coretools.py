@@ -1269,8 +1269,23 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
     #---------- System tick ----------
     #Restore the system tick from the database if needed.
     if config.TICK == 0:
-        #TODO
-        pass
+        #Get the latest readings for each probe, and
+        #find the last tick that was used.
+        for _site_id in config.SITE_SETTINGS:
+            for _probe in config.SITE_SETTINGS[_site_id]["Probes"]:
+                _probe_id = _probe.split(":")[1]
+
+                reading = logiccoretools.get_latest_reading(_site_id, _probe_id)
+
+                if reading is not None:
+                    if reading.get_tick() > config.TICK:
+                        config.TICK = reading.get_tick()
+
+        #Log if we managed to get a newer tick.
+        if config.TICK != 0:
+            print("Restored system tick from database: "+str(config.TICK))
+            logger.info("Restored system tick from database: "+str(config.TICK))
+            logiccoretools.log_event("Restored system tick from database: "+str(config.TICK))
 
     #Increment the system tick by 1.
     config.TICK += 1
@@ -1318,7 +1333,7 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
                                      + ")", "OK", "None")
 
         logiccoretools.log_event("NAS Box getting hot! Temps: sys: "+sys_temp+", hdd0: "+hdd0_temp
-                                 + ", hdd1: "+hdd1_temp)
+                                 + ", hdd1: "+hdd1_temp, severity="WARNING")
 
     #NAS/tick interval is 15 seconds.
     return 15
