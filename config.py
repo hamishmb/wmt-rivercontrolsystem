@@ -193,10 +193,8 @@ SITE_SETTINGS = {
             "IPAddress": "192.168.0.25",
             "HostingSockets": True,
             "ControlLogicFunction": "nas_control_logic",
-
-            #TODO Set up another account for this.
-            "DBUser": "admin",
-            "DBPasswd": "admin",
+            "DBUser": "nasbox",
+            "DBPasswd": "river20",
             "DBHost": "127.0.0.1",
             "DBPort": 3306,
 
