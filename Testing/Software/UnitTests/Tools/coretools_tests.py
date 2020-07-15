@@ -33,6 +33,7 @@ sys.path.insert(0, os.path.abspath('../../../')) #Need to be able to import the 
 import config
 import Tools
 import Tools.coretools as core_tools
+import Tools.logiccoretools as logiccoretools
 
 #Import test data and functions.
 from . import coretools_test_data as data
@@ -195,10 +196,15 @@ class TestDatabaseConnection(unittest.TestCase):
     """
 
     def setUp(self):
+        self.orig_do_query = core_tools.DatabaseConnection.do_query
+        core_tools.DatabaseConnection.do_query = data.fake_do_query
+
         self.dbconn = core_tools.DatabaseConnection("SUMP")
 
     def tearDown(self):
         del self.dbconn
+
+        core_tools.DatabaseConnection.do_query = self.orig_do_query
 
     #---------- TEST CONSTRUCTOR ----------
     def test_constructor_1(self):
@@ -756,11 +762,17 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Current reading interval.
         self.reading_interval = 15
 
+        #Disabling functions in logiccoretools because we aren't testing them here.
+        self.orig_attempt_to_control = logiccoretools.attempt_to_control
+        logiccoretools.attempt_to_control = data.fake_attempt_to_control
+
     def tearDown(self):
         del self.devices
         del self.butts_pump
         del self.sump_pump
         del self.reading_interval
+
+        logiccoretools.attempt_to_control = self.orig_attempt_to_control
 
     #-------------------- NORMAL VALUES --------------------
     def test_sumppi_control_logic_1(self):

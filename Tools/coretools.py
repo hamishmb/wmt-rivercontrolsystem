@@ -1457,7 +1457,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         #Close the wendy butts gate valve.
         logger.info("Closing the wendy butts gate valve...")
         print("Closing the wendy butts gate valve...")
-        config.DBCONNECTION.attempt_to_control("VALVE4", "V4", "0%")
+        logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
         main_pump.enable()
 
@@ -1503,7 +1503,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         #Close gate valve.
         logger.info("Closing wendy butts gate valve...")
         print("Closing wendy butts gate valve...")
-        config.DBCONNECTION.attempt_to_control("VALVE4", "V4", "0%")
+        logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
         main_pump.enable()
 
@@ -1525,7 +1525,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         #Close gate valve.
         logger.info("Closing wendy butts gate valve...")
         print("Closing wendy butts gate valve...")
-        config.DBCONNECTION.attempt_to_control("VALVE4", "V4", "0%")
+        logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
         main_pump.enable()
 
@@ -1546,12 +1546,12 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         if butts_reading >= 300:
             logger.info("Opening wendy butts gate valve to 25%...")
             print("Opening wendy butts gate valve to 25%...")
-            config.DBCONNECTION.attempt_to_control("VALVE4", "V4", "25%")
+            logiccoretools.attempt_to_control("VALVE4", "V4", "25%")
 
         else:
             logger.warning("Insufficient water in wendy butts...")
             print("Insufficient water in wendy butts...")
-            config.DBCONNECTION.attempt_to_control("VALVE4", "V4", "0%")
+            logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
         #Make sure the main circulation pump is on.
         logger.info("Turning the main cirulation pump on, if it was off...")
@@ -1572,12 +1572,12 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         if butts_reading >= 300:
             logger.info("Opening wendy butts gate valve to 50%...")
             print("Opening wendy butts gate valve to 50%...")
-            config.DBCONNECTION.attempt_to_control("VALVE4", "V4", "50%")
+            logiccoretools.attempt_to_control("VALVE4", "V4", "50%")
 
         else:
             logger.error("Insufficient water in wendy butts...")
             print("Insufficient water in wendy butts...")
-            config.DBCONNECTION.attempt_to_control("VALVE4", "V4", "0%")
+            logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
             logger.error("*** NOTICE ***: Water level in the sump is between 200 and 300 mm!")
             logger.error("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: "
@@ -1605,12 +1605,12 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         if butts_reading >= 300:
             logger.info("Opening wendy butts gate valve to 100%...")
             print("Opening wendy butts gate valve to 100%...")
-            config.DBCONNECTION.attempt_to_control("VALVE4", "V4", "100%")
+            logiccoretools.attempt_to_control("VALVE4", "V4", "100%")
 
         else:
             logger.warning("Insufficient water in wendy butts...")
             print("Insufficient water in wendy butts...")
-            config.DBCONNECTION.attempt_to_control("VALVE4", "V4", "0%")
+            logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
             logger.critical("*** CRITICAL ***: Water level in the sump less than 200 mm!")
             logger.critical("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to system.")

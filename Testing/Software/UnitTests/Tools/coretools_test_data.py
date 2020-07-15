@@ -163,6 +163,19 @@ def get_state_lockedbybuttspi(site_id, sensor_id):
 def get_state_unavailable(site_id, sensor_id):
     return None
 
+#Dummy do_query method.
+def fake_do_query(self, query, retries):
+    self.in_queue.append(query)
+
+    result = self.result
+    self.result = None
+
+    return result
+
+#Dummy logiccoretools.attempt_to_control method for sumppi control logic.
+def fake_attempt_to_control(site_id, sensor_id, request, retries=3):
+    return True
+
 #Sample values for the arguments to the Reading class constructor.
 TEST_READING_DATA = [
     [str(datetime.datetime.now()), 0, "G4:M0", "400", "OK"],
