@@ -253,7 +253,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             if "SocketName" not in site_settings:
                 continue
 
-            socket = socket_tools.Sockets("Socket", system_id site_settings["SocketName"])
+            socket = socket_tools.Sockets("Socket", system_id, site_settings["SocketName"])
             socket.set_portnumber(site_settings["ServerPort"])
             socket.set_server_address(site_settings["IPAddress"])
             sockets[site_settings["SocketID"]] = socket
