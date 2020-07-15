@@ -1356,7 +1356,7 @@ def valve_control_logic(readings, devices, monitors, sockets, reading_interval):
     if state is not None:
         request = state[1]
 
-        if request is not None:
+        if request != "None":
             position = int(request.replace("%", ""))
 
             #There's only one device for gate valve pis, the gate valve, so take a shortcut.
