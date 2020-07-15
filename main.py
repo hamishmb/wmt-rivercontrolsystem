@@ -58,6 +58,7 @@ import traceback
 
 import config
 from Tools import loggingtools
+from Tools import logiccoretools
 
 def usage():
     """
@@ -295,14 +296,14 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     if system_id != "NAS":
         #Request the latest system tick value and wait 60 seconds for it to come in.
-        #FIXME sometimes fails, make multiple requests?
         logger.info("Waiting up to 60 seconds for the system tick...")
         print("Waiting up to 60 seconds for the system tick...")
 
-        socket.write("Tick?")
         count = 0
 
-        while config.TICK == 0 and count < 60:
+        while config.TICK == 0 and count < 6:
+            socket.write("Tick?")
+
             if socket.has_data():
                 data = socket.read()
 
@@ -315,7 +316,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                 socket.pop()
 
-            time.sleep(1)
+            time.sleep(10)
             count += 1
 
         if config.TICK != 0:
