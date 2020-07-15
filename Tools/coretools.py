@@ -42,8 +42,9 @@ import datetime
 import MySQLdb as mysql
 import psutil
 
-import logiccoretools
 import config
+
+from . import logiccoretools
 
 #Don't ask for a logger name, so this works with both main.py
 #and the universal monitor.
