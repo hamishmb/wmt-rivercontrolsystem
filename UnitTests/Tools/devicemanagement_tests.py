@@ -50,7 +50,7 @@ class TestManageHallEffectProbe(unittest.TestCase):
 
     def setUp(self):
         self.probe = device_objects.HallEffectProbe("G4:M0", "Test")
-        self.mgmtclass = device_mgmt.ManageHallEffectProbe(self.probe)
+        self.mgmtclass = device_mgmt.ManageHallEffectProbe(self.probe, None)
 
     def tearDown(self):
         del self.mgmtclass
@@ -62,7 +62,7 @@ class TestManageHallEffectProbe(unittest.TestCase):
     def test_constructor_1(self):
         """Test the constructor works as expected"""
         probe = device_objects.HallEffectProbe("G4:M0", "Test")
-        mgmtclass = device_mgmt.ManageHallEffectProbe(probe)
+        mgmtclass = device_mgmt.ManageHallEffectProbe(probe, None)
 
         self.assertEqual(mgmtclass.probe, probe)
 
@@ -109,8 +109,8 @@ class TestManageGateValve(unittest.TestCase):
     """This class tests the features of the ManageGateValve class in Tools/devicemanagement.py"""
 
     def setUp(self):
-        self.valve = device_objects.GateValve("V4", "Test", (2, 3, 4), 5, 99, 1, 3.3)
-        self.mgmtclass = device_mgmt.ManageGateValve(self.valve)
+        self.valve = device_objects.GateValve("V4", "Test", (2, 3, 4), 5, 99, 1, 3.3, None)
+        self.mgmtclass = device_mgmt.ManageGateValve(self.valve, None)
 
     def tearDown(self):
         del self.mgmtclass
@@ -121,8 +121,8 @@ class TestManageGateValve(unittest.TestCase):
 
     def test_constructor_1(self):
         """Test that the constructor works as expected"""
-        valve = device_objects.GateValve("V4", "Test", (2, 3, 4), 5, 99, 1, 3.3)
-        mgmtclass = device_mgmt.ManageGateValve(self.valve)
+        valve = device_objects.GateValve("V4", "Test", (2, 3, 4), 5, 99, 1, 3.3, None)
+        mgmtclass = device_mgmt.ManageGateValve(self.valve, None)
 
         #Check that variables were set correctly by the constructor.
         self.assertFalse(mgmtclass._exit)

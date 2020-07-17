@@ -41,10 +41,17 @@ class TestSockets(unittest.TestCase):
     """This test class tests the features of the Sockets class in Tools/sockettools.py"""
 
     def setUp(self):
+        #Shallow copy only, but should hopefully be good enough.
+        self.orig_site_settings = config.SITE_SETTINGS.copy()
+        config.SITE_SETTINGS.update(data.TEST_SITES)
+
         self.socket = socket_tools.Sockets("Plug", "ST0", "ST0 Socket")
 
     def tearDown(self):
         del self.socket
+
+        #Reset the site settings.
+        config.SITE_SETTINGS = self.orig_site_settings
 
         #Keep clearing this, because otherwise it gets filled up with sockets
         #from previous tests, and causes later tests to fail.

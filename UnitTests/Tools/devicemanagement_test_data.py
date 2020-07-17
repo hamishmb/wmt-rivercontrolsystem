@@ -70,6 +70,9 @@ class ADS:
 
     voltage = 1
 
+    def ADS1115(i2c, address):
+        pass
+
 class ADS2:
     #Constants.
     P0 = 0

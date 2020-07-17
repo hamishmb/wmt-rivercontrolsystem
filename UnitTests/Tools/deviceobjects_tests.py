@@ -489,7 +489,7 @@ class TestGateValve(unittest.TestCase):
     def setUp(self):
         #Don't specify the other arguments because they're only used in the
         #ManageGateValve class.
-        self.gatevalve = device_objects.GateValve("V4", "Test", (2, 3, 4), 5, 99, 1, 3.3)
+        self.gatevalve = device_objects.GateValve("V4", "Test", (2, 3, 4), 5, 99, 1, 3.3, None)
 
     def tearDown(self):
         del self.gatevalve
@@ -511,7 +511,7 @@ class TestGateValve(unittest.TestCase):
             ref_voltage = dataset[6]
 
             gatevalve = device_objects.GateValve(_id, _name, pins, pos_tolerance, max_open,
-                                                 min_open, ref_voltage)
+                                                 min_open, ref_voltage, None)
 
             self.assertEqual(gatevalve.forward_pin, pins[0])
             self.assertEqual(gatevalve.reverse_pin, pins[1])
@@ -534,7 +534,7 @@ class TestGateValve(unittest.TestCase):
 
             try:
                 gatevalve = device_objects.GateValve(_id, _name, pins, pos_tolerance, max_open,
-                                                 min_open, ref_voltage)
+                                                 min_open, ref_voltage, None)
 
             except ValueError:
                 #Expected.

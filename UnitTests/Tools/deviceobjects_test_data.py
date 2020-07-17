@@ -64,7 +64,7 @@ class ManageHallEffectProbe:
 class ManageGateValve:
     position = 0
 
-    def __init__(self, valve):
+    def __init__(self, valve, i2c_address):
         pass
 
     def get_current_position(self):
