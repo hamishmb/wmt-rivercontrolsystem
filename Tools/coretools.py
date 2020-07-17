@@ -516,6 +516,11 @@ class DatabaseConnection(threading.Thread):
                 if not self.is_connected:
                     print("Could not connect to database! Retrying...")
                     logger.error("DatabaseConnection: Could not connect! Retrying...")
+
+                    #Set the query result to "Error" to stop excessive hangs when
+                    #trying to execute queries when there is no connection.
+                    self.result = "Error"
+
                     time.sleep(10)
                     continue
 
@@ -530,20 +535,20 @@ class DatabaseConnection(threading.Thread):
             if config.EXITING:
                 continue
 
-            #Check if peer is alive roughly every 60 seconds.
-            if count > 60:
-                count = 0
-
+            #Do any requested operations on the queue.
+            while self.in_queue:
+                #Check for each query, because database.commit() does not have a
+                #way of setting a reasonable timeout.
                 if not self.peer_alive():
                     #We need to reconnect.
                     print("Database connection lost! Reconnecting...")
                     logger.error("DatabaseConnection: Connection lost! Reconnecting...")
 
+                    self.result = "Error"
                     self.is_connected = False
                     self._cleanup(database, cursor)
+                    break
 
-            #Do any requested operations on the queue.
-            while self.in_queue:
                 query = self.in_queue[0]
 
                 try:
@@ -604,7 +609,6 @@ class DatabaseConnection(threading.Thread):
                     logger.debug("DatabaseConnection: Done.")
                     self.in_queue.popleft()
 
-            count += 1
             time.sleep(1)
 
         #Do clean up.
@@ -1348,22 +1352,30 @@ def valve_control_logic(readings, devices, monitors, sockets, reading_interval):
         valve_id = valve.split(":")[1] 
 
     #Check if there's a request for a new valve position.
-    state = logiccoretools.get_state(config.SYSTEM_ID, valve_id)
+    try:
+        state = logiccoretools.get_state(config.SYSTEM_ID, valve_id)
 
-    if state is not None:
-        request = state[1]
+    except RuntimeError: pass
 
-        if request != "None":
-            position = int(request.replace("%", ""))
+    else:
+        if state is not None:
+            request = state[1]
 
-            #There's only one device for gate valve pis, the gate valve, so take a shortcut.
-            #Only do anything if the position has changed.
-            if position != devices[0].get_requested_position():
-                devices[0].set_position(position)
+            if request != "None":
+                position = int(request.replace("%", ""))
 
-                logger.info("New valve position: "+str(position))
-                print("New valve position: "+str(position))
-                logiccoretools.log_event(config.SYSTEM_ID+": New valve position: "+str(position))
+                #There's only one device for gate valve pis, the gate valve, so take a shortcut.
+                #Only do anything if the position has changed.
+                if position != devices[0].get_requested_position():
+                    devices[0].set_position(position)
+
+                    logger.info("New valve position: "+str(position))
+                    print("New valve position: "+str(position))
+
+                    try:
+                        logiccoretools.log_event(config.SYSTEM_ID+": New valve position: "+str(position))
+
+                    except RuntimeError: pass
 
     #Unsure how to decide the interval, so just setting to 15 seconds TODO.
     return 15
@@ -1454,7 +1466,11 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         #Close the wendy butts gate valve.
         logger.info("Closing the wendy butts gate valve...")
         print("Closing the wendy butts gate valve...")
-        logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
+
+        try:
+            logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
+
+        except RuntimeError: pass
 
         main_pump.enable()
 
@@ -1500,7 +1516,11 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         #Close gate valve.
         logger.info("Closing wendy butts gate valve...")
         print("Closing wendy butts gate valve...")
-        logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
+
+        try:
+            logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
+
+        except RuntimeError: pass
 
         main_pump.enable()
 
@@ -1522,7 +1542,11 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         #Close gate valve.
         logger.info("Closing wendy butts gate valve...")
         print("Closing wendy butts gate valve...")
-        logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
+
+        try:
+            logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
+
+        except RuntimeError: pass
 
         main_pump.enable()
 
@@ -1543,12 +1567,20 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         if butts_reading >= 300:
             logger.info("Opening wendy butts gate valve to 25%...")
             print("Opening wendy butts gate valve to 25%...")
-            logiccoretools.attempt_to_control("VALVE4", "V4", "25%")
+
+            try:
+                logiccoretools.attempt_to_control("VALVE4", "V4", "25%")
+
+            except RuntimeError: pass
 
         else:
             logger.warning("Insufficient water in wendy butts...")
             print("Insufficient water in wendy butts...")
-            logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
+
+            try:
+                logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
+
+            except RuntimeError: pass
 
         #Make sure the main circulation pump is on.
         logger.info("Turning the main cirulation pump on, if it was off...")
@@ -1569,12 +1601,20 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         if butts_reading >= 300:
             logger.info("Opening wendy butts gate valve to 50%...")
             print("Opening wendy butts gate valve to 50%...")
-            logiccoretools.attempt_to_control("VALVE4", "V4", "50%")
+
+            try:
+                logiccoretools.attempt_to_control("VALVE4", "V4", "50%")
+
+            except RuntimeError: pass
 
         else:
             logger.error("Insufficient water in wendy butts...")
             print("Insufficient water in wendy butts...")
-            logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
+
+            try:
+                logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
+
+            except RuntimeError: pass
 
             logger.error("*** NOTICE ***: Water level in the sump is between 200 and 300 mm!")
             logger.error("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: "
@@ -1602,12 +1642,20 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         if butts_reading >= 300:
             logger.info("Opening wendy butts gate valve to 100%...")
             print("Opening wendy butts gate valve to 100%...")
-            logiccoretools.attempt_to_control("VALVE4", "V4", "100%")
+
+            try:
+                logiccoretools.attempt_to_control("VALVE4", "V4", "100%")
+
+            except RuntimeError: pass
 
         else:
             logger.warning("Insufficient water in wendy butts...")
             print("Insufficient water in wendy butts...")
-            logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
+
+            try:
+                logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
+
+            except RuntimeError: pass
 
             logger.critical("*** CRITICAL ***: Water level in the sump less than 200 mm!")
             logger.critical("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to system.")
