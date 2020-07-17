@@ -258,14 +258,14 @@ class ManageGateValve(threading.Thread):
 
     Args:
         valve (GateValve-Object).         The valve to manage.
+        i2c_address (int).                The i2c_address of the ADC. Most
+                                          easily expressed in hexadecimal.
 
     Usage:
-        mgmt_thread = ManageGateValve(<valve-object>)
+        mgmt_thread = ManageGateValve(<valve-object>, 0x48)
 
     """
 
-    #FIXME The documentation for this constructor is wrong -
-    #there are extra arguments that we need to explain in the docstring.
     def __init__(self, valve, i2c_address):
         """The constructor, set up some basic threading stuff."""
         #Store a reference to the GateValve object.
