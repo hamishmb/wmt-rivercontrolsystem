@@ -521,6 +521,9 @@ class DatabaseConnection(threading.Thread):
                     #trying to execute queries when there is no connection.
                     self.result = "Error"
 
+                    #Keep clearing the queue until we're reconnected as well.
+                    self.in_queue.clear()
+
                     time.sleep(10)
                     continue
 
@@ -537,6 +540,8 @@ class DatabaseConnection(threading.Thread):
 
             #Do any requested operations on the queue.
             while self.in_queue:
+                print(self.in_queue)
+
                 #Check for each query, because database.commit() does not have a
                 #way of setting a reasonable timeout.
                 if not self.peer_alive():
@@ -544,7 +549,10 @@ class DatabaseConnection(threading.Thread):
                     print("Database connection lost! Reconnecting...")
                     logger.error("DatabaseConnection: Connection lost! Reconnecting...")
 
+                    #Drop the queries so we can try again or move on without deadlocking.
                     self.result = "Error"
+                    self.in_queue.clear()
+
                     self.is_connected = False
                     self._cleanup(database, cursor)
                     break
@@ -1006,6 +1014,8 @@ class DatabaseConnection(threading.Thread):
 
         result = self.do_query(query, retries)
 
+        print("Result: "+str(result))
+
         #Store the part of the results that we want.
         try:
             result = result[0][2:]
@@ -1069,6 +1079,8 @@ class DatabaseConnection(threading.Thread):
         state = self.get_state(site_id, sensor_id)
 
         #If it's locked and we didn't lock it, return False.
+        print("State: "+str(state), str(state) == "")
+
         if state is None or \
             (state[0] == "Locked" and \
              state[2] != self.site_id):
