@@ -538,6 +538,23 @@ class DatabaseConnection(threading.Thread):
             if config.EXITING:
                 continue
 
+            #Check if peer is alive roughly every 60 seconds.
+            if count > 60:
+                count = 0
+
+                if not self.peer_alive():
+                    #We need to reconnect.
+                    print("Database connection lost! Reconnecting...")
+                    logger.error("DatabaseConnection: Connection lost! Reconnecting...")
+
+                    #Drop the queries so we can try again or move on without deadlocking.
+                    self.result = "Error"
+                    self.in_queue.clear()
+
+                    self.is_connected = False
+                    self._cleanup(database, cursor)
+                    continue
+
             #Do any requested operations on the queue.
             while self.in_queue:
                 print(self.in_queue)
@@ -617,6 +634,7 @@ class DatabaseConnection(threading.Thread):
                     logger.debug("DatabaseConnection: Done.")
                     self.in_queue.popleft()
 
+            count += 1
             time.sleep(1)
 
         #Do clean up.
