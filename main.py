@@ -292,7 +292,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     core_tools.DatabaseConnection(system_id)
     config.DBCONNECTION.start_thread()
-    config.DBCONNECTION.initialise_db() #FIXME: Currently causes a hang if database never connects.
 
     if system_id != "NAS":
         #Request the latest system tick value and wait 60 seconds for it to come in.
@@ -326,6 +325,12 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         else:
             logger.error("Could not get tick within 60 seconds!")
             print("Could not get tick within 60 seconds!")
+
+    time.sleep(5)
+
+    #Do this after system tick to allow database extra time to connect on first boot.
+    if config.DBCONNECTION.is_ready():
+        config.DBCONNECTION.initialise_db()
 
     logger.info("Starting to take readings...")
     print("Starting to take readings. Please stand by...")
@@ -418,6 +423,10 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                 #Keep all the readings we get, for the control logic.
                 readings[reading.get_id()] = reading
+
+            #Initialise the database if possible.
+            if not config.DBCONNECTION.initialised() and config.DBCONNECTION.is_ready():
+                config.DBCONNECTION.initialise_db()
 
             #Logic.
             if "ControlLogicFunction" in config.SITE_SETTINGS[system_id]:

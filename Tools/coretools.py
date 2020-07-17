@@ -775,10 +775,17 @@ class DatabaseConnection(threading.Thread):
     #-------------------- GETTER METHODS --------------------
     def is_ready(self):
         """
-        This method returns True if the database is ready to use, otherwise False.
+        This method returns True if the database is ready to use (connected), otherwise False.
         """
 
         return self.is_connected
+
+    def initialised(self):
+        """
+        This method returns True if the database has been initialised, otherwise False.
+        """
+
+        return self.init_done
 
     def thread_running(self):
         """
