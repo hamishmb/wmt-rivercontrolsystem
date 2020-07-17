@@ -14,10 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#TODO The way the lists are done here confuses Sphinx.
-#is there a list syntax that can be used instead? - the generated
-#docs are not displaying nicely.
-
 """
 This is the configuration for all pis. These dictionaries (key-value
 base data) provide the configuration for each site in a centralised,
@@ -31,82 +27,82 @@ control.
 In the dictionary, devices are identified according to their location
 and type the following key, eg:
 
-Sump Pi                        - SUMP
-    Hall Effect (magnetic) Probe -     M0
-    Main circulation Pump        -     P1
-    Butts Return Pump            -     P0
+* Sump Pi                        - SUMP
 
-Wendy Street Pi                - G4
-    Hall Effect (magnetic) Probe -     M0
-    Float Switch                 -     FS0
+   * Hall Effect (magnetic) Probe -     M0
+   * Main circulation Pump        -     P1
+   * Butts Return Pump            -     P0
 
-Gate Valve                     - VALVE4:V4
+* Wendy Street Pi                - G4
+
+   * Hall Effect (magnetic) Probe -     M0
+   * Float Switch                 -     FS0
+
+* Gate Valve                     - VALVE4:V4
 
 Full List of Devices and their ID Data, IP Addresses, (i2C Addresses) Pi server Port and
 Socket Numbers where applicable:
 
-Sump Pi                                 - SUMP, 192.168.0.2
-    Hall Effect (magnetic) Probe          -     SUMP:M0 (0x48)
-    Main circulation Pump                 -     SUMP:P1
-    Butts Return Pump                     -     SUMP:P0
+* Sump Pi                                 - SUMP, 192.168.0.2
 
-Lady Hanham Butts Pi                   - G3, 192.168.0.3, 30003, SOCK3
-    Hall Effect (magnetic) Probe          -     G3:M0 (0x48)
-    Float Switch (High)                   -     G3:FS0
-    Float Switch (Low)                    -     G3:FS1
+   * Hall Effect (magnetic) Probe          -     SUMP:M0 (0x48)
+   * Main circulation Pump                 -     SUMP:P1
+   * Butts Return Pump                     -     SUMP:P0
 
-    Hall Effect (magnetic) Probe          -     G3:M1 (0x49)
-    Float Switch (High)                   -     G3:FS2
-    Float Switch (Low)                    -     G3:FS3
+* Lady Hanham Butts Pi                   - G3, 192.168.0.3, 30003, SOCK3
 
-    Hall Effect (magnetic) Probe          -     G3:M1 (0x4B)
-    Float Switch (High)                   -     G3:FS4
-    Float Switch (Low)                    -     G3:FS5
+   * Hall Effect (magnetic) Probe          -     G3:M0 (0x48)
+   * Float Switch (High)                   -     G3:FS0
+   * Float Switch (Low)                    -     G3:FS1
 
-    Mains Water Solenoid Valve            -     G1:S0
+   * Hall Effect (magnetic) Probe          -     G3:M1 (0x49)
+   * Float Switch (High)                   -     G3:FS2
+   * Float Switch (Low)                    -     G3:FS3
 
-Wendy Street Butts Pi                     - G4, 192.168.0.4, 30004, SOCK4
-    Hall Effect (magnetic) Probe          -     G4:M0
-    Float Switch (High)                   -     G4:FS0
-    Float Switch (Low)                    -     G4:FS1
+   * Hall Effect (magnetic) Probe          -     G3:M1 (0x4B)
+   * Float Switch (High)                   -     G3:FS4
+   * Float Switch (Low)                    -     G3:FS5
 
-Gazebo Butts Pi                           - G5, 192.168.0.5, 30005, SOCK5
-    Hall Effect (magnetic) Probe          -     G5:M0
-    Float Switch (High)                   -     G5:FS0
-    Float Switch (Low)                    -     G5:FS1
+   * Mains Water Solenoid Valve            -     G1:S0
 
-Stage Butts Pi                            - G6, 192.168.0.6, 30006, SOCK6
-    Hall Effect (magnetic) Probe          -     G6:M0
-    Float Switch (High)                   -     G6:FS0
-    Float Switch (Low)                    -     G6:FS1
+* Wendy Street Butts Pi                     - G4, 192.168.0.4, 30004, SOCK4
 
-Railway Room G1 Butts Group Gate Valve  - VALVE1:V1, 192.168.0.11, 30011, SOCK11
+   * Hall Effect (magnetic) Probe          -     G4:M0
+   * Float Switch (High)                   -     G4:FS0
+   * Float Switch (Low)                    -     G4:FS1
 
-Railway Room G2 Butts Group Gate Valve  - VALVE1:V2, 192.168.0.12, 30012, SOCK12
+* Gazebo Butts Pi                           - G5, 192.168.0.5, 30005, SOCK5
 
-Railway Room G3 Butts Group Gate Valve  - VALVE3:V3, 192.168.0.13, 30013, SOCK13
+   * Hall Effect (magnetic) Probe          -     G5:M0
+   * Float Switch (High)                   -     G5:FS0
+   * Float Switch (Low)                    -     G5:FS1
 
-Wendy Street G4 Butts Group Gate Valve  - VALVE4:V4, 192.168.0.14, 30014, SOCK14
+* Stage Butts Pi                            - G6, 192.168.0.6, 30006, SOCK6
+   * Hall Effect (magnetic) Probe          -     G6:M0
+   * Float Switch (High)                   -     G6:FS0
+   * Float Switch (Low)                    -     G6:FS1
 
-Gazebo G5 Butts Group Gate Valve        - VALVE5:V5, 192.168.0.15, 30015, SOCK15
+* Railway Room G1 Butts Group Gate Valve  - VALVE1:V1, 192.168.0.11, 30011, SOCK11
+* Railway Room G2 Butts Group Gate Valve  - VALVE1:V2, 192.168.0.12, 30012, SOCK12
+* Railway Room G3 Butts Group Gate Valve  - VALVE3:V3, 192.168.0.13, 30013, SOCK13
 
-Matrix Pump V6 Gate Valve               - VALVE6:V6, 192.168.0.16, 30016, SOCK16
+* Wendy Street G4 Butts Group Gate Valve  - VALVE4:V4, 192.168.0.14, 30014, SOCK14
 
-Matrix Pump V7 Gate Valve               - VALVE7:V7, 192.168.0.17, 30017, SOCK17
+* Gazebo G5 Butts Group Gate Valve        - VALVE5:V5, 192.168.0.15, 30015, SOCK15
 
-Matrix Pump V8 Gate Valve               - VALVE8:V8, 192.168.0.18, 30018, SOCK18
+* Matrix Pump V6 Gate Valve               - VALVE6:V6, 192.168.0.16, 30016, SOCK16
+* Matrix Pump V7 Gate Valve               - VALVE7:V7, 192.168.0.17, 30017, SOCK17
+* Matrix Pump V8 Gate Valve               - VALVE8:V8, 192.168.0.18, 30018, SOCK18
+* Matrix Pump V9 Gate Valve               - VALVE9:V9, 192.168.0.19, 30019, SOCK19
 
-Matrix Pump V9 Gate Valve               - VALVE9:V9, 192.168.0.19, 30019, SOCK19
+* TBD Gate Valve                          - VALVE10:V10, 192.168.0.20, 30020, SOCK20
+* TBD Loctn Gardeners Supply Gate Valve   - VALVE11:V11, 192.168.0.21, 30021, SOCK21
 
-TBD Gate Valve                          - VALVE10:V10, 192.168.0.20, 30020, SOCK20
+* Stage Butts Group G6 Gate Valve         - VALVE12:V12, 192.168.0.22, 30022, SOCK22
 
-TBD Loctn Gardeners Supply Gate Valve   - VALVE11:V11, 192.168.0.21, 30021, SOCK21
+* Staff & Visitor GUI Pi                  - GUI, 192.168.0.9
 
-Stage Butts Group G6 Gate Valve         - VALVE12:V12, 192.168.0.22, 30022, SOCK22
-
-Staff & Visitor GUI Pi                  - GUI, 192.168.0.9
-
-Webserver Pi                            - WMT_Webserver, 192.168.0.1
+* Webserver Pi                            - WMT_Webserver, 192.168.0.1
 
 Notes:
 
@@ -120,7 +116,7 @@ This is accepted and will "just work".
 
 3.  The code to actually make decisions and decide what to do with
 the devices to control is not here - it's in coretools.py.  At the
-moment. only sumppi controls anything, so the method is called
+moment, only sumppi controls anything, so the method is called
 do_control_logic(), but later on there will be methods for each site,
 and they will be mapped to each site here in this config file.
 
@@ -175,8 +171,10 @@ if not "TESTING" in globals():
 #Used to signal system shutdown to all the threads.
 EXITING = False
 
-import Tools
-import Tools.deviceobjects
+#NB: These are imported here because the above variables and the testing
+#flag must be set up first to prevent issues.
+import Tools #pylint: disable=wrong-import-position
+import Tools.deviceobjects #pylint: disable=wrong-import-position
 
 def reconfigure_logging():
     """
