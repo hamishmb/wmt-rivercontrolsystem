@@ -31,7 +31,8 @@ The API documentation for the software is also included
 in this repository, and is generated from docstrings in the
 source code, using Sphinx.
 
-###Generating the documentation
+Generating the documentation
+----------------------------
 
 To generate the documentation, you need to ensure you have
 sphinx installed with either:
@@ -111,4 +112,4 @@ To generate the report. To view the report, run:
 
     xdg-open ./htmlcov/index.html
 
-Coverage isn't at 100% as of the time of writing, but it will continue to improve as the software is developed. Ignoring sockettools.py, which may soon be obsolete, the total coverage is around 76% at the time of writing - not bad.
+Coverage isn't at 100% as of the time of writing, but it will continue to improve as the software is developed. The total coverage is around 80% at the time of writing (17/07/2020).
