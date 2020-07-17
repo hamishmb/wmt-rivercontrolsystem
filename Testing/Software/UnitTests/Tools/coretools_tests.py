@@ -206,6 +206,9 @@ class TestDatabaseConnection(unittest.TestCase):
 
         core_tools.DatabaseConnection.do_query = self.orig_do_query
 
+        #Reset this to None as well to avoid polluting the environment for later tests.
+        config.DBCONNECTION = None
+        
     #---------- TEST CONSTRUCTOR ----------
     def test_constructor_1(self):
         """Test that the constructor works as expected when valid IDs are passed"""
