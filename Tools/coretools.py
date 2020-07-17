@@ -79,9 +79,9 @@ class Reading:
                                     to identify the probe. Example: "G4:M0".
 
         reading_value (String):     The value of the reading. Format differs
-                                    depending on probe type at the moment **FIXME**.
+                                    depending on probe type at the moment.
                                     Ideally, these would all be values in mm like:
-                                    400 mm.
+                                    "400mm".
 
         reading_status (String):    The status of the probe at the time the reading
                                     was taken. If there is no fault, this should be
@@ -93,15 +93,6 @@ class Reading:
         The constructor for this class takes four arguments as specified above.
 
         >>> my_reading = core_tools.Reading(<a_time>, <a_tick>, <an_id>, <a_value>, <a_status>)
-
-    .. warning::
-        There is currently **absolutely no** check to see that each instance variable
-        actually has the correct format. This will come later.
-
-    .. warning::
-        System ticks have not yet been implemented. As such the value
-        for the tick passed here to the constructor is ignored, and
-        the attribute is set to -1.
 
     .. note::
         Equality methods have been implemented for this class so you can do things like:
