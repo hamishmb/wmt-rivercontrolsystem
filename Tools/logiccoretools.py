@@ -239,6 +239,31 @@ def update_status(pi_status, sw_status, current_action, retries=3):
 
     return config.DBCONNECTION.update_status(pi_status, sw_status, current_action, retries)
 
+def store_tick(tick, retries=3):
+    """
+    This method stores the given system tick in the database.
+
+    .. warning::
+            This is only meant to be run from the NAS box. It will
+            exit immediately with no action if run on another system.
+
+    Args:
+        tick (int). The system tick to store.
+
+    Kwargs:
+        retries[=3] (int).          The number of times to retry before giving up
+                                    and raising an error.
+
+    Throws:
+        RuntimeError, if the query failed too many times.
+
+    Usage:
+        >>> store_tick(<int>)
+        >>>
+    """
+
+    return config.DBCONNECTION.store_tick(tick, retries)
+
 def store_reading(reading, retries=3):
     """
     This method stores the given reading in the database.

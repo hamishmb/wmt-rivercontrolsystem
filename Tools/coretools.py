@@ -1265,6 +1265,40 @@ class DatabaseConnection(threading.Thread):
 
         self.log_event("Updated status")
 
+    def store_tick(self, tick, retries=3):
+        """
+        This method stores the given system tick in the database.
+
+        .. warning::
+                This is only meant to be run from the NAS box. It will
+                exit immediately with no action if run on another system.
+
+        Args:
+            tick (int). The system tick to store.
+
+        Kwargs:
+            retries[=3] (int).          The number of times to retry before giving up
+                                        and raising an error.
+
+        Throws:
+            RuntimeError, if the query failed too many times.
+
+        Usage:
+            >>> store_tick(<int>)
+            >>>
+        """
+
+        if config.SYSTEM_ID != "NAS":
+            return
+
+        if not isinstance(tick, int):
+            raise ValueError("Invalid system tick: "+str(tick))
+
+        query = """INSERT INTO `SystemTick`(`Tick`, `System Time`) """ \
+                + """VALUES('"""+tick+"""', NOW());"""
+
+        self.do_query(query, retries)
+
     def store_reading(self, reading, retries=3):
         """
         This method stores the given reading in the database.
@@ -1327,6 +1361,7 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
 
     #Increment the system tick by 1.
     config.TICK += 1
+    logiccoretools.store_tick(config.TICK)
 
     #---------- Free locks that have expired ----------
     #TODO
