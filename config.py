@@ -147,6 +147,10 @@ RELEASEDATE = "15/7/2020"
 #System ID of this Pi.
 SYSTEM_ID = None
 
+#CPU LOAD and MEMORY USAGE (MB).
+CPU = None
+MEM = None
+
 #Used to access the database connection object.
 DBCONNECTION = None
 

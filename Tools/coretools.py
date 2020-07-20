@@ -405,20 +405,24 @@ class MonitorLoad(threading.Thread):
 
         while not config.EXITING:
             try:
-                cpu_percent = psutil.cpu_percent()
-                used_memory_mb = (psutil.virtual_memory().used // 1024 // 1024)
+                cpu_percent = str(psutil.cpu_percent())
+                used_memory_mb = str((psutil.virtual_memory().used // 1024 // 1024))
 
             except Exception:
                 pass
 
             else:
-                logger.info("\n\nCPU Usage: "+str(cpu_percent)
-                            + "\nMemory Used (MB): "+str(used_memory_mb)
+                logger.info("\n\nCPU Usage: "+cpu_percent
+                            + "\nMemory Used (MB): "+used_memory_mb
                             +"\n\n")
 
-                print("\nCPU Usage: "+str(cpu_percent)
-                      + " Memory Used (MB): "+str(used_memory_mb)
+                print("\nCPU Usage: "+cpu_percent
+                      + " Memory Used (MB): "+used_memory_mb
                       + "\n")
+
+                #Save to global variables.
+                config.CPU = cpu_percent
+                config.MEM = used_memory_mb
 
             #Respond to system shutdown quickly.
             sleep = 30
@@ -1359,14 +1363,16 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
     if not hot:
         logger.info("Temperatures: sys: "+sys_temp+", hdd0: "+hdd0_temp+", hdd1: "+hdd1_temp)
         logiccoretools.update_status("Up, temps: ("+sys_temp+"/"+hdd0_temp+"/"+hdd1_temp
-                                     + ")", "OK", "None")
+                                     + "), CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+                                     "OK", "None")
 
     else:
         logger.warning("High Temperatures! sys: "+sys_temp+", hdd0: "+hdd0_temp
                        + ", hdd1: "+hdd1_temp)
 
         logiccoretools.update_status("Up, HIGH temps: ("+sys_temp+"/"+hdd0_temp+"/"+hdd1_temp
-                                     + ")", "OK", "None")
+                                     + "), CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+                                     "OK", "None")
 
         logiccoretools.log_event("NAS Box getting hot! Temps: sys: "+sys_temp+", hdd0: "+hdd0_temp
                                  + ", hdd1: "+hdd1_temp, severity="WARNING")
@@ -1385,6 +1391,8 @@ def valve_control_logic(readings, devices, monitors, sockets, reading_interval):
     #Get the sensor name for this valve.
     for valve in config.SITE_SETTINGS[config.SYSTEM_ID]["Devices"]:
         valve_id = valve.split(":")[1] 
+
+    position = None
 
     #Check if there's a request for a new valve position.
     try:
@@ -1411,6 +1419,14 @@ def valve_control_logic(readings, devices, monitors, sockets, reading_interval):
                         logiccoretools.log_event(config.SYSTEM_ID+": New valve position: "+str(position))
 
                     except RuntimeError: pass
+
+    if position is not None:
+        logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+                                     "OK", "Position requested: "+str(position))
+
+    else:
+        logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+                                     "OK", "None")
 
     #Unsure how to decide the interval, so just setting to 15 seconds TODO.
     return 15
@@ -1714,6 +1730,9 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
     #Set the reading interval in the monitors, and send it down the sockets to the peers.
     for monitor in monitors:
         monitor.set_reading_interval(reading_interval)
+
+    logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+                                 "OK", "None")
 
     return reading_interval
 
