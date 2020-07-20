@@ -537,7 +537,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     logger.info("Resetting GPIO pins...")
     print("Resetting GPIO pins...")
 
-    if not config.TESTING:
+    if not config.TESTING and "NAS" not in sys.argv:
         #Reset GPIO pins.
         GPIO.cleanup()
 
