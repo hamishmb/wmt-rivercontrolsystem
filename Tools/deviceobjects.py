@@ -58,7 +58,7 @@ try:
     GPIO.setmode(GPIO.BCM)
 
 except (ImportError, NotImplementedError):
-    if not config.TESTING or system_id == "NAS":
+    if not config.TESTING and config.SYSTEM_ID != "NAS":
         logger.critical("Unable to import RPi.GPIO! Did you mean to use testing mode?")
         logger.critical("Exiting...")
         logging.shutdown()
