@@ -766,10 +766,6 @@ class DatabaseConnection(threading.Thread):
         #----- NAS box: Clear any locks we're holding and create control entries for devices -----
         if self.site_id == "NAS":
             for site_id in config.SITE_SETTINGS:
-                #Ignore the NAS site.
-                if site_id == "NAS":
-                    continue
-
                 query = """DELETE FROM `"""+site_id+"""Control;"""
 
                 self.do_query(query, 0)
