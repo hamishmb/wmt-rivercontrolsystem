@@ -837,8 +837,13 @@ class DatabaseConnection(threading.Thread):
             result (str).           The result.
 
         Throws:
-            RuntimeError, if the query failed too many times.
+            RuntimeError, if the query failed too many times, or if we aren't
+            connected to the database.
         """
+
+        if not self.is_connected:
+            raise RuntimeError("Database not connected")
+
         count = 0
 
         while count <= retries:
