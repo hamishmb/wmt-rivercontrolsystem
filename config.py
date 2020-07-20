@@ -160,9 +160,13 @@ TICK = 0
 #A strange approach, but it works and means we can import the modules for doc generation
 #without error. It also doesn't relax the checks on our actual deployments.
 if not "TESTING" in globals():
+    #If we are on the NAS box, default to True.
+    if "NAS" in sys.argv:
+        TESTING = True
+
     #If running on a raspberry pi (architecture check), default to False,
     #unless the testing flag is present.
-    if os.uname()[4][:3] in ("arm", "aar") and \
+    elif os.uname()[4][:3] in ("arm", "aar") and \
         "-t" not in sys.argv and \
         "--testing" not in sys.argv:
 

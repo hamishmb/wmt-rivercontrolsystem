@@ -215,7 +215,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     except ImportError:
         #Only allow import errors if we are testing or on the NAS box.
-        if not config.TESTING and system_id != "NAS":
+        if not config.TESTING and "NAS" not in sys.argv:
             logger.critical("Unable to import RPi.GPIO! Did you mean to use testing mode?")
             logger.critical("Exiting...")
             logging.shutdown()
@@ -537,7 +537,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     logger.info("Resetting GPIO pins...")
     print("Resetting GPIO pins...")
 
-    if not config.TESTING and system_id != "NAS":
+    if not config.TESTING:
         #Reset GPIO pins.
         GPIO.cleanup()
 
