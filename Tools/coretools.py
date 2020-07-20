@@ -853,7 +853,6 @@ class DatabaseConnection(threading.Thread):
         while count <= retries and self.is_connected:
             if threading.current_thread() is not self.db_thread:
                 #Acquire the lock for fetching data.
-                print("acquiring lock")
                 self.client_lock.acquire()
 
             self.in_queue.append(query)
@@ -870,7 +869,6 @@ class DatabaseConnection(threading.Thread):
             self.client_thread_done = True
 
             if threading.current_thread() is not self.db_thread:
-                print("releasing lock")
                 self.client_lock.release()
 
             #Keep trying until we succeed or we hit the maximum number of retries.
@@ -1043,8 +1041,6 @@ class DatabaseConnection(threading.Thread):
 
         result = self.do_query(query, retries)
 
-        print("Result: "+str(result))
-
         #Store the part of the results that we want.
         try:
             result = result[0][2:]
@@ -1108,8 +1104,6 @@ class DatabaseConnection(threading.Thread):
         state = self.get_state(site_id, sensor_id)
 
         #If it's locked and we didn't lock it, return False.
-        print("State: "+str(state), str(state) == "")
-
         if state is None or \
             (state[0] == "Locked" and \
              state[2] != self.site_id):
