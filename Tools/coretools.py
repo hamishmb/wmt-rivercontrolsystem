@@ -533,6 +533,9 @@ class DatabaseConnection(threading.Thread):
                     logger.info("DatabaseConnection: Done!")
                     self.is_connected = True
 
+                    #Clear old stuff out of the queue to prevent errors.
+                    self.in_queue.clear()
+
             #If we're exiting, break out of the loop.
             #This prevents us from executing tons of queries at this point and delaying exit.
             if config.EXITING:
@@ -846,7 +849,7 @@ class DatabaseConnection(threading.Thread):
 
         count = 0
 
-        while count <= retries:
+        while count <= retries and self.is_connected:
             if threading.current_thread() is not self.db_thread:
                 #Acquire the lock for fetching data.
                 self.client_lock.acquire()
