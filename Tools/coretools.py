@@ -1295,7 +1295,7 @@ class DatabaseConnection(threading.Thread):
             raise ValueError("Invalid system tick: "+str(tick))
 
         query = """INSERT INTO `SystemTick`(`Tick`, `System Time`) """ \
-                + """VALUES('"""+tick+"""', NOW());"""
+                + """VALUES('"""+str(tick)+"""', NOW());"""
 
         self.do_query(query, retries)
 
