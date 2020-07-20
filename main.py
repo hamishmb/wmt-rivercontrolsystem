@@ -214,7 +214,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         import RPi.GPIO as GPIO
 
     except ImportError:
-        #Only allow import errors if we are testing.
+        #Only allow import errors if we are testing or on the NAS box.
         if not config.TESTING:
             logger.critical("Unable to import RPi.GPIO! Did you mean to use testing mode?")
             logger.critical("Exiting...")

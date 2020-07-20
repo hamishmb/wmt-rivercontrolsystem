@@ -565,8 +565,6 @@ class DatabaseConnection(threading.Thread):
 
             #Do any requested operations on the queue.
             while self.in_queue:
-                print(self.in_queue)
-
                 #Check for each query, because database.commit() does not have a
                 #way of setting a reasonable timeout.
                 if not self.peer_alive():
