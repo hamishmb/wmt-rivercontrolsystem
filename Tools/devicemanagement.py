@@ -71,7 +71,7 @@ except (ImportError, NotImplementedError, ValueError) as error:
         logger.critical("ADS (I2C) device not found!")
         print("ADS (I2C) device not found!")
 
-    if not config.TESTING:
+    if not config.TESTING or system_id == "NAS":
         logger.critical("Unable to import RPi.GPIO or ADS modules! "
                         + "Did you mean to use testing mode?")
 
