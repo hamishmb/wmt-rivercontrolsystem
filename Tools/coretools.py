@@ -535,6 +535,7 @@ class DatabaseConnection(threading.Thread):
 
                     #Clear old stuff out of the queue to prevent errors.
                     self.in_queue.clear()
+                    self.result = None
 
             #If we're exiting, break out of the loop.
             #This prevents us from executing tons of queries at this point and delaying exit.
@@ -852,6 +853,7 @@ class DatabaseConnection(threading.Thread):
         while count <= retries and self.is_connected:
             if threading.current_thread() is not self.db_thread:
                 #Acquire the lock for fetching data.
+                print("acquiring lock")
                 self.client_lock.acquire()
 
             self.in_queue.append(query)
@@ -868,6 +870,7 @@ class DatabaseConnection(threading.Thread):
             self.client_thread_done = True
 
             if threading.current_thread() is not self.db_thread:
+                print("releasing lock")
                 self.client_lock.release()
 
             #Keep trying until we succeed or we hit the maximum number of retries.
