@@ -865,6 +865,8 @@ class DatabaseConnection(threading.Thread):
             result = self.result
             self.result = None
 
+            print(query, result)
+
             #Signal that the database thread can safely continue.
             self.client_thread_done = True
 
