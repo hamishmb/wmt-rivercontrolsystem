@@ -1760,8 +1760,11 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
     for monitor in monitors:
         monitor.set_reading_interval(reading_interval)
 
-    logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
-                                 "OK", "None")
+    try:
+        logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+                                     "OK", "None")
+
+    except RuntimeError: pass
 
     return reading_interval
 

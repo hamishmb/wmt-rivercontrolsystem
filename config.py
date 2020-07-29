@@ -176,8 +176,13 @@ if not "TESTING" in globals():
     else:
         TESTING = True
 
-#Used to signal system shutdown to all the threads.
+#Used to signal software shutdown to all the threads.
 EXITING = False
+
+#Used to signal pending shutdown, reboot, and update.
+SHUTDOWN = False
+REBOOT = False
+UPDATE = False
 
 #NB: These are imported here because the above variables and the testing
 #flag must be set up first to prevent issues.

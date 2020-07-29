@@ -50,6 +50,8 @@ It communicates with buttspi over the network to gather readings.
 """
 
 import sys
+import os
+import subprocess
 import getopt
 import time
 import datetime
@@ -507,6 +509,29 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                 if monitor.is_running():
                     at_least_one_monitor_running = True
 
+            #Check if shutdown, reboot, or update have been requested.
+            config.SHUTDOWN = config.SHUTDOWN or os.path.exists("/tmp/.shutdown")
+            config.REBOOT = config.REBOOT or os.path.exists("/tmp/.reboot")
+            config.UPDATE = config.UPDATE or os.path.exists("/tmp/.update")
+
+            if config.SHUTDOWN or config.REBOOT or config.UPDATE:
+                try:
+                    os.remove("/tmp/.shutdown")
+
+                except Exception: pass
+
+                try:
+                    os.remove("/tmp/.reboot")
+
+                except Exception: pass
+
+                try:
+                    os.remove("/tmp/.update")
+
+                except Exception: pass
+
+                config.EXITING = True
+
     except KeyboardInterrupt:
         #Ask the threads to exit.
         logger.info("Caught keyboard interrupt. Asking threads to exit...")
@@ -540,6 +565,29 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     if not config.TESTING and "NAS" not in sys.argv:
         #Reset GPIO pins.
         GPIO.cleanup()
+
+    #---------- Do shutdown, update and reboot if needed ----------
+    if config.SHUTDOWN:
+        logger.info("Shutting down...")
+
+        if system_id == "NAS":
+            subprocess.run(["ash", "/home/admin/shutdown.sh"])
+
+        else:
+            subprocess.run(["poweroff"])
+
+    elif config.REBOOT:
+        logger.info("Restarting...")
+
+        if system_id == "NAS":
+            subprocess.run(["ash", "/home/admin/reboot.sh"])
+
+        else:
+            subprocess.run(["reboot"])
+
+    elif config.UPDATE:
+        logger.info("Applying update...")
+        #TODO
 
 def init_logging():
     #NB: Can't use getLogger() any more because we want a custom handler.
