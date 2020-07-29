@@ -1343,7 +1343,11 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
             for _probe in config.SITE_SETTINGS[_site_id]["Probes"]:
                 _probe_id = _probe.split(":")[1]
 
-                reading = logiccoretools.get_latest_reading(_site_id, _probe_id)
+                try:
+                    reading = logiccoretools.get_latest_reading(_site_id, _probe_id)
+
+                except RuntimeError:
+                    reading = None
 
                 if reading is not None:
                     if reading.get_tick() > config.TICK:
@@ -1353,11 +1357,21 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
         if config.TICK != 0:
             print("Restored system tick from database: "+str(config.TICK))
             logger.info("Restored system tick from database: "+str(config.TICK))
-            logiccoretools.log_event("Restored system tick from database: "+str(config.TICK))
+
+            try:
+                logiccoretools.log_event("Restored system tick from database: "+str(config.TICK))
+
+            except RuntimeError:
+                pass
 
     #Increment the system tick by 1.
     config.TICK += 1
-    logiccoretools.store_tick(config.TICK)
+
+    try:
+        logiccoretools.store_tick(config.TICK)
+
+    except RuntimeError:
+        pass
 
     #---------- Free locks that have expired ----------
     #TODO
@@ -1391,20 +1405,29 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
 
     if not hot:
         logger.info("Temperatures: sys: "+sys_temp+", hdd0: "+hdd0_temp+", hdd1: "+hdd1_temp)
-        logiccoretools.update_status("Up, temps: ("+sys_temp+"/"+hdd0_temp+"/"+hdd1_temp
-                                     + "), CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
-                                     "OK", "None")
+
+        try:
+            logiccoretools.update_status("Up, temps: ("+sys_temp+"/"+hdd0_temp+"/"+hdd1_temp
+                                         + "), CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+                                         "OK", "None")
+
+        except RuntimeError:
+            pass
 
     else:
         logger.warning("High Temperatures! sys: "+sys_temp+", hdd0: "+hdd0_temp
                        + ", hdd1: "+hdd1_temp)
 
-        logiccoretools.update_status("Up, HIGH temps: ("+sys_temp+"/"+hdd0_temp+"/"+hdd1_temp
-                                     + "), CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
-                                     "OK", "None")
+        try:
+            logiccoretools.update_status("Up, HIGH temps: ("+sys_temp+"/"+hdd0_temp+"/"+hdd1_temp
+                                         + "), CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+                                         "OK", "None")
 
-        logiccoretools.log_event("NAS Box getting hot! Temps: sys: "+sys_temp+", hdd0: "+hdd0_temp
-                                 + ", hdd1: "+hdd1_temp, severity="WARNING")
+            logiccoretools.log_event("NAS Box getting hot! Temps: sys: "+sys_temp+", hdd0: "+hdd0_temp
+                                     + ", hdd1: "+hdd1_temp, severity="WARNING")
+
+        except RuntimeError:
+            pass
 
     #NAS/tick interval is 15 seconds.
     return 15
