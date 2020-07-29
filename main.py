@@ -684,8 +684,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                     try:
                         status = logiccoretools.get_status(site_id)
 
-                    except RuntimeError: pass
+                    except RuntimeError: print("RE")
                     else:
+                        print("State: "+str(state))
                         if state is not None:
                             action = state[2]
                     
