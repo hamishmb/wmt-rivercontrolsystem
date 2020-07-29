@@ -133,6 +133,37 @@ def get_state(site_id, sensor_id, retries=3):
 
     return config.DBCONNECTION.get_state(site_id, sensor_id, retries)
 
+def get_status(site_id, retries=3):
+    """
+    This method queries the status of the given site.
+
+    Args:
+        site_id.            The site that we're interested in.
+
+    KWargs:
+        retries[=3] (int).        The number of times to retry before giving up
+                                  and raising an error.
+
+    Returns:
+        tuple.      1st element:        Pi status (str).
+                    2nd element:        Sw status (str).
+                    3rd element:        Current Action (str).
+
+        OR
+
+        None.           No data available.
+
+    Throws:
+        RuntimeError, if the query failed too many times.
+
+    Usage:
+        >>> get_status("VALVE4")
+        >>> ("Up", "OK", "None")
+
+    """
+
+    return config.DBCONNECTION.get_status(site_id, retries)
+
 def attempt_to_control(site_id, sensor_id, request, retries=3):
     """
     This method attempts to lock the given sensor/device so we can take control.

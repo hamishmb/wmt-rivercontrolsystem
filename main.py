@@ -666,8 +666,28 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
         if system_id == "NAS":
             #Wait until all the pis have downloaded the update.
-            #TODO be sure of this using DB.
-            time.sleep(30)
+            print("Waiting for pis to download the update...")
+            logger.info("Waiting for pis to download the update...")
+
+            done = []
+
+            for site_id in config.SITE_SETTINGS:
+                try:
+                    status = logiccoretools.get_status(site_id)
+
+                except RuntimeError: pass
+                else:
+                    if state is not None:
+                        action = state[2]
+                
+                        if action.upper() == "UPDATING":
+                            done.append(site_id)
+
+                #When all have grabbed the file, break out.
+                if len(done) == len(config.SITE_SETTINGS.keys()):
+                    break
+
+                time.sleep(5)
 
             #Move files into place.
             subprocess.run(["rm", "-rf", "/mnt/HD/HD_a2/rivercontrolsystem.old"], check=False)

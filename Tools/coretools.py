@@ -1049,6 +1049,55 @@ class DatabaseConnection(threading.Thread):
 
         return result
 
+    def get_status(self, site_id, retries=3):
+        """
+        This method queries the status of the given site.
+
+        Args:
+            site_id.            The site that we're interested in.
+
+        KWargs:
+            retries[=3] (int).        The number of times to retry before giving up
+                                      and raising an error.
+
+        Returns:
+            tuple.      1st element:        Pi status (str).
+                        2nd element:        Sw status (str).
+                        3rd element:        Current Action (str).
+
+            OR
+
+            None.           No data available.
+
+        Throws:
+            RuntimeError, if the query failed too many times.
+
+        Usage:
+            >>> get_status("VALVE4")
+            >>> ("Up", "OK", "None")
+
+        """
+
+        if not isinstance(site_id, str) or \
+            site_id == "" or \
+            site_id not in config.SITE_SETTINGS:
+
+            raise ValueError("Invalid site ID: "+str(site_id))
+
+        query = """SELECT * FROM `SystemStatus` WHERE `System ID` = '""" \
+                + site_id+"""';"""
+
+        result = self.do_query(query, retries)
+
+        #Store the part of the results that we want.
+        try:
+            result = result[0][2:]
+
+        except IndexError:
+            result = None
+
+        return result
+
     #-------------------- CONVENIENCE WRITER METHODS --------------------
     def attempt_to_control(self, site_id, sensor_id, request, retries=3):
         """
