@@ -401,7 +401,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     try:
         at_least_one_monitor_running = True
 
-        while at_least_one_monitor_running:
+        while at_least_one_monitor_running and not config.EXITING:
             #Check for new readings from all monitors.
             for monitor in monitors:
                 #Skip over any monitors that have stopped.
