@@ -671,11 +671,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             core_tools.DatabaseConnection(system_id)
             config.DBCONNECTION.start_thread()
 
-            while not config.DBCONNECTION.is_ready():
-                time.sleep(0.5)
-
-            config.DBCONNECTION.initialise_db()
-
             print("Waiting for pis to download the update...")
             logger.info("Waiting for pis to download the update...")
 
