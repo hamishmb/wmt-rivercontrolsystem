@@ -582,6 +582,8 @@ class DatabaseConnection(threading.Thread):
 
                 query = self.in_queue[0]
 
+                print(query)
+
                 try:
                     if "SELECT" not in query:
                         #Nothing to return, can do this the usual way.
