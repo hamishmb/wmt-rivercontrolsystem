@@ -206,6 +206,12 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #Reconfigure logging for module imported before we set the logger up.
     config.reconfigure_logging()
 
+    #The NAS box needs more time to stabalise before we continue.
+    #Wait another minute.
+    if system_id == "NAS":
+        logger.info("Waiting 1 minute for NAS box to finish booting up...")
+        time.sleep(60)
+
     #Do framework imports.
     from Tools import coretools as core_tools
     from Tools import sockettools as socket_tools
