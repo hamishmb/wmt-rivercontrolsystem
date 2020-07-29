@@ -676,23 +676,28 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
             done = []
 
-            for site_id in config.SITE_SETTINGS:
-                if site_id == "NAS":
-                    continue
+            while True:
+                for site_id in config.SITE_SETTINGS:
+                    if site_id == "NAS":
+                        continue
 
-                try:
-                    status = logiccoretools.get_status(site_id)
+                    try:
+                        status = logiccoretools.get_status(site_id)
 
-                except RuntimeError: pass
-                else:
-                    if state is not None:
-                        action = state[2]
-                
-                        if action.upper() == "UPDATING":
-                            done.append(site_id)
+                    except RuntimeError: pass
+                    else:
+                        if state is not None:
+                            action = state[2]
+                    
+                            if action.upper() == "UPDATING":
+                                print("Done: "+site_id)
+                                logger.info("Done: "+site_id)
+                                done.append(site_id)
 
                 #When all have grabbed the file (ignoring NAS), break out.
-                if len(done) == len(config.SITE_SETTINGS.keys()) - 1:
+                if len(done) > 0 and \
+                    len(done) == len(config.SITE_SETTINGS.keys()) - 1:
+
                     break
 
                 time.sleep(5)
