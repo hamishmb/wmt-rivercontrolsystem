@@ -262,7 +262,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     if config.SITE_SETTINGS[system_id]["HostingSockets"]:
         #We are a server, and we are hosting sockets.
-        #Use information from the other sites to figure out what sockets to create.
+        #Use info ation from the other sites to figure out what sockets to create.
         for site in config.SITE_SETTINGS:
             site_settings = config.SITE_SETTINGS[site]
 
@@ -553,6 +553,13 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                 subprocess.run(["ln", "-s", "/mnt/HD/HD_a2/rivercontrolsystem.tar.gz", "/var/www"],
                                check=False)
 
+                #Signal that we are updating.
+                try:
+                    logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "
+                                                 +config.MEM+" MB", "OK", "Updating")
+
+                except RuntimeError: pass
+
                 for site_id in config.SITE_SETTINGS:
                     config.DBCONNECTION.attempt_to_control(site_id, site_id, "Update")
 
@@ -663,7 +670,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             time.sleep(30)
 
             #Move files into place.
-            subprocess.run(["rm", "-rv", "/mnt/HD/HD_a2/rivercontrolsystem.old"], check=False)
+            subprocess.run(["rm", "-rf", "/mnt/HD/HD_a2/rivercontrolsystem.old"], check=False)
             subprocess.run(["mv", "/mnt/HD/HD_a2/rivercontrolsystem",
                             "/mnt/HD/HD_a2/rivercontrolsystem.old"], check=False)
 
@@ -677,7 +684,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             
         else:
             #Move files into place.
-            subprocess.run(["rm", "-rv", "/home/pi/rivercontrolsystem.old"], check=False)
+            subprocess.run(["rm", "-rf", "/home/pi/rivercontrolsystem.old"], check=False)
             subprocess.run(["mv", "/home/pi/rivercontrolsystem", "/home/pi/rivercontrolsystem.old"],
                            check=False)
 
