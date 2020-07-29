@@ -209,8 +209,15 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #The NAS box needs more time to stabalise before we continue.
     #Wait another minute.
     if system_id == "NAS":
-        logger.info("Waiting 1 minute for NAS box to finish booting up...")
-        time.sleep(60)
+        print("Waiting 1 minute for NAS box to finish booting up (CTRL-C to skip)...")
+        logger.info("Waiting 1 minute for NAS box to finish booting up (CTRL-C to skip)...")
+
+        try:
+            time.sleep(60)
+
+        except KeyboardInterrupt:
+            print("Skipping as requested by user...")
+            logger.info("Skipping as requested by user...")
 
     #Do framework imports.
     from Tools import coretools as core_tools
@@ -302,13 +309,13 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     config.DBCONNECTION.start_thread()
 
     if system_id != "NAS":
-        #Request the latest system tick value and wait 60 seconds for it to come in.
-        logger.info("Waiting up to 60 seconds for the system tick...")
-        print("Waiting up to 60 seconds for the system tick...")
+        #Request the latest system tick value and wait 180 seconds for it to come in.
+        logger.info("Waiting up to 180 seconds for the system tick...")
+        print("Waiting up to 180 seconds for the system tick...")
 
         count = 0
 
-        while config.TICK == 0 and count < 6:
+        while config.TICK == 0 and count < 18:
             socket.write("Tick?")
 
             if socket.has_data():
@@ -331,8 +338,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             print("Received tick")
 
         else:
-            logger.error("Could not get tick within 60 seconds!")
-            print("Could not get tick within 60 seconds!")
+            logger.error("Could not get tick within 180 seconds!")
+            print("Could not get tick within 180 seconds!")
 
     time.sleep(5)
 
