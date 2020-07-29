@@ -405,7 +405,7 @@ class MonitorLoad(threading.Thread):
 
         while not config.EXITING:
             try:
-                cpu_percent = str(psutil.cpu_percent())
+                cpu_percent = str(round(psutil.cpu_percent(), 2))
                 used_memory_mb = str((psutil.virtual_memory().used // 1024 // 1024))
 
             except Exception:
