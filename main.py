@@ -523,9 +523,62 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                     at_least_one_monitor_running = True
 
             #Check if shutdown, reboot, or update have been requested.
+            #Database.
+            try:
+                state = logiccoretools.get_state(config.SYSTEM_ID, config.SYSTEM_ID)
+
+            except RuntimeError: pass
+            else:
+                if state is not None:
+                    request = state[1]
+            
+                    if request.upper() == "SHUTDOWN":
+                        config.SHUTDOWN = True
+
+                    elif request.upper() == "REBOOT":
+                        config.REBOOT = True
+
+                    elif request.upper() == "UPDATE":
+                        config.UPDATE = True
+                        
+            #Local files.
             config.SHUTDOWN = config.SHUTDOWN or os.path.exists("/tmp/.shutdown")
             config.REBOOT = config.REBOOT or os.path.exists("/tmp/.reboot")
             config.UPDATE = config.UPDATE or os.path.exists("/tmp/.update")
+
+            #If this is the NAS box, make the update available to pis and signal that they should
+            #update using the database.
+            if config.UPDATE and system_id == "NAS":
+                #Make the update available to the pis at http://192.168.0.25/rivercontrolsystem.tar.gz
+                subprocess.run(["ln", "-s", "/mnt/HD/HD_a2/rivercontrolsystem.tar.gz", "/var/www"],
+                               check=False)
+
+                for site_id in config.SITE_SETTINGS:
+                    config.DBCONNECTION.attempt_to_control(site_id, site_id, "Update")
+
+            elif config.UPDATE and system_id != "NAS":
+                #Download the update from the NAS box.
+                subprocess.run(["wget", "-O", "/tmp/rivercontrolsystem.tar.gz",
+                                "http://192.168.0.25/rivercontrolsystem.tar.gz"], check=False)
+
+                #Signal that we got it.
+                try:
+                    logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "
+                                                 +config.MEM+" MB", "OK", "Updating")
+
+                except RuntimeError: pass
+
+            elif config.REBOOT:
+                try:
+                    logiccoretools.update_status("Down for reboot", "N/A", "Rebooting")
+
+                except RuntimeError: pass
+
+            elif config.SHUTDOWN:
+                try:
+                    logiccoretools.update_status("Off (shutdown requested)", "N/A", "None")
+
+                except RuntimeError: pass
 
             if config.SHUTDOWN or config.REBOOT or config.UPDATE:
                 try:
@@ -581,26 +634,60 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     #---------- Do shutdown, update and reboot if needed ----------
     if config.SHUTDOWN:
+        print("Shutting down...")
         logger.info("Shutting down...")
 
         if system_id == "NAS":
-            subprocess.run(["ash", "/home/admin/shutdown.sh"])
+            subprocess.run(["ash", "/home/admin/shutdown.sh"], check=False)
 
         else:
-            subprocess.run(["poweroff"])
+            subprocess.run(["poweroff"], check=False)
 
     elif config.REBOOT:
+        print("Restarting...")
         logger.info("Restarting...")
 
         if system_id == "NAS":
-            subprocess.run(["ash", "/home/admin/reboot.sh"])
+            subprocess.run(["ash", "/home/admin/reboot.sh"], check=False)
 
         else:
-            subprocess.run(["reboot"])
+            subprocess.run(["reboot"], check=False)
 
     elif config.UPDATE:
+        print("Applying update...")
         logger.info("Applying update...")
-        #TODO
+
+        if system_id == "NAS":
+            #Wait until all the pis have downloaded the update.
+            #TODO be sure of this using DB.
+            time.sleep(30)
+
+            #Move files into place.
+            subprocess.run(["rm", "-rv", "/mnt/HD/HD_a2/rivercontrolsystem.old"], check=False)
+            subprocess.run(["mv", "/mnt/HD/HD_a2/rivercontrolsystem",
+                            "/mnt/HD/HD_a2/rivercontrolsystem.old"], check=False)
+
+            subprocess.run(["tar", "-xf", "/mnt/HD/HD_a2/rivercontrolsystem.tar.gz", "-C",
+                            "/mnt/HD/HD_a2"], check=False)
+
+            #Reboot.
+            print("Restarting...")
+            logger.info("Restarting...")
+            subprocess.run(["ash", "/home/admin/reboot.sh"])
+            
+        else:
+            #Move files into place.
+            subprocess.run(["rm", "-rv", "/home/pi/rivercontrolsystem.old"], check=False)
+            subprocess.run(["mv", "/home/pi/rivercontrolsystem", "/home/pi/rivercontrolsystem.old"],
+                           check=False)
+
+            subprocess.run(["tar", "-xf", "/tmp/rivercontrolsystem.tar.gz", "-C", "/home/pi"],
+                           check=False)
+
+            #Reboot.
+            print("Restarting...")
+            logger.info("Restarting...")
+            subprocess.run(["reboot"], check=False)
 
 def init_logging():
     #NB: Can't use getLogger() any more because we want a custom handler.
