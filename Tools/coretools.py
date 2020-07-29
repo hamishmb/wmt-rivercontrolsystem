@@ -1093,6 +1093,8 @@ class DatabaseConnection(threading.Thread):
 
         result = self.do_query(query, retries)
 
+        print(result, result[0][2:])
+
         #Store the part of the results that we want.
         try:
             result = result[0][2:]
