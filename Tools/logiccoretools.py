@@ -162,11 +162,7 @@ def get_status(site_id, retries=3):
 
     """
 
-    result = config.DBCONNECTION.get_status(site_id, retries)
-
-    print(result)
-
-    return result
+    return config.DBCONNECTION.get_status(site_id, retries)
 
 def attempt_to_control(site_id, sensor_id, request, retries=3):
     """

@@ -686,9 +686,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                     except RuntimeError: print("RE")
                     else:
-                        print("State: "+str(state))
-                        if state is not None:
-                            action = state[2]
+                        if status is not None:
+                            action = status[2]
                     
                             if action.upper() == "UPDATING":
                                 print("Done: "+site_id)

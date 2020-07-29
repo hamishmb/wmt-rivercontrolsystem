@@ -582,8 +582,6 @@ class DatabaseConnection(threading.Thread):
 
                 query = self.in_queue[0]
 
-                print(query)
-
                 try:
                     if "SELECT" not in query:
                         #Nothing to return, can do this the usual way.
@@ -865,8 +863,6 @@ class DatabaseConnection(threading.Thread):
             result = self.result
             self.result = None
 
-            print(query, result)
-
             #Signal that the database thread can safely continue.
             self.client_thread_done = True
 
@@ -1092,8 +1088,6 @@ class DatabaseConnection(threading.Thread):
                 + site_id+"""';"""
 
         result = self.do_query(query, retries)
-
-        print(result, result[0][2:])
 
         #Store the part of the results that we want.
         try:
