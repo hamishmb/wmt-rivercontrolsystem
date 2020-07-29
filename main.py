@@ -666,6 +666,11 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
         if system_id == "NAS":
             #Wait until all the pis have downloaded the update.
+            #Restart database thread to check.
+            config.EXITING = False
+            core_tools.DatabaseConnection(system_id)
+            config.DBCONNECTION.start_thread()
+
             print("Waiting for pis to download the update...")
             logger.info("Waiting for pis to download the update...")
 
