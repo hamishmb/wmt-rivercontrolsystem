@@ -678,7 +678,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
             while True:
                 for site_id in config.SITE_SETTINGS:
-                    if site_id == "NAS":
+                    if site_id == "NAS" or site_id in done:
                         continue
 
                     try:
