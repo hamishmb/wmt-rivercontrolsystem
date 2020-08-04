@@ -181,7 +181,9 @@ EXITING = False
 
 #Used to signal pending shutdown, reboot, and update.
 SHUTDOWN = False
+SHUTDOWNALL = False
 REBOOT = False
+REBOOTALL = False
 UPDATE = False
 
 #NB: These are imported here because the above variables and the testing

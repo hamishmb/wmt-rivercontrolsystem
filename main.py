@@ -535,15 +535,25 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                     if request.upper() == "SHUTDOWN":
                         config.SHUTDOWN = True
 
+                    elif request.upper() == "SHUTDOWNALL":
+                        config.SHUTDOWN = True
+                        config.SHUTDOWNALL = True
+
                     elif request.upper() == "REBOOT":
                         config.REBOOT = True
+
+                    elif request.upper() == "REBOOTALL":
+                        config.REBOOT = True
+                        config.REBOOTALL = True
 
                     elif request.upper() == "UPDATE":
                         config.UPDATE = True
                         
             #Local files.
-            config.SHUTDOWN = config.SHUTDOWN or os.path.exists("/tmp/.shutdown")
-            config.REBOOT = config.REBOOT or os.path.exists("/tmp/.reboot")
+            config.SHUTDOWN = config.SHUTDOWN or os.path.exists("/tmp/.shutdown") or os.path.exists("/tmp/.shutdownall")
+            config.SHUTDOWNALL = config.SHUTDOWNALL or os.path.exists("/tmp/.shutdownall")
+            config.REBOOT = config.REBOOT or os.path.exists("/tmp/.reboot") or os.path.exists("/tmp/.rebootall")
+            config.REBOOTALL = config.REBOOTALL or os.path.exists("/tmp/.rebootall")
             config.UPDATE = config.UPDATE or os.path.exists("/tmp/.update")
 
             #If this is the NAS box, make the update available to pis and signal that they should
@@ -581,11 +591,19 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                 except RuntimeError: pass
 
+                if system_id == "NAS" and config.REBOOTALL:
+                    for site_id in config.SITE_SETTINGS:
+                        config.DBCONNECTION.attempt_to_control(site_id, site_id, "Reboot")
+
             elif config.SHUTDOWN:
                 try:
-                    logiccoretools.update_status("Off (shutdown requested)", "N/A", "None")
+                    logiccoretools.update_status("Off (shutdown requested)", "N/A", "Shutting Down")
 
                 except RuntimeError: pass
+
+                if system_id == "NAS" and config.SHUTDOWNALL:
+                    for site_id in config.SITE_SETTINGS:
+                        config.DBCONNECTION.attempt_to_control(site_id, site_id, "Shutdown")
 
             if config.SHUTDOWN or config.REBOOT or config.UPDATE:
                 try:
@@ -594,7 +612,17 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                 except Exception: pass
 
                 try:
+                    os.remove("/tmp/.shutdownall")
+
+                except Exception: pass
+
+                try:
                     os.remove("/tmp/.reboot")
+
+                except Exception: pass
+
+                try:
+                    os.remove("/tmp/.rebootall")
 
                 except Exception: pass
 
@@ -644,7 +672,47 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         print("Shutting down...")
         logger.info("Shutting down...")
 
-        if system_id == "NAS":
+        if system_id == "NAS" and not config.SHUTDOWNALL:
+            subprocess.run(["ash", "/home/admin/shutdown.sh"], check=False)
+
+        elif system_id == "NAS" and config.SHUTDOWNALL:
+            #Wait until all the pis have started to shut down.
+            #Restart database thread to check.
+            config.EXITING = False
+            core_tools.DatabaseConnection(system_id)
+            config.DBCONNECTION.start_thread()
+
+            print("Waiting for pis to begin shutting down...")
+            logger.info("Waiting for pis to begin shutting down...")
+
+            done = []
+
+            while True:
+                for site_id in config.SITE_SETTINGS:
+                    if site_id == "NAS" or site_id in done:
+                        continue
+
+                    try:
+                        status = logiccoretools.get_status(site_id)
+
+                    except RuntimeError: print("RE")
+                    else:
+                        if status is not None:
+                            action = status[2]
+                    
+                            if action.upper() == "SHUTTING DOWN":
+                                print("Done: "+site_id)
+                                logger.info("Done: "+site_id)
+                                done.append(site_id)
+
+                #When all have shut down (ignoring NAS), break out.
+                if len(done) > 0 and \
+                    len(done) == len(config.SITE_SETTINGS.keys()) - 1:
+
+                    break
+
+                time.sleep(5)
+
             subprocess.run(["ash", "/home/admin/shutdown.sh"], check=False)
 
         else:
@@ -654,7 +722,47 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         print("Restarting...")
         logger.info("Restarting...")
 
-        if system_id == "NAS":
+        if system_id == "NAS" and not config.REBOOTALL:
+            subprocess.run(["ash", "/home/admin/reboot.sh"], check=False)
+
+        elif system_id == "NAS" and config.REBOOTALL:
+            #Wait until all the pis have started to reboot.
+            #Restart database thread to check.
+            config.EXITING = False
+            core_tools.DatabaseConnection(system_id)
+            config.DBCONNECTION.start_thread()
+
+            print("Waiting for pis to begin rebooting...")
+            logger.info("Waiting for pis to begin rebooting...")
+
+            done = []
+
+            while True:
+                for site_id in config.SITE_SETTINGS:
+                    if site_id == "NAS" or site_id in done:
+                        continue
+
+                    try:
+                        status = logiccoretools.get_status(site_id)
+
+                    except RuntimeError: print("RE")
+                    else:
+                        if status is not None:
+                            action = status[2]
+                    
+                            if action.upper() == "REBOOTING":
+                                print("Done: "+site_id)
+                                logger.info("Done: "+site_id)
+                                done.append(site_id)
+
+                #When all have rebooted (ignoring NAS), break out.
+                if len(done) > 0 and \
+                    len(done) == len(config.SITE_SETTINGS.keys()) - 1:
+
+                    break
+
+                time.sleep(5)
+
             subprocess.run(["ash", "/home/admin/reboot.sh"], check=False)
 
         else:
