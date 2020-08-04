@@ -345,7 +345,10 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     #Do this after system tick to allow database extra time to connect on first boot.
     if config.DBCONNECTION.is_ready():
-        config.DBCONNECTION.initialise_db()
+        try:
+            config.DBCONNECTION.initialise_db()
+
+        except RuntimeError: pass
 
     logger.info("Starting to take readings...")
     print("Starting to take readings. Please stand by...")
