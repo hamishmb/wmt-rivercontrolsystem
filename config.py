@@ -172,6 +172,8 @@ if not "TESTING" in globals():
 #Used to signal system shutdown to all the threads.
 EXITING = False
 
+DEBUG = False
+
 import Tools
 import Tools.deviceobjects
 

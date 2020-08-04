@@ -141,6 +141,7 @@ def handle_cmdline_options():
             logger.critical("Running in testing mode, hardware access simulated/disabled...")
 
         elif opt in ["-d", "--debug"]:
+            config.DEBUG = True
             logger.setLevel(logging.DEBUG)
             handler.setLevel(logging.DEBUG)
 

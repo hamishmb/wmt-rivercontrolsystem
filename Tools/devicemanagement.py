@@ -134,6 +134,9 @@ class ManageHallEffectProbe(threading.Thread):
         self.chan2 = AnalogIn(self.ads, ADS.P2)
         self.chan3 = AnalogIn(self.ads, ADS.P3)
 
+        #For debugging.
+        self.count = 0
+
         self.start()
 
     def run(self):
@@ -154,6 +157,9 @@ class ManageHallEffectProbe(threading.Thread):
                 self.probe._current_reading = new_reading
 
             time.sleep(0.5)
+
+            if config.DEBUG:
+                self.count += 1
 
     def get_compensated_probe_voltages(self):
         """
@@ -182,6 +188,17 @@ class ManageHallEffectProbe(threading.Thread):
         v_meas.append(self.chan2.voltage)
         v_meas.append(self.chan3.voltage)
         self.ads_lock.release()
+
+        #Do 10 minutes of probe voltage dumping if we're in debug mode.
+        if config.DEBUG:
+            if self.count < 1200:
+                logger.info("Voltages ("+self.probe.get_id()+"): "+str(v_meas[0])+", "
+                            + str(v_meas[1])+", "+str(v_meas[2])
+                            +", "+str(v_meas[3]))
+
+                print("Voltages ("+self.probe.get_id()+"): "+str(v_meas[0])+", "
+                      + str(v_meas[1])+", "+str(v_meas[2])
+                      +", "+str(v_meas[3]))
 
         #Find the minimum value
         v_min = min(v_meas)
@@ -246,6 +263,13 @@ class ManageHallEffectProbe(threading.Thread):
                 logger.debug("Possible faulty probe - no limits passed")
 
             count += 1
+
+        #Print level that corresponds to the voltage if we're in debug mode.
+        if config.DEBUG:
+            if self.count < 1200:
+                logger.info("Level ("+self.probe.get_id()+"): "+str(level))
+
+                print("Level ("+self.probe.get_id()+"): "+str(level))
 
         return level
 
