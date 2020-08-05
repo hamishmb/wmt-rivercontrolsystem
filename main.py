@@ -574,7 +574,10 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                 except RuntimeError: pass
 
                 for site_id in config.SITE_SETTINGS:
-                    config.DBCONNECTION.attempt_to_control(site_id, site_id, "Update")
+                    try:
+                        logiccoretools.attempt_to_control(site_id, site_id, "Update")
+
+                    except RuntimeError: pass
 
             elif config.UPDATE and system_id != "NAS":
                 #Download the update from the NAS box.
@@ -596,7 +599,10 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                 if system_id == "NAS" and config.REBOOTALL:
                     for site_id in config.SITE_SETTINGS:
-                        config.DBCONNECTION.attempt_to_control(site_id, site_id, "Reboot")
+                        try:
+                            logiccoretools.attempt_to_control(site_id, site_id, "Reboot")
+
+                        except RuntimeError: pass
 
             elif config.SHUTDOWN:
                 try:
@@ -606,7 +612,10 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                 if system_id == "NAS" and config.SHUTDOWNALL:
                     for site_id in config.SITE_SETTINGS:
-                        config.DBCONNECTION.attempt_to_control(site_id, site_id, "Shutdown")
+                        try:
+                            logiccoretools.attempt_to_control(site_id, site_id, "Shutdown")
+
+                        except RuntimeError: pass
 
             if config.SHUTDOWN or config.REBOOT or config.UPDATE:
                 try:
