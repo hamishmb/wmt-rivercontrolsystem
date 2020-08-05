@@ -338,6 +338,17 @@ class BaseMonitorClass(threading.Thread):
         if not hasattr(self, "socket"):
             #Write readings to the database as well as to the files, as long as this
             #isn't just a sockets monitor running on the NAS box.
+            #Try to send any queued readings.
+            while self.db_queue:
+                try:
+                    config.DBCONNECTION.store_reading(self.db_queue[0])
+
+                except RuntimeError:
+                    #Break out after first error rather than trying loads of readings.
+                    break
+
+                else:
+                    self.db_queue.popleft()
 
             try:
                 config.DBCONNECTION.store_reading(reading)
@@ -347,19 +358,6 @@ class BaseMonitorClass(threading.Thread):
                 self.db_queue.append(reading)
 
                 #TODO Log it.
-
-            else:
-                #Try to send any queued readings.
-                while self.db_queue:
-                    try:
-                        config.DBCONNECTION.store_reading(self.db_queue[0])
-
-                    except RuntimeError:
-                        #Break out after first error rather than trying loads of readings.
-                        break
-
-                    else:
-                        self.db_queue.popleft()
                 
             #TODO how to handle errors?
 
