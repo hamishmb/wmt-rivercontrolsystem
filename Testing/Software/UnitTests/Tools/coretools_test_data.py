@@ -176,6 +176,10 @@ def fake_do_query(self, query, retries):
 def fake_attempt_to_control(site_id, sensor_id, request, retries=3):
     return True
 
+#Dummy logiccoretools.update_status method for sumppi control logic.
+def fake_update_status(pi_status, sw_status, current_action, retries=3):
+    return True
+
 #Sample values for the arguments to the Reading class constructor.
 TEST_READING_DATA = [
     [str(datetime.datetime.now()), 0, "G4:M0", "400", "OK"],

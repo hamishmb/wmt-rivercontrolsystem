@@ -34,6 +34,7 @@ sys.path.insert(0, os.path.abspath('../../../')) #Need to be able to import the 
 import Tools
 import Tools.monitortools as monitor_tools
 import Tools.coretools as core_tools
+import Tools.logiccoretools as logiccoretools
 import Tools.deviceobjects as device_objects
 
 #Import test data and functions.
@@ -49,9 +50,14 @@ class TestBaseMonitorClass(unittest.TestCase):
 
         self.basemonitor.queue.append(self.reading)
 
+        self.orig_store_reading = logiccoretools.store_reading
+        logiccoretools.store_reading = data.fake_store_reading
+
     def tearDown(self):
         del self.reading
         del self.basemonitor
+
+        logiccoretools.store_reading = self.orig_store_reading
 
     def set_exited_flag(self):
         self.basemonitor.running = False

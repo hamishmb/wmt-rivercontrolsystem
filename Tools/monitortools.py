@@ -341,7 +341,7 @@ class BaseMonitorClass(threading.Thread):
             #Try to send any queued readings.
             while self.db_queue:
                 try:
-                    config.DBCONNECTION.store_reading(self.db_queue[0])
+                    logiccoretools.store_reading(self.db_queue[0])
 
                 except RuntimeError:
                     #Break out after first error rather than trying loads of readings.
@@ -351,7 +351,7 @@ class BaseMonitorClass(threading.Thread):
                     self.db_queue.popleft()
 
             try:
-                config.DBCONNECTION.store_reading(reading)
+                logiccoretools.store_reading(reading)
 
             except RuntimeError:
                 #Queue to send later.
@@ -559,7 +559,7 @@ class Monitor(BaseMonitorClass):
 
                 #Construct a Reading object to hold this info.
                 #Args in order: Time, Tick, ID, Value, Status
-                reading = coretools.Reading(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+                reading = coretools.Reading(time.strftimen("%Y-%m-%d %H:%M:%S", time.localtime()),
                                             config.TICK,
                                             self.probe.get_id(),
                                             str(the_reading), status_text)

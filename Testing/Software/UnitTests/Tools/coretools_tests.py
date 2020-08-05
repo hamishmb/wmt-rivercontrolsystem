@@ -627,10 +627,6 @@ class TestDatabaseConnection(unittest.TestCase):
         for args in data.TEST_ATTEMPT_TO_CONTROL_DATA:
             self.dbconn.release_control(args[0], args[1])
 
-        #Test that the number of queries is what we expect.
-        #Double the length of the data list, because we log the event each time.
-        self.assertEqual(len(self.dbconn.in_queue), 2*len(data.TEST_ATTEMPT_TO_CONTROL_DATA))
-
         #Change the get_state method back to the original.
         self.dbconn.get_state = original_getstate
 
@@ -686,9 +682,6 @@ class TestDatabaseConnection(unittest.TestCase):
         for args in (("Up", "OK", "None"), ("Up", "OK", "P0 Enabled"),
                      ("Down", "Rebooting", "None"), ("Down", "No Connection", "None")):
             self.dbconn.update_status(args[0], args[1], args[2])
-
-        #Double the length of the data list, because we log the event each time.
-        self.assertTrue(len(self.dbconn.in_queue) == 8)
 
     def test_update_status_2(self):
         """Test this fails when given invalid arguments"""
@@ -767,7 +760,12 @@ class TestSumpPiControlLogic(unittest.TestCase):
 
         #Disabling functions in logiccoretools because we aren't testing them here.
         self.orig_attempt_to_control = logiccoretools.attempt_to_control
+        self.orig_update_status = logiccoretools.update_status
         logiccoretools.attempt_to_control = data.fake_attempt_to_control
+        logiccoretools.update_status = data.fake_update_status
+
+        config.CPU = "50"
+        config.MEM = "50"
 
     def tearDown(self):
         del self.devices
@@ -776,6 +774,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         del self.reading_interval
 
         logiccoretools.attempt_to_control = self.orig_attempt_to_control
+        logiccoretools.update_status = self.orig_update_status
+
+        config.CPU = None
+        config.MEM = None
 
     #-------------------- NORMAL VALUES --------------------
     def test_sumppi_control_logic_1(self):

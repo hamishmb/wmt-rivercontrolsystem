@@ -129,6 +129,10 @@ def badopen(file, mode):
 def do_nothing():
     pass
 
+#Dummy logiccoretools.store_reading method for sumppi control logic.
+def fake_store_reading(reading, retries=3):
+    return True
+
 #Sample values for the arguments to the BaseMonitorClass class constructor.
 TEST_BASEMONITOR_DATA = [
     ["SUMP", "M0"],
