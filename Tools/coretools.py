@@ -467,6 +467,9 @@ class DatabaseConnection(threading.Thread):
         #A flag to show if the DB thread is running or not.
         self.is_running = False
 
+        #Stop us filling up the event log with identical events.
+        self.last_event = None
+
         #We need a queue for the asynchronous database write operations.
         self.in_queue = deque()
 
@@ -1260,6 +1263,12 @@ class DatabaseConnection(threading.Thread):
             event == "":
 
             raise ValueError("Invalid severity: "+str(severity))
+
+        #Ignore if this event is exactly the same as the last one.
+        if event == self.last_event:
+            return
+
+        self.last_event = event
 
         query = """INSERT INTO `EventLog`(`Site ID`, `Severity`, `Event`, `Device Time`) VALUES('"""+self.site_id \
                 +"""', '"""+severity+"""', '"""+event+"""', '"""+str(datetime.datetime.now())+"""');"""
