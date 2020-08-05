@@ -43,6 +43,7 @@ import logging
 import config
 
 from . import coretools
+from . import logiccoretools
 
 #Don't ask for a logger name, so this works with both main.py
 #and the universal monitor.
@@ -344,7 +345,6 @@ class BaseMonitorClass(threading.Thread):
             except RuntimeError:
                 #Queue to send later.
                 self.db_queue.append(reading)
-                write_failed = True
 
                 #TODO Log it.
 
