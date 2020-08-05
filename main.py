@@ -386,10 +386,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     #Keep tabs on its progress so we can write new readings to the file.
     try:
-        at_least_one_monitor_running = True
-
-        while at_least_one_monitor_running and not config.EXITING:
-            #Check for new readings from all monitors.
+        while not config.EXITING:
+            #Check for new readings from all monitors and the database.
             for monitor in monitors:
                 #Skip over any monitors that have stopped.
                 if not monitor.is_running():
@@ -494,13 +492,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                 time.sleep(1)
                 count += 1
-
-            #Check if at least one monitor is running.
-            at_least_one_monitor_running = False
-
-            for monitor in monitors:
-                if monitor.is_running():
-                    at_least_one_monitor_running = True
 
             #Check if shutdown, reboot, or update have been requested.
             #Database.
