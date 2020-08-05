@@ -114,6 +114,9 @@ class BaseMonitorClass(threading.Thread):
         #The outgoing queue for readings collected by this thread.
         self.queue = deque()
 
+        #Queue for readings that couldn't be sent to the database.
+        self.db_queue = deque()
+
         #The latest-but-one reading.
         self.prev_reading = ""
 
@@ -331,17 +334,34 @@ class BaseMonitorClass(threading.Thread):
 
         write_failed = False
 
-        if not hasattr(self, "socket") and config.DBCONNECTION.is_ready():
+        if not hasattr(self, "socket"):
             #Write readings to the database as well as to the files, as long as this
             #isn't just a sockets monitor running on the NAS box.
 
             try:
                 config.DBCONNECTION.store_reading(reading)
 
-            except RuntimeError: pass
+            except RuntimeError:
+                #Queue to send later.
+                self.db_queue.append(reading)
+                write_failed = True
 
+                #TODO Log it.
+
+            else:
+                #Try to send any queued readings.
+                while self.db_queue:
+                    try:
+                        config.DBCONNECTION.store_reading(self.db_queue[0])
+
+                    except RuntimeError:
+                        #Break out after first error rather than trying loads of readings.
+                        break
+
+                    else:
+                        self.db_queue.popleft()
+                
             #TODO how to handle errors?
-            #TODO make sure previous readings arrive when database connection is ready.
 
         try:
             if reading == previous_reading:
