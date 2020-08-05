@@ -1523,12 +1523,36 @@ def valve_control_logic(readings, devices, monitors, sockets, reading_interval):
                     except RuntimeError: pass
 
     if position is not None:
-        logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
-                                     "OK", "Position requested: "+str(position))
+        try:
+            logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+                                         "OK", "Position requested: "+str(position))
+
+        except RuntimeError: pass
 
     else:
+        try:
+            logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+                                         "OK", "None")
+
+        except RuntimeError: pass
+
+    #Unsure how to decide the interval, so just setting to 15 seconds TODO.
+    return 15
+
+def generic_control_logic(readings, devices, monitors, sockets, reading_interval):
+    """
+    This control logic is generic and runs on all the monitoring-only pis. It does the following:
+
+    - Updates the pi status in the database.
+
+    """
+
+    try:
         logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
                                      "OK", "None")
+
+    except RuntimeError:
+        pass
 
     #Unsure how to decide the interval, so just setting to 15 seconds TODO.
     return 15
