@@ -353,32 +353,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     logger.info("Starting to take readings...")
     print("Starting to take readings. Please stand by...")
 
-    logger.info("Waiting for peer(s) to connect...")
-    print("Waiting for peer(s) to connect...")
-
     monitors = []
 
-    #Start monitor threads for the sockets.
-    if config.SITE_SETTINGS[system_id]["HostingSockets"]:
-        for site in config.SITE_SETTINGS:
-            site_settings = config.SITE_SETTINGS[site]
-
-            #If no socket is defined for this site, skip it.
-            if "SocketName" not in site_settings:
-                continue
-
-            #If there are probes to control, add monitors for all of them.
-            if "Probes" in site_settings:
-                for probe_name in site_settings["Probes"]:
-                    monitors.append(monitor_tools.SocketsMonitor(sockets[site_settings["SocketID"]],
-                                                                 probe_name.split(":")[0],
-                                                                 probe_name.split(":")[1]))
-
-            elif site_settings["Type"] == "Gate Valve":
-                monitors.append(monitor_tools.SocketsMonitor(sockets[site_settings["SocketID"]],
-                                                             site, site))
-
-    #And for our SUMP probe.
+    #Start monitor threads for our local probes.
     for probe in probes:
         monitors.append(monitor_tools.Monitor(probe, reading_interval, system_id))
 
