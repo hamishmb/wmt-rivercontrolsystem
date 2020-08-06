@@ -349,7 +349,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             config.DBCONNECTION.initialise_db()
 
         except RuntimeError:
-            pass
+            print("Error: Couldn't initialise database!")
+            logger.error("Error: Couldn't initialise database!")
 
     logger.info("Starting to take readings...")
     print("Starting to take readings. Please stand by...")
@@ -500,7 +501,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                 state = logiccoretools.get_state(config.SYSTEM_ID, config.SYSTEM_ID)
 
             except RuntimeError:
-                pass
+                print("Error: Couldn't check for requested site actions!")
+                logger.error("Error: Couldn't check for requested site actions!")
 
             else:
                 if state is not None:
@@ -543,14 +545,16 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                                                  +config.MEM+" MB", "OK", "Updating")
 
                 except RuntimeError:
-                    pass
+                    print("Error: Couldn't update site status!")
+                    logger.error("Error: Couldn't update site status!")
 
                 for site_id in config.SITE_SETTINGS:
                     try:
                         logiccoretools.attempt_to_control(site_id, site_id, "Update")
 
                     except RuntimeError:
-                        pass
+                        print("Error: Couldn't request update for "+site_id+"!")
+                        logger.error("Error: Couldn't request update for "+site_id+"!")
 
             elif config.UPDATE and system_id != "NAS":
                 #Download the update from the NAS box.
@@ -563,14 +567,16 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                                                  +config.MEM+" MB", "OK", "Updating")
 
                 except RuntimeError:
-                    pass
+                    print("Error: Couldn't update site status!")
+                    logger.error("Error: Couldn't update site status!")
 
             elif config.REBOOT:
                 try:
                     logiccoretools.update_status("Down for reboot", "N/A", "Rebooting")
 
                 except RuntimeError:
-                    pass
+                    print("Error: Couldn't update site status!")
+                    logger.error("Error: Couldn't update site status!")
 
                 if system_id == "NAS" and config.REBOOTALL:
                     for site_id in config.SITE_SETTINGS:
@@ -578,14 +584,16 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                             logiccoretools.attempt_to_control(site_id, site_id, "Reboot")
 
                         except RuntimeError:
-                            pass
+                            print("Error: Couldn't request reboot for "+site_id+"!")
+                            logger.error("Error: Couldn't request reboot for "+site_id+"!")
 
             elif config.SHUTDOWN:
                 try:
                     logiccoretools.update_status("Off (shutdown requested)", "N/A", "Shutting Down")
 
                 except RuntimeError:
-                    pass
+                    print("Error: Couldn't update site status!")
+                    logger.error("Error: Couldn't update site status!")
 
                 if system_id == "NAS" and config.SHUTDOWNALL:
                     for site_id in config.SITE_SETTINGS:
@@ -593,7 +601,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                             logiccoretools.attempt_to_control(site_id, site_id, "Shutdown")
 
                         except RuntimeError:
-                            pass
+                            print("Error: Couldn't request poweroff for "+site_id+"!")
+                            logger.error("Error: Couldn't request poweroff for "+site_id+"!")
 
             if config.SHUTDOWN or config.REBOOT or config.UPDATE:
                 try:
@@ -690,7 +699,10 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                     try:
                         status = logiccoretools.get_status(site_id)
 
-                    except RuntimeError: print("RE")
+                    except RuntimeError:
+                        print("Error: Couldn't get "+site_id+" site status!")
+                        logger.error("Error: Couldn't get "+site_id+" site status!")
+
                     else:
                         if status is not None:
                             action = status[2]
@@ -740,7 +752,10 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                     try:
                         status = logiccoretools.get_status(site_id)
 
-                    except RuntimeError: print("RE")
+                    except RuntimeError:
+                        print("Error: Couldn't get "+site_id+" site status!")
+                        logger.error("Error: Couldn't get "+site_id+" site status!")
+
                     else:
                         if status is not None:
                             action = status[2]
@@ -787,7 +802,10 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                     try:
                         status = logiccoretools.get_status(site_id)
 
-                    except RuntimeError: print("RE")
+                    except RuntimeError:
+                        print("Error: Couldn't get "+site_id+" site status!")
+                        logger.error("Error: Couldn't get "+site_id+" site status!")
+
                     else:
                         if status is not None:
                             action = status[2]

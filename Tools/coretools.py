@@ -1405,6 +1405,9 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
                     reading = logiccoretools.get_latest_reading(_site_id, _probe_id)
 
                 except RuntimeError:
+                    print("Error: Couldn't get reading for "+_site_id+":"+_probe_id+"!")
+                    logger.error("Error: Couldn't get reading for "+_site_id+":"+_probe_id+"!")
+
                     reading = None
 
                 if reading is not None:
@@ -1420,7 +1423,11 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
                 logiccoretools.log_event("Restored system tick from database: "+str(config.TICK))
 
             except RuntimeError:
-                pass
+                print("Error: Couldn't log event saying that tick was restored to "
+                      + str(config.TICK)+"!")
+
+                logger.error("Error: Couldn't log event saying that tick was restored to "
+                             + str(config.TICK)+"!")
 
     #Increment the system tick by 1.
     config.TICK += 1
@@ -1429,10 +1436,11 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
         logiccoretools.store_tick(config.TICK)
 
     except RuntimeError:
-        pass
+        print("Error: Couldn't store current tick!")
+        logger.error("Error: Couldn't store current tick!")
 
     #---------- Free locks that have expired ----------
-    #TODO
+    #TODO Not yet implemented, do later if needed.
 
     #---------- Monitor the temperature of the NAS box and the drives ----------
     #System board temp.
@@ -1470,7 +1478,8 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
                                          "OK", "None")
 
         except RuntimeError:
-            pass
+            print("Error: Couldn't update site status!")
+            logger.error("Error: Couldn't update site status!")
 
     else:
         logger.warning("High Temperatures! sys: "+sys_temp+", hdd0: "+hdd0_temp
@@ -1485,7 +1494,8 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
                                      + ", hdd1: "+hdd1_temp, severity="WARNING")
 
         except RuntimeError:
-            pass
+            print("Error: Couldn't update site status or log event!")
+            logger.error("Error: Couldn't update site status or log event!")
 
     #NAS/tick interval is 15 seconds.
     return 15
@@ -1509,7 +1519,8 @@ def valve_control_logic(readings, devices, monitors, sockets, reading_interval):
         state = logiccoretools.get_state(config.SYSTEM_ID, valve_id)
 
     except RuntimeError:
-        pass
+        print("Error: Couldn't get site status!")
+        logger.error("Error: Couldn't get site status!")
 
     else:
         if state is not None:
@@ -1530,7 +1541,8 @@ def valve_control_logic(readings, devices, monitors, sockets, reading_interval):
                         logiccoretools.log_event(config.SYSTEM_ID+": New valve position: "+str(position))
 
                     except RuntimeError:
-                        pass
+                        print("Error: Couldn't log event!")
+                        logger.error("Error: Couldn't log event!")
 
     if position is not None:
         try:
@@ -1538,7 +1550,8 @@ def valve_control_logic(readings, devices, monitors, sockets, reading_interval):
                                          "OK", "Position requested: "+str(position))
 
         except RuntimeError:
-            pass
+            print("Error: Couldn't update site status!")
+            logger.error("Error: Couldn't update site status!")
 
     else:
         try:
@@ -1546,7 +1559,8 @@ def valve_control_logic(readings, devices, monitors, sockets, reading_interval):
                                          "OK", "None")
 
         except RuntimeError:
-            pass
+            print("Error: Couldn't update site status!")
+            logger.error("Error: Couldn't update site status!")
 
     #Unsure how to decide the interval, so just setting to 15 seconds TODO.
     return 15
@@ -1564,7 +1578,8 @@ def generic_control_logic(readings, devices, monitors, sockets, reading_interval
                                      "OK", "None")
 
     except RuntimeError:
-        pass
+        print("Error: Couldn't update site status!")
+        logger.error("Error: Couldn't update site status!")
 
     #Unsure how to decide the interval, so just setting to 15 seconds TODO.
     return 15
@@ -1660,7 +1675,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
             logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
         except RuntimeError:
-            pass
+            print("Error: Error trying to control valve V4!")
+            logger.error("Error: Error trying to control valve V4!")
 
         main_pump.enable()
 
@@ -1711,7 +1727,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
             logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
         except RuntimeError:
-            pass
+            print("Error: Error trying to control valve V4!")
+            logger.error("Error: Error trying to control valve V4!")
 
         main_pump.enable()
 
@@ -1738,7 +1755,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
             logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
         except RuntimeError:
-            pass
+            print("Error: Error trying to control valve V4!")
+            logger.error("Error: Error trying to control valve V4!")
 
         main_pump.enable()
 
@@ -1764,7 +1782,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
                 logiccoretools.attempt_to_control("VALVE4", "V4", "25%")
 
             except RuntimeError:
-                pass
+                print("Error: Error trying to control valve V4!")
+                logger.error("Error: Error trying to control valve V4!")
 
         else:
             logger.warning("Insufficient water in wendy butts...")
@@ -1774,7 +1793,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
                 logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
             except RuntimeError:
-                pass
+                print("Error: Error trying to control valve V4!")
+                logger.error("Error: Error trying to control valve V4!")
 
         #Make sure the main circulation pump is on.
         logger.info("Turning the main cirulation pump on, if it was off...")
@@ -1800,7 +1820,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
                 logiccoretools.attempt_to_control("VALVE4", "V4", "50%")
 
             except RuntimeError:
-                pass
+                print("Error: Error trying to control valve V4!")
+                logger.error("Error: Error trying to control valve V4!")
 
         else:
             logger.error("Insufficient water in wendy butts...")
@@ -1810,7 +1831,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
                 logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
             except RuntimeError:
-                pass
+                print("Error: Error trying to control valve V4!")
+                logger.error("Error: Error trying to control valve V4!")
 
             logger.error("*** NOTICE ***: Water level in the sump is between 200 and 300 mm!")
             logger.error("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: "
@@ -1843,7 +1865,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
                 logiccoretools.attempt_to_control("VALVE4", "V4", "100%")
 
             except RuntimeError:
-                pass
+                print("Error: Error trying to control valve V4!")
+                logger.error("Error: Error trying to control valve V4!")
 
         else:
             logger.warning("Insufficient water in wendy butts...")
@@ -1853,7 +1876,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
                 logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
             except RuntimeError:
-                pass
+                print("Error: Error trying to control valve V4!")
+                logger.error("Error: Error trying to control valve V4!")
 
             logger.critical("*** CRITICAL ***: Water level in the sump less than 200 mm!")
             logger.critical("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to system.")
@@ -1883,7 +1907,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
                                      "OK", "None")
 
     except RuntimeError:
-        pass
+        print("Error: Couldn't update site status!")
+        logger.error("Error: Couldn't update site status!")
 
     return reading_interval
 

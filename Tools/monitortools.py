@@ -345,6 +345,8 @@ class BaseMonitorClass(threading.Thread):
 
                 except RuntimeError:
                     #Break out after first error rather than trying loads of readings.
+                    print("Error: Couldn't store queued reading, trying again later!")
+                    logger.error("Error: Couldn't store queued reading, trying again later!")
                     break
 
                 else:
@@ -357,9 +359,8 @@ class BaseMonitorClass(threading.Thread):
                 #Queue to send later.
                 self.db_queue.append(reading)
 
-                #TODO Log it.
-                
-            #TODO how to handle errors?
+                print("Error: Couldn't store current reading, queueing for later!")
+                logger.error("Error: Couldn't store current reading, queueing for later!")
 
         try:
             if reading == previous_reading:
