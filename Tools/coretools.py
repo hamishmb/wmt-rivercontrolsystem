@@ -1426,6 +1426,22 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
     #Increment the system tick by 1.
     config.TICK += 1
 
+    #Reset tick if we're getting near the limit (2^31, assuming signed integers for safety).
+    #(https://docs.oracle.com/cd/E19078-01/mysql/mysql-refman-5.1/data-types.html#numeric-types)
+    if config.TICK >= 2147483600:
+        print("Reset tick to zero as near limit")
+        logger.warning("Reset tick to zero as near limit")
+
+        try:
+            logiccoretools.log_event("Reset system tick to zero as near to limit",
+                                     severity="WARNING")
+
+        except RuntimeError:
+            print("Error: Couldn't log event saying that tick was reset!")
+            logger.error("Error: Couldn't log event saying that tick was reset!")
+
+        config.TICK = 0
+
     try:
         logiccoretools.store_tick(config.TICK)
 
