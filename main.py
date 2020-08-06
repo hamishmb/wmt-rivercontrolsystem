@@ -541,12 +541,13 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                 #Signal that we are updating.
                 try:
+                    logiccoretools.log_event("Updating...")
                     logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "
                                                  +config.MEM+" MB", "OK", "Updating")
 
                 except RuntimeError:
-                    print("Error: Couldn't update site status!")
-                    logger.error("Error: Couldn't update site status!")
+                    print("Error: Couldn't update site status or event log!")
+                    logger.error("Error: Couldn't update site status or event log!")
 
                 for site_id in config.SITE_SETTINGS:
                     try:
@@ -563,20 +564,22 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                 #Signal that we got it.
                 try:
+                    logiccoretools.log_event("Updating...")
                     logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "
                                                  +config.MEM+" MB", "OK", "Updating")
 
                 except RuntimeError:
-                    print("Error: Couldn't update site status!")
-                    logger.error("Error: Couldn't update site status!")
+                    print("Error: Couldn't update site status or event log!")
+                    logger.error("Error: Couldn't update site status or event log!")
 
             elif config.REBOOT:
                 try:
+                    logiccoretools.log_event("Rebooting...")
                     logiccoretools.update_status("Down for reboot", "N/A", "Rebooting")
 
                 except RuntimeError:
-                    print("Error: Couldn't update site status!")
-                    logger.error("Error: Couldn't update site status!")
+                    print("Error: Couldn't update site status or event log!")
+                    logger.error("Error: Couldn't update site status or event log!")
 
                 if system_id == "NAS" and config.REBOOTALL:
                     for site_id in config.SITE_SETTINGS:
@@ -589,11 +592,12 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
             elif config.SHUTDOWN:
                 try:
+                    logiccoretools.log_event("Shutting down...")
                     logiccoretools.update_status("Off (shutdown requested)", "N/A", "Shutting Down")
 
                 except RuntimeError:
-                    print("Error: Couldn't update site status!")
-                    logger.error("Error: Couldn't update site status!")
+                    print("Error: Couldn't update site status or event log!")
+                    logger.error("Error: Couldn't update site status or event log!")
 
                 if system_id == "NAS" and config.SHUTDOWNALL:
                     for site_id in config.SITE_SETTINGS:
