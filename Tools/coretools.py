@@ -443,10 +443,6 @@ class DatabaseConnection(threading.Thread):
     the calling thread to wait, though.
     """
 
-    #TODO Logging, especially debug logging.
-    #TODO Error handling and connection error detection.
-    # ^ Has been written to some extent, but not tested thoroughly.
-
     def __init__(self, site_id):
         """The constructor"""
         threading.Thread.__init__(self)
@@ -631,8 +627,6 @@ class DatabaseConnection(threading.Thread):
                         time.sleep(0.01)
 
                     #Break out so we can check the connection again.
-                    #TODO Need to check that this works, and handles only the errors
-                    #we want it to handle.
                     self.is_connected = False
                     self._cleanup(database, cursor)
 
