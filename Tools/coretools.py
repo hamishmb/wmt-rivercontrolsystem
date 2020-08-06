@@ -343,7 +343,7 @@ class SyncTime(threading.Thread):
         """The main body of the thread"""
         while not config.EXITING:
             cmd = subprocess.run(["sudo", "rdate", config.SITE_SETTINGS["NAS"]["IPAddress"]],
-                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
 
             stdout = cmd.stdout.decode("UTF-8", errors="ignore")
 
@@ -356,7 +356,7 @@ class SyncTime(threading.Thread):
                     logger.error("Falling back to Sump Pi...")
 
                     cmd = subprocess.run(["sudo", "rdate", config.SITE_SETTINGS["SUMP"]["IPAddress"]],
-                                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
 
                     stdout = cmd.stdout.decode("UTF-8", errors="ignore")
 
@@ -534,15 +534,14 @@ class DatabaseConnection(threading.Thread):
                     time.sleep(10)
                     continue
 
-                else:
-                    #We are now connected.
-                    print("Connected to database.")
-                    logger.info("DatabaseConnection: Done!")
-                    self.is_connected = True
+                #Otherwise, we are now connected.
+                print("Connected to database.")
+                logger.info("DatabaseConnection: Done!")
+                self.is_connected = True
 
-                    #Clear old stuff out of the queue to prevent errors.
-                    self.in_queue.clear()
-                    self.result = None
+                #Clear old stuff out of the queue to prevent errors.
+                self.in_queue.clear()
+                self.result = None
 
             #If we're exiting, break out of the loop.
             #This prevents us from executing tons of queries at this point and delaying exit.
@@ -1441,7 +1440,7 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
     sys_temp = cmd.stdout.decode("UTF-8", errors="ignore").split()[-1]
-    
+
     #HDD 0 temp.
     cmd = subprocess.run(["temperature_monitor", "-c", "0"],
                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -1501,7 +1500,7 @@ def valve_control_logic(readings, devices, monitors, sockets, reading_interval):
 
     #Get the sensor name for this valve.
     for valve in config.SITE_SETTINGS[config.SYSTEM_ID]["Devices"]:
-        valve_id = valve.split(":")[1] 
+        valve_id = valve.split(":")[1]
 
     position = None
 
@@ -1509,7 +1508,8 @@ def valve_control_logic(readings, devices, monitors, sockets, reading_interval):
     try:
         state = logiccoretools.get_state(config.SYSTEM_ID, valve_id)
 
-    except RuntimeError: pass
+    except RuntimeError:
+        pass
 
     else:
         if state is not None:
@@ -1529,21 +1529,24 @@ def valve_control_logic(readings, devices, monitors, sockets, reading_interval):
                     try:
                         logiccoretools.log_event(config.SYSTEM_ID+": New valve position: "+str(position))
 
-                    except RuntimeError: pass
+                    except RuntimeError:
+                        pass
 
     if position is not None:
         try:
             logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
                                          "OK", "Position requested: "+str(position))
 
-        except RuntimeError: pass
+        except RuntimeError:
+            pass
 
     else:
         try:
             logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
                                          "OK", "None")
 
-        except RuntimeError: pass
+        except RuntimeError:
+            pass
 
     #Unsure how to decide the interval, so just setting to 15 seconds TODO.
     return 15
@@ -1656,7 +1659,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         try:
             logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
-        except RuntimeError: pass
+        except RuntimeError:
+            pass
 
         main_pump.enable()
 
@@ -1706,7 +1710,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         try:
             logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
-        except RuntimeError: pass
+        except RuntimeError:
+            pass
 
         main_pump.enable()
 
@@ -1732,7 +1737,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         try:
             logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
-        except RuntimeError: pass
+        except RuntimeError:
+            pass
 
         main_pump.enable()
 
@@ -1757,7 +1763,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
             try:
                 logiccoretools.attempt_to_control("VALVE4", "V4", "25%")
 
-            except RuntimeError: pass
+            except RuntimeError:
+                pass
 
         else:
             logger.warning("Insufficient water in wendy butts...")
@@ -1766,7 +1773,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
             try:
                 logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
-            except RuntimeError: pass
+            except RuntimeError:
+                pass
 
         #Make sure the main circulation pump is on.
         logger.info("Turning the main cirulation pump on, if it was off...")
@@ -1791,7 +1799,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
             try:
                 logiccoretools.attempt_to_control("VALVE4", "V4", "50%")
 
-            except RuntimeError: pass
+            except RuntimeError:
+                pass
 
         else:
             logger.error("Insufficient water in wendy butts...")
@@ -1800,7 +1809,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
             try:
                 logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
-            except RuntimeError: pass
+            except RuntimeError:
+                pass
 
             logger.error("*** NOTICE ***: Water level in the sump is between 200 and 300 mm!")
             logger.error("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: "
@@ -1832,7 +1842,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
             try:
                 logiccoretools.attempt_to_control("VALVE4", "V4", "100%")
 
-            except RuntimeError: pass
+            except RuntimeError:
+                pass
 
         else:
             logger.warning("Insufficient water in wendy butts...")
@@ -1841,7 +1852,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
             try:
                 logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
-            except RuntimeError: pass
+            except RuntimeError:
+                pass
 
             logger.critical("*** CRITICAL ***: Water level in the sump less than 200 mm!")
             logger.critical("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to system.")
@@ -1870,7 +1882,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
                                      "OK", "None")
 
-    except RuntimeError: pass
+    except RuntimeError:
+        pass
 
     return reading_interval
 

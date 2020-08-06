@@ -118,7 +118,7 @@ class ManageHallEffectProbe(threading.Thread):
         """The constructor, set up some basic threading stuff"""
         #Initialise the thread.
         threading.Thread.__init__(self)
-        
+
         # Create the ADC object using the I2C bus
         self.ads = ADS.ADS1115(i2c, address=i2c_address)
 
@@ -273,7 +273,7 @@ class ManageGateValve(threading.Thread):
 
         # Create the ADC object using the I2C bus
         self.ads = ADS.ADS1115(i2c, address=i2c_address)
-        
+
         self._exit = False
 
         #Set the valve closed initially.

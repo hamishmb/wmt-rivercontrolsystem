@@ -710,7 +710,7 @@ class HallEffectProbe(BaseDeviceClass):
 
         #Check that the corresponding limits in low_limits are actually lower.
         for limit in high_limits:
-            if not (limit > low_limits[high_limits.index(limit)]):
+            if not limit > low_limits[high_limits.index(limit)]:
                 raise ValueError("Invalid limits: "+str(high_limits)+", "+str(low_limits))
 
         self.high_limits = high_limits

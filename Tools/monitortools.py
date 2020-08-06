@@ -289,7 +289,7 @@ class BaseMonitorClass(threading.Thread):
             self.file_handle.write("\nTIME,SYSTEM TICK,ID,VALUE,STATUS\n")
             self.file_handle.flush()
 
-        except Exception as error:
+        except (OSError, IOError) as error:
             logger.error("Exception \n\n"+str(traceback.format_exc())
                          + "\n\nwhile running!")
 
@@ -559,7 +559,7 @@ class Monitor(BaseMonitorClass):
 
                 #Construct a Reading object to hold this info.
                 #Args in order: Time, Tick, ID, Value, Status
-                reading = coretools.Reading(time.strftimen("%Y-%m-%d %H:%M:%S", time.localtime()),
+                reading = coretools.Reading(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
                                             config.TICK,
                                             self.probe.get_id(),
                                             str(the_reading), status_text)
@@ -689,12 +689,11 @@ class SocketsMonitor(BaseMonitorClass):
                         if should_continue:
                             continue
 
-                        else:
-                            #Remove the reading from the socket's queue.
-                            self.socket.pop()
+                        #Remove the reading from the socket's queue.
+                        self.socket.pop()
 
-                            #Add it to the queue.
-                            self.queue.append(reading)
+                        #Add it to the queue.
+                        self.queue.append(reading)
 
                     else:
                         #Wait a bit for the other monitor(s) to pick it up.

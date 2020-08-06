@@ -425,6 +425,9 @@ class TestMonitor(unittest.TestCase):
         #Make sure it won't exit immediately.
         monitor_tools.config.EXITING = False
 
+        self.orig_store_reading = logiccoretools.store_reading
+        logiccoretools.store_reading = data.fake_store_reading
+
     def tearDown(self):
         del self.halleffectprobe
 
@@ -434,6 +437,8 @@ class TestMonitor(unittest.TestCase):
             os.mkdir("readings")
 
         os.chdir("../")
+
+        logiccoretools.store_reading = self.orig_store_reading
 
     def test_1(self):
         """Test that the class initialises and exits correctly (slow test)"""

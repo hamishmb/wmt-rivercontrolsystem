@@ -348,7 +348,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         try:
             config.DBCONNECTION.initialise_db()
 
-        except RuntimeError: pass
+        except RuntimeError:
+            pass
 
     logger.info("Starting to take readings...")
     print("Starting to take readings. Please stand by...")
@@ -498,11 +499,13 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             try:
                 state = logiccoretools.get_state(config.SYSTEM_ID, config.SYSTEM_ID)
 
-            except RuntimeError: pass
+            except RuntimeError:
+                pass
+
             else:
                 if state is not None:
                     request = state[1]
-            
+
                     if request.upper() == "SHUTDOWN":
                         config.SHUTDOWN = True
 
@@ -519,7 +522,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                     elif request.upper() == "UPDATE":
                         config.UPDATE = True
-                        
+
             #Local files.
             config.SHUTDOWN = config.SHUTDOWN or os.path.exists("/tmp/.shutdown") or os.path.exists("/tmp/.shutdownall")
             config.SHUTDOWNALL = config.SHUTDOWNALL or os.path.exists("/tmp/.shutdownall")
@@ -539,13 +542,15 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                     logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "
                                                  +config.MEM+" MB", "OK", "Updating")
 
-                except RuntimeError: pass
+                except RuntimeError:
+                    pass
 
                 for site_id in config.SITE_SETTINGS:
                     try:
                         logiccoretools.attempt_to_control(site_id, site_id, "Update")
 
-                    except RuntimeError: pass
+                    except RuntimeError:
+                        pass
 
             elif config.UPDATE and system_id != "NAS":
                 #Download the update from the NAS box.
@@ -557,59 +562,69 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                     logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "
                                                  +config.MEM+" MB", "OK", "Updating")
 
-                except RuntimeError: pass
+                except RuntimeError:
+                    pass
 
             elif config.REBOOT:
                 try:
                     logiccoretools.update_status("Down for reboot", "N/A", "Rebooting")
 
-                except RuntimeError: pass
+                except RuntimeError:
+                    pass
 
                 if system_id == "NAS" and config.REBOOTALL:
                     for site_id in config.SITE_SETTINGS:
                         try:
                             logiccoretools.attempt_to_control(site_id, site_id, "Reboot")
 
-                        except RuntimeError: pass
+                        except RuntimeError:
+                            pass
 
             elif config.SHUTDOWN:
                 try:
                     logiccoretools.update_status("Off (shutdown requested)", "N/A", "Shutting Down")
 
-                except RuntimeError: pass
+                except RuntimeError:
+                    pass
 
                 if system_id == "NAS" and config.SHUTDOWNALL:
                     for site_id in config.SITE_SETTINGS:
                         try:
                             logiccoretools.attempt_to_control(site_id, site_id, "Shutdown")
 
-                        except RuntimeError: pass
+                        except RuntimeError:
+                            pass
 
             if config.SHUTDOWN or config.REBOOT or config.UPDATE:
                 try:
                     os.remove("/tmp/.shutdown")
 
-                except Exception: pass
+                except (OSError, IOError):
+                    pass
 
                 try:
                     os.remove("/tmp/.shutdownall")
 
-                except Exception: pass
+                except (OSError, IOError):
+                    pass
 
                 try:
                     os.remove("/tmp/.reboot")
 
-                except Exception: pass
+                except (OSError, IOError):
+                    pass
 
                 try:
                     os.remove("/tmp/.rebootall")
 
-                except Exception: pass
+                except (OSError, IOError):
+                    pass
 
                 try:
                     os.remove("/tmp/.update")
 
-                except Exception: pass
+                except (OSError, IOError):
+                    pass
 
                 config.EXITING = True
 
@@ -679,7 +694,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                     else:
                         if status is not None:
                             action = status[2]
-                    
+
                             if action.upper() == "SHUTTING DOWN":
                                 print("Done: "+site_id)
                                 logger.info("Done: "+site_id)
@@ -729,7 +744,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                     else:
                         if status is not None:
                             action = status[2]
-                    
+
                             if action.upper() == "REBOOTING":
                                 print("Done: "+site_id)
                                 logger.info("Done: "+site_id)
@@ -776,7 +791,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                     else:
                         if status is not None:
                             action = status[2]
-                    
+
                             if action.upper() == "UPDATING":
                                 print("Done: "+site_id)
                                 logger.info("Done: "+site_id)
@@ -801,8 +816,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             #Reboot.
             print("Restarting...")
             logger.info("Restarting...")
-            subprocess.run(["ash", "/home/admin/reboot.sh"])
-            
+            subprocess.run(["ash", "/home/admin/reboot.sh"], check=False)
+
         else:
             #Move files into place.
             subprocess.run(["rm", "-rf", "/home/pi/rivercontrolsystem.old"], check=False)
