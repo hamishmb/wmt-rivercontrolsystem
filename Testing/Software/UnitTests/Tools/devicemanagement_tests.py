@@ -21,9 +21,10 @@
 #Import modules
 import unittest
 import sys
+import os
 
 #Import other modules.
-sys.path.append('../..') #Need to be able to import the Tools module from here.
+sys.path.insert(0, os.path.abspath('../../../')) #Need to be able to import the Tools module from here.
 
 import Tools
 import Tools.deviceobjects as device_objects
@@ -50,7 +51,7 @@ class TestManageHallEffectProbe(unittest.TestCase):
 
     def setUp(self):
         self.probe = device_objects.HallEffectProbe("G4:M0", "Test")
-        self.mgmtclass = device_mgmt.ManageHallEffectProbe(self.probe, None)
+        self.mgmtclass = device_mgmt.ManageHallEffectProbe(self.probe, 0x48)
 
     def tearDown(self):
         del self.mgmtclass
@@ -62,7 +63,7 @@ class TestManageHallEffectProbe(unittest.TestCase):
     def test_constructor_1(self):
         """Test the constructor works as expected"""
         probe = device_objects.HallEffectProbe("G4:M0", "Test")
-        mgmtclass = device_mgmt.ManageHallEffectProbe(probe, None)
+        mgmtclass = device_mgmt.ManageHallEffectProbe(probe, 0x48)
 
         self.assertEqual(mgmtclass.probe, probe)
 
@@ -109,8 +110,16 @@ class TestManageGateValve(unittest.TestCase):
     """This class tests the features of the ManageGateValve class in Tools/devicemanagement.py"""
 
     def setUp(self):
-        self.valve = device_objects.GateValve("V4", "Test", (2, 3, 4), 5, 99, 1, 3.3, None)
-        self.mgmtclass = device_mgmt.ManageGateValve(self.valve, None)
+        self.valve = device_objects.GateValve("VALVE4:V4", "Test")
+
+        self.valve.set_pins((2, 3, 4))
+        self.valve.set_pos_tolerance(5)
+        self.valve.set_max_open(99)
+        self.valve.set_min_open(1)
+        self.valve.set_ref_voltage(3.3)
+        self.valve.set_i2c_address(0x48)
+
+        self.mgmtclass = device_mgmt.ManageGateValve(self.valve, 0x48)
 
     def tearDown(self):
         del self.mgmtclass
@@ -121,8 +130,16 @@ class TestManageGateValve(unittest.TestCase):
 
     def test_constructor_1(self):
         """Test that the constructor works as expected"""
-        valve = device_objects.GateValve("V4", "Test", (2, 3, 4), 5, 99, 1, 3.3, None)
-        mgmtclass = device_mgmt.ManageGateValve(self.valve, None)
+        valve = device_objects.GateValve("VALVE4:V4", "Test")
+
+        valve.set_pins((2, 3, 4))
+        valve.set_pos_tolerance(5)
+        valve.set_max_open(99)
+        valve.set_min_open(1)
+        valve.set_ref_voltage(3.3)
+        valve.set_i2c_address(0x48)
+
+        mgmtclass = device_mgmt.ManageGateValve(valve, 0x48)
 
         #Check that variables were set correctly by the constructor.
         self.assertFalse(mgmtclass._exit)

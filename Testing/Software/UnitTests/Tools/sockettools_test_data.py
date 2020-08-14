@@ -16,11 +16,12 @@
 
 import datetime
 import sys
+import os
 import pickle
 import _pickle
 
 #Import other modules.
-sys.path.append('../..') #Need to be able to import the Tools module from here.
+sys.path.insert(0, os.path.abspath('../../../')) #Need to be able to import the Tools module from here.
 
 #Global variables for testing.
 unpickled_data = []

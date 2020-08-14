@@ -14,10 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#TODO The way the lists are done here confuses Sphinx.
-#is there a list syntax that can be used instead? - the generated
-#docs are not displaying nicely.
-
 """
 This is the configuration for all pis. These dictionaries (key-value
 base data) provide the configuration for each site in a centralised,
@@ -31,82 +27,82 @@ control.
 In the dictionary, devices are identified according to their location
 and type the following key, eg:
 
-Sump Pi                        - SUMP
-    Hall Effect (magnetic) Probe -     M0
-    Main circulation Pump        -     P1
-    Butts Return Pump            -     P0
+* Sump Pi                        - SUMP
 
-Wendy Street Pi                - G4
-    Hall Effect (magnetic) Probe -     M0
-    Float Switch                 -     FS0
+   * Hall Effect (magnetic) Probe -     M0
+   * Main circulation Pump        -     P1
+   * Butts Return Pump            -     P0
 
-Gate Valve                     - V4
+* Wendy Street Pi                - G4
+
+   * Hall Effect (magnetic) Probe -     M0
+   * Float Switch                 -     FS0
+
+* Gate Valve                     - VALVE4:V4
 
 Full List of Devices and their ID Data, IP Addresses, (i2C Addresses) Pi server Port and
 Socket Numbers where applicable:
 
-Sump Pi                                 - SUMP, 192.168.0.2
-    Hall Effect (magnetic) Probe          -     SUMP:M0 (0x48)
-    Main circulation Pump                 -     SUMP:P1
-    Butts Return Pump                     -     SUMP:P0
+* Sump Pi                                 - SUMP, 192.168.0.2
 
-Lady Hanham Butts Pi                   - G3, 192.168.0.3, 30003, SOCK3
-    Hall Effect (magnetic) Probe          -     G3:M0 (0x48)
-    Float Switch (High)                   -     G3:FS0
-    Float Switch (Low)                    -     G3:FS1
+   * Hall Effect (magnetic) Probe          -     SUMP:M0 (0x48)
+   * Main circulation Pump                 -     SUMP:P1
+   * Butts Return Pump                     -     SUMP:P0
 
-    Hall Effect (magnetic) Probe          -     G3:M1 (0x49)
-    Float Switch (High)                   -     G3:FS2
-    Float Switch (Low)                    -     G3:FS3
+* Lady Hanham Butts Pi                   - G3, 192.168.0.3, 30003, SOCK3
 
-    Hall Effect (magnetic) Probe          -     G3:M1 (0x4B)
-    Float Switch (High)                   -     G3:FS4
-    Float Switch (Low)                    -     G3:FS5
+   * Hall Effect (magnetic) Probe          -     G3:M0 (0x48)
+   * Float Switch (High)                   -     G3:FS0
+   * Float Switch (Low)                    -     G3:FS1
 
-    Mains Water Solenoid Valve            -     G1:S0
+   * Hall Effect (magnetic) Probe          -     G3:M1 (0x49)
+   * Float Switch (High)                   -     G3:FS2
+   * Float Switch (Low)                    -     G3:FS3
 
-Wendy Street Butts Pi                     - G4, 192.168.0.4, 30004, SOCK4
-    Hall Effect (magnetic) Probe          -     G4:M0
-    Float Switch (High)                   -     G4:FS0
-    Float Switch (Low)                    -     G4:FS1
+   * Hall Effect (magnetic) Probe          -     G3:M1 (0x4B)
+   * Float Switch (High)                   -     G3:FS4
+   * Float Switch (Low)                    -     G3:FS5
 
-Gazebo Butts Pi                           - G5, 192.168.0.5, 30005, SOCK5
-    Hall Effect (magnetic) Probe          -     G5:M0
-    Float Switch (High)                   -     G5:FS0
-    Float Switch (Low)                    -     G5:FS1
+   * Mains Water Solenoid Valve            -     G1:S0
 
-Stage Butts Pi                            - G6, 192.168.0.6, 30006, SOCK6
-    Hall Effect (magnetic) Probe          -     G6:M0
-    Float Switch (High)                   -     G6:FS0
-    Float Switch (Low)                    -     G6:FS1
+* Wendy Street Butts Pi                     - G4, 192.168.0.4, 30004, SOCK4
 
-Railway Room G1 Butts Group Gate Valve  - V1, 192.168.0.11, 30011, SOCK11
+   * Hall Effect (magnetic) Probe          -     G4:M0
+   * Float Switch (High)                   -     G4:FS0
+   * Float Switch (Low)                    -     G4:FS1
 
-Railway Room G2 Butts Group Gate Valve  - V2, 192.168.0.12, 30012, SOCK12
+* Gazebo Butts Pi                           - G5, 192.168.0.5, 30005, SOCK5
 
-Railway Room G3 Butts Group Gate Valve  - V3, 192.168.0.13, 30013, SOCK13
+   * Hall Effect (magnetic) Probe          -     G5:M0
+   * Float Switch (High)                   -     G5:FS0
+   * Float Switch (Low)                    -     G5:FS1
 
-Wendy Street G4 Butts Group Gate Valve  - V4, 192.168.0.14, 30014, SOCK14
+* Stage Butts Pi                            - G6, 192.168.0.6, 30006, SOCK6
+   * Hall Effect (magnetic) Probe          -     G6:M0
+   * Float Switch (High)                   -     G6:FS0
+   * Float Switch (Low)                    -     G6:FS1
 
-Gazebo G5 Butts Group Gate Valve        - V5, 192.168.0.15, 30015, SOCK15
+* Railway Room G1 Butts Group Gate Valve  - VALVE1:V1, 192.168.0.11, 30011, SOCK11
+* Railway Room G2 Butts Group Gate Valve  - VALVE1:V2, 192.168.0.12, 30012, SOCK12
+* Railway Room G3 Butts Group Gate Valve  - VALVE3:V3, 192.168.0.13, 30013, SOCK13
 
-Matrix Pump V6 Gate Valve               - V6, 192.168.0.16, 30016, SOCK16
+* Wendy Street G4 Butts Group Gate Valve  - VALVE4:V4, 192.168.0.14, 30014, SOCK14
 
-Matrix Pump V7 Gate Valve               - V7, 192.168.0.17, 30017, SOCK17
+* Gazebo G5 Butts Group Gate Valve        - VALVE5:V5, 192.168.0.15, 30015, SOCK15
 
-Matrix Pump V8 Gate Valve               - V8, 192.168.0.18, 30018, SOCK18
+* Matrix Pump V6 Gate Valve               - VALVE6:V6, 192.168.0.16, 30016, SOCK16
+* Matrix Pump V7 Gate Valve               - VALVE7:V7, 192.168.0.17, 30017, SOCK17
+* Matrix Pump V8 Gate Valve               - VALVE8:V8, 192.168.0.18, 30018, SOCK18
+* Matrix Pump V9 Gate Valve               - VALVE9:V9, 192.168.0.19, 30019, SOCK19
 
-Matrix Pump V9 Gate Valve               - V9, 192.168.0.19, 30019, SOCK19
+* TBD Gate Valve                          - VALVE10:V10, 192.168.0.20, 30020, SOCK20
+* TBD Loctn Gardeners Supply Gate Valve   - VALVE11:V11, 192.168.0.21, 30021, SOCK21
 
-TBD Gate Valve                          - V10, 192.168.0.20, 30020, SOCK20
+* Stage Butts Group G6 Gate Valve         - VALVE12:V12, 192.168.0.22, 30022, SOCK22
 
-TBD Loctn Gardeners Supply Gate Valve   - V11, 192.168.0.21, 30021, SOCK21
+* Staff & Visitor GUI Pi                  - GUI, 192.168.0.9
 
-Stage Butts Group G6 Gate Valve         - V12, 192.168.0.22, 30022, SOCK22
-
-Staff & Visitor GUI Pi                  - GUI, 192.168.0.9
-
-Webserver Pi                            - WMT_Webserver, 192.168.0.1
+* Webserver Pi                            - WMT_Webserver, 192.168.0.1
 
 Notes:
 
@@ -120,7 +116,7 @@ This is accepted and will "just work".
 
 3.  The code to actually make decisions and decide what to do with
 the devices to control is not here - it's in coretools.py.  At the
-moment. only sumppi controls anything, so the method is called
+moment, only sumppi controls anything, so the method is called
 do_control_logic(), but later on there will be methods for each site,
 and they will be mapped to each site here in this config file.
 
@@ -146,7 +142,14 @@ import sys
 
 #Define global variables.
 VERSION = "0.11.0~pre4"
-RELEASEDATE = "21/0/2020"
+RELEASEDATE = "15/7/2020"
+
+#System ID of this Pi.
+SYSTEM_ID = None
+
+#CPU LOAD and MEMORY USAGE (MB).
+CPU = None
+MEM = None
 
 #Used to access the database connection object.
 DBCONNECTION = None
@@ -154,12 +157,19 @@ DBCONNECTION = None
 #List of sockets objects.
 SOCKETSLIST = []
 
+#Current system tick.
+TICK = 0
+
 #A strange approach, but it works and means we can import the modules for doc generation
 #without error. It also doesn't relax the checks on our actual deployments.
 if not "TESTING" in globals():
+    #If we are on the NAS box, default to True.
+    if "NAS" in sys.argv:
+        TESTING = True
+
     #If running on a raspberry pi (architecture check), default to False,
     #unless the testing flag is present.
-    if os.uname()[4][:3] in ("arm", "aar") and \
+    elif os.uname()[4][:3] in ("arm", "aar") and \
         "-t" not in sys.argv and \
         "--testing" not in sys.argv:
 
@@ -169,13 +179,23 @@ if not "TESTING" in globals():
     else:
         TESTING = True
 
-#Used to signal system shutdown to all the threads.
+#Used to signal software shutdown to all the threads.
 EXITING = False
 
+#Signals whether we are in debug mode.
 DEBUG = False
 
-import Tools
-import Tools.deviceobjects
+#Used to signal pending shutdown, reboot, and update.
+SHUTDOWN = False
+SHUTDOWNALL = False
+REBOOT = False
+REBOOTALL = False
+UPDATE = False
+
+#NB: These are imported here because the above variables and the testing
+#flag must be set up first to prevent issues.
+import Tools #pylint: disable=wrong-import-position
+import Tools.deviceobjects #pylint: disable=wrong-import-position
 
 def reconfigure_logging():
     """
@@ -186,7 +206,29 @@ def reconfigure_logging():
 
 SITE_SETTINGS = {
 
-    #Settings for the SUMP site (master pi).
+    #Settings for the NAS site.
+    "NAS":
+        {
+            "ID": "NAS",
+            "Name": "NAS Box",
+            "Default Interval": 15,
+            "IPAddress": "192.168.0.25",
+            "HostingSockets": True,
+            "ControlLogicFunction": "nas_control_logic",
+            "DBUser": "nasbox",
+            "DBPasswd": "river20",
+            "DBHost": "127.0.0.1",
+            "DBPort": 3306,
+
+            #Local probes.
+            "Probes":
+                {},
+
+            #Devices to control.
+            "Devices": {},
+        },
+
+    #Settings for the SUMP site.
     "SUMP":
         {
             "Type": "Site",
@@ -194,11 +236,11 @@ SITE_SETTINGS = {
             "Name": "Sump Pi",
             "Default Interval": 15,
             "IPAddress": "192.168.0.2",
-            "HostingSockets": True,
+            "HostingSockets": False,
             "ControlLogicFunction": "sumppi_control_logic",
             "DBUser": "sumppi",
             "DBPasswd": "river20",
-            "DBHost": "192.168.1.114",
+            "DBHost": "192.168.0.25",
             "DBPort": 3306,
 
             #Local probes.
@@ -243,6 +285,13 @@ SITE_SETTINGS = {
                         "Pins":  (18)
                     }
                 },
+
+            "ServerAddress": "192.168.0.25",
+            "ServerPort": 30002,
+            "ServerName": "NAS",
+            "SocketName": "Sumppi Socket",
+            "SocketID": "SOCK2"
+
         },
 
     #Settings for the G3 site (client pi behind the Lady Hanham Building).
@@ -254,8 +303,11 @@ SITE_SETTINGS = {
             "Default Interval": 15,
             "IPAddress": "192.168.0.3",
             "HostingSockets": False,
+            "ControlLogicFunction": "generic_control_logic",
             "DBUser": "hanhampi",
             "DBPasswd": "river20",
+            "DBHost": "192.168.0.25",
+            "DBPort": 3306,
 
             #Local probes.
             "Probes":
@@ -376,9 +428,9 @@ SITE_SETTINGS = {
 
             },
 
-            "ServerAddress": "192.168.0.2",
+            "ServerAddress": "192.168.0.25",
             "ServerPort": 30003,
-            "ServerName": "SumpPi",
+            "ServerName": "NAS",
             "SocketName": "Lady Hanham Buttspi Socket",
             "SocketID": "SOCK3"
         },
@@ -392,8 +444,11 @@ SITE_SETTINGS = {
             "Default Interval": 15,
             "IPAddress": "192.168.0.4",
             "HostingSockets": False,
+            "ControlLogicFunction": "generic_control_logic",
             "DBUser": "wbuttspi",
             "DBPasswd": "river20",
+            "DBHost": "192.168.0.25",
+            "DBPort": 3306,
 
             #Local probes.
             "Probes":
@@ -436,9 +491,9 @@ SITE_SETTINGS = {
             #Devices to control.
             "Devices": {},
 
-            "ServerAddress": "192.168.0.2",
+            "ServerAddress": "192.168.0.25",
             "ServerPort": 30004,
-            "ServerName": "SumpPi",
+            "ServerName": "NAS",
             "SocketName": "Wendy Street Buttspi Socket",
             "SocketID": "SOCK4"
         },
@@ -452,8 +507,11 @@ SITE_SETTINGS = {
             "Default Interval": 15,
             "IPAddress": "192.168.0.6",
             "HostingSockets": False,
+            "ControlLogicFunction": "generic_control_logic",
             "DBUser": "sbuttspi",
             "DBPasswd": "river20",
+            "DBHost": "192.168.0.25",
+            "DBPort": 3306,
 
             #Local probes.
             "Probes":
@@ -496,306 +554,409 @@ SITE_SETTINGS = {
             #Devices to control.
             "Devices": {},
 
-            "ServerAddress": "192.168.0.2",
+            "ServerAddress": "192.168.0.25",
             "ServerPort": 30006,
-            "ServerName": "SumpPi",
+            "ServerName": "NAS",
             "SocketName": "Wendy Street Stagepi Socket",
             "SocketID": "SOCK6"
 
         },
 
     #Gate Valves.
-    "V1":
+    "VALVE1":
         {
-            "Type": "Gate Valve",
-            "ID":   "V1",
-            "HostingSockets": False,
-            "IPAddress": "192.168.0.11",
+            "ID":   "VALVE1",
+            "Name": "Gate Valve V1 Pi",
             "Default Interval": 15,
-            "DBUser": "test",
-            "DBPasswd": "test",
-
-            "Name": "Lady Hanham Butts Farm Gate Valve V1",
-            "Class": Tools.deviceobjects.GateValve,
-            "ADCAddress":       0x48,
-
-            "Pins":  (17, 27, 19),
-            "posTolerance": 1,
-            "maxOpen": 90,
-            "minOpen": 1,
-            "refVoltage": 3.3,
+            "IPAddress": "192.168.0.11",
+            "HostingSockets": False,
+            "ControlLogicFunction": "valve_control_logic",
+            "DBUser": "valve1",
+            "DBPasswd": "river20",
+            "DBHost": "192.168.0.25",
+            "DBPort": 3306,
 
             #Here for compatibility reasons.
             "Probes": {},
-            "Devices": {},
+
+            #Devices to control.
+            "Devices":
+                {
+                    "VALVE1:V1":
+                        {
+                            "Type": "Gate Valve",
+                            "ID": "VALVE1:V1",
+                            "Name": "Gate Valve V1",
+                            "Class": Tools.deviceobjects.GateValve,
+                            "ADCAddress": 0x48,
+
+                            "Pins":  (17, 27, 19),
+                            "posTolerance": 1,
+                            "maxOpen": 90,
+                            "minOpen": 1,
+                            "refVoltage": 3.3,
+                        },
+                },
 
             #Config for server connection.
-            "ServerAddress": "192.168.0.2",
+            "ServerAddress": "192.168.0.25",
             "ServerPort": 30011,
-            "ServerName": "SumpPi",
-            "SocketName": "Lady Hanham Butts Gate Valve V1 Socket",
+            "ServerName": "NAS",
+            "SocketName": "Gate Valve V1 Socket",
             "SocketID": "SOCK11",
 
         },
-    "V2":
+
+    "VALVE2":
         {
-            "Type": "Gate Valve",
-            "ID":   "V2",
-            "HostingSockets": False,
-            "IPAddress": "192.168.0.12",
+            "ID":   "VALVE2",
+            "Name": "Gate Valve V2 Pi",
             "Default Interval": 15,
-            "DBUser": "test",
-            "DBPasswd": "test",
-
-            "Name": "Lady Hanham Butts Farm Gate Valve V2",
-            "Class": Tools.deviceobjects.GateValve,
-            "ADCAddress":       0x48,
-
-            "Pins":  (17, 27, 19),
-            "posTolerance": 1,
-            "maxOpen": 90,
-            "minOpen": 1,
-            "refVoltage": 3.3,
+            "IPAddress": "192.168.0.12",
+            "HostingSockets": False,
+            "ControlLogicFunction": "valve_control_logic",
+            "DBUser": "valve2",
+            "DBPasswd": "river20",
+            "DBHost": "192.168.0.25",
+            "DBPort": 3306,
 
             #Here for compatibility reasons.
             "Probes": {},
-            "Devices": {},
+
+            #Devices to control.
+            "Devices":
+                {
+                    "VALVE2:V2":
+                        {
+                            "Type": "Gate Valve",
+                            "ID": "VALVE2:V2",
+                            "Name": "Gate Valve V2",
+                            "Class": Tools.deviceobjects.GateValve,
+                            "ADCAddress": 0x48,
+
+                            "Pins":  (17, 27, 19),
+                            "posTolerance": 1,
+                            "maxOpen": 90,
+                            "minOpen": 1,
+                            "refVoltage": 3.3,
+                        },
+                },
 
             #Config for server connection.
-            "ServerAddress": "192.168.0.2",
+            "ServerAddress": "192.168.0.25",
             "ServerPort": 30012,
-            "ServerName": "SumpPi",
-            "SocketName": "Lady Hanham Butts Gate Valve V2 Socket",
+            "ServerName": "NAS",
+            "SocketName": "Gate Valve V2 Socket",
             "SocketID": "SOCK12",
 
         },
-    "V3":
+
+    "VALVE3":
         {
-            "Type": "Gate Valve",
-            "ID":   "V3",
-            "HostingSockets": False,
-            "IPAddress": "192.168.0.13",
+            "ID":   "VALVE3",
+            "Name": "Gate Valve V3 Pi",
             "Default Interval": 15,
-            "DBUser": "test",
-            "DBPasswd": "test",
-
-            "Name": "Lady Hanham Butts Farm Gate Valve V3",
-            "Class": Tools.deviceobjects.GateValve,
-            "ADCAddress":       0x48,
-
-            "Pins":  (17, 27, 19),
-            "posTolerance": 1,
-            "maxOpen": 90,
-            "minOpen": 1,
-            "refVoltage": 3.3,
+            "IPAddress": "192.168.0.13",
+            "HostingSockets": False,
+            "ControlLogicFunction": "valve_control_logic",
+            "DBUser": "valve3",
+            "DBPasswd": "river20",
+            "DBHost": "192.168.0.25",
+            "DBPort": 3306,
 
             #Here for compatibility reasons.
             "Probes": {},
-            "Devices": {},
+
+            #Devices to control.
+            "Devices":
+                {
+                    "VALVE3:V3":
+                        {
+                            "Type": "Gate Valve",
+                            "ID": "VALVE3:V3",
+                            "Name": "Gate Valve V3",
+                            "Class": Tools.deviceobjects.GateValve,
+                            "ADCAddress": 0x48,
+
+                            "Pins":  (17, 27, 19),
+                            "posTolerance": 1,
+                            "maxOpen": 90,
+                            "minOpen": 1,
+                            "refVoltage": 3.3,
+                        },
+                },
 
             #Config for server connection.
-            "ServerAddress": "192.168.0.2",
+            "ServerAddress": "192.168.0.25",
             "ServerPort": 30013,
-            "ServerName": "SumpPi",
-            "SocketName": "Lady Hanham Butts Gate Valve V3 Socket",
+            "ServerName": "NAS",
+            "SocketName": "Gate Valve V3 Socket",
             "SocketID": "SOCK13",
 
         },
-    "V4":
+
+    "VALVE4":
         {
-            "Type": "Gate Valve",
-            "ID":   "V4",
-            "HostingSockets": False,
-            "IPAddress": "192.168.0.14",
+            "ID":   "VALVE4",
+            "Name": "Gate Valve V4 Pi",
             "Default Interval": 15,
-            "DBUser": "valvev4",
+            "IPAddress": "192.168.0.14",
+            "HostingSockets": False,
+            "ControlLogicFunction": "valve_control_logic",
+            "DBUser": "valve4",
             "DBPasswd": "river20",
-
-            "Name": "Wendy Street Butts Farm Gate Valve V4",
-            "Class": Tools.deviceobjects.GateValve,
-            "ADCAddress":       0x48,
-
-            "Pins":  (17, 27, 19),
-            "posTolerance": 1,
-            "maxOpen": 90,
-            "minOpen": 1,
-            "refVoltage": 3.3,
+            "DBHost": "192.168.0.25",
+            "DBPort": 3306,
 
             #Here for compatibility reasons.
             "Probes": {},
-            "Devices": {},
+
+            #Devices to control.
+            "Devices":
+                {
+                    "VALVE4:V4":
+                        {
+                            "Type": "Gate Valve",
+                            "ID": "VALVE4:V4",
+                            "Name": "Gate Valve V4",
+                            "Class": Tools.deviceobjects.GateValve,
+                            "ADCAddress": 0x48,
+
+                            "Pins":  (17, 27, 19),
+                            "posTolerance": 1,
+                            "maxOpen": 90,
+                            "minOpen": 1,
+                            "refVoltage": 3.3,
+                        },
+                },
 
             #Config for server connection.
-            "ServerAddress": "192.168.0.2",
+            "ServerAddress": "192.168.0.25",
             "ServerPort": 30014,
-            "ServerName": "SumpPi",
+            "ServerName": "NAS",
             "SocketName": "Wendy Street Butts Gate Valve V4 Socket",
             "SocketID": "SOCK14",
 
         },
 
-#    "V6":
+#    "VALVE6":
 #        {
-#            "Type": "Gate Valve",
-#            "ID":   "V6",
-#            "HostingSockets": False,
-#            "IPAddress": "192.168.0.16",
+#            "ID":   "VALVE6",
+#            "Name": "Gate Valve V6 Pi",
 #            "Default Interval": 15,
-#            "DBUser": "valvev6",
+#            "IPAddress": "192.168.0.16",
+#            "HostingSockets": False,
+#            "ControlLogicFunction": "valve_control_logic",
+#            "DBUser": "valve6",
 #            "DBPasswd": "river20",
-#
-#            "Name": "Matrix Pump Gate Valve V6",
-#            "Class": Tools.deviceobjects.GateValve,
-#            "ADCAddress":       0x48,
-#
-#            "Pins":  (17, 27, 19),
-#            "posTolerance": 1,
-#            "maxOpen": 90,
-#            "minOpen": 1,
-#            "refVoltage": 3.3,
+#            "DBHost": "192.168.0.25",
+#            "DBPort": 3306,
 #
 #            #Here for compatibility reasons.
 #            "Probes": {},
-#            "Devices": {},
+#
+#            #Devices to control.
+#            "Devices":
+#                {
+#                    "VALVE6:V6":
+#                        {
+#                            "Type": "Gate Valve",
+#                            "ID": "VALVE6:V6",
+#                            "Name": "Gate Valve V6",
+#                            "Class": Tools.deviceobjects.GateValve,
+#                            "ADCAddress": 0x48,
+#
+#                            "Pins":  (17, 27, 19),
+#                            "posTolerance": 1,
+#                            "maxOpen": 90,
+#                            "minOpen": 1,
+#                            "refVoltage": 3.3,
+#                        },
+#                },
 #
 #            #Config for server connection.
-#            "ServerAddress": "192.168.0.2",
+#            "ServerAddress": "192.168.0.25",
 #            "ServerPort": 30016,
-#            "ServerName": "SumpPi",
+#            "ServerName": "NAS",
 #            "SocketName": "Matrix Pump Gate Valve V6 Socket",
 #            "SocketID": "SOCK16",
 #
 #        },
 
-#    "V7":
+#    "VALVE7":
 #        {
-#            "Type": "Gate Valve",
-#            "ID":   "V7",
-#            "HostingSockets": False,
-#            "IPAddress": "192.168.0.17",
+#            "ID":   "VALVE7",
+#            "Name": "Gate Valve V7 Pi",
 #            "Default Interval": 15,
-#            "DBUser": "valvev7",
+#            "IPAddress": "192.168.0.17",
+#            "HostingSockets": False,
+#            "ControlLogicFunction": "valve_control_logic",
+#            "DBUser": "valve7",
 #            "DBPasswd": "river20",
-#
-#            "Name": "Matrix Pump Gate Valve V7",
-#            "Class": Tools.deviceobjects.GateValve,
-#            "ADCAddress":       0x48,
-#
-#            "Pins":  (17, 27, 19),
-#            "posTolerance": 1,
-#            "maxOpen": 90,
-#            "minOpen": 1,
-#            "refVoltage": 3.3,
+#            "DBHost": "192.168.0.25",
+#            "DBPort": 3306,
 #
 #            #Here for compatibility reasons.
 #            "Probes": {},
-#            "Devices": {},
+#
+#            #Devices to control.
+#            "Devices":
+#                {
+#                    "VALVE7:V7":
+#                        {
+#                            "Type": "Gate Valve",
+#                            "ID": "VALVE7:V7",
+#                            "Name": "Gate Valve V7",
+#                            "Class": Tools.deviceobjects.GateValve,
+#                            "ADCAddress": 0x48,
+#
+#                            "Pins":  (17, 27, 19),
+#                            "posTolerance": 1,
+#                            "maxOpen": 90,
+#                            "minOpen": 1,
+#                            "refVoltage": 3.3,
+#                        },
+#                },
 #
 #            #Config for server connection.
-#            "ServerAddress": "192.168.0.2",
+#            "ServerAddress": "192.168.0.25",
 #            "ServerPort": 30017,
-#            "ServerName": "SumpPi",
+#            "ServerName": "NAS",
 #            "SocketName": "Matrix Pump Gate Valve V7 Socket",
 #            "SocketID": "SOCK17",
 #
 #        },
 
-#    "V8":
+#    "VALVE8":
 #        {
-#            "Type": "Gate Valve",
-#            "ID":   "V8",
-#            "HostingSockets": False,
-#            "IPAddress": "192.168.0.18",
+#            "ID":   "VALVE8",
+#            "Name": "Gate Valve V8 Pi",
 #            "Default Interval": 15,
-#            "DBUser": "valvev8",
+#            "IPAddress": "192.168.0.18",
+#            "HostingSockets": False,
+#            "ControlLogicFunction": "valve_control_logic",
+#            "DBUser": "valve8",
 #            "DBPasswd": "river20",
-#
-#            "Name": "Matrix Pump Gate Valve V8",
-#            "Class": Tools.deviceobjects.GateValve,
-#            "ADCAddress":       0x48,
-#
-#            "Pins":  (17, 27, 19),
-#            "posTolerance": 1,
-#            "maxOpen": 90,
-#            "minOpen": 1,
-#            "refVoltage": 3.3,
+#            "DBHost": "192.168.0.25",
+#            "DBPort": 3306,
 #
 #            #Here for compatibility reasons.
 #            "Probes": {},
-#            "Devices": {},
+#
+#            #Devices to control.
+#            "Devices":
+#                {
+#                    "VALVE8:V8":
+#                        {
+#                            "Type": "Gate Valve",
+#                            "ID": "VALVE8:V8",
+#                            "Name": "Gate Valve V8",
+#                            "Class": Tools.deviceobjects.GateValve,
+#                            "ADCAddress": 0x48,
+#
+#                            "Pins":  (17, 27, 19),
+#                            "posTolerance": 1,
+#                            "maxOpen": 90,
+#                            "minOpen": 1,
+#                            "refVoltage": 3.3,
+#                        },
+#                },
 #
 #            #Config for server connection.
-#            "ServerAddress": "192.168.0.2",
+#            "ServerAddress": "192.168.0.25",
 #            "ServerPort": 30018,
-#            "ServerName": "SumpPi",
-#            "SocketName": "Matrix Pump Gate Valve V4 Socket",
+#            "ServerName": "NAS",
+#            "SocketName": "Matrix Pump Gate Valve V8 Socket",
 #            "SocketID": "SOCK18",
 #
 #        },
 
-#    "V9":
+#    "VALVE9":
 #        {
-#            "Type": "Gate Valve",
-#            "ID":   "V9",
-#            "HostingSockets": False,
-#            "IPAddress": "192.168.0.19",
+#            "ID":   "VALVE9",
+#            "Name": "Gate Valve V9 Pi",
 #            "Default Interval": 15,
-#            "DBUser": "valvev9",
+#            "IPAddress": "192.168.0.19",
+#            "HostingSockets": False,
+#            "ControlLogicFunction": "valve_control_logic",
+#            "DBUser": "valve9",
 #            "DBPasswd": "river20",
-#
-#            "Name": "Matrix Pump Gate Valve V9",
-#            "Class": Tools.deviceobjects.GateValve,
-#            "ADCAddress":       0x48,
-#
-#            "Pins":  (17, 27, 19),
-#            "posTolerance": 1,
-#            "maxOpen": 90,
-#            "minOpen": 1,
-#            "refVoltage": 3.3,
+#            "DBHost": "192.168.0.25",
+#            "DBPort": 3306,
 #
 #            #Here for compatibility reasons.
 #            "Probes": {},
-#            "Devices": {},
+#
+#            #Devices to control.
+#            "Devices":
+#                {
+#                    "VALVE9:V9":
+#                        {
+#                            "Type": "Gate Valve",
+#                            "ID": "VALVE9:V9",
+#                            "Name": "Gate Valve V9",
+#                            "Class": Tools.deviceobjects.GateValve,
+#                            "ADCAddress": 0x48,
+#
+#                            "Pins":  (17, 27, 19),
+#                            "posTolerance": 1,
+#                            "maxOpen": 90,
+#                            "minOpen": 1,
+#                            "refVoltage": 3.3,
+#                        },
+#                },
 #
 #            #Config for server connection.
-#            "ServerAddress": "192.168.0.2",
+#            "ServerAddress": "192.168.0.25",
 #            "ServerPort": 30019,
-#            "ServerName": "SumpPi",
+#            "ServerName": "NAS",
 #            "SocketName": "Matrix Pump Gate Valve V9 Socket",
 #            "SocketID": "SOCK19",
 #
 #        },
 
-#    "V12":
+#    "VALVE12":
 #        {
-#            "Type": "Gate Valve",
-#            "ID":   "V12",
-#            "HostingSockets": False,
-#            "IPAddress": "192.168.0.22",
+#            "ID":   "VALVE8",
+#            "Name": "Gate Valve V12 Pi",
 #            "Default Interval": 15,
-#            "DBUser": "valvev12",
+#            "IPAddress": "192.168.0.22",
+#            "HostingSockets": False,
+#            "ControlLogicFunction": "valve_control_logic",
+#            "DBUser": "valve12",
 #            "DBPasswd": "river20",
-#
-#            "Name": "Stage Butts Gate Valve V12",
-#            "Class": Tools.deviceobjects.GateValve,
-#            "ADCAddress":       0x48,
-#
-#            "Pins":  (17, 27, 19),
-#            "posTolerance": 1,
-#            "maxOpen": 90,
-#            "minOpen": 1,
-#            "refVoltage": 3.3,
+#            "DBHost": "192.168.0.25",
+#            "DBPort": 3306,
 #
 #            #Here for compatibility reasons.
 #            "Probes": {},
-#            "Devices": {},
-
+#
+#            #Devices to control.
+#            "Devices":
+#                {
+#                    "VALVE12:V12":
+#                        {
+#                            "Type": "Gate Valve",
+#                            "ID": "VALVE12:V12",
+#                            "Name": "Gate Valve V12",
+#                            "Class": Tools.deviceobjects.GateValve,
+#                            "ADCAddress": 0x48,
+#
+#                            "Pins":  (17, 27, 19),
+#                            "posTolerance": 1,
+#                            "maxOpen": 90,
+#                            "minOpen": 1,
+#                            "refVoltage": 3.3,
+#                        },
+#                },
+#
 #            #Config for server connection.
-#            "ServerAddress": "192.168.0.2",
+#            "ServerAddress": "192.168.0.25",
 #            "ServerPort": 30022,
-#            "ServerName": "SumpPi",
+#            "ServerName": "NAS",
 #            "SocketName": "Stage Butts Gate Valve V12 Socket",
 #            "SocketID": "SOCK22",
 #
 #        },
+
 }

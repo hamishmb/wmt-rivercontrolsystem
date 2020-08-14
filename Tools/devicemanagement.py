@@ -118,7 +118,7 @@ class ManageHallEffectProbe(threading.Thread):
         """The constructor, set up some basic threading stuff"""
         #Initialise the thread.
         threading.Thread.__init__(self)
-        
+
         # Create the ADC object using the I2C bus
         self.ads = ADS.ADS1115(i2c, address=i2c_address)
 
@@ -221,7 +221,7 @@ class ManageHallEffectProbe(threading.Thread):
                 v_comp[min_column] = v_avg - v_min
 
             else:
-                #TODO: Will this ever happen? It seems impossible to me - Hamish.
+                #NB: Catchall for any corner cases where a minimum cannot be determined.
                 v_comp[min_column] = v_avg
 
         return (v_comp, min_column)
@@ -282,14 +282,14 @@ class ManageGateValve(threading.Thread):
 
     Args:
         valve (GateValve-Object).         The valve to manage.
+        i2c_address (int).                The i2c_address of the ADC. Most
+                                          easily expressed in hexadecimal.
 
     Usage:
-        mgmt_thread = ManageGateValve(<valve-object>)
+        mgmt_thread = ManageGateValve(<valve-object>, 0x48)
 
     """
 
-    #FIXME The documentation for this constructor is wrong -
-    #there are extra arguments that we need to explain in the docstring.
     def __init__(self, valve, i2c_address):
         """The constructor, set up some basic threading stuff."""
         #Store a reference to the GateValve object.
@@ -297,7 +297,7 @@ class ManageGateValve(threading.Thread):
 
         # Create the ADC object using the I2C bus
         self.ads = ADS.ADS1115(i2c, address=i2c_address)
-        
+
         self._exit = False
 
         #Set the valve closed initially.
@@ -412,7 +412,6 @@ class ManageGateValve(threading.Thread):
                 self.low_limit = self.valve.min_open
                 #Add 1 to make sure the valve can close, but doesn't strain the
                 #motor if alignment isn't perfect.
-                #TODO Tolerance increased to 2%, see if hunting stops.
                 self.high_limit = self.valve.min_open + 2
 
             else:
@@ -470,6 +469,13 @@ class ManageGateValve(threading.Thread):
         """
 
         return self.actual_position
+
+    def get_requested_position(self):
+        """
+        Returns the most recent requested position for the gate valve.
+        """
+
+        return self.percentage
 
     #-------------------- SETTER METHODS --------------------
     def set_position(self, percentage):

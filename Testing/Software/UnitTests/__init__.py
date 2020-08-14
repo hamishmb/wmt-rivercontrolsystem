@@ -17,9 +17,3 @@
 """
 This is the Tests package.
 """
-
-#TODO hold off on these for a while, might be able to redesign these executables a bit.
-#Executables.
-#main_tests
-#universal_monitor_tests
-#gate_valve_tests

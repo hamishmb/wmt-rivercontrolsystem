@@ -72,5 +72,5 @@ class ADS:
     def ADS1115(cls, i2c, address=None):
         pass
 
-def AnalogIn(ads, pin):
+def AnalogIn(ads2, pin):
     return ADS

@@ -15,9 +15,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
+import os
 
 #Import other modules.
-sys.path.append('../..') #Need to be able to import the Tools module from here.
+sys.path.insert(0, os.path.abspath('../../../')) #Need to be able to import the Tools module from here.
 
 #Variables for test methods.
 voltages_position = 0
@@ -62,6 +63,9 @@ class GPIO:
 
 #Define two dummy ADC classes for testing.
 class ADS:
+    def ADS1115(i2c, address):
+        pass
+
     #Constants.
     P0 = 0
     P1 = 0

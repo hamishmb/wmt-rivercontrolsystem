@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Sockets Class (server) test for the River System Control and Monitoring Software
+# Sockets Class (client) test for the River System Control and Monitoring Software
 # This file is part of the River System Control and Monitoring Software.
 # Copyright (C) 2017-2020 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
@@ -21,8 +21,8 @@ import sys
 import os
 import getopt
 
-sys.path.insert(0, os.path.abspath('../../'))
-sys.path.insert(0, os.path.abspath('../'))
+sys.path.insert(0, os.path.abspath('../../../../'))
+sys.path.insert(0, os.path.abspath('../../../'))
 
 TEST_SITES = {
     #--------------- DUMMY SITE IDs for TESTING ---------------
@@ -85,12 +85,12 @@ def usage():
     >>> usage()
     """
 
-    print("\nUsage: test_socketsclass_server.py [OPTION]\n\n")
+    print("\nUsage: test_socketsclass_client.py [OPTION]\n\n")
     print("Options:\n")
     print("       -h, --help:                   Show this help message")
-    print("       -a, --address:                The IP address of the client")
+    print("       -a, --address:                The IP address to connect to")
     print("       -p, --portnumber:             The port number to use")
-    print("test_socketsclass_server.py is released under the GNU GPL Version 3")
+    print("test_socketsclass_client.py is released under the GNU GPL Version 3")
     print("Copyright (C) Wimborne Model Town 2017-2020")
 
 def run_standalone():
@@ -140,7 +140,7 @@ def run_standalone():
     print("Testing. Please stand by...")
 
     #Create the sockets object.
-    socket = socket_tools.Sockets("Socket", "ST1")
+    socket = socket_tools.Sockets("Plug", "ST0")
 
     #Set the object up.
     socket.set_portnumber(port)
@@ -153,10 +153,7 @@ def run_standalone():
 
     try:
         while True:
-            while socket.has_data():
-                print(socket.read())
-                socket.pop()
-
+            socket.write("Hello world!")
             time.sleep(1)
 
     except KeyboardInterrupt:
