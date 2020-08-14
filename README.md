@@ -67,7 +67,7 @@ Unit Tests
 ==========
 
 A number of unit tests have been written for this software. To run them,
-change into the source directory and run:
+change into the "Testing/Software" directory and run:
 
     python3 ./unittets.py
 

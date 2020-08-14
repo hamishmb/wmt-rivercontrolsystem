@@ -25,9 +25,9 @@ This is the part of the software framework that contains classes to help manage 
 These take the form of management threads to separate coordination of each of these
 more complicated devices, from the classes that represent the devices themselves.
 
-.. module:: deviceobjects.py
+.. module:: devicemanagement.py
     :platform: Linux
-    :synopsis: The part of the framework that contains the control/probe/sensor classes.
+    :synopsis: The part of the framework that contains the management code for device classes.
 
 .. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk> and Terry Coles <WMT@hadrian-way.co.uk
 
@@ -102,7 +102,7 @@ class ManageHallEffectProbe(threading.Thread):
     This class is used to repeatedly poll the level of the hall effect probe, and
     make these levels available to the monitor thread. This is done because we can
     no longer use the hardware interrupts as with the old hall effect probe - this
-    one uses and ADC.
+    one uses an ADC.
 
     Documentation for the constructor for objects of type ManageHallEffectProbe:
 
@@ -282,12 +282,10 @@ class ManageGateValve(threading.Thread):
 
     Args:
         valve (GateValve-Object).         The valve to manage.
-        i2c_address (int).                The i2c_address of the ADC. Most
-                                          easily expressed in hexadecimal.
+        i2c_address (int).                The i2c_address of the ADC. Most easily expressed in hexadecimal.
 
     Usage:
-        mgmt_thread = ManageGateValve(<valve-object>, 0x48)
-
+        >>> mgmt_thread = ManageGateValve(<valve-object>, 0x48)
     """
 
     def __init__(self, valve, i2c_address):

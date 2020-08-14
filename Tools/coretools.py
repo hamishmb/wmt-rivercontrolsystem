@@ -19,10 +19,9 @@
 #Reason (logging-not-lazy): Harder to understand the logging statements that way.
 
 """
-This is the coretools module, which contains tools used by both
-the main control software, and the universal monitor. It's kind
-superflous at the moment, but I will probably move some more
-functions in here to reduce code duplication.
+This is the coretools module, which contains tools used in various other places
+in the software framework. Currently this also contains the control logic, but
+this is likely to move to some new files once we have the new algorithms.
 
 .. module:: coretools.py
     :platform: Linux
@@ -269,7 +268,7 @@ class Reading:
         """
         This method is used to compare objects of type Reading.
 
-        It simple does the same as the __eq__ method and then uses a
+        It simply does the same as the __eq__ method and then uses a
         boolean NOT on it.
 
         Usage:
@@ -440,6 +439,11 @@ class DatabaseConnection(threading.Thread):
     The methods that just send data to the database run asynchronously - the thread
     requesting the operation is not made to wait. Methods that return data will cause
     the calling thread to wait, though.
+
+    Constructor documentation:
+
+    Args:
+        site_id (str).          The site ID of this pi.
     """
 
     def __init__(self, site_id):
@@ -1381,7 +1385,7 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
     This control logic runs on the NAS box, and is responsible for:
 
     - Setting and restoring the system tick.
-    - Freeing locks that have expired (locks can only be held for a maximum of TBD minutes). NYI.
+    - Freeing locks that have expired (locks can only be held for a maximum of TBD minutes). Not yet implemented.
     - Monitoring the temperature of the NAS box and its drives.
 
     """

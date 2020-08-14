@@ -33,9 +33,11 @@ you want to send to the queue, and then SocketsHandlerThread
 sends the data down the socket ASAP, but if it couldn't send it,
 it will stay in the queue until it is successfully sent.
 
+This now also includes the ability to forward messages, as documented above.
+
 .. module:: sockettools.py
     :platform: Linux
-    :synopsis: The part of the framework that contains the sockets/network communications classes.
+    :synopsis: The part of the framework that contains the sockets classes.
 
 .. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
 
@@ -141,8 +143,6 @@ class Sockets:
 
         Args:
             port_number (int):      The port number for the socket.
-
-
 
         .. warning::
                 Be aware that if this number is < than 1024, you need root
@@ -817,6 +817,16 @@ class Sockets:
             return -1
 
     def _process_obj(self, obj):
+        """
+        Used to "un-serialize" data received from the peer.
+
+        Either pushes message to incoming or forwarding queue depending on whether
+        the message is for this pi or not.
+
+        Args:
+            obj (str).          Serialised object.
+        """
+
         #Push the unpickled objects to the message queue.
         #We need to un-serialize the data first.
         try:

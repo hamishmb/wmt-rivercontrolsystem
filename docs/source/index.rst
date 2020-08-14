@@ -11,15 +11,18 @@ Contents:
 .. toctree::
     :maxdepth: 2
 
+    overview
     main_control_software
     config
     tools
     coretools
+    loggingtools
+    logiccoretools
     monitortools
     deviceobjects
     devicemanagement
     sockettools
-
+    testingtools
 
 
 Indices and tables

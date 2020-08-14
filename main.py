@@ -20,26 +20,12 @@
 
 """
 This is the main part of the control software, and it currently manages
-balancing water between the butts and the sump using a magnetic probe and
-a solid state relay to control the butts pump. This software runs on sumppi.
-It communicates with buttspi over the network to gather readings.
+balancing water between the wendy butts and the sump. Further functionality
+will be added shortly with more control logic functions.
 
-.. note::
-      This program currently has LIMITED FUNCTIONALITY.
-      It is a pre-production version that is being used
-      to set up a test system that uses 3 RPis, one at
-      the sump, with a hall effect probe and 2 SSRs connected
-      and the other Pis are installed at the butts. One has
-      a float switch and a hall effect probe. The other is used
-      to control a gate valve for managing water flow coming
-      back from the water butts.
-
-      The sump pi will be using this program.
-      Sump pi uses the first SSR to control the butts pump, and
-      the second one is used to enable/disable the circulation
-      pump. It will communicate with the other pis over sockets,
-      and the other pis will be running universal_standalone_monitor.py,
-      and gate_valve.py.
+This software runs on all the pis, and the NAS box, and the configuration in
+config.py determines (for the most part) what actions are taken on each different
+device.
 
 .. module:: main.py
     :platform: Linux
@@ -92,7 +78,7 @@ def handle_cmdline_options():
     This function is used to handle the commandline options passed
     to main.py.
 
-    Valid commandline options to universal_standalone_monitor.py:
+    Valid commandline options to main.py:
         -h, --help                          Calls the usage() function to display help information
                                             to the user.
         -i <string>, --id=<string>          Specifies the system ID eg "G4". If settings for this
@@ -100,7 +86,8 @@ def handle_cmdline_options():
                                             thrown. Mandatory.
         -t, --testing                       Enable testing mode. Disables certain checks on start-up,
                                             and hardware access via GPIO pins.
-                                            Useful when running the software in test deployments.
+                                            Useful when running the software in test deployments
+                                            or in VMs.
         -d, --debug                         Enable debug mode.
         -q, --quiet                         Show only warnings, errors, and critical errors.
 
@@ -175,12 +162,11 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     """
     This is the main part of the program.
     It imports everything required from the Tools package,
-    and sets up the server socket, calls the function to
-    greet the user, sets up the sensor objects, and the
-    monitors.
+    and sets up the sockets, sets up the sensor objects, and the
+    monitors, and connects to the database.
 
     After that, it enters a monitor loop and repeatedly checks for new
-    sensor data, and then calls the coretools.sumppi_control_logic() function
+    sensor data, and then calls the control logic function
     to make decisions about what to do based on this data.
 
     Raises:
@@ -857,7 +843,10 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             subprocess.run(["reboot"], check=False)
 
 def init_logging():
-    #NB: Can't use getLogger() any more because we want a custom handler.
+    """
+    Used as part of the logging initialisation process during startup.
+    """
+
     logger = logging.getLogger('River System Control Software')
 
     #Remove the console handler.

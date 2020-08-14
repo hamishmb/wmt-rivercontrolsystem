@@ -25,7 +25,7 @@ coretools.DatabaseConnection class.
 
 .. module:: logiccoretools.py
     :platform: Linux
-    :synopsis: Contains tools used by all parts of the software.
+    :synopsis: Code to interface between control logic and DatabaseConnection class.
 
 .. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
 """

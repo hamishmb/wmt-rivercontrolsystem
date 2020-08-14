@@ -13,3 +13,9 @@ If site A is connected to site B, which is connected to site C, A can talk to C 
 >>> socket.send("*C* Hello, world")
 
 When B receives this message, it will forward it on to C. Note that there is no error returned if forwarding failed or if the message couldn't be delivered.
+
+Module
+======
+
+.. automodule:: rivercontrolsystem.Tools.sockettools
+    :members:

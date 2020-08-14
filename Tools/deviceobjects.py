@@ -21,15 +21,15 @@
 #TODO: Throw errors if setup hasn't been completed properly.
 
 """
-This is the part of the software framework that contains the control, sensor and
-probe classes. These represent the control devices and probes/sensors that we're
+This is the part of the software framework that contains the device, sensor and
+probe classes. These represent the devices and probes/sensors that we're
 interfacing with. These classes provide a common API to get readings (the get_reading()
 method), and also draw the implementation details for how each probe is managed away
 from the rest of the program.
 
 .. module:: deviceobjects.py
     :platform: Linux
-    :synopsis: The part of the framework that contains the control/probe/sensor classes.
+    :synopsis: The part of the framework that contains the device/probe/sensor classes.
 
 .. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk> and Terry Coles <WMT@hadrian-way.co.uk
 
@@ -194,7 +194,7 @@ class BaseDeviceClass:
         This method is used to specify the pins this probe will use. This can be a
         single pin, or multiple pins (eg in the case of a magnetic probe). Can also
         be used to specify one or more output pins. Cannot currently specify both
-        input and output pins. Uses RPi BCM pins.
+        input and output pins. Uses RPi BCM pin numbers.
 
         .. note::
             If you are specifying multiple input pins, eg for a Hall Effect Probe, then
@@ -465,6 +465,12 @@ class FloatSwitch(BaseDeviceClass):
         This is because they are always pressed down unless the butts are full.
         Hence, if the **hardware** is active low, the **software representation**
         of it must be active high.
+
+    .. note::
+        The new float switches that do both high and low are essentially 2-in-1.
+        As such, initialise 2 of these classes with the correct pins to interface
+        with the new float switches.
+
     """
 
     # ---------- CONSTRUCTORS ----------
@@ -729,9 +735,6 @@ class HallEffectProbe(BaseDeviceClass):
             >>> <Device-Object>.set_limits(<list<list(int)>>)
 
         """
-
-        #NB: Removed the []s around this too - we don't want a list with a tuple
-        #inside!
 
         #Check the depths are valid.
         #Basic checks.
@@ -1074,7 +1077,7 @@ class GateValve(BaseDeviceClass):
         0% - fully closed.
         100% - fully open.
 
-        .. note::universal_monitor
+        .. note::
 
             Currently no fault checking is performed, so the string part of the return value
             is always "OK".

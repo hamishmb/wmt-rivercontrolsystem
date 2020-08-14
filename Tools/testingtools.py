@@ -15,8 +15,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-This module defines a couple of testing classes that simulate hardware, in order for the
-control software to be run more easily in test deployments without real hardware.
+This module defines some testing classes and functions that simulate hardware, in order for the
+control software to be run more easily in test deployments without real hardware, such as
+in virtual machines.
 
 The classes in this module override RPi.GPIO and parts of the adafruit_ads1x15.ads1115 module.
 """

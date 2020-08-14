@@ -21,7 +21,7 @@
 """
 This is the loggingtools module, which contains tools used by the logger.
 Currently, this a just a custom handler for the logger that will rotate
-the log file every day, and re-create it with a warning if it disappears.
+the log file every day, and re-create it if it disappears.
 
 .. module:: loggingtools.py
     :platform: Linux

@@ -72,10 +72,6 @@ class BaseMonitorClass(threading.Thread):
 
         probe_id (str):             The ID of the probe we're looking for.
 
-    Invokes:
-        threading.Thread.__init__(self), to initialise
-        the subclass deriving from this as a thread.
-
     Usage:
         >>> monitor = BaseMonitorClass(<system_id>, <probe_id>)
 
@@ -605,6 +601,10 @@ class SocketsMonitor(BaseMonitorClass):
     This is the universal sockets monitor thread that is used to monitor all
     probe types over a socket. It inherits from BaseMonitorClass. This is
     also quite a simple class.
+
+    .. note::
+        This class may eventually be removed  as it is no longer used, seeing as
+        we now have the database in the NAS box for storing readings.
 
     Documentation for constructor for objects of type SocketsMonitor:
 

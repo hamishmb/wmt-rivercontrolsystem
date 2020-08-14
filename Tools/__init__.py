@@ -23,19 +23,28 @@ modules in here:
 coretools.py
 ============
 
-This module contins classes and functions used at both the master pi end,
-and the remote pis. More functions will likely be added here soon to
-reduce code duplication.
-
-Contains Functions:
-
-- greet_user()
-- get_and_handle_new_reading()
-- do_control_logic()
+This module contins classes and functions used in varies parts of the rest of the
+framework. Currently this includes control logic, but this is likely to move soon.
 
 Contains Classes:
 
+- DatabaseConnection - to communicate with the database on the NAS box.
 - Reading - to represent readings from all probes.
+
+loggingtools.py
+===============
+
+This module contains a custom handler for Python 3's logging module. The custom
+handler rotates log files every night at midnight and re-creates log files if they
+are moved or deleted.
+
+logiccoretools.py
+=================
+
+This module contains code to interface between the control logic and the DatabaseConnection
+class in coretools. This is to provide a stable API in case the DatabaseConnection class
+needs to be modified at a later date. Currently, all the functions in here do is call
+the corresponding method in the DatabaseConnection class with the same name.
 
 monitortools.py
 ===============
@@ -44,7 +53,7 @@ This module contains the monitoring tools used in the rest of the
 program. These take the form of classes that have methods executed
 as threads. This approach was decided because it stops the main
 program thread from blocking when taking readings, and allows us
-to take readings from many probes at once without any resulting
+to take readings from many probes at once without any noticeable resulting
 delays/complexity. SocketsMonitor allows simple monitoring of probes
 over a network.
 
@@ -52,7 +61,7 @@ Contains Classes:
 
 - BaseMonitorClass
 - Monitor
-- SocketsMonitor
+- SocketsMonitor (not currently in use by framework)
 
 deviceobjects.py
 ================
@@ -76,7 +85,6 @@ Contains Classes:
 - ResistanceProbe
 - HallEffectDevice (for water-wheels)
 - HallEffectProbe (magnetic levels probe)
-- HallEffectProbe2 (new magnetic levels probe)
 
 sockettools.py
 ==============
@@ -97,10 +105,10 @@ Contains Classes:
 - Sockets
 - SocketHandlerThread
 
-.. module:: main.py
-    :platform: Linux
-    :synopsis: The main part of the control software.
+testingtools.py
+===============
 
-.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
-
+This module defines some testing classes and functions that simulate hardware, in order for the
+control software to be run more easily in test deployments without real hardware, such as
+in virtual machines.
 """

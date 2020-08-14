@@ -106,19 +106,16 @@ Socket Numbers where applicable:
 
 Notes:
 
-1.  Remote probes are monitored using the configuration too - the
-master pi (sumppi) just reads the configuration for the other pis
-to set this up. No extra configuration is needed.
+1.  Remote probes are monitored using the configuration too - the control logic
+for each pi uses the database to query readings for each probe it is interested in.
 
-2.  Any section of the configuration can be omitted if, for example,
+2.  Any section of the configuration can be empty, for example,
 there are no devices to control at a particular site (like the G4 site).
 This is accepted and will "just work".
 
 3.  The code to actually make decisions and decide what to do with
-the devices to control is not here - it's in coretools.py.  At the
-moment, only sumppi controls anything, so the method is called
-do_control_logic(), but later on there will be methods for each site,
-and they will be mapped to each site here in this config file.
+the devices to control is not here - it's in coretools.py (and may
+soon be moved elsewhere). These are the control logic functions.
 
 4.  The Webserver Pi is not a part of the River System, but shares an
 Ethernet network.  It has therefore been allocated an IP Address that
