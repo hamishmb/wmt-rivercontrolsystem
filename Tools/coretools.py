@@ -1982,6 +1982,11 @@ def setup_devices(system_id, dictionary="Probes"):
             #startup, if state is not initialised.
             device.disable()
 
+            #If this is sump pi and the circulation pump, turn it back on.
+            if system_id == "SUMP" and device_id == "SUMP:P1":
+                print("Enabling circulation pump to avoid overflow while waiting for NAS box...")
+                device.enable()
+
         elif _type == "Gate Valve":
             pins = device_settings["Pins"]
             pos_tolerance = device_settings["posTolerance"]
