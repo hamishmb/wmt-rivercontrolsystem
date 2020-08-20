@@ -19,6 +19,7 @@ Contents:
     deviceobjects
     devicemanagement
     sockettools
+    statetools
 
 
 
