@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # River System Control and Monitoring Software
-# Copyright (C) 2017-2019 Wimborne Model Town
+# Copyright (C) 2017-2020 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
 # at your option, any later version.
@@ -20,26 +20,12 @@
 
 """
 This is the main part of the control software, and it currently manages
-balancing water between the butts and the sump using a magnetic probe and
-a solid state relay to control the butts pump. This software runs on sumppi.
-It communicates with buttspi over the network to gather readings.
+balancing water between the wendy butts and the sump. Further functionality
+will be added shortly with more control logic functions.
 
-.. note::
-      This program currently has LIMITED FUNCTIONALITY.
-      It is a pre-production version that is being used
-      to set up a test system that uses 3 RPis, one at
-      the sump, with a hall effect probe and 2 SSRs connected
-      and the other Pis are installed at the butts. One has
-      a float switch and a hall effect probe. The other is used
-      to control a gate valve for managing water flow coming
-      back from the water butts.
-
-      The sump pi will be using this program.
-      Sump pi uses the first SSR to control the butts pump, and
-      the second one is used to enable/disable the circulation
-      pump. It will communicate with the other pis over sockets,
-      and the other pis will be running universal_standalone_monitor.py,
-      and gate_valve.py.
+This software runs on all the pis, and the NAS box, and the configuration in
+config.py determines (for the most part) what actions are taken on each different
+device.
 
 .. module:: main.py
     :platform: Linux
@@ -50,6 +36,8 @@ It communicates with buttspi over the network to gather readings.
 """
 
 import sys
+import os
+import subprocess
 import getopt
 import time
 import datetime
@@ -58,6 +46,7 @@ import traceback
 
 import config
 from Tools import loggingtools
+from Tools import logiccoretools
 
 def usage():
     """
@@ -82,14 +71,14 @@ def usage():
     print("       -q, --quiet                   Log only warnings, errors, and critical errors")
     print("main.py is released under the GNU GPL Version 3")
     print("Version: "+config.VERSION+" ("+config.RELEASEDATE+")")
-    print("Copyright (C) Wimborne Model Town 2017-2019")
+    print("Copyright (C) Wimborne Model Town 2017-2020")
 
 def handle_cmdline_options():
     """
     This function is used to handle the commandline options passed
     to main.py.
 
-    Valid commandline options to universal_standalone_monitor.py:
+    Valid commandline options to main.py:
         -h, --help                          Calls the usage() function to display help information
                                             to the user.
         -i <string>, --id=<string>          Specifies the system ID eg "G4". If settings for this
@@ -97,7 +86,8 @@ def handle_cmdline_options():
                                             thrown. Mandatory.
         -t, --testing                       Enable testing mode. Disables certain checks on start-up,
                                             and hardware access via GPIO pins.
-                                            Useful when running the software in test deployments.
+                                            Useful when running the software in test deployments
+                                            or in VMs.
         -d, --debug                         Enable debug mode.
         -q, --quiet                         Show only warnings, errors, and critical errors.
 
@@ -141,6 +131,7 @@ def handle_cmdline_options():
             logger.critical("Running in testing mode, hardware access simulated/disabled...")
 
         elif opt in ["-d", "--debug"]:
+            config.DEBUG = True
             logger.setLevel(logging.DEBUG)
             handler.setLevel(logging.DEBUG)
 
@@ -171,12 +162,11 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     """
     This is the main part of the program.
     It imports everything required from the Tools package,
-    and sets up the server socket, calls the function to
-    greet the user, sets up the sensor objects, and the
-    monitors.
+    and sets up the sockets, sets up the sensor objects, and the
+    monitors, and connects to the database.
 
     After that, it enters a monitor loop and repeatedly checks for new
-    sensor data, and then calls the coretools.sumppi_control_logic() function
+    sensor data, and then calls the control logic function
     to make decisions about what to do based on this data.
 
     Raises:
@@ -198,9 +188,23 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     #Handle cmdline options.
     system_id = handle_cmdline_options()
+    config.SYSTEM_ID = system_id
 
     #Reconfigure logging for module imported before we set the logger up.
     config.reconfigure_logging()
+
+    #The NAS box needs more time to stabalise before we continue.
+    #Wait another minute.
+    if system_id == "NAS":
+        print("Waiting 1 minute for NAS box to finish booting up (CTRL-C to skip)...")
+        logger.info("Waiting 1 minute for NAS box to finish booting up (CTRL-C to skip)...")
+
+        try:
+            time.sleep(60)
+
+        except KeyboardInterrupt:
+            print("Skipping as requested by user...")
+            logger.info("Skipping as requested by user...")
 
     #Do framework imports.
     from Tools import coretools as core_tools
@@ -212,8 +216,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         import RPi.GPIO as GPIO
 
     except ImportError:
-        #Only allow import errors if we are testing.
-        if not config.TESTING:
+        #Only allow import errors if we are testing or on the NAS box.
+        if not config.TESTING and "NAS" not in sys.argv:
             logger.critical("Unable to import RPi.GPIO! Did you mean to use testing mode?")
             logger.critical("Exiting...")
             logging.shutdown()
@@ -221,7 +225,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             sys.exit("Unable to import RPi.GPIO! Did you mean to use testing mode? Exiting...")
 
         else:
-            #Import dummy class.
+            #Import dummy GPIO class to fake hardware access.
             from Tools.testingtools import GPIO
 
     #Welcome message.
@@ -232,9 +236,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     print("System Time: ", str(datetime.datetime.now()))
     print("System startup sequence initiated.")
 
-    #If this isn't sumppi, start synchronising time with sumppi.
-    if system_id != "SUMP":
-        core_tools.SyncTime()
+    #If this isn't the NAS box, start synchronising time with the NAS box.
+    if system_id != "NAS":
+        core_tools.SyncTime(system_id)
 
     #Start monitoring system load.
     core_tools.MonitorLoad()
@@ -245,7 +249,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     if config.SITE_SETTINGS[system_id]["HostingSockets"]:
         #We are a server, and we are hosting sockets.
-        #Use information from the other sites to figure out what sockets to create.
+        #Use info ation from the other sites to figure out what sockets to create.
         for site in config.SITE_SETTINGS:
             site_settings = config.SITE_SETTINGS[site]
 
@@ -253,8 +257,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             if "SocketName" not in site_settings:
                 continue
 
-            socket = socket_tools.Sockets("Socket", site_settings["SocketName"])
+            socket = socket_tools.Sockets("Socket", system_id, site_settings["SocketName"])
             socket.set_portnumber(site_settings["ServerPort"])
+            socket.set_server_address(site_settings["IPAddress"])
             sockets[site_settings["SocketID"]] = socket
 
             socket.start_handler()
@@ -264,86 +269,100 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         #Connect to the server.
         logger.info("Initialising connection to server, please wait...")
         print("Initialising connection to server, please wait...")
-        socket = socket_tools.Sockets("Plug", config.SITE_SETTINGS[system_id]["ServerName"])
+        socket = socket_tools.Sockets("Plug", system_id, config.SITE_SETTINGS[system_id]["ServerName"])
         socket.set_portnumber(config.SITE_SETTINGS[system_id]["ServerPort"])
         socket.set_server_address(config.SITE_SETTINGS[system_id]["ServerAddress"])
         socket.start_handler()
+
+        sockets[config.SITE_SETTINGS[system_id]["SocketID"]] = socket
 
         logger.info("Will connect to server as soon as it becomes available.")
         print("Will connect to server as soon as it becomes available.")
 
     logger.debug("Done!")
 
-    if system_id[0] == "V":
-        #This is a gate valve - setup is different.
-        logger.info("Setting up the gate valve...")
-        valve = core_tools.setup_valve(system_id)
+    #Create the probe(s).
+    probes = core_tools.setup_devices(system_id)
 
-        probes = []
-
-    else:
-        #Create the probe(s).
-        probes = core_tools.setup_devices(system_id)
-
-        #Create the device(s).
-        devices = core_tools.setup_devices(system_id, dictionary="Devices")
+    #Create the device(s).
+    devices = core_tools.setup_devices(system_id, dictionary="Devices")
 
     #Default reading interval for all probes.
     reading_interval = config.SITE_SETTINGS[system_id]["Default Interval"]
 
+    logger.info("Connecting to database...")
+    print("Connecting to database...")
+
+    core_tools.DatabaseConnection(system_id)
+    config.DBCONNECTION.start_thread()
+
+    if system_id != "NAS":
+        #Request the latest system tick value and wait 180 seconds for it to come in.
+        logger.info("Waiting up to 180 seconds for the system tick...")
+        print("Waiting up to 180 seconds for the system tick...")
+
+        count = 0
+
+        while config.TICK == 0 and count < 18:
+            socket.write("Tick?")
+
+            if socket.has_data():
+                data = socket.read()
+
+                if "Tick:" in data:
+                    #Store tick sent from the NAS box.
+                    config.TICK = int(data.split(" ")[1])
+
+                    print("New tick: "+data.split(" ")[1])
+                    logger.info("New tick: "+data.split(" ")[1])
+
+                socket.pop()
+
+            time.sleep(10)
+            count += 1
+
+        if config.TICK != 0:
+            logger.info("Received tick")
+            print("Received tick")
+
+        else:
+            logger.error("Could not get tick within 180 seconds!")
+            print("Could not get tick within 180 seconds!")
+
+    time.sleep(5)
+
+    #Do this after system tick to allow database extra time to connect on first boot.
+    if config.DBCONNECTION.is_ready():
+        try:
+            config.DBCONNECTION.initialise_db()
+
+        except RuntimeError:
+            print("Error: Couldn't initialise database!")
+            logger.error("Error: Couldn't initialise database!")
+
     logger.info("Starting to take readings...")
     print("Starting to take readings. Please stand by...")
 
-    logger.info("Waiting for peer(s) to connect...")
-    print("Waiting for peer(s) to connect...")
-
     monitors = []
 
-    #Start monitor threads for the sockets.
-    if config.SITE_SETTINGS[system_id]["HostingSockets"]:
-        for site in config.SITE_SETTINGS:
-            site_settings = config.SITE_SETTINGS[site]
-
-            #If no socket is defined for this site, skip it.
-            if "SocketName" not in site_settings:
-                continue
-
-            #If there are probes to control, add monitors for all of them.
-            if "Probes" in site_settings:
-                for probe_name in site_settings["Probes"]:
-                    monitors.append(monitor_tools.SocketsMonitor(sockets[site_settings["SocketID"]],
-                                                                 probe_name.split(":")[0],
-                                                                 probe_name.split(":")[1]))
-
-            elif site_settings["Type"] == "Gate Valve":
-                monitors.append(monitor_tools.SocketsMonitor(sockets[site_settings["SocketID"]],
-                                                             site, site))
-
-    #And for our SUMP probe.
+    #Start monitor threads for our local probes.
     for probe in probes:
         monitors.append(monitor_tools.Monitor(probe, reading_interval, system_id))
 
     #Add monitor for the gate valve if needed.
     if system_id[0] == "V":
-        monitors.append(monitor_tools.Monitor(valve, reading_interval, system_id))
-
-    #Wait until the first readings have come in so we are synchronised.
-    #TODO: We probably want to remove this - this was only ever meant to be temporary.
-    #NB: Will now wait for the client connections.
-    for each_monitor in monitors:
-        while not each_monitor.has_data():
-            time.sleep(0.5)
-
-    #Set to sensible defaults to avoid errors.
-    old_reading_interval = 0
+        for device in devices:
+            monitors.append(monitor_tools.Monitor(device, reading_interval, system_id))
 
     #Make a readings dictionary for temporary storage for the control logic function.
     #TODO Set up with default readings - need discussion first for some of these.
-    #NB: datetime.datetime.now() is actually the wrong function to call, fix this.
     readings = {}
 
     readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "0mm",
                                              "OK")
+
+    readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "0mm",
+                                           "OK")
 
     readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "True",
                                             "OK")
@@ -359,29 +378,38 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     
     #---------------------------------------------------------------------------
 
+    #Make a reading intervals dictionary for temporary storage of the reading intervals.
+    #Assume 15 seconds by default.
+    reading_intervals = {}
+
+    for _siteid in config.SITE_SETTINGS:
+        reading_intervals[_siteid] = 15
+
     #Keep tabs on its progress so we can write new readings to the file.
     try:
-        at_least_one_monitor_running = True
-
-        while at_least_one_monitor_running:
-            #Check for new readings from all monitors.
+        while not config.EXITING:
+            #Check for new readings from all monitors and the database.
             for monitor in monitors:
                 #Skip over any monitors that have stopped.
-                #TODO: This should never happen, moan in log file?
                 if not monitor.is_running():
+                    logger.error("Monitor for "+monitor.get_system_id()+":"+monitor.get_probe_id()
+                                 + " is not running!")
+
+                    print("Monitor for "+monitor.get_system_id()+":"+monitor.get_probe_id()
+                          + " is not running!")
+
+                    logiccoretools.log_event("Monitor for "+monitor.get_system_id()+":"
+                                             + monitor.get_probe_id()+" is not running!",
+                                             severity="ERROR")
+
+                    #TODO add to pi status?
+
                     continue
 
                 #Check for new readings.
                 #NOTE: Later on, use the readings returned from this
                 #for state history generation etc.
-                if "SocketName" in config.SITE_SETTINGS[system_id]:
-                    reading = core_tools.get_and_handle_new_reading(monitor, "test",
-                                                                    config.SITE_SETTINGS
-                                                                    [system_id]["ServerAddress"],
-                                                                    socket)
-
-                else:
-                    reading = core_tools.get_and_handle_new_reading(monitor, "test")
+                reading = core_tools.get_and_handle_new_reading(monitor, "test")
 
                 #Ignore empty readings.
                 if reading is None:
@@ -390,6 +418,10 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                 #Keep all the readings we get, for the control logic.
                 readings[reading.get_id()] = reading
 
+            #Initialise the database if possible.
+            if not config.DBCONNECTION.initialised() and config.DBCONNECTION.is_ready():
+                config.DBCONNECTION.initialise_db()
+
             #Logic.
             if "ControlLogicFunction" in config.SITE_SETTINGS[system_id]:
                 function = getattr(core_tools,
@@ -397,61 +429,222 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                 reading_interval = function(readings, devices, monitors, sockets, reading_interval)
 
-            #Sumppi sets the reading interval, so it doesn't need to check if it is changing.
-            #TODO: Do we still want this?
-            if system_id == "SUMP":
-                #Wait until it's time to check for another reading.
-                time.sleep(reading_interval)
+            #I know we could use a long time.sleep(),
+            #but we need to be able to respond to messages from the sockets.
+            #
+            #What would be really useful here is if the sockets library
+            #provided a function that just sleeps until either the socket
+            #has data or a specified timeout expires, and then returns
+            #true/false. Does such a function exist?
+            #
+            #TODO refactor into a separate function.
+            asked_for_tick = False
+            count = 0
+
+            while count < reading_interval:
+                #This way, if our reading interval changes,
+                #the code will respond to the change immediately.
+                #Check if we have a new reading interval.
+                if not asked_for_tick and (reading_interval - count) < 10 and system_id != "NAS":
+                    #Get the latest system tick if we're in the last 10 seconds of the interval.
+                    asked_for_tick = True
+                    socket.write("Tick?")
+
+                for socket_id in sockets:
+                    _socket = sockets[socket_id]
+
+                    if _socket.has_data():
+                        data = _socket.read()
+
+                        if not isinstance(data, str):
+                            continue
+
+                        #-------------------- READING INTERVAL HANDLING --------------------
+                        if "Interval:" in data:
+                            #Save the reading interval to our list.
+                            #Get the site id that this interval corresponds to.
+                            _site = data.split(" ")[1]
+
+                            #Save the interval to our list.
+                            reading_intervals[_site] = int(data.split(" ")[2])
+
+                            print("Received new interval from "+_site+": "+data.split(" ")[2])
+                            logger.info("Received new interval from "+_site+": "+data.split(" ")[2])
+
+                        elif "Interval?:" in data and system_id == "NAS":
+                            #NAS box only: reply with the reading interval we have for that site.
+                            requested_site = data.split(" ")[1]
+
+                            _socket.write("Interval: "+requested_site+" "+str(reading_intervals[requested_site]))
+
+                            print("Received new interval request for "+requested_site)
+                            logger.info("Received new interval request for "+requested_site)
+
+                        #-------------------- SYSTEM TICK HANDLING --------------------
+                        elif data == "Tick?" and system_id == "NAS":
+                            #NAS box only: reply with the current system tick when asked.
+                            _socket.write("Tick: "+str(config.TICK))
+
+                            print("Received request for current system tick")
+                            logger.info("Received request for current system tick")
+
+                        elif "Tick:" in data and system_id != "NAS":
+                            #Everything except NAS box: store tick sent from the NAS box.
+                            config.TICK = int(data.split(" ")[1])
+
+                            print("New tick: "+data.split(" ")[1])
+                            logger.info("New tick: "+data.split(" ")[1])
+
+                        _socket.pop()
+
+                time.sleep(1)
+                count += 1
+
+            #Check if shutdown, reboot, or update have been requested.
+            #Database.
+            try:
+                state = logiccoretools.get_state(config.SYSTEM_ID, config.SYSTEM_ID)
+
+            except RuntimeError:
+                print("Error: Couldn't check for requested site actions!")
+                logger.error("Error: Couldn't check for requested site actions!")
 
             else:
-                #I know we could use a long time.sleep(),
-                #but this MUST be responsive to changes in the reading interval.
-                #
-                #What would be really useful here is if the sockets library
-                #provided a function that just sleeps until either the socket
-                #has data or a specified timeout expires, and then returns
-                #true/false. Does such a function exist?
-                count = 0
+                if state is not None:
+                    request = state[1]
 
-                while count < reading_interval:
-                    #This way, if our reading interval changes,
-                    #the code will respond to the change immediately.
-                    #Check if we have a new reading interval.
-                    if socket.has_data():
-                        data = socket.read()
+                    if request.upper() == "SHUTDOWN":
+                        config.SHUTDOWN = True
 
-                        if "Reading Interval" in data:
-                            reading_interval = int(data.split()[-1])
+                    elif request.upper() == "SHUTDOWNALL":
+                        config.SHUTDOWN = True
+                        config.SHUTDOWNALL = True
 
-                            #Only add a new line to the log if the reading interval changed.
-                            if reading_interval != old_reading_interval:
-                                old_reading_interval = reading_interval
-                                logger.info("New reading interval: "+str(reading_interval))
-                                print("\nNew reading interval: "+str(reading_interval))
+                    elif request.upper() == "REBOOT":
+                        config.REBOOT = True
 
-                                #Make sure all monitors use the new reading interval.
-                                for monitor in monitors:
-                                    monitor.set_reading_interval(reading_interval)
+                    elif request.upper() == "REBOOTALL":
+                        config.REBOOT = True
+                        config.REBOOTALL = True
 
-                        elif "Valve Position" in data:
-                            valve_position = int(data.split()[-1])
+                    elif request.upper() == "UPDATE":
+                        config.UPDATE = True
 
-                            logger.info("New valve position: "+str(valve_position))
-                            print("New valve position: "+str(valve_position))
+            #Local files.
+            config.SHUTDOWN = config.SHUTDOWN or os.path.exists("/tmp/.shutdown") or os.path.exists("/tmp/.shutdownall")
+            config.SHUTDOWNALL = config.SHUTDOWNALL or os.path.exists("/tmp/.shutdownall")
+            config.REBOOT = config.REBOOT or os.path.exists("/tmp/.reboot") or os.path.exists("/tmp/.rebootall")
+            config.REBOOTALL = config.REBOOTALL or os.path.exists("/tmp/.rebootall")
+            config.UPDATE = config.UPDATE or os.path.exists("/tmp/.update")
 
-                            valve.set_position(valve_position)
+            #If this is the NAS box, make the update available to pis and signal that they should
+            #update using the database.
+            if config.UPDATE and system_id == "NAS":
+                #Make the update available to the pis at http://192.168.0.25/rivercontrolsystem.tar.gz
+                subprocess.run(["ln", "-s", "/mnt/HD/HD_a2/rivercontrolsystem.tar.gz", "/var/www"],
+                               check=False)
 
-                        socket.pop()
+                #Signal that we are updating.
+                try:
+                    logiccoretools.log_event("Updating...")
+                    logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "
+                                                 +config.MEM+" MB", "OK", "Updating")
 
-                    time.sleep(1)
-                    count += 1
+                except RuntimeError:
+                    print("Error: Couldn't update site status or event log!")
+                    logger.error("Error: Couldn't update site status or event log!")
 
-            #Check if at least one monitor is running.
-            at_least_one_monitor_running = False
+                for site_id in config.SITE_SETTINGS:
+                    try:
+                        logiccoretools.attempt_to_control(site_id, site_id, "Update")
 
-            for monitor in monitors:
-                if monitor.is_running():
-                    at_least_one_monitor_running = True
+                    except RuntimeError:
+                        print("Error: Couldn't request update for "+site_id+"!")
+                        logger.error("Error: Couldn't request update for "+site_id+"!")
+
+            elif config.UPDATE and system_id != "NAS":
+                #Download the update from the NAS box.
+                subprocess.run(["wget", "-O", "/tmp/rivercontrolsystem.tar.gz",
+                                "http://192.168.0.25/rivercontrolsystem.tar.gz"], check=False)
+
+                #Signal that we got it.
+                try:
+                    logiccoretools.log_event("Updating...")
+                    logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "
+                                                 +config.MEM+" MB", "OK", "Updating")
+
+                except RuntimeError:
+                    print("Error: Couldn't update site status or event log!")
+                    logger.error("Error: Couldn't update site status or event log!")
+
+            elif config.REBOOT:
+                try:
+                    logiccoretools.log_event("Rebooting...")
+                    logiccoretools.update_status("Down for reboot", "N/A", "Rebooting")
+
+                except RuntimeError:
+                    print("Error: Couldn't update site status or event log!")
+                    logger.error("Error: Couldn't update site status or event log!")
+
+                if system_id == "NAS" and config.REBOOTALL:
+                    for site_id in config.SITE_SETTINGS:
+                        try:
+                            logiccoretools.attempt_to_control(site_id, site_id, "Reboot")
+
+                        except RuntimeError:
+                            print("Error: Couldn't request reboot for "+site_id+"!")
+                            logger.error("Error: Couldn't request reboot for "+site_id+"!")
+
+            elif config.SHUTDOWN:
+                try:
+                    logiccoretools.log_event("Shutting down...")
+                    logiccoretools.update_status("Off (shutdown requested)", "N/A", "Shutting Down")
+
+                except RuntimeError:
+                    print("Error: Couldn't update site status or event log!")
+                    logger.error("Error: Couldn't update site status or event log!")
+
+                if system_id == "NAS" and config.SHUTDOWNALL:
+                    for site_id in config.SITE_SETTINGS:
+                        try:
+                            logiccoretools.attempt_to_control(site_id, site_id, "Shutdown")
+
+                        except RuntimeError:
+                            print("Error: Couldn't request poweroff for "+site_id+"!")
+                            logger.error("Error: Couldn't request poweroff for "+site_id+"!")
+
+            if config.SHUTDOWN or config.REBOOT or config.UPDATE:
+                try:
+                    os.remove("/tmp/.shutdown")
+
+                except (OSError, IOError):
+                    pass
+
+                try:
+                    os.remove("/tmp/.shutdownall")
+
+                except (OSError, IOError):
+                    pass
+
+                try:
+                    os.remove("/tmp/.reboot")
+
+                except (OSError, IOError):
+                    pass
+
+                try:
+                    os.remove("/tmp/.rebootall")
+
+                except (OSError, IOError):
+                    pass
+
+                try:
+                    os.remove("/tmp/.update")
+
+                except (OSError, IOError):
+                    pass
+
+                config.EXITING = True
 
     except KeyboardInterrupt:
         #Ask the threads to exit.
@@ -483,12 +676,194 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     logger.info("Resetting GPIO pins...")
     print("Resetting GPIO pins...")
 
-    if not config.TESTING:
+    if not config.TESTING and "NAS" not in sys.argv:
         #Reset GPIO pins.
         GPIO.cleanup()
 
+    #---------- Do shutdown, update and reboot if needed ----------
+    if config.SHUTDOWN:
+        print("Shutting down...")
+        logger.info("Shutting down...")
+
+        if system_id == "NAS" and not config.SHUTDOWNALL:
+            subprocess.run(["ash", "/home/admin/shutdown.sh"], check=False)
+
+        elif system_id == "NAS" and config.SHUTDOWNALL:
+            #Wait until all the pis have started to shut down.
+            #Restart database thread to check.
+            config.EXITING = False
+            core_tools.DatabaseConnection(system_id)
+            config.DBCONNECTION.start_thread()
+
+            print("Waiting for pis to begin shutting down...")
+            logger.info("Waiting for pis to begin shutting down...")
+
+            done = []
+
+            while True:
+                for site_id in config.SITE_SETTINGS:
+                    if site_id == "NAS" or site_id in done:
+                        continue
+
+                    try:
+                        status = logiccoretools.get_status(site_id)
+
+                    except RuntimeError:
+                        print("Error: Couldn't get "+site_id+" site status!")
+                        logger.error("Error: Couldn't get "+site_id+" site status!")
+
+                    else:
+                        if status is not None:
+                            action = status[2]
+
+                            if action.upper() == "SHUTTING DOWN":
+                                print("Done: "+site_id)
+                                logger.info("Done: "+site_id)
+                                done.append(site_id)
+
+                #When all have shut down (ignoring NAS), break out.
+                if len(done) > 0 and \
+                    len(done) == len(config.SITE_SETTINGS.keys()) - 1:
+
+                    break
+
+                time.sleep(5)
+
+            subprocess.run(["ash", "/home/admin/shutdown.sh"], check=False)
+
+        else:
+            subprocess.run(["poweroff"], check=False)
+
+    elif config.REBOOT:
+        print("Restarting...")
+        logger.info("Restarting...")
+
+        if system_id == "NAS" and not config.REBOOTALL:
+            subprocess.run(["ash", "/home/admin/reboot.sh"], check=False)
+
+        elif system_id == "NAS" and config.REBOOTALL:
+            #Wait until all the pis have started to reboot.
+            #Restart database thread to check.
+            config.EXITING = False
+            core_tools.DatabaseConnection(system_id)
+            config.DBCONNECTION.start_thread()
+
+            print("Waiting for pis to begin rebooting...")
+            logger.info("Waiting for pis to begin rebooting...")
+
+            done = []
+
+            while True:
+                for site_id in config.SITE_SETTINGS:
+                    if site_id == "NAS" or site_id in done:
+                        continue
+
+                    try:
+                        status = logiccoretools.get_status(site_id)
+
+                    except RuntimeError:
+                        print("Error: Couldn't get "+site_id+" site status!")
+                        logger.error("Error: Couldn't get "+site_id+" site status!")
+
+                    else:
+                        if status is not None:
+                            action = status[2]
+
+                            if action.upper() == "REBOOTING":
+                                print("Done: "+site_id)
+                                logger.info("Done: "+site_id)
+                                done.append(site_id)
+
+                #When all have rebooted (ignoring NAS), break out.
+                if len(done) > 0 and \
+                    len(done) == len(config.SITE_SETTINGS.keys()) - 1:
+
+                    break
+
+                time.sleep(5)
+
+            subprocess.run(["ash", "/home/admin/reboot.sh"], check=False)
+
+        else:
+            subprocess.run(["reboot"], check=False)
+
+    elif config.UPDATE:
+        print("Applying update...")
+        logger.info("Applying update...")
+
+        if system_id == "NAS":
+            #Wait until all the pis have downloaded the update.
+            #Restart database thread to check.
+            config.EXITING = False
+            core_tools.DatabaseConnection(system_id)
+            config.DBCONNECTION.start_thread()
+
+            print("Waiting for pis to download the update...")
+            logger.info("Waiting for pis to download the update...")
+
+            done = []
+
+            while True:
+                for site_id in config.SITE_SETTINGS:
+                    if site_id == "NAS" or site_id in done:
+                        continue
+
+                    try:
+                        status = logiccoretools.get_status(site_id)
+
+                    except RuntimeError:
+                        print("Error: Couldn't get "+site_id+" site status!")
+                        logger.error("Error: Couldn't get "+site_id+" site status!")
+
+                    else:
+                        if status is not None:
+                            action = status[2]
+
+                            if action.upper() == "UPDATING":
+                                print("Done: "+site_id)
+                                logger.info("Done: "+site_id)
+                                done.append(site_id)
+
+                #When all have grabbed the file (ignoring NAS), break out.
+                if len(done) > 0 and \
+                    len(done) == len(config.SITE_SETTINGS.keys()) - 1:
+
+                    break
+
+                time.sleep(5)
+
+            #Move files into place.
+            subprocess.run(["rm", "-rf", "/mnt/HD/HD_a2/rivercontrolsystem.old"], check=False)
+            subprocess.run(["mv", "/mnt/HD/HD_a2/rivercontrolsystem",
+                            "/mnt/HD/HD_a2/rivercontrolsystem.old"], check=False)
+
+            subprocess.run(["tar", "-xf", "/mnt/HD/HD_a2/rivercontrolsystem.tar.gz", "-C",
+                            "/mnt/HD/HD_a2"], check=False)
+
+            #Reboot.
+            print("Restarting...")
+            logger.info("Restarting...")
+            subprocess.run(["ash", "/home/admin/reboot.sh"], check=False)
+
+        else:
+            #Move files into place.
+            subprocess.run(["rm", "-rf", "/home/pi/rivercontrolsystem.old"], check=False)
+            subprocess.run(["mv", "/home/pi/rivercontrolsystem", "/home/pi/rivercontrolsystem.old"],
+                           check=False)
+
+            subprocess.run(["tar", "-xf", "/tmp/rivercontrolsystem.tar.gz", "-C", "/home/pi"],
+                           check=False)
+
+            #Reboot.
+            print("Restarting...")
+            logger.info("Restarting...")
+            subprocess.run(["reboot"], check=False)
+
 def init_logging():
-    #NB: Can't use getLogger() any more because we want a custom handler.
+    """
+    Used as part of the logging initialisation process during startup.
+    """
+
     logger = logging.getLogger('River System Control Software')
 
     #Remove the console handler.

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Core Tools for the River System Control and Monitoring Software
-# Copyright (C) 2017-2019 Wimborne Model Town
+# Copyright (C) 2017-2020 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
 # at your option, any later version.
@@ -19,10 +19,9 @@
 #Reason (logging-not-lazy): Harder to understand the logging statements that way.
 
 """
-This is the coretools module, which contains tools used by both
-the main control software, and the universal monitor. It's kind
-superflous at the moment, but I will probably move some more
-functions in here to reduce code duplication.
+This is the coretools module, which contains tools used in various other places
+in the software framework. Currently this also contains the control logic, but
+this is likely to move to some new files once we have the new algorithms.
 
 .. module:: coretools.py
     :platform: Linux
@@ -38,7 +37,8 @@ import threading
 import subprocess
 import logging
 from collections import deque
-#import MySQLdb as mysql
+import datetime
+import MySQLdb as mysql
 import psutil
 
 from .statetools import ControlStateABC, ControlStateMachineABC
@@ -46,6 +46,8 @@ from .statetools import ControlStateABC, ControlStateMachineABC
 import inspect
 
 import config
+
+from . import logiccoretools
 
 #Don't ask for a logger name, so this works with both main.py
 #and the universal monitor.
@@ -80,9 +82,9 @@ class Reading:
                                     to identify the probe. Example: "G4:M0".
 
         reading_value (String):     The value of the reading. Format differs
-                                    depending on probe type at the moment **FIXME**.
+                                    depending on probe type at the moment.
                                     Ideally, these would all be values in mm like:
-                                    400 mm.
+                                    "400mm".
 
         reading_status (String):    The status of the probe at the time the reading
                                     was taken. If there is no fault, this should be
@@ -94,15 +96,6 @@ class Reading:
         The constructor for this class takes four arguments as specified above.
 
         >>> my_reading = core_tools.Reading(<a_time>, <a_tick>, <an_id>, <a_value>, <a_status>)
-
-    .. warning::
-        There is currently **absolutely no** check to see that each instance variable
-        actually has the correct format. This will come later.
-
-    .. warning::
-        System ticks have not yet been implemented. As such the value
-        for the tick passed here to the constructor is ignored, and
-        the attribute is set to -1.
 
     .. note::
         Equality methods have been implemented for this class so you can do things like:
@@ -121,7 +114,6 @@ class Reading:
         """This is the constructor as defined above"""
         #Set some semi-private variables.
         #Check the time is a string.
-        #TODO Check that the time string is valid as well.
         if not isinstance(reading_time, str):
             raise ValueError("reading_time argument must be of type str")
 
@@ -274,14 +266,14 @@ class Reading:
                     and self._value == other.get_value()
                     and self._status == other.get_status())
 
-        except:
+        except Exception:
             return False
 
     def __ne__(self, other):
         """
         This method is used to compare objects of type Reading.
 
-        It simple does the same as the __eq__ method and then uses a
+        It simply does the same as the __eq__ method and then uses a
         boolean NOT on it.
 
         Usage:
@@ -338,27 +330,52 @@ class SyncTime(threading.Thread):
     This class starts a thread that repeatedly synchronises the system time of
     all the pis with Sump Pi's hardware clock every day. Note that special permissions
     need to have been granted to normal users for this to work when not run as root.
+
+    Constructor args:
+        system_id (String):             The system ID of this pi.
     """
 
-    def __init__(self):
+    def __init__(self, system_id):
         """The constructor"""
         threading.Thread.__init__(self)
+        self.system_id = system_id
 
         self.start()
 
     def run(self):
         """The main body of the thread"""
         while not config.EXITING:
-            cmd = subprocess.run(["sudo", "rdate", config.SITE_SETTINGS["SUMP"]["IPAddress"]],
-                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            cmd = subprocess.run(["sudo", "rdate", config.SITE_SETTINGS["NAS"]["IPAddress"]],
+                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
 
             stdout = cmd.stdout.decode("UTF-8", errors="ignore")
 
             if cmd.returncode != 0:
-                logger.error("Unable to sync system time. Error was: "+str(stdout))
-                print("Unable to sync system time. Error was: "+str(stdout))
-                logger.error("Retrying time sync in 10 seconds...")
-                sleep = 10
+                logger.error("Unable to sync system time with NAS box. Error was: "+str(stdout))
+                print("Unable to sync system time with NAS box. Error was: "+str(stdout))
+
+                #If this isn't Sump Pi, try to sync with Sump Pi instead.
+                if self.system_id != "SUMP":
+                    logger.error("Falling back to Sump Pi...")
+
+                    cmd = subprocess.run(["sudo", "rdate", config.SITE_SETTINGS["SUMP"]["IPAddress"]],
+                                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
+
+                    stdout = cmd.stdout.decode("UTF-8", errors="ignore")
+
+                    if cmd.returncode != 0:
+                        logger.error("Unable to sync system time with Sump Pi. Error was: "+str(stdout))
+                        print("Unable to sync system time with Sump Pi. Error was: "+str(stdout))
+                        logger.error("Retrying time sync in 10 seconds...")
+                        sleep = 10
+
+                    else:
+                        logger.error("Retrying time sync in 10 seconds...")
+                        sleep = 10
+
+                else:
+                    logger.error("Retrying time sync in 10 seconds...")
+                    sleep = 10
 
             else:
                 logger.info("System time synchronised, now set to "+str(stdout))
@@ -391,20 +408,24 @@ class MonitorLoad(threading.Thread):
 
         while not config.EXITING:
             try:
-                cpu_percent = psutil.cpu_percent()
-                used_memory_mb = (psutil.virtual_memory().used // 1024 // 1024)
+                cpu_percent = str(round(psutil.cpu_percent(), 2))
+                used_memory_mb = str((psutil.virtual_memory().used // 1024 // 1024))
 
             except Exception:
                 pass
 
             else:
-                logger.info("\n\nCPU Usage: "+str(cpu_percent)
-                            + "\nMemory Used (MB): "+str(used_memory_mb)
+                logger.info("\n\nCPU Usage: "+cpu_percent
+                            + "\nMemory Used (MB): "+used_memory_mb
                             +"\n\n")
 
-                print("\n\nCPU Usage: "+str(cpu_percent)
-                      + "\nMemory Used (MB): "+str(used_memory_mb)
-                      + "\n\n")
+                print("\nCPU Usage: "+cpu_percent
+                      + " Memory Used (MB): "+used_memory_mb
+                      + "\n")
+
+                #Save to global variables.
+                config.CPU = cpu_percent
+                config.MEM = used_memory_mb
 
             #Respond to system shutdown quickly.
             sleep = 30
@@ -423,12 +444,12 @@ class DatabaseConnection(threading.Thread):
     The methods that just send data to the database run asynchronously - the thread
     requesting the operation is not made to wait. Methods that return data will cause
     the calling thread to wait, though.
-    """
 
-    #TODO Argument validation for remaining methods.
-    #TODO Logging, especially debug logging.
-    #TODO Error handling and connection error detection.
-    # ^ Has been written to some extent, but not tested thoroughly.
+    Constructor documentation:
+
+    Args:
+        site_id (str).          The site ID of this pi.
+    """
 
     def __init__(self, site_id):
         """The constructor"""
@@ -441,14 +462,17 @@ class DatabaseConnection(threading.Thread):
             raise ValueError("Invalid site ID: "+str(site_id))
 
         self.site_id = site_id
-        self.pi_name = config.SITE_SETTINGS[site_id]["Name"]
 
         #As the thread itself sets up the connection to the database, we need
         #a flag to show whether it's ready or not.
         self.is_connected = False
+        self.init_done = False
 
         #A flag to show if the DB thread is running or not.
         self.is_running = False
+
+        #Stop us filling up the event log with identical events.
+        self.last_event = None
 
         #We need a queue for the asynchronous database write operations.
         self.in_queue = deque()
@@ -469,6 +493,8 @@ class DatabaseConnection(threading.Thread):
         #at the same time.
         self.client_lock = threading.RLock()
 
+        config.DBCONNECTION = self
+
     def start_thread(self):
         """Called to start the database thread"""
         self.start()
@@ -481,6 +507,7 @@ class DatabaseConnection(threading.Thread):
 
         #Setup to avoid errors.
         database = cursor = None
+        count = 0
 
         #First we need to find our connection settings from the config file.
         user = config.SITE_SETTINGS[self.site_id]["DBUser"]
@@ -493,35 +520,95 @@ class DatabaseConnection(threading.Thread):
                 #Attempt to connect to the database server.
                 logger.info("DatabaseConnection: Attempting to connect to database...")
 
-                database, cursor = self._connect(user, passwd, host, port)
+                if self.peer_alive():
+                    database, cursor = self._connect(user, passwd, host, port)
 
                 #Avoids duplicating the initialisation commands in the queue.
                 if not self.is_connected:
+                    print("Could not connect to database! Retrying...")
+                    logger.error("DatabaseConnection: Could not connect! Retrying...")
+
+                    #Set the query result to "Error" to stop excessive hangs when
+                    #trying to execute queries when there is no connection.
+                    self.result = "Error"
+
+                    #Keep clearing the queue until we're reconnected as well.
+                    self.in_queue.clear()
+
+                    time.sleep(10)
                     continue
 
-                #Initialise the database.
-                self._initialise_db()
+                #Otherwise, we are now connected.
+                print("Connected to database.")
+                logger.info("DatabaseConnection: Done!")
+                self.is_connected = True
+
+                #Clear old stuff out of the queue to prevent errors.
+                self.in_queue.clear()
+                self.result = None
 
             #If we're exiting, break out of the loop.
+            #This prevents us from executing tons of queries at this point and delaying exit.
             if config.EXITING:
                 continue
 
-            #We are now connected.
-            self.is_connected = True
-            config.DBCONNECTION = self
+            #Check if peer is alive roughly every 60 seconds.
+            if count > 60:
+                count = 0
+
+                if not self.peer_alive():
+                    #We need to reconnect.
+                    print("Database connection lost! Reconnecting...")
+                    logger.error("DatabaseConnection: Connection lost! Reconnecting...")
+
+                    #Drop the queries so we can try again or move on without deadlocking.
+                    self.result = "Error"
+                    self.in_queue.clear()
+
+                    self.is_connected = False
+                    self._cleanup(database, cursor)
+                    continue
 
             #Do any requested operations on the queue.
             while self.in_queue:
+                #Check for each query, because database.commit() does not have a
+                #way of setting a reasonable timeout.
+                if not self.peer_alive():
+                    #We need to reconnect.
+                    print("Database connection lost! Reconnecting...")
+                    logger.error("DatabaseConnection: Connection lost! Reconnecting...")
+
+                    #Drop the queries so we can try again or move on without deadlocking.
+                    self.result = "Error"
+                    self.in_queue.clear()
+
+                    self.is_connected = False
+                    self._cleanup(database, cursor)
+                    break
+
                 query = self.in_queue[0]
 
                 try:
                     if "SELECT" not in query:
                         #Nothing to return, can do this the usual way.
+                        logger.debug("DatabaseConnection: Executing query: "+query+"...")
+                        self.client_thread_done = False
+
                         cursor.execute(query)
                         database.commit()
 
+                        #If there's no error by this point, we succeeded.
+                        self.result = "Success"
+
+                        while not self.client_thread_done:
+                            time.sleep(0.01)
+
+                        #Make sure the result is cleared at this point.
+                        self.result = None
+
                     else:
                         #We need to return data now, so we must be careful.
+                        logger.debug("DatabaseConnection: Executing query: "+query+", and returning data...")
                         self.client_thread_done = False
 
                         cursor.execute(query)
@@ -530,22 +617,34 @@ class DatabaseConnection(threading.Thread):
                         while not self.client_thread_done:
                             time.sleep(0.01)
 
+                        #Make sure the result is cleared at this point.
+                        self.result = None
+
                 except mysql._exceptions.Error as error:
+                    print("DatabaseConnection: Error executing query "+query+"! "
+                          + "Error was: "+str(error))
+
                     logger.error("DatabaseConnection: Error executing query "+query+"! "
                                  + "Error was: "+str(error))
 
+                    #Drop the query so we can try again or move on without deadlocking.
+                    self.result = "Error"
+                    self.in_queue.popleft()
+
+                    while not self.client_thread_done:
+                        time.sleep(0.01)
+
                     #Break out so we can check the connection again.
-                    #TODO Need to check that this works, and handles only the errors
-                    #we want it to handle.
-                    #TODO How to handle if a query fails, rather than if the database is
-                    #offline?
-                    config.DBCONNECTION = None
+                    self.is_connected = False
+                    self._cleanup(database, cursor)
 
                     break
 
                 else:
+                    logger.debug("DatabaseConnection: Done.")
                     self.in_queue.popleft()
 
+            count += 1
             time.sleep(1)
 
         #Do clean up.
@@ -554,6 +653,35 @@ class DatabaseConnection(threading.Thread):
         self.is_running = False
 
     #-------------------- PRIVATE SETUP METHODS -------------------
+    def peer_alive(self):
+        """
+        Used to ping peer once at other end of the connection to check if it is still up.
+
+        Used on first connection, and periodically so we know if a host goes down.
+
+        Returns:
+            boolean.        True = peer is online
+                            False = peer is offline
+
+        Usage:
+            >>> <DatabaseConnection-Obj>.peer_alive()
+            >>> True
+        """
+        try:
+            #Ping the peer one time.
+            subprocess.run(["ping", "-c", "1", "-W", "2", config.SITE_SETTINGS[self.site_id]["DBHost"]],
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
+
+            #If there was no error, this was fine.
+            logger.debug("DatabaseConnection.peer_alive(): ("+self.name+"): Peer is up...")
+            return True
+
+        except subprocess.CalledProcessError:
+            #Non-zero exit status.
+            logger.warning("DatabaseConnection.peer_alive(): ("+self.name+"): Peer is down!")
+
+            return False
+
     def _connect(self, user, passwd, host, port):
         """
         PRIVATE, implementation detail.
@@ -599,7 +727,7 @@ class DatabaseConnection(threading.Thread):
 
         try:
             database = mysql.connect(host=host, port=port, user=user, passwd=passwd,
-                                     connect_timeout=10, db="rivercontrolsystem")
+                                     connect_timeout=30, db="rivercontrolsystem")
 
             cursor = database.cursor()
 
@@ -618,10 +746,8 @@ class DatabaseConnection(threading.Thread):
 
         return (database, cursor)
 
-    def _initialise_db(self):
+    def initialise_db(self):
         """
-        PRIVATE, implementation detail.
-
         Used to make sure that required records for this pi are present, and
         resets them if needed eg by clearing locks and setting initial status.
         """
@@ -629,31 +755,39 @@ class DatabaseConnection(threading.Thread):
         #It doesn't matter that these aren't done immediately - every query is done on
         #a first-come first-served basis.
 
-        #----- Remove and reset the status entry for this pi, if it exists -----
+        #----- Remove and reset the status entry for this device, if it exists -----
         query = """DELETE FROM `SystemStatus` """ \
-                + """ WHERE `Pi Name` = '"""+self.pi_name+"""';"""
+                + """ WHERE `System ID` = '"""+self.site_id+"""';"""
 
-        self.in_queue.append(query)
+        self.do_query(query, 0)
 
-        query = """INSERT INTO `SystemStatus`(`Pi Name`, `Pi Status`, """ \
-                + """`Software Status`, `Current Action`) VALUES('"""+self.pi_name \
+        query = """INSERT INTO `SystemStatus`(`System ID`, `Pi Status`, """ \
+                + """`Software Status`, `Current Action`) VALUES('"""+self.site_id \
                 + """', 'Up', 'Initialising...', 'None');"""
 
-        self.in_queue.append(query)
+        self.do_query(query, 0)
 
-        #----- Clear any locks we're holding and create control entries for devices -----
-        #TODO should be done on NAS box only, this isn't safe in case another pi is
-        #controlling something and this one just rebooted!
-        query = """DELETE FROM `"""+self.site_id+"""Control;"""
+        #----- NAS box: Clear any locks we're holding and create control entries for devices -----
+        if self.site_id == "NAS":
+            for site_id in config.SITE_SETTINGS:
+                query = """DELETE FROM `"""+site_id+"""Control;"""
 
-        self.in_queue.append(query)
+                self.do_query(query, 0)
 
-        for device in config.SITE_SETTINGS[self.site_id]["Devices"]:
-            query = """INSERT INTO `"""+self.site_id+"""Control`(`Device ID`, """ \
-                    + """`Device Status`, `Request`, `Locked By`) VALUES('""" \
-                    + device.split(":")[1]+"""', 'Unlocked', 'None', 'None');"""
+                query = """INSERT INTO `"""+site_id+"""Control`(`Device ID`, """ \
+                            + """`Device Status`, `Request`, `Locked By`) VALUES('""" \
+                            + site_id+"""', 'Unlocked', 'None', 'None');"""
 
-            self.in_queue.append(query)
+                self.do_query(query, 0)
+
+                for device in config.SITE_SETTINGS[site_id]["Devices"]:
+                    query = """INSERT INTO `"""+site_id+"""Control`(`Device ID`, """ \
+                            + """`Device Status`, `Request`, `Locked By`) VALUES('""" \
+                            + device.split(":")[1]+"""', 'Unlocked', 'None', 'None');"""
+
+                    self.do_query(query, 0)
+
+        self.init_done = True
 
     def _cleanup(self, database, cursor):
         """
@@ -677,10 +811,17 @@ class DatabaseConnection(threading.Thread):
     #-------------------- GETTER METHODS --------------------
     def is_ready(self):
         """
-        This method returns True if the database is ready to use, otherwise False.
+        This method returns True if the database is ready to use (connected), otherwise False.
         """
 
         return self.is_connected
+
+    def initialised(self):
+        """
+        This method returns True if the database has been initialised, otherwise False.
+        """
+
+        return self.init_done
 
     def thread_running(self):
         """
@@ -690,13 +831,72 @@ class DatabaseConnection(threading.Thread):
         return self.is_running
 
     #-------------------- CONVENIENCE READER METHODS --------------------
-    def get_latest_reading(self, site_id, sensor_id):
+    def do_query(self, query, retries):
+        """
+        This method executes the query with the specified number of retries.
+
+        Args:
+            query (str).            The query to execute.
+            retries (int).          The number of retries.
+
+        Returns:
+            result (str).           The result.
+
+        Throws:
+            RuntimeError, if the query failed too many times, or if we aren't
+            connected to the database.
+        """
+
+        if not self.is_connected:
+            raise RuntimeError("Database not connected")
+
+        count = 0
+
+        while count <= retries and self.is_connected:
+            if threading.current_thread() is not self.db_thread:
+                #Acquire the lock for fetching data.
+                self.client_lock.acquire()
+
+            self.in_queue.append(query)
+
+            #Wait until the query is processed.
+            while self.result is None:
+                time.sleep(0.01)
+
+            #Store the results.
+            result = self.result
+            self.result = None
+
+            #Signal that the database thread can safely continue.
+            self.client_thread_done = True
+
+            if threading.current_thread() is not self.db_thread:
+                self.client_lock.release()
+
+            #Keep trying until we succeed or we hit the maximum number of retries.
+            if result == "Error":
+                count += 1
+
+            else:
+                break
+
+        #Throw RuntimeError if the query still failed.
+        if result == "Error":
+            raise RuntimeError("Query Failed")
+
+        return result
+
+    def get_latest_reading(self, site_id, sensor_id, retries=3):
         """
         This method returns the latest reading for the given sensor at the given site.
 
         Args:
-            site_id.            The site we want the reading from.
-            sensor_id.          The sensor we want the reading for.
+            site_id (str).            The site we want the reading from.
+            sensor_id (str).          The sensor we want the reading for.
+
+        KWargs:
+            retries[=3] (int).        The number of times to retry before giving up
+                                      and raising an error.
 
         Returns:
             A Reading object.       The latest reading for that sensor at that site.
@@ -705,21 +905,23 @@ class DatabaseConnection(threading.Thread):
 
             None.                   There is no reading available to return.
 
+        Throws:
+            RuntimeError, if the query failed too many times.
+
         Usage example:
             >>> get_latest_reading("G4", "M0")
-            >>> 'Reading at time 2019-09-30 12:01:12.227565, and tick 0, from probe: G4:M0, with value: 350, and status: OK'
+            >>> 'Reading at time 2020-09-30 12:01:12.227565, and tick 0, from probe: G4:M0, with value: 350, and status: OK'
 
         """
-
-        result = self.get_n_latest_readings(site_id, sensor_id, 1)
+        #NOTE: argument validation done in get_n_latest_readings.
+        result = self.get_n_latest_readings(site_id, sensor_id, 1, retries)
 
         if result != []:
             return result[0]
 
-        else:
-            return None
+        return None
 
-    def get_n_latest_readings(self, site_id, sensor_id, number):
+    def get_n_latest_readings(self, site_id, sensor_id, number, retries=3):
         """
         This method returns last n readings for the given sensor at the given site.
         If the list is empty, or contains fewer readings than was asked for, this
@@ -730,38 +932,45 @@ class DatabaseConnection(threading.Thread):
             sensor_id.          The sensor we want the reading for.
             number.             The number of readings.
 
+        KWargs:
+            retries[=3] (int).        The number of times to retry before giving up
+                                      and raising an error.
+
         Returns:
             List of (Reading objects).       The latest readings for that sensor at that site.
 
+        Throws:
+            RuntimeError, if the query failed too many times.
+
         Usage example:
             >>> get_latest_reading("G4", "M0")
-            >>> 'Reading at time 2019-09-30 12:01:12.227565, and tick 0, from probe: G4:M0, with value: 350, and status: OK'
+            >>> 'Reading at time 2020-09-30 12:01:12.227565, and tick 0, from probe: G4:M0, with value: 350, and status: OK'
 
         """
+
+        if not isinstance(site_id, str) or \
+            site_id == "" or \
+            site_id not in config.SITE_SETTINGS:
+
+            raise ValueError("Invalid site ID: "+str(site_id))
+
+        if not isinstance(sensor_id, str) or \
+            sensor_id == "" or \
+            (site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Devices"] and \
+             site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Probes"]):
+
+            raise ValueError("Invalid sensor ID: "+str(sensor_id))
+
+        if not isinstance(number, int) or \
+            number < 0 or \
+            number == 0:
+
+            raise ValueError("Invalid number of readings: "+str(number))
 
         query = """SELECT * FROM `"""+site_id+"""Readings` WHERE `Probe ID` = '"""+sensor_id \
                 + """' ORDER BY ID DESC LIMIT 0, """+str(number)+""";"""
 
-        if threading.current_thread() is not self.db_thread:
-            #Acquire the lock for fetching data.
-            self.client_lock.acquire()
-
-        self.in_queue.append(query)
-
-        #Wait until the query is processed.
-        #TODO Could cause a deadlock if a prev query keeps failing!
-        while self.result is None:
-            time.sleep(0.01)
-
-        #Store the results.
-        result = self.result
-        self.result = None
-
-        #Signal that the database thread can safely continue.
-        self.client_thread_done = True
-
-        if threading.current_thread() is not self.db_thread:
-            self.client_lock.release()
+        result = self.do_query(query, retries)
 
         readings = []
 
@@ -784,7 +993,7 @@ class DatabaseConnection(threading.Thread):
 
         return readings
 
-    def get_state(self, site_id, sensor_id):
+    def get_state(self, site_id, sensor_id, retries=3):
         """
         This method queries the state of the given sensor/device. Information is returned
         such as what (if anything) has been requested, if it is Locked or Unlocked,
@@ -793,6 +1002,10 @@ class DatabaseConnection(threading.Thread):
         Args:
             site_id.            The site that holds the device we're interested in.
             sensor_id.          The sensor we want to know about.
+
+        KWargs:
+            retries[=3] (int).        The number of times to retry before giving up
+                                      and raising an error.
 
         Returns:
             tuple.      1st element:        Device status (str) ("Locked" or "Unlocked").
@@ -803,44 +1016,94 @@ class DatabaseConnection(threading.Thread):
 
             None.           No data available.
 
+        Throws:
+            RuntimeError, if the query failed too many times.
+
         Usage:
-            >>> get_state("V4", "V4")
+            >>> get_state("VALVE4", "V4")
             >>> ("Locked", "50%", "SUMP")
 
         """
+
+        if not isinstance(site_id, str) or \
+            site_id == "" or \
+            site_id not in config.SITE_SETTINGS:
+
+            raise ValueError("Invalid site ID: "+str(site_id))
+
+        if not isinstance(sensor_id, str) or \
+            sensor_id == "" or \
+            (site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Devices"] and \
+             site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Probes"] and \
+             site_id != sensor_id):
+
+            raise ValueError("Invalid sensor ID: "+str(sensor_id))
+
         query = """SELECT * FROM `"""+site_id+"""Control` WHERE `Device ID` = '""" \
                 + sensor_id+"""' LIMIT 0, 1;"""
 
-        if threading.current_thread() is not self.db_thread:
-            #Acquire the client thread lock for fetching data.
-            self.client_lock.acquire()
+        result = self.do_query(query, retries)
 
-        self.in_queue.append(query)
-
-        #Wait until the query is processed.
-        #TODO Could cause a deadlock if a prev query keeps failing!
-        while self.result is None:
-            time.sleep(0.01)
-
-        #Store the results.
+        #Store the part of the results that we want.
         try:
-            result = self.result[0][2:]
+            result = result[0][2:]
 
         except IndexError:
             result = None
 
-        self.result = None
+        return result
 
-        #Signal that the database thread can safely continue.
-        self.client_thread_done = True
+    def get_status(self, site_id, retries=3):
+        """
+        This method queries the status of the given site.
 
-        if threading.current_thread() is not self.db_thread:
-            self.client_lock.release()
+        Args:
+            site_id.            The site that we're interested in.
+
+        KWargs:
+            retries[=3] (int).        The number of times to retry before giving up
+                                      and raising an error.
+
+        Returns:
+            tuple.      1st element:        Pi status (str).
+                        2nd element:        Sw status (str).
+                        3rd element:        Current Action (str).
+
+            OR
+
+            None.           No data available.
+
+        Throws:
+            RuntimeError, if the query failed too many times.
+
+        Usage:
+            >>> get_status("VALVE4")
+            >>> ("Up", "OK", "None")
+
+        """
+
+        if not isinstance(site_id, str) or \
+            site_id == "" or \
+            site_id not in config.SITE_SETTINGS:
+
+            raise ValueError("Invalid site ID: "+str(site_id))
+
+        query = """SELECT * FROM `SystemStatus` WHERE `System ID` = '""" \
+                + site_id+"""';"""
+
+        result = self.do_query(query, retries)
+
+        #Store the part of the results that we want.
+        try:
+            result = result[0][2:]
+
+        except IndexError:
+            result = None
 
         return result
 
     #-------------------- CONVENIENCE WRITER METHODS --------------------
-    def attempt_to_control(self, site_id, sensor_id, request):
+    def attempt_to_control(self, site_id, sensor_id, request, retries=3):
         """
         This method attempts to lock the given sensor/device so we can take control.
         First we check if the device is locked. If it isn't locked, or this pi locked it,
@@ -853,9 +1116,16 @@ class DatabaseConnection(threading.Thread):
             sensor_id.          The sensor we want to know about.
             request (str).      What state we want the device to be in.
 
+        KWargs:
+            retries[=3] (int).        The number of times to retry before giving up
+                                      and raising an error.
+
         Returns:
             boolean.        True - We are now in control of the device.
                             False - The device is locked and in use by another pi.
+
+        Throws:
+            RuntimeError, if the query failed too many times.
 
         Usage:
             >>> attempt_to_control("SUMP", "P0", "On")
@@ -873,12 +1143,13 @@ class DatabaseConnection(threading.Thread):
             sensor_id == "" or \
             (site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Devices"] and \
              site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Probes"] and \
-             not "V" in site_id):
+             site_id != sensor_id):
 
             raise ValueError("Invalid sensor ID: "+str(sensor_id))
 
         if not isinstance(request, str) or \
-            request == "":
+            (sensor_id == site_id and \
+             request not in ("Manual", "Update", "Reboot", "Shutdown")):
 
             raise ValueError("Invalid request: "+str(request))
 
@@ -896,7 +1167,7 @@ class DatabaseConnection(threading.Thread):
                 + """`Request` = '"""+request+"""', `Locked By` = '"""+self.site_id \
                 + """' WHERE `Device ID` = '"""+sensor_id+"""';"""
 
-        self.in_queue.append(query)
+        self.do_query(query, retries)
 
         #Log the event as well.
         self.log_event("Taking control of "+site_id+":"+sensor_id
@@ -904,7 +1175,7 @@ class DatabaseConnection(threading.Thread):
 
         return True
 
-    def release_control(self, site_id, sensor_id):
+    def release_control(self, site_id, sensor_id, retries=3):
         """
         This method attempts to release the given sensor/device so other pis can
         take control. First we check if we locked the device. If it isn't locked,
@@ -915,6 +1186,13 @@ class DatabaseConnection(threading.Thread):
         Args:
             site_id.            The site that holds the device we're interested in.
             sensor_id.          The sensor we want to know about.
+
+        KWargs:
+            retries[=3] (int).        The number of times to retry before giving up
+                                      and raising an error.
+
+        Throws:
+            RuntimeError, if the query failed too many times.
 
         Usage:
             >>> release_control("SUMP", "P0")
@@ -932,8 +1210,7 @@ class DatabaseConnection(threading.Thread):
             sensor_id == "" or \
             (site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Devices"] and \
              site_id+":"+sensor_id not in config.SITE_SETTINGS[site_id]["Probes"] and \
-             not "V" in site_id) or \
-             ("V" in site_id and site_id != sensor_id):
+             site_id != sensor_id):
 
             raise ValueError("Invalid sensor ID: "+str(sensor_id))
 
@@ -951,20 +1228,30 @@ class DatabaseConnection(threading.Thread):
                 + """`Request` = 'None', `Locked By` = 'None' WHERE `Device ID` = '""" \
                 + sensor_id+"""';"""
 
-        self.in_queue.append(query)
+        self.do_query(query, retries)
 
         #Log the event as well.
         self.log_event("Releasing control of "+site_id+":"+sensor_id)
 
-    def log_event(self, event):
+    def log_event(self, event, severity="INFO", retries=3):
         """
         This method logs the given event message in the database.
 
         Args:
-            event (str).            The event to log.
+            event (str).                The event to log.
+
+        Kwargs:
+            severity[="INFO"] (str).    The severity of the event.
+                                        "DEBUG", "INFO", "WARNING", "ERROR", or "CRITICAL".
+
+            retries[=3] (int).          The number of times to retry before giving up
+                                        and raising an error.
+
+        Throws:
+            RuntimeError, if the query failed too many times.
 
         Usage:
-            >>> log_event("test")
+            >>> log_event("test", "INFO")
             >>>
         """
 
@@ -973,12 +1260,23 @@ class DatabaseConnection(threading.Thread):
 
             raise ValueError("Invalid event message: "+str(event))
 
-        query = """INSERT INTO `EventLog`(`Site ID`, `Event`, `Time`) VALUES('"""+self.site_id \
-                +"""', '"""+event+"""', NOW());"""
+        if not isinstance(severity, str) or \
+            event == "":
 
-        self.in_queue.append(query)
+            raise ValueError("Invalid severity: "+str(severity))
 
-    def update_status(self, pi_status, sw_status, current_action):
+        #Ignore if this event is exactly the same as the last one.
+        if event == self.last_event:
+            return
+
+        self.last_event = event
+
+        query = """INSERT INTO `EventLog`(`Site ID`, `Severity`, `Event`, `Device Time`) VALUES('"""+self.site_id \
+                +"""', '"""+severity+"""', '"""+event+"""', '"""+str(datetime.datetime.now())+"""');"""
+
+        self.do_query(query, retries)
+
+    def update_status(self, pi_status, sw_status, current_action, retries=3):
         """
         This method logs the given statuses and action(s) in the database.
 
@@ -986,6 +1284,13 @@ class DatabaseConnection(threading.Thread):
             pi_status (str).            The current status of this pi.
             sw_status (str).            The current status of the software on this pi.
             current_action (str).       The software's current action(s).
+
+        Kwargs:
+            retries[=3] (int).          The number of times to retry before giving up
+                                        and raising an error.
+
+        Throws:
+            RuntimeError, if the query failed too many times.
 
         Usage:
             >>> update_status("Up", "OK", "None")
@@ -1010,18 +1315,59 @@ class DatabaseConnection(threading.Thread):
         query = """UPDATE SystemStatus SET `Pi Status` = '"""+pi_status \
                 + """', `Software Status` = '"""+sw_status \
                 + """', `Current Action` =  '"""+current_action \
-                + """' WHERE `Pi Name` = '"""+self.pi_name+"""';"""
+                + """' WHERE `SYSTEM ID` = '"""+self.site_id+"""';"""
 
-        self.in_queue.append(query)
+        self.do_query(query, retries)
 
         self.log_event("Updated status")
 
-    def store_reading(self, reading):
+    def store_tick(self, tick, retries=3):
+        """
+        This method stores the given system tick in the database.
+
+        .. warning::
+                This is only meant to be run from the NAS box. It will
+                exit immediately with no action if run on another system.
+
+        Args:
+            tick (int). The system tick to store.
+
+        Kwargs:
+            retries[=3] (int).          The number of times to retry before giving up
+                                        and raising an error.
+
+        Throws:
+            RuntimeError, if the query failed too many times.
+
+        Usage:
+            >>> store_tick(<int>)
+            >>>
+        """
+
+        if config.SYSTEM_ID != "NAS":
+            return
+
+        if not isinstance(tick, int):
+            raise ValueError("Invalid system tick: "+str(tick))
+
+        query = """INSERT INTO `SystemTick`(`Tick`, `System Time`) """ \
+                + """VALUES('"""+str(tick)+"""', NOW());"""
+
+        self.do_query(query, retries)
+
+    def store_reading(self, reading, retries=3):
         """
         This method stores the given reading in the database.
 
         Args:
             reading (Reading). The reading to store.
+
+        Kwargs:
+            retries[=3] (int).          The number of times to retry before giving up
+                                        and raising an error.
+
+        Throws:
+            RuntimeError, if the query failed too many times.
 
         Usage:
             >>> store_reading(<Reading-Obj>)
@@ -1032,15 +1378,230 @@ class DatabaseConnection(threading.Thread):
             raise ValueError("Invalid reading object: "+str(reading))
 
         query = """INSERT INTO `"""+self.site_id+"""Readings`(`Probe ID`, `Tick`, """ \
-                + """`Time`, `Value`, `Status`) VALUES('"""+reading.get_sensor_id() \
+                + """`Measure Time`, `Value`, `Status`) VALUES('"""+reading.get_sensor_id() \
                 + """', """+str(reading.get_tick())+""", '"""+reading.get_time()+"""', '""" \
                 + reading.get_value()+"""', '"""+reading.get_status()+"""');"""
 
-        self.in_queue.append(query)
+        self.do_query(query, retries)
 
 # -------------------- CONTROL LOGIC FUNCTIONS AND CLASSES --------------------
+def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
+    """
+    This control logic runs on the NAS box, and is responsible for:
 
-#TODO update the documentation, this is old.
+    - Setting and restoring the system tick.
+    - Freeing locks that have expired (locks can only be held for a maximum of TBD minutes). Not yet implemented.
+    - Monitoring the temperature of the NAS box and its drives.
+
+    """
+    #---------- System tick ----------
+    #Restore the system tick from the database if needed.
+    if config.TICK == 0:
+        #Get the latest readings for each probe, and
+        #find the last tick that was used.
+        for _site_id in config.SITE_SETTINGS:
+            for _probe in config.SITE_SETTINGS[_site_id]["Probes"]:
+                _probe_id = _probe.split(":")[1]
+
+                try:
+                    reading = logiccoretools.get_latest_reading(_site_id, _probe_id)
+
+                except RuntimeError:
+                    print("Error: Couldn't get reading for "+_site_id+":"+_probe_id+"!")
+                    logger.error("Error: Couldn't get reading for "+_site_id+":"+_probe_id+"!")
+
+                    reading = None
+
+                if reading is not None:
+                    if reading.get_tick() > config.TICK:
+                        config.TICK = reading.get_tick()
+
+        #Log if we managed to get a newer tick.
+        if config.TICK != 0:
+            print("Restored system tick from database: "+str(config.TICK))
+            logger.info("Restored system tick from database: "+str(config.TICK))
+
+            try:
+                logiccoretools.log_event("Restored system tick from database: "+str(config.TICK))
+
+            except RuntimeError:
+                print("Error: Couldn't log event saying that tick was restored to "
+                      + str(config.TICK)+"!")
+
+                logger.error("Error: Couldn't log event saying that tick was restored to "
+                             + str(config.TICK)+"!")
+
+    #Increment the system tick by 1.
+    config.TICK += 1
+
+    #Reset tick if we're getting near the limit (2^31, assuming signed integers for safety).
+    #(https://docs.oracle.com/cd/E19078-01/mysql/mysql-refman-5.1/data-types.html#numeric-types)
+    if config.TICK >= 2147483600:
+        print("Reset tick to zero as near limit")
+        logger.warning("Reset tick to zero as near limit")
+
+        try:
+            logiccoretools.log_event("Reset system tick to zero as near to limit",
+                                     severity="WARNING")
+
+        except RuntimeError:
+            print("Error: Couldn't log event saying that tick was reset!")
+            logger.error("Error: Couldn't log event saying that tick was reset!")
+
+        config.TICK = 0
+
+    try:
+        logiccoretools.store_tick(config.TICK)
+
+    except RuntimeError:
+        print("Error: Couldn't store current tick!")
+        logger.error("Error: Couldn't store current tick!")
+
+    #---------- Free locks that have expired ----------
+    #TODO Not yet implemented, do later if needed.
+
+    #---------- Monitor the temperature of the NAS box and the drives ----------
+    #System board temp.
+    cmd = subprocess.run(["temperature_monitor", "-b"],
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+    sys_temp = cmd.stdout.decode("UTF-8", errors="ignore").split()[-1]
+
+    #HDD 0 temp.
+    cmd = subprocess.run(["temperature_monitor", "-c", "0"],
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+    hdd0_temp = cmd.stdout.decode("UTF-8", errors="ignore").split()[-1]
+
+    #HDD 1 temp.
+    cmd = subprocess.run(["temperature_monitor", "-c", "1"],
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+    hdd1_temp = cmd.stdout.decode("UTF-8", errors="ignore").split()[-1]
+
+    #Log temperatures and update in system status table.
+    #Check if any of the temps are > 50C.
+    hot = False
+
+    for temp in (sys_temp, hdd0_temp, hdd1_temp):
+        if int(temp) > 50:
+            hot = True
+
+    if not hot:
+        logger.info("Temperatures: sys: "+sys_temp+", hdd0: "+hdd0_temp+", hdd1: "+hdd1_temp)
+
+        try:
+            logiccoretools.update_status("Up, temps: ("+sys_temp+"/"+hdd0_temp+"/"+hdd1_temp
+                                         + "), CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+                                         "OK", "None")
+
+        except RuntimeError:
+            print("Error: Couldn't update site status!")
+            logger.error("Error: Couldn't update site status!")
+
+    else:
+        logger.warning("High Temperatures! sys: "+sys_temp+", hdd0: "+hdd0_temp
+                       + ", hdd1: "+hdd1_temp)
+
+        try:
+            logiccoretools.update_status("Up, HIGH temps: ("+sys_temp+"/"+hdd0_temp+"/"+hdd1_temp
+                                         + "), CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+                                         "OK", "None")
+
+            logiccoretools.log_event("NAS Box getting hot! Temps: sys: "+sys_temp+", hdd0: "+hdd0_temp
+                                     + ", hdd1: "+hdd1_temp, severity="WARNING")
+
+        except RuntimeError:
+            print("Error: Couldn't update site status or log event!")
+            logger.error("Error: Couldn't update site status or log event!")
+
+    #NAS/tick interval is 15 seconds.
+    return 15
+
+def valve_control_logic(readings, devices, monitors, sockets, reading_interval):
+    """
+    This control logic is generic and runs on all the gate valves. It does the following:
+
+    - Polls the database and sets valve positions upon request.
+
+    """
+
+    #Get the sensor name for this valve.
+    for valve in config.SITE_SETTINGS[config.SYSTEM_ID]["Devices"]:
+        valve_id = valve.split(":")[1]
+
+    position = None
+
+    #Check if there's a request for a new valve position.
+    try:
+        state = logiccoretools.get_state(config.SYSTEM_ID, valve_id)
+
+    except RuntimeError:
+        print("Error: Couldn't get site status!")
+        logger.error("Error: Couldn't get site status!")
+
+    else:
+        if state is not None:
+            request = state[1]
+
+            if request != "None":
+                position = int(request.replace("%", ""))
+
+                #There's only one device for gate valve pis, the gate valve, so take a shortcut.
+                #Only do anything if the position has changed.
+                if position != devices[0].get_requested_position():
+                    devices[0].set_position(position)
+
+                    logger.info("New valve position: "+str(position))
+                    print("New valve position: "+str(position))
+
+                    try:
+                        logiccoretools.log_event(config.SYSTEM_ID+": New valve position: "+str(position))
+
+                    except RuntimeError:
+                        print("Error: Couldn't log event!")
+                        logger.error("Error: Couldn't log event!")
+
+    if position is not None:
+        try:
+            logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+                                         "OK", "Position requested: "+str(position))
+
+        except RuntimeError:
+            print("Error: Couldn't update site status!")
+            logger.error("Error: Couldn't update site status!")
+
+    else:
+        try:
+            logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+                                         "OK", "None")
+
+        except RuntimeError:
+            print("Error: Couldn't update site status!")
+            logger.error("Error: Couldn't update site status!")
+
+    #Unsure how to decide the interval, so just setting to 15 seconds TODO.
+    return 15
+
+def generic_control_logic(readings, devices, monitors, sockets, reading_interval):
+    """
+    This control logic is generic and runs on all the monitoring-only pis. It does the following:
+
+    - Updates the pi status in the database.
+
+    """
+
+    try:
+        logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+                                     "OK", "None")
+
+    except RuntimeError:
+        print("Error: Couldn't update site status!")
+        logger.error("Error: Couldn't update site status!")
+
+    #Unsure how to decide the interval, so just setting to 15 seconds TODO.
+    return 15
+
 def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval):
     """
     This function is used to decides what action to take based
@@ -1081,8 +1642,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
     Usage:
 
         >>> reading_interval = sumppi_control_logic(<listofreadings>,
-        >>>                                     <listofprobes>, <listofmonitors>,
-        >>>                                     <listofsockets>, <areadinginterval)
+        >>>                                         <listofprobes>, <listofmonitors>,
+        >>>                                         <listofsockets>, <areadinginterval)
 
     """
 
@@ -1109,9 +1670,6 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
     #Check that the devices list is not empty.
     assert devices
 
-    #Check that the sockets list is not empty.
-    assert sockets
-
     #Check that the reading interval is positive, and greater than 0.
     assert reading_interval > 0
 
@@ -1130,7 +1688,13 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         #Close the wendy butts gate valve.
         logger.info("Closing the wendy butts gate valve...")
         print("Closing the wendy butts gate valve...")
-        sockets["SOCK14"].write("Valve Position 0")
+
+        try:
+            logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
+
+        except RuntimeError:
+            print("Error: Error trying to control valve V4!")
+            logger.error("Error: Error trying to control valve V4!")
 
         main_pump.enable()
 
@@ -1176,7 +1740,13 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         #Close gate valve.
         logger.info("Closing wendy butts gate valve...")
         print("Closing wendy butts gate valve...")
-        sockets["SOCK14"].write("Valve Position 0")
+
+        try:
+            logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
+
+        except RuntimeError:
+            print("Error: Error trying to control valve V4!")
+            logger.error("Error: Error trying to control valve V4!")
 
         main_pump.enable()
 
@@ -1198,7 +1768,13 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         #Close gate valve.
         logger.info("Closing wendy butts gate valve...")
         print("Closing wendy butts gate valve...")
-        sockets["SOCK14"].write("Valve Position 0")
+
+        try:
+            logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
+
+        except RuntimeError:
+            print("Error: Error trying to control valve V4!")
+            logger.error("Error: Error trying to control valve V4!")
 
         main_pump.enable()
 
@@ -1219,12 +1795,24 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         if butts_reading >= 300:
             logger.info("Opening wendy butts gate valve to 25%...")
             print("Opening wendy butts gate valve to 25%...")
-            sockets["SOCK14"].write("Valve Position 25")
+
+            try:
+                logiccoretools.attempt_to_control("VALVE4", "V4", "25%")
+
+            except RuntimeError:
+                print("Error: Error trying to control valve V4!")
+                logger.error("Error: Error trying to control valve V4!")
 
         else:
             logger.warning("Insufficient water in wendy butts...")
             print("Insufficient water in wendy butts...")
-            sockets["SOCK14"].write("Valve Position 0")
+
+            try:
+                logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
+
+            except RuntimeError:
+                print("Error: Error trying to control valve V4!")
+                logger.error("Error: Error trying to control valve V4!")
 
         #Make sure the main circulation pump is on.
         logger.info("Turning the main cirulation pump on, if it was off...")
@@ -1245,12 +1833,24 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         if butts_reading >= 300:
             logger.info("Opening wendy butts gate valve to 50%...")
             print("Opening wendy butts gate valve to 50%...")
-            sockets["SOCK14"].write("Valve Position 50")
+
+            try:
+                logiccoretools.attempt_to_control("VALVE4", "V4", "50%")
+
+            except RuntimeError:
+                print("Error: Error trying to control valve V4!")
+                logger.error("Error: Error trying to control valve V4!")
 
         else:
             logger.error("Insufficient water in wendy butts...")
             print("Insufficient water in wendy butts...")
-            sockets["SOCK14"].write("Valve Position 0")
+
+            try:
+                logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
+
+            except RuntimeError:
+                print("Error: Error trying to control valve V4!")
+                logger.error("Error: Error trying to control valve V4!")
 
             logger.error("*** NOTICE ***: Water level in the sump is between 200 and 300 mm!")
             logger.error("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: "
@@ -1278,12 +1878,24 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         if butts_reading >= 300:
             logger.info("Opening wendy butts gate valve to 100%...")
             print("Opening wendy butts gate valve to 100%...")
-            sockets["SOCK14"].write("Valve Position 100")
+
+            try:
+                logiccoretools.attempt_to_control("VALVE4", "V4", "100%")
+
+            except RuntimeError:
+                print("Error: Error trying to control valve V4!")
+                logger.error("Error: Error trying to control valve V4!")
 
         else:
             logger.warning("Insufficient water in wendy butts...")
             print("Insufficient water in wendy butts...")
-            sockets["SOCK14"].write("Valve Position 0")
+
+            try:
+                logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
+
+            except RuntimeError:
+                print("Error: Error trying to control valve V4!")
+                logger.error("Error: Error trying to control valve V4!")
 
             logger.critical("*** CRITICAL ***: Water level in the sump less than 200 mm!")
             logger.critical("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to system.")
@@ -1308,8 +1920,13 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
     for monitor in monitors:
         monitor.set_reading_interval(reading_interval)
 
-    for each_socket in sockets.values():
-        each_socket.write("Reading Interval: "+str(reading_interval))
+    try:
+        logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+                                     "OK", "None")
+
+    except RuntimeError:
+        print("Error: Couldn't update site status!")
+        logger.error("Error: Couldn't update site status!")
 
     return reading_interval
 
@@ -1820,9 +2437,13 @@ def setup_devices(system_id, dictionary="Probes"):
         device_name = device_settings["Name"]
         _type = device_settings["Type"]
         device = device_settings["Class"]
+
         device = device(device_id, device_name)
 
         if _type == "Hall Effect Probe":
+            i2c_address = device_settings["ADCAddress"]
+            device.set_address(i2c_address)
+
             high_limits = device_settings["HighLimits"]
             low_limits = device_settings["LowLimits"]
 
@@ -1846,6 +2467,28 @@ def setup_devices(system_id, dictionary="Probes"):
             #startup, if state is not initialised.
             device.disable()
 
+            #If this is sump pi and the circulation pump, turn it back on.
+            if system_id == "SUMP" and device_id == "SUMP:P1":
+                print("Enabling circulation pump to avoid overflow while waiting for NAS box...")
+                device.enable()
+
+        elif _type == "Gate Valve":
+            pins = device_settings["Pins"]
+            pos_tolerance = device_settings["posTolerance"]
+            max_open = device_settings["maxOpen"]
+            min_open = device_settings["minOpen"]
+            ref_voltage = device_settings["refVoltage"]
+            i2c_address = device_settings["ADCAddress"]
+
+            device.set_pins(pins)
+            device.set_pos_tolerance(pos_tolerance)
+            device.set_max_open(max_open)
+            device.set_min_open(min_open)
+            device.set_ref_voltage(ref_voltage)
+            device.set_i2c_address(i2c_address)
+
+            device.start_thread()
+
         else:
             pins = device_settings["Pins"]
             device.set_pins(pins)
@@ -1854,69 +2497,22 @@ def setup_devices(system_id, dictionary="Probes"):
 
     return devices
 
-def setup_valve(system_id):
-    """
-    This function is used to set up gate valves.
-
-    Args:
-        system_id (str):              The system (pi) that we're setting up for.
-
-    Returns:
-        A reference to the GateValve object created.
-
-    Usage:
-        >>> setup_valve("V4")
-
-    """
-    valve_settings = config.SITE_SETTINGS[system_id]
-
-    valve_name = valve_settings["Name"]
-    _type = valve_settings["Type"]
-    valve = valve_settings["Class"]
-    pins = valve_settings["Pins"]
-    pos_tolerance = valve_settings["posTolerance"]
-    max_open = valve_settings["maxOpen"]
-    min_open = valve_settings["minOpen"]
-    ref_voltage = valve_settings["refVoltage"]
-
-    valve = valve(system_id, valve_name, pins, pos_tolerance, max_open, min_open, ref_voltage)
-
-    valve.start_thread()
-
-    return valve
-
-def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None):
+def get_and_handle_new_reading(monitor, _type):
     """
     This function is used to get, handle, and return new readings from the
     monitors. It checks each monitor to see if there is data, then prints
-    and logs it if needed, before writing the new reading down the socket
-    to the master pi, if a connection has been set up.
+    and logs it if needed.
 
     Args:
         monitor (BaseMonitorClass):     The monitor we're checking.
         _type (str):                    The type of probe we're monitoring.
-
-    KWargs:
-        server_address (str):           The server address. Set to None if
-                                        not specified.
-
-        socket (Sockets):               The socket connected to the master pi.
-                                        Set to None if not specified.
 
     Returns:
         A Reading object.
 
     Usage:
 
-        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>)
-
-        OR
-
-        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, "192.168.0.2")
-
-        OR
-
-        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, "192.168.0.2", <Socket-Obj>)
+        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, "test")
     """
 
     reading = None
@@ -1940,8 +2536,5 @@ def get_and_handle_new_reading(monitor, _type, server_address=None, socket=None)
 
         #Flush buffers.
         sys.stdout.flush()
-
-        if server_address is not None:
-            socket.write(reading)
 
     return reading

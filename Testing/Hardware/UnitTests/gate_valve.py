@@ -13,7 +13,7 @@
 #          3) Turns the actuator motor to close the valve to 20%.
 #          4) Repeat until interrupted.
 #
-# Copyright (c) 2018 Wimborne Model Town http://www.wimborne-modeltown.com/
+# Copyright (c) 2020 Wimborne Model Town http://www.wimborne-modeltown.com/
 #
 #    This code is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by

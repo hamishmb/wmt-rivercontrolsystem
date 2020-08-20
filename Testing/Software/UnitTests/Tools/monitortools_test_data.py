@@ -16,9 +16,10 @@
 
 import datetime
 import sys
+import os
 
 #Import other modules.
-sys.path.append('../..') #Need to be able to import the Tools module from here.
+sys.path.insert(0, os.path.abspath('../../../')) #Need to be able to import the Tools module from here.
 
 #This is needed for access to BaseDeviceClass, which our dummy classes extend from.
 import Tools
@@ -127,6 +128,10 @@ def badopen(file, mode):
 
 def do_nothing():
     pass
+
+#Dummy logiccoretools.store_reading method for sumppi control logic.
+def fake_store_reading(reading, retries=3):
+    return True
 
 #Sample values for the arguments to the BaseMonitorClass class constructor.
 TEST_BASEMONITOR_DATA = [

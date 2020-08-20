@@ -21,15 +21,15 @@
 #TODO: Throw errors if setup hasn't been completed properly.
 
 """
-This is the part of the software framework that contains the control, sensor and
-probe classes. These represent the control devices and probes/sensors that we're
+This is the part of the software framework that contains the device, sensor and
+probe classes. These represent the devices and probes/sensors that we're
 interfacing with. These classes provide a common API to get readings (the get_reading()
 method), and also draw the implementation details for how each probe is managed away
 from the rest of the program.
 
 .. module:: deviceobjects.py
     :platform: Linux
-    :synopsis: The part of the framework that contains the control/probe/sensor classes.
+    :synopsis: The part of the framework that contains the device/probe/sensor classes.
 
 .. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk> and Terry Coles <WMT@hadrian-way.co.uk
 
@@ -194,7 +194,7 @@ class BaseDeviceClass:
         This method is used to specify the pins this probe will use. This can be a
         single pin, or multiple pins (eg in the case of a magnetic probe). Can also
         be used to specify one or more output pins. Cannot currently specify both
-        input and output pins. Uses RPi BCM pins.
+        input and output pins. Uses RPi BCM pin numbers.
 
         .. note::
             If you are specifying multiple input pins, eg for a Hall Effect Probe, then
@@ -465,6 +465,12 @@ class FloatSwitch(BaseDeviceClass):
         This is because they are always pressed down unless the butts are full.
         Hence, if the **hardware** is active low, the **software representation**
         of it must be active high.
+
+    .. note::
+        The new float switches that do both high and low are essentially 2-in-1.
+        As such, initialise 2 of these classes with the correct pins to interface
+        with the new float switches.
+
     """
 
     # ---------- CONSTRUCTORS ----------
@@ -655,10 +661,25 @@ class HallEffectProbe(BaseDeviceClass):
         self.low_limits = None                     #The low limits to be used with this probe.
         self.depths = None                         #The multidimensional list of 4 rows or depths.
         self.length = None                         #The number of sensors in each stack.
+        self.i2c_address = None                    #The i2c address of the probe.
 
     def start_thread(self):
         """Start the thread to keep polling the probe."""
-        device_mgmt.ManageHallEffectProbe(self)
+        device_mgmt.ManageHallEffectProbe(self, self.i2c_address)
+
+    def set_address(self, i2c_address):
+        """
+        This method is used to import the address this probe will use. The calling code must
+        already have established these from config.py
+
+        Args:
+            i2c_address (int):          The hardware address this probe will use.
+
+        Usage:
+            >>> <Device-Object>.set_address(<int>)
+        """
+
+        self.i2c_address = i2c_address
 
     def set_limits(self, high_limits, low_limits):
         """
@@ -674,17 +695,13 @@ class HallEffectProbe(BaseDeviceClass):
 
         """
 
-        #NB: Removed the []s around these - we don't want a list with a tuple
-        #inside!
 
         #Check the limits are valid.
         #Basic check.
-        if not (isinstance(high_limits, list) or isinstance(high_limits, tuple)) or \
-            not (isinstance(low_limits, list) or isinstance(low_limits, tuple)) or \
+        if not (isinstance(high_limits, (list, tuple))) or \
+            not (isinstance(low_limits, (list, tuple))) or \
             len(high_limits) != 10 or \
-            len(low_limits) != 10 or \
-            high_limits in ((), []) or \
-            low_limits in ((), []):
+            len(low_limits) != 10:
 
             raise ValueError("Invalid limits: "+str(high_limits)+", "+str(low_limits))
 
@@ -692,14 +709,14 @@ class HallEffectProbe(BaseDeviceClass):
         #Check that all the limits are floats or ints.
         for limits in (high_limits, low_limits):
             for limit in limits:
-                if not (isinstance(limit, float) or isinstance(limit, int)) or \
+                if not (isinstance(limit, (float, int))) or \
                     isinstance(limit, bool):
 
                     raise ValueError("Invalid limits: "+str(high_limits)+", "+str(low_limits))
 
         #Check that the corresponding limits in low_limits are actually lower.
         for limit in high_limits:
-            if not (limit > low_limits[high_limits.index(limit)]):
+            if not limit > low_limits[high_limits.index(limit)]:
                 raise ValueError("Invalid limits: "+str(high_limits)+", "+str(low_limits))
 
         self.high_limits = high_limits
@@ -719,13 +736,10 @@ class HallEffectProbe(BaseDeviceClass):
 
         """
 
-        #NB: Removed the []s around this too - we don't want a list with a tuple
-        #inside!
-
         #Check the depths are valid.
         #Basic checks.
         for depthlist in depths:
-            if not (isinstance(depthlist, list) or isinstance(depthlist, tuple)) or \
+            if not (isinstance(depthlist, (list, tuple))) or \
                 depthlist in ((), []) or \
                 len(depthlist) != 10 or \
                 len(depths) != 4:
@@ -823,42 +837,48 @@ class HallEffectProbe(BaseDeviceClass):
 # ---------------------------------- HYBRID OBJECTS -----------------------------------------
 # (Objects that contain both controlled devices and sensors)
 class GateValve(BaseDeviceClass):
-    def __init__(self, _id, _name, pins, pos_tolerance, max_open, min_open, ref_voltage):
+    def __init__(self, _id, _name):
         """This is the constructor"""
-        #NB: ID will be repeated eg "V4:V4" so that BaseDeviceClass and the
-        #rest of the software functions properly.
-        BaseDeviceClass.__init__(self, _id+":"+_id, _name)
+        BaseDeviceClass.__init__(self, _id, _name)
 
         self.control_thread = None
 
-        #NOTE: Valid BCM pins range from 2 to 27.
-        #Check that the pins specified are valid.
+        self.forward_pin = None #The pin to set the motor direction to backwards (opening gate).
+        self.reverse_pin = None #The pin to set the motor direction to backwards (closing gate).
+        self.clutch_pin = None #The pin to engage the clutch.
+
+        self.pos_tolerance = None #Positional tolerance in %.
+        self.max_open = None #Max open value in %.
+        self.min_open = None #Min open value in %.
+
+        self.ref_voltage = None #Reference voltage.
+        self.i2c_address = None #The hardware address for the A2D (ADC)
+
+    def set_pins(self, pins, _input=True):
+        """Wrapper for BaseDeviceClass that also sets forward_pin, reverse_pin, and clutch_pin."""
         if (not isinstance(pins, list) and \
             not isinstance(pins, tuple)) or \
             len(pins) != 3:
 
             raise ValueError("Invalid value for pins: "+str(pins))
 
-        for pin in pins:
-            if not isinstance(pin, int) or \
-                pin < 2 or \
-                pin > 27:
+        #Call the BaseDeviceClass method.
+        super().set_pins(pins, _input)
 
-                raise ValueError("Invalid pin(s): "+str(pins))
-
-        #Set all pins as outputs.
-        self.set_pins(pins, _input=False)
-
-        #The pin to set the motor direction to forwards (opening gate).
         self.forward_pin = pins[0]
-
-        #The pin to set the motor direction to backwards (closing gate).
         self.reverse_pin = pins[1]
-
-        #The pin to engage the clutch.
         self.clutch_pin = pins[2]
 
-        #Positional Tolerance in percent
+    def set_pos_tolerance(self, pos_tolerance):
+        """
+        This method sets the positional tolerance of this valve as a percentage.
+
+        Args:
+            pos_tolerance (int). Must be between 1 and 10.
+
+        Usage:
+            >>> <GateValve-Object>.set_pos_tolerance(5)
+        """
         if not isinstance(pos_tolerance, int) or \
             isinstance(pos_tolerance, bool) or \
             pos_tolerance < 1 or \
@@ -868,7 +888,18 @@ class GateValve(BaseDeviceClass):
 
         self.pos_tolerance = pos_tolerance
 
-        #Upper limit of valve position in percent
+    def set_max_open(self, max_open):
+        """
+        This method sets the maximum percentage the gate valve will open.
+
+        Args:
+            max_open (int). The maximum open value of this gate valve.
+                            Must be between 90 and 99.
+
+        Usage:
+
+            >>> <GateValve-Object>.set_max_open(95)
+        """
         if not isinstance(max_open, int) or \
             max_open < 90 or \
             max_open > 99:
@@ -877,7 +908,18 @@ class GateValve(BaseDeviceClass):
 
         self.max_open = max_open
 
-        #Lower limit of valve position in percent
+    def set_min_open(self, min_open):
+        """
+        This method sets the minimum percentage the gate valve will open.
+
+        Args:
+            min_open (int). The minimum open value of this gate valve.
+                            Must be between 1 and 10.
+
+        Usage:
+
+            >>> <GateValve-Object>.set_min_open(5)
+        """
         if not isinstance(min_open, int) or \
             min_open < 1 or \
             min_open > 10:
@@ -886,18 +928,44 @@ class GateValve(BaseDeviceClass):
 
         self.min_open = min_open
 
-        #Voltage at the top of the position pot
-        if not (isinstance(ref_voltage, int) or isinstance(ref_voltage, float)) or \
+    def set_ref_voltage(self, ref_voltage):
+        """
+        This method sets the reference voltage of the gate valve.
+
+        Args:
+            ref_voltage(float). The reference voltage of this gate valve.
+
+        Usage:
+
+            >>> <GateValve-Object>.set_ref_voltage(3.3)
+        """
+        if not isinstance(ref_voltage, (int, float)) or \
             ref_voltage < 2 or \
             ref_voltage > 5.5:
 
             raise ValueError("Invalid value for ref_voltage: "+str(ref_voltage))
 
         self.ref_voltage = ref_voltage
-        
+
+    def set_i2c_address(self, i2c_address):
+        """
+        This method sets the address of the valve on the i2c bus.
+
+        Args:
+            i2c_address(int). The address of this gate valve.
+
+        Usage:
+
+            >>> <GateValve-Object>.set_i2c_address(0x48)
+        """
+        if not isinstance(i2c_address, int):
+            raise ValueError("Invalid value for i2c_address: "+str(i2c_address))
+
+        self.i2c_address = i2c_address
+
     def start_thread(self):
         """Start the thread to manage the thread."""
-        self.control_thread = device_mgmt.ManageGateValve(self)
+        self.control_thread = device_mgmt.ManageGateValve(self, self.i2c_address)
 
     def get_pos_tolerance(self):
         """
@@ -935,7 +1003,7 @@ class GateValve(BaseDeviceClass):
 
         Returns:
 
-            float. The reference voltage of this gate valve.
+            int. The minimum open value of this gate valve.
 
         Usage:
 
@@ -950,15 +1018,31 @@ class GateValve(BaseDeviceClass):
 
         Returns:
 
-            int. The maximum open value of this gate valve.
+            float. The reference voltage of this gate valve.
 
         Usage:
 
-            >>> <GateValve-Object>.get_max_open()
+            >>> <GateValve-Object>.get_ref_voltage()
             >>> 3.3
         """
         return self.ref_voltage
 
+    def get_requested_position(self):
+        """
+        This method returns the most recent requested position for the gate valve.
+
+        Returns:
+
+            int. The position (0 - 100).
+
+        Usage:
+
+            >>> <GateValve-Object>.get_requested_position()
+            >>> 50
+        """
+        return self.control_thread.get_requested_position()
+
+    # ---------- CONTROL METHODS ----------
     def set_position(self, percentage):
         """
         This method sets the position of the gate valve to the given percentage.
@@ -993,7 +1077,7 @@ class GateValve(BaseDeviceClass):
         0% - fully closed.
         100% - fully open.
 
-        .. note::universal_monitor
+        .. note::
 
             Currently no fault checking is performed, so the string part of the return value
             is always "OK".

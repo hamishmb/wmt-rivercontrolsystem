@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Logging Tools for the River System Control and Monitoring Software
-# Copyright (C) 2017-2019 Wimborne Model Town
+# Copyright (C) 2017-2020 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
 # at your option, any later version.
@@ -21,7 +21,7 @@
 """
 This is the loggingtools module, which contains tools used by the logger.
 Currently, this a just a custom handler for the logger that will rotate
-the log file every day, and re-create it with a warning if it disappears.
+the log file every day, and re-create it if it disappears.
 
 .. module:: loggingtools.py
     :platform: Linux

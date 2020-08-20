@@ -16,9 +16,10 @@
 
 import datetime
 import sys
+import os
 
 #Import other modules.
-sys.path.append('../..') #Need to be able to import the Tools module from here.
+sys.path.insert(0, os.path.abspath('../../../')) #Need to be able to import the Tools module from here.
 
 #This is needed for access to BaseDeviceClass, which our dummy classes extend from.
 import Tools
@@ -162,6 +163,23 @@ def get_state_lockedbybuttspi(site_id, sensor_id):
 def get_state_unavailable(site_id, sensor_id):
     return None
 
+#Dummy do_query method.
+def fake_do_query(self, query, retries):
+    self.in_queue.append(query)
+
+    result = self.result
+    self.result = None
+
+    return result
+
+#Dummy logiccoretools.attempt_to_control method for sumppi control logic.
+def fake_attempt_to_control(site_id, sensor_id, request, retries=3):
+    return True
+
+#Dummy logiccoretools.update_status method for sumppi control logic.
+def fake_update_status(pi_status, sw_status, current_action, retries=3):
+    return True
+
 #Sample values for the arguments to the Reading class constructor.
 TEST_READING_DATA = [
     [str(datetime.datetime.now()), 0, "G4:M0", "400", "OK"],
@@ -266,17 +284,17 @@ TEST_ATTEMPT_TO_CONTROL_DATA = [
     ["SUMP", "P0", "Off"],
     ["SUMP", "P1", "On"],
     ["SUMP", "P1", "Off"],
-    ["V4", "V4", "1%"],
-    ["V4", "V4", "2%"],
-    ["V4", "V4", "3%"],
-    ["V4", "V4", "4%"],
-    ["V4", "V4", "5%"],
-    ["V4", "V4", "6%"],
-    ["V4", "V4", "7%"],
-    ["V4", "V4", "8%"],
-    ["V4", "V4", "9%"],
-    ["V4", "V4", "10%"],
-    ["V4", "V4", "11%"],
+    ["VALVE4", "V4", "1%"],
+    ["VALVE4", "V4", "2%"],
+    ["VALVE4", "V4", "3%"],
+    ["VALVE4", "V4", "4%"],
+    ["VALVE4", "V4", "5%"],
+    ["VALVE4", "V4", "6%"],
+    ["VALVE4", "V4", "7%"],
+    ["VALVE4", "V4", "8%"],
+    ["VALVE4", "V4", "9%"],
+    ["VALVE4", "V4", "10%"],
+    ["VALVE4", "V4", "11%"],
 ]
 
 #Bad sample values for arguments to the DatabaseConnection.attempt_to_control method.
@@ -286,16 +304,16 @@ TEST_ATTEMPT_TO_CONTROL_BAD_DATA = [
     ["", "P1", "On"],
     [3, "P1", "Off"],
     [True, "V4", "1%"],
-    ["V4", "", "2%"],
-    ["V4", "P4", 3],
-    ["V4", "V4", 12.4],
-    ["V4", "V4", {}],
-    ["V4", {}, "6%"],
+    ["VALVE4", "", "2%"],
+    ["VALVE4", "P4", 3],
+    ["VALVE4", "V4", 12.4],
+    ["VALVE4", "V4", {}],
+    ["VALVE4", {}, "6%"],
     [(), "V4", "7%"],
-    ["V4", None, "8%"],
+    ["VALVE4", None, "8%"],
     [[], "V4", "9%"],
     [False, "V4", True],
-    ["V4", "V4", None],
+    ["VALVE4", "V4", None],
 ]
 
 #Bad sample values for arguments to the DatabaseConnection.release_control method.
@@ -306,10 +324,10 @@ TEST_RELEASE_CONTROL_BAD_DATA = [
     [3, "P1"],
     [True, "V4"],
     ["V4", ""],
-    ["V4", "P4"],
-    ["V4", {}],
+    ["VALVE4", "P4"],
+    ["VALVE4", {}],
     [(), "V4"],
-    ["V4", None],
+    ["VALVE4", None],
     [[], "V4"],
     [False, "V4"],
     [3.14, "V4"],

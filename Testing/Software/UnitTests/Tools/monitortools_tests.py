@@ -29,11 +29,12 @@ import threading
 import subprocess
 
 #Import other modules.
-sys.path.append('../..') #Need to be able to import the Tools module from here.
+sys.path.insert(0, os.path.abspath('../../../')) #Need to be able to import the Tools module from here.
 
 import Tools
 import Tools.monitortools as monitor_tools
 import Tools.coretools as core_tools
+import Tools.logiccoretools as logiccoretools
 import Tools.deviceobjects as device_objects
 
 #Import test data and functions.
@@ -49,9 +50,14 @@ class TestBaseMonitorClass(unittest.TestCase):
 
         self.basemonitor.queue.append(self.reading)
 
+        self.orig_store_reading = logiccoretools.store_reading
+        logiccoretools.store_reading = data.fake_store_reading
+
     def tearDown(self):
         del self.reading
         del self.basemonitor
+
+        logiccoretools.store_reading = self.orig_store_reading
 
     def set_exited_flag(self):
         self.basemonitor.running = False
@@ -300,7 +306,7 @@ class TestBaseMonitorClass(unittest.TestCase):
         previous_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
 
         #Just a hack to make sure that the file is reported to exist.
-        self.basemonitor.current_file_name = "main.py"
+        self.basemonitor.current_file_name = "unittests.py"
 
         #Set the expiration time to midnight so we can rotate readings files.
         #This uses the datetime class cos it's easier to compare times that way.
@@ -419,6 +425,9 @@ class TestMonitor(unittest.TestCase):
         #Make sure it won't exit immediately.
         monitor_tools.config.EXITING = False
 
+        self.orig_store_reading = logiccoretools.store_reading
+        logiccoretools.store_reading = data.fake_store_reading
+
     def tearDown(self):
         del self.halleffectprobe
 
@@ -428,6 +437,8 @@ class TestMonitor(unittest.TestCase):
             os.mkdir("readings")
 
         os.chdir("../")
+
+        logiccoretools.store_reading = self.orig_store_reading
 
     def test_1(self):
         """Test that the class initialises and exits correctly (slow test)"""

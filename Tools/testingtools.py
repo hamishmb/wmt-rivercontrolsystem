@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Testing Tools for the River System Control and Monitoring Software
-# Copyright (C) 2017-2019 Wimborne Model Town
+# Copyright (C) 2017-2020 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
 # at your option, any later version.
@@ -15,8 +15,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-This module defines a couple of testing classes that simulate hardware, in order for the
-control software to be run more easily in test deployments without real hardware.
+This module defines some testing classes and functions that simulate hardware, in order for the
+control software to be run more easily in test deployments without real hardware, such as
+in virtual machines.
 
 The classes in this module override RPi.GPIO and parts of the adafruit_ads1x15.ads1115 module.
 """
@@ -68,5 +69,9 @@ class ADS:
     #Voltage.
     voltage = 0
 
-def AnalogIn(ads, pin):
+    @classmethod
+    def ADS1115(cls, i2c, address=None):
+        pass
+
+def AnalogIn(ads2, pin):
     return ADS

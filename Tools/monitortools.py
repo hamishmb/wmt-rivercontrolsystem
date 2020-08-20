@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Monitoring Tools for the River System Control and Monitoring Software
-# Copyright (C) 2017-2019 Wimborne Model Town
+# Copyright (C) 2017-2020 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
 # at your option, any later version.
@@ -43,6 +43,7 @@ import logging
 import config
 
 from . import coretools
+from . import logiccoretools
 
 #Don't ask for a logger name, so this works with both main.py
 #and the universal monitor.
@@ -70,10 +71,6 @@ class BaseMonitorClass(threading.Thread):
                                     this monitor is running on eg G4.
 
         probe_id (str):             The ID of the probe we're looking for.
-
-    Invokes:
-        threading.Thread.__init__(self), to initialise
-        the subclass deriving from this as a thread.
 
     Usage:
         >>> monitor = BaseMonitorClass(<system_id>, <probe_id>)
@@ -113,6 +110,9 @@ class BaseMonitorClass(threading.Thread):
 
         #The outgoing queue for readings collected by this thread.
         self.queue = deque()
+
+        #Queue for readings that couldn't be sent to the database.
+        self.db_queue = deque()
 
         #The latest-but-one reading.
         self.prev_reading = ""
@@ -285,7 +285,7 @@ class BaseMonitorClass(threading.Thread):
             self.file_handle.write("\nTIME,SYSTEM TICK,ID,VALUE,STATUS\n")
             self.file_handle.flush()
 
-        except Exception as error:
+        except (OSError, IOError) as error:
             logger.error("Exception \n\n"+str(traceback.format_exc())
                          + "\n\nwhile running!")
 
@@ -330,6 +330,33 @@ class BaseMonitorClass(threading.Thread):
         """
 
         write_failed = False
+
+        if not hasattr(self, "socket"):
+            #Write readings to the database as well as to the files, as long as this
+            #isn't just a sockets monitor running on the NAS box.
+            #Try to send any queued readings.
+            while self.db_queue:
+                try:
+                    logiccoretools.store_reading(self.db_queue[0])
+
+                except RuntimeError:
+                    #Break out after first error rather than trying loads of readings.
+                    print("Error: Couldn't store queued reading, trying again later!")
+                    logger.error("Error: Couldn't store queued reading, trying again later!")
+                    break
+
+                else:
+                    self.db_queue.popleft()
+
+            try:
+                logiccoretools.store_reading(reading)
+
+            except RuntimeError:
+                #Queue to send later.
+                self.db_queue.append(reading)
+
+                print("Error: Couldn't store current reading, queueing for later!")
+                logger.error("Error: Couldn't store current reading, queueing for later!")
 
         try:
             if reading == previous_reading:
@@ -530,7 +557,7 @@ class Monitor(BaseMonitorClass):
                 #Construct a Reading object to hold this info.
                 #Args in order: Time, Tick, ID, Value, Status
                 reading = coretools.Reading(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-                                            0,
+                                            config.TICK,
                                             self.probe.get_id(),
                                             str(the_reading), status_text)
 
@@ -574,6 +601,10 @@ class SocketsMonitor(BaseMonitorClass):
     This is the universal sockets monitor thread that is used to monitor all
     probe types over a socket. It inherits from BaseMonitorClass. This is
     also quite a simple class.
+
+    .. note::
+        This class may eventually be removed  as it is no longer used, seeing as
+        we now have the database in the NAS box for storing readings.
 
     Documentation for constructor for objects of type SocketsMonitor:
 
@@ -644,6 +675,9 @@ class SocketsMonitor(BaseMonitorClass):
                     except IndexError:
                         break
 
+                    if not isinstance(reading, coretools.Reading):
+                        break
+
                     #Check the reading is from the right probe.
                     #NB: Could check site ID, but we'll have a socket for each one, so a non-issue.
                     if reading.get_sensor_id() == self.probe_id:
@@ -656,12 +690,11 @@ class SocketsMonitor(BaseMonitorClass):
                         if should_continue:
                             continue
 
-                        else:
-                            #Remove the reading from the socket's queue.
-                            self.socket.pop()
+                        #Remove the reading from the socket's queue.
+                        self.socket.pop()
 
-                            #Add it to the queue.
-                            self.queue.append(reading)
+                        #Add it to the queue.
+                        self.queue.append(reading)
 
                     else:
                         #Wait a bit for the other monitor(s) to pick it up.

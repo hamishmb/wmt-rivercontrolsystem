@@ -22,14 +22,16 @@
 from collections import deque
 import unittest
 import sys
+import os
 import time
 import threading
 import select
 import socket
 
 #Import other modules.
-sys.path.append('../..') #Need to be able to import the Tools module from here.
+sys.path.insert(0, os.path.abspath('../../../')) #Need to be able to import the Tools module from here.
 
+import config
 import Tools
 import Tools.sockettools as socket_tools
 
@@ -40,10 +42,21 @@ class TestSockets(unittest.TestCase):
     """This test class tests the features of the Sockets class in Tools/sockettools.py"""
 
     def setUp(self):
-        self.socket = socket_tools.Sockets("Plug")
+        #Shallow copy only, but should hopefully be good enough.
+        self.orig_site_settings = config.SITE_SETTINGS.copy()
+        config.SITE_SETTINGS.update(data.TEST_SITES)
+
+        self.socket = socket_tools.Sockets("Plug", "ST0", "ST0 Socket")
 
     def tearDown(self):
         del self.socket
+
+        #Reset the site settings.
+        config.SITE_SETTINGS = self.orig_site_settings
+
+        #Keep clearing this, because otherwise it gets filled up with sockets
+        #from previous tests, and causes later tests to fail.
+        config.SOCKETSLIST = []
 
     def set_exited_flag(self):
         self.socket.handler_exited = True
@@ -51,7 +64,7 @@ class TestSockets(unittest.TestCase):
     def test_constructor_1(self):
         """Test #1: Test that the constructor works when no name is specified"""
         for _type in ("Plug", "Socket"):
-            socket = socket_tools.Sockets(_type)
+            socket = socket_tools.Sockets(_type, "ST0")
 
             self.assertEqual(socket.port_number, -1)
             self.assertEqual(socket.server_address, "")
@@ -71,7 +84,7 @@ class TestSockets(unittest.TestCase):
     def test_constructor_2(self):
         """Test #2: Test that the constructor works when a name is specified"""
         for _type in ("Plug", "Socket"):
-            socket = socket_tools.Sockets(_type, "Test Socket")
+            socket = socket_tools.Sockets(_type, "ST0", "Test Socket")
 
             self.assertEqual(socket.port_number, -1)
             self.assertEqual(socket.server_address, "")
@@ -92,7 +105,7 @@ class TestSockets(unittest.TestCase):
         """Test #3: Test that the constructor fails when _type is not 'Plug' or 'Socket'"""
         for _type in ("plug", "socket", "test", "notatype", None, 1, True):
             try:
-                socket = socket_tools.Sockets(_type, "Test Socket")
+                socket = socket_tools.Sockets(_type, "ST0", "Test Socket")
 
             except ValueError:
                 #Expected.
@@ -106,7 +119,7 @@ class TestSockets(unittest.TestCase):
         """Test #4: Test that the constructor fails when name is not a string"""
         for _name in (None, 1, True, 6.7, (), [], {}):
             try:
-                socket = socket_tools.Sockets("Socket", _name)
+                socket = socket_tools.Sockets("Socket", "ST0", _name)
 
             except ValueError:
                 #Expected.
@@ -115,6 +128,20 @@ class TestSockets(unittest.TestCase):
             else:
                 #All of these must throw errors!
                 self.assertTrue(False, "ValueError expected for data: "+str(_name))
+
+    def test_constructor_5(self):
+        """Test #5: Test that the constructor fails when ID is invalid"""
+        for sysid in ("NOTANID", "T78", None, 1, True, 6.7, (), [], {}):
+            try:
+                socket = socket_tools.Sockets("Socket", sysid, "test")
+
+            except ValueError:
+                #Expected.
+                pass
+
+            else:
+                #All of these must throw errors!
+                self.assertTrue(False, "ValueError expected for data: "+str(sysid))
 
     def test_set_portnumber_1(self):
         """Test #1: Test that this works when valid portnumbers are passed."""
@@ -200,6 +227,7 @@ class TestSockets(unittest.TestCase):
         self.assertEqual(self.socket.server_socket, None)
 
     def test_reset_2(self):
+        """Test #2: This that this works as expected when an OSError occurs"""
         self.socket.server_socket = data.fake_socket_oserror
 
         self.socket.reset()
@@ -321,7 +349,7 @@ class TestSockets(unittest.TestCase):
         self.socket._create_socket()
 
         #Create a plug to connect to it.
-        self.plug = socket_tools.Sockets("Plug", "Test Socket")
+        self.plug = socket_tools.Sockets("Plug", "ST1", "Test Socket")
 
         self.plug._create_plug()
 
@@ -471,7 +499,7 @@ class TestSockets(unittest.TestCase):
         self.socket.type = "Socket"
         self.socket.port_number = 30000
 
-        self.plug = socket_tools.Sockets("Plug")
+        self.plug = socket_tools.Sockets("Plug", "ST1")
         self.plug.server_address = "127.0.0.1"
         self.plug.port_number = 30000
 
@@ -636,6 +664,206 @@ class TestSockets(unittest.TestCase):
 
         self.socket.underlying_socket = None
         socket_tools.select = select
+
+    def test__forward_messages_1(self):
+        """Test #1: Test this works as expected when there are no pending messages to forward."""
+        self.assertTrue(self.socket._forward_messages())
+
+    def test__forward_messages_2(self):
+        """Test #2: Test this runs without error when a message cannot be forwarded (slow test)."""
+        self.socket.type = "Socket"
+        self.socket.server_address = "127.0.0.1"
+        self.socket.port_number = 30000
+
+        self.plug = socket_tools.Sockets("Plug", "ST1")
+        self.plug.server_address = "127.0.0.1"
+        self.plug.port_number = 30000
+
+        try:
+            #This needs to be concurrent to work.
+            threading.Timer(1, self.socket._create_and_connect).start()
+            threading.Timer(5, self.plug._create_and_connect).start()
+
+            time.sleep(15)
+
+            #Check that the sockets have connected (15 seconds should be long enough).
+            self.assertTrue(self.socket.is_ready())
+            self.assertTrue(self.plug.is_ready())
+
+            #Write the message to be forwarded.
+            #ID to forward to should not be available (test will fail if it is).
+            self.socket.write("*G4* test")
+            self.assertTrue(self.socket._send_pending_messages())
+
+            time.sleep(5)
+
+            #Receive the message at the other socket.
+            self.assertEqual(self.plug._read_pending_messages(), 0)
+            self.assertTrue(self.plug._forward_messages())
+
+            time.sleep(5)
+
+            self.assertFalse(self.socket.out_queue)
+            self.assertFalse(self.socket.in_queue)
+
+            #Make sure the message didn't arrive anywhere.
+            self.assertFalse(self.plug.has_data())
+            self.assertFalse(self.socket.has_data())
+
+            self.assertFalse(self.socket.internal_request_exit)
+            self.assertTrue(self.socket.ready_to_send)
+
+            self.assertFalse(self.plug.internal_request_exit)
+            self.assertTrue(self.plug.ready_to_send)
+
+        except Exception as e:
+            #Unexpected!
+            raise e
+
+        finally:
+            #Reset everything
+            self.socket.underlying_socket.close()
+            self.socket.reset()
+            self.plug.reset()
+
+            del self.socket.type
+
+            del self.plug.server_address
+            del self.plug.port_number
+
+        self.socket.write("*NOTANID* test")
+
+        self.assertTrue(self.socket._forward_messages())
+
+    def test__forward_messages_3(self):
+        """Test #3: Test this works when there is no need to forward a message (slow test)."""
+        self.socket.type = "Socket"
+        self.socket.server_address = "127.0.0.1"
+        self.socket.port_number = 30000
+
+        self.plug = socket_tools.Sockets("Plug", "ST1")
+        self.plug.server_address = "127.0.0.1"
+        self.plug.port_number = 30000
+
+        try:
+            #This needs to be concurrent to work.
+            threading.Timer(1, self.socket._create_and_connect).start()
+            threading.Timer(5, self.plug._create_and_connect).start()
+
+            time.sleep(15)
+
+            #Check that the sockets have connected (15 seconds should be long enough).
+            self.assertTrue(self.socket.is_ready())
+            self.assertTrue(self.plug.is_ready())
+
+            #Write the message to be forwarded.
+            #ID to forward to is the same as the ID of the receiving socket - no need to forward it.
+            self.socket.write("*ST1* test")
+            self.assertTrue(self.socket._send_pending_messages())
+
+            time.sleep(5)
+
+            #Receive the message at the other socket.
+            self.assertEqual(self.plug._read_pending_messages(), 0)
+            self.assertTrue(self.plug._forward_messages())
+
+            time.sleep(5)
+
+            self.assertFalse(self.socket.out_queue)
+            self.assertFalse(self.socket.in_queue)
+
+            #Make sure the message arrived.
+            self.assertTrue(self.plug.has_data())
+            self.assertEqual(self.plug.read(), "test")
+
+            self.assertFalse(self.socket.internal_request_exit)
+            self.assertTrue(self.socket.ready_to_send)
+
+            self.assertFalse(self.plug.internal_request_exit)
+            self.assertTrue(self.plug.ready_to_send)
+
+        except Exception as e:
+            #Unexpected!
+            raise e
+
+        finally:
+            #Reset everything
+            self.socket.underlying_socket.close()
+            self.socket.reset()
+            self.plug.reset()
+
+            del self.socket.type
+
+            del self.plug.server_address
+            del self.plug.port_number
+
+    def test__forward_messages_4(self):
+        """Test #4: Test this forwards a message when it should (slow test)."""
+        self.socket.type = "Socket"
+        self.socket.server_address = "127.0.0.1"
+        self.socket.port_number = 30000
+
+        self.plug = socket_tools.Sockets("Plug", "ST1", "ST1 Socket")
+        self.plug.server_address = "127.0.0.1"
+        self.plug.port_number = 30000
+
+        try:
+            #This needs to be concurrent to work.
+            threading.Timer(1, self.socket._create_and_connect).start()
+            threading.Timer(5, self.plug._create_and_connect).start()
+
+            time.sleep(15)
+
+            #Check that the sockets have connected (15 seconds should be long enough).
+            self.assertTrue(self.socket.is_ready())
+            self.assertTrue(self.plug.is_ready())
+
+            #Write the message to be forwarded.
+            #ID to forward to is the same as the ID of the sending socket - should return to sender.
+            self.socket.write("*ST0* test")
+            self.assertTrue(self.socket._send_pending_messages())
+
+            time.sleep(5)
+
+            #Receive and forward the message at the other socket.
+            self.assertEqual(self.plug._read_pending_messages(), 0)
+            self.assertTrue(self.plug._forward_messages())
+            self.assertTrue(self.plug._send_pending_messages())
+
+            time.sleep(5)
+
+            #Receiver at the initial end again.
+            self.assertEqual(self.socket._read_pending_messages(), 0)
+
+            time.sleep(5)
+
+            self.assertFalse(self.socket.out_queue)
+            self.assertTrue(self.socket.in_queue)
+
+            #Make sure the message arrived.
+            self.assertTrue(self.socket.has_data())
+            self.assertEqual(self.socket.read(), "test")
+
+            self.assertFalse(self.socket.internal_request_exit)
+            self.assertTrue(self.socket.ready_to_send)
+
+            self.assertFalse(self.plug.internal_request_exit)
+            self.assertTrue(self.plug.ready_to_send)
+
+        except Exception as e:
+            #Unexpected!
+            raise e
+
+        finally:
+            #Reset everything
+            self.socket.underlying_socket.close()
+            self.socket.reset()
+            self.plug.reset()
+
+            del self.socket.type
+
+            del self.plug.server_address
+            del self.plug.port_number
 
     def test__process_obj_1(self):
         """Test #1: Test this works when everything is fine."""

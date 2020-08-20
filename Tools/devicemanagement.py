@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Device management classes for the River System Control and Monitoring Software
-# Copyright (C) 2017-2019 Wimborne model Town
+# Copyright (C) 2017-2020 Wimborne model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
 # at your option, any later version.
@@ -25,9 +25,9 @@ This is the part of the software framework that contains classes to help manage 
 These take the form of management threads to separate coordination of each of these
 more complicated devices, from the classes that represent the devices themselves.
 
-.. module:: deviceobjects.py
+.. module:: devicemanagement.py
     :platform: Linux
-    :synopsis: The part of the framework that contains the control/probe/sensor classes.
+    :synopsis: The part of the framework that contains the management code for device classes.
 
 .. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk> and Terry Coles <WMT@hadrian-way.co.uk
 
@@ -64,8 +64,6 @@ try:
     # Create the I2C bus
     i2c = busio.I2C(board.SCL, board.SDA)
 
-    # Create the ADC object using the I2C bus
-    ads = ADS.ADS1115(i2c)
 
 except (ImportError, NotImplementedError, ValueError) as error:
     if isinstance(error, ValueError):
@@ -90,6 +88,8 @@ except (ImportError, NotImplementedError, ValueError) as error:
         from Tools.testingtools import ads
         from Tools.testingtools import AnalogIn
 
+        i2c = None
+
 def reconfigure_logger():
     """
     Reconfigures the logging level for this module.
@@ -102,7 +102,7 @@ class ManageHallEffectProbe(threading.Thread):
     This class is used to repeatedly poll the level of the hall effect probe, and
     make these levels available to the monitor thread. This is done because we can
     no longer use the hardware interrupts as with the old hall effect probe - this
-    one uses and ADC.
+    one uses an ADC.
 
     Documentation for the constructor for objects of type ManageHallEffectProbe:
 
@@ -114,10 +114,13 @@ class ManageHallEffectProbe(threading.Thread):
 
     """
 
-    def __init__(self, probe):
+    def __init__(self, probe, i2c_address):
         """The constructor, set up some basic threading stuff"""
         #Initialise the thread.
         threading.Thread.__init__(self)
+
+        # Create the ADC object using the I2C bus
+        self.ads = ADS.ADS1115(i2c, address=i2c_address)
 
         #Make the probe object available to the rest of the class.
         self.probe = probe
@@ -126,10 +129,13 @@ class ManageHallEffectProbe(threading.Thread):
         self.ads_lock = threading.RLock()
 
         # Create four single-ended inputs on channels 0 to 3
-        self.chan0 = AnalogIn(ads, ADS.P0)
-        self.chan1 = AnalogIn(ads, ADS.P1)
-        self.chan2 = AnalogIn(ads, ADS.P2)
-        self.chan3 = AnalogIn(ads, ADS.P3)
+        self.chan0 = AnalogIn(self.ads, ADS.P0)
+        self.chan1 = AnalogIn(self.ads, ADS.P1)
+        self.chan2 = AnalogIn(self.ads, ADS.P2)
+        self.chan3 = AnalogIn(self.ads, ADS.P3)
+
+        #For debugging.
+        self.count = 0
 
         self.start()
 
@@ -151,6 +157,9 @@ class ManageHallEffectProbe(threading.Thread):
                 self.probe._current_reading = new_reading
 
             time.sleep(0.5)
+
+            if config.DEBUG:
+                self.count += 1
 
     def get_compensated_probe_voltages(self):
         """
@@ -180,6 +189,17 @@ class ManageHallEffectProbe(threading.Thread):
         v_meas.append(self.chan3.voltage)
         self.ads_lock.release()
 
+        #Do 10 minutes of probe voltage dumping if we're in debug mode.
+        if config.DEBUG:
+            if self.count < 1200:
+                logger.info("Voltages ("+self.probe.get_id()+"): "+str(v_meas[0])+", "
+                            + str(v_meas[1])+", "+str(v_meas[2])
+                            +", "+str(v_meas[3]))
+
+                print("Voltages ("+self.probe.get_id()+"): "+str(v_meas[0])+", "
+                      + str(v_meas[1])+", "+str(v_meas[2])
+                      +", "+str(v_meas[3]))
+
         #Find the minimum value
         v_min = min(v_meas)
 
@@ -201,7 +221,7 @@ class ManageHallEffectProbe(threading.Thread):
                 v_comp[min_column] = v_avg - v_min
 
             else:
-                #TODO: Will this ever happen? It seems impossible to me - Hamish.
+                #NB: Catchall for any corner cases where a minimum cannot be determined.
                 v_comp[min_column] = v_avg
 
         return (v_comp, min_column)
@@ -244,6 +264,13 @@ class ManageHallEffectProbe(threading.Thread):
 
             count += 1
 
+        #Print level that corresponds to the voltage if we're in debug mode.
+        if config.DEBUG:
+            if self.count < 1200:
+                logger.info("Level ("+self.probe.get_id()+"): "+str(level))
+
+                print("Level ("+self.probe.get_id()+"): "+str(level))
+
         return level
 
 class ManageGateValve(threading.Thread):
@@ -254,19 +281,20 @@ class ManageGateValve(threading.Thread):
     Documentation for the constructor for objects of type ManageGateValve:
 
     Args:
-        valve (BaseDeviceClass-Object).         The valve to manage.
+        valve (GateValve-Object).         The valve to manage.
+        i2c_address (int).                The i2c_address of the ADC. Most easily expressed in hexadecimal.
 
     Usage:
-        mgmt_thread = ManageGateValve(<valve-object>)
-
+        >>> mgmt_thread = ManageGateValve(<valve-object>, 0x48)
     """
 
-    #FIXME The documentation for this constructor is wrong -
-    #there are extra arguments that we need to explain in the docstring.
-    def __init__(self, valve):
+    def __init__(self, valve, i2c_address):
         """The constructor, set up some basic threading stuff."""
         #Store a reference to the GateValve object.
         self.valve = valve
+
+        # Create the ADC object using the I2C bus
+        self.ads = ADS.ADS1115(i2c, address=i2c_address)
 
         self._exit = False
 
@@ -382,7 +410,6 @@ class ManageGateValve(threading.Thread):
                 self.low_limit = self.valve.min_open
                 #Add 1 to make sure the valve can close, but doesn't strain the
                 #motor if alignment isn't perfect.
-                #TODO Tolerance increased to 2%, see if hunting stops.
                 self.high_limit = self.valve.min_open + 2
 
             else:
@@ -403,10 +430,8 @@ class ManageGateValve(threading.Thread):
             built in to prevent this, but it can still happen.
         """
 
-        #traceback.print_stack()
-
         #Create the Analog reading object to read Ch 0 of the A/D
-        chan = AnalogIn(ads, ADS.P0)
+        chan = AnalogIn(self.ads, ADS.P0)
 
         try:
             #Get voltage reading for channel 0 (the position pot slider)
@@ -442,6 +467,13 @@ class ManageGateValve(threading.Thread):
         """
 
         return self.actual_position
+
+    def get_requested_position(self):
+        """
+        Returns the most recent requested position for the gate valve.
+        """
+
+        return self.percentage
 
     #-------------------- SETTER METHODS --------------------
     def set_position(self, percentage):

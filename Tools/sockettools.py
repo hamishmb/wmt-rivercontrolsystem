@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Socket Tools for the River System Control and Monitoring Software
-# Copyright (C) 2017-2019 Wimborne Model Town
+# Copyright (C) 2017-2020 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
 # at your option, any later version.
@@ -33,9 +33,11 @@ you want to send to the queue, and then SocketsHandlerThread
 sends the data down the socket ASAP, but if it couldn't send it,
 it will stay in the queue until it is successfully sent.
 
+This now also includes the ability to forward messages, as documented above.
+
 .. module:: sockettools.py
     :platform: Linux
-    :synopsis: The part of the framework that contains the sockets/network communications classes.
+    :synopsis: The part of the framework that contains the sockets classes.
 
 .. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
 
@@ -46,6 +48,7 @@ import socket
 import select
 import threading
 import traceback
+import subprocess
 import time
 import logging
 import pickle
@@ -68,19 +71,21 @@ class Sockets:
     Documentation for constructor of objects of type Socket:
 
     Args:
-        the_type (string):      The type of socket we are constructing.
+        _type (string):         The type of socket we are constructing.
                                 **MUST** be one of "Plug", or "Socket".
+
+        system_id (str):        The system ID.
 
     Kwargs:
         name (string):          The human-readable name of the socket.
                                 Optional.
 
     Usage:
-        >>> my_socket = Sockets("Plug")
+        >>> my_socket = Sockets("Plug", "G4")
 
         OR
 
-        >>> my_socket = Sockets("Plug", "G4 Socket")
+        >>> my_socket = Sockets("Plug", "G4", "G4 Socket")
 
     .. note::
         On instantiation, messages to the commandline are enabled.
@@ -92,11 +97,15 @@ class Sockets:
     #pylint: disable=too-many-public-methods
     #We need all of these public methods too.
 
-    def __init__(self, _type, name="Unknown"):
+    def __init__(self, _type, system_id, name="Unknown"):
         """The constructor, as documented above."""
         #Throw ValueError if _type is invalid.
         if _type not in ("Plug", "Socket"):
             raise ValueError("_type must be either 'Plug' or 'Socket'")
+
+        #Throw ValueError if system_id is invalid.
+        if not isinstance(system_id, str) or system_id not in config.SITE_SETTINGS:
+            raise ValueError("Invalid system ID")
 
         #Throw ValueError if name is invalid.
         if not isinstance(name, str):
@@ -107,6 +116,7 @@ class Sockets:
         self.server_address = ""
         self.type = _type
         self.name = name
+        self.system_id = system_id
         self.underlying_socket = None
         self.server_socket = None
         self.handler_thread = None
@@ -121,6 +131,10 @@ class Sockets:
         #Message queues (actually lists).
         self.in_queue = deque()
         self.out_queue = deque()
+        self.forward_queue = deque()
+
+        #Add this sockets object to the list.
+        config.SOCKETSLIST.append(self)
 
     # ---------- Setup Functions ----------
     def set_portnumber(self, port_number):
@@ -129,8 +143,6 @@ class Sockets:
 
         Args:
             port_number (int):      The port number for the socket.
-
-
 
         .. warning::
                 Be aware that if this number is < than 1024, you need root
@@ -157,8 +169,7 @@ class Sockets:
         This method sets the server address for the socket.
 
         Note:
-            This is only useful when creating a 'Plug' (client socket).
-            Otherwise, it will be ignored.
+            Now needed for both sockets, so we can ping the peer.
 
         Args:
             server_address (string):        The server address.
@@ -230,9 +241,7 @@ class Sockets:
         self.internal_request_exit = False
         self.handler_exited = False
 
-        #Queues.
-        self.in_queue = deque()
-        self.out_queue = deque()
+        #Don't reset queues, as this will drop pending data!
 
         #Sockets.
         try:
@@ -366,6 +375,39 @@ class Sockets:
             raise ValueError("Type must be 'Plug' or 'Socket'")
 
     # ---------- Handler Thread & Functions ----------
+    def peer_alive(self):
+        """
+        Used to ping peer once at other end of the connection to check if it is still up.
+
+        Used on first connection, and periodically so we know if a host goes down.
+
+        Returns:
+            boolean.        True = peer is online
+                            False = peer is offline
+
+        Usage:
+            >>> <Sockets-Obj>.peer_alive()
+            >>> True
+        """
+        try:
+            #Ping the peer one time.
+            subprocess.run(["ping", "-c", "1", "-W", "2", self.server_address],
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
+
+            #If there was no error, this was fine.
+            logger.debug("Sockets.peer_alive(): ("+self.name+"): Peer is up...")
+            return True
+
+        except subprocess.CalledProcessError:
+            #Non-zero exit status.
+            logger.warning("Sockets.peer_alive(): ("+self.name+"): Peer is down!")
+
+            if self.verbose:
+                print("Connection Failed, peer down ("+self.name+"). "
+                      + "Retrying in 10 seconds...")
+
+            return False
+
     def _create_and_connect(self):
         """
         PRIVATE, implementation detail.
@@ -395,6 +437,7 @@ class Sockets:
 
             #We are now connected.
             logger.info("Sockets._create_and_connect(): ("+self.name+"): Done!")
+            self.internal_request_exit = False
             self.ready_to_send = True
 
         except ConnectionRefusedError as err:
@@ -657,6 +700,53 @@ class Sockets:
         logger.debug("Sockets._send_pending_messages(): ("+self.name+"): Done.")
         return True
 
+    def _forward_messages(self):
+        """
+        PRIVATE, implementation detail.
+
+        Puts any messages that we need to forward on the correct socket's queue.
+        Should only be used by the handler thread.
+        Returns True if successful, False if not/queue empty.
+
+        Usage:
+
+            >>> <Sockets-Obj>._forward_messages()
+            >>> True
+        """
+
+        logger.debug("Sockets._forward_messages(): ("+self.name+"): Forwarding any pending messages...")
+
+        #Forward all pending messages, if there are any.
+        while self.forward_queue:
+            #Write the oldest message first.
+            logger.info("Sockets._forward_messages(): ("+self.name+"): Forwarding data...")
+
+            msg = self.forward_queue[0]
+
+            #Find the correct socket to send the message to.
+            dest_sysid = msg.split(" ")[0].replace("*", "")
+            dest_ipaddr = config.SITE_SETTINGS[dest_sysid]["IPAddress"]
+
+            dest_socket = None
+
+            for _socket in config.SOCKETSLIST:
+                if _socket.server_address == dest_ipaddr:
+                    dest_socket = _socket
+
+            if dest_socket is None:
+                #Couldn't find the socket to forward this message to!
+                logger.error("Sockets._forward_messages(): ("+self.name+"): Cannot forward message for "+dest_sysid+"! Dropping message.")
+
+            else:
+                dest_socket.write(msg)
+
+            #Remove the oldest message from message queue.
+            logger.debug("Sockets._forward_messages(): ("+self.name+"): Clearing front of forward_queue...")
+            self.forward_queue.popleft()
+
+        logger.debug("Sockets._forward_messages(): ("+self.name+"): Done.")
+        return True
+
     def _read_pending_messages(self):
         """
         PRIVATE, implementation detail.
@@ -727,16 +817,47 @@ class Sockets:
             return -1
 
     def _process_obj(self, obj):
+        """
+        Used to "un-serialize" data received from the peer.
+
+        Either pushes message to incoming or forwarding queue depending on whether
+        the message is for this pi or not.
+
+        Args:
+            obj (str).          Serialised object.
+        """
+
         #Push the unpickled objects to the message queue.
         #We need to un-serialize the data first.
-        logger.debug("Sockets._process_obj(): ("+self.name+"): Pushing message to IncomingQueue...")
-
         try:
-            self.in_queue.append(pickle.loads(obj))
+            msg = pickle.loads(obj)
 
         except (_pickle.UnpicklingError, TypeError, EOFError):
             logger.error("Sockets._process_obj(): ("+self.name+"): Error unpickling data from socket: "+str(obj))
             print("Unpickling error ("+self.name+"): "+str(obj))
+            return
+
+        if isinstance(msg, str):
+            potential_sysid = msg.split(" ")[0].replace("*", "")
+
+        else:
+            potential_sysid = None
+
+        #Append to the appropriate queue.
+        if potential_sysid != self.system_id and potential_sysid in config.SITE_SETTINGS:
+            #Needs to be sent to another device.
+            logger.debug("Sockets._process_obj(): ("+self.name+"): Pushing message to forward queue...")
+            self.forward_queue.append(msg)
+
+        else:
+            #This message is intended for us.
+            logger.debug("Sockets._process_obj(): ("+self.name+"): Pushing message to incoming queue...")
+
+            if isinstance(msg, str) and "*" in msg:
+                self.in_queue.append(' '.join(msg.split(" ")[1:]))
+
+            else:
+                self.in_queue.append(msg)
 
 class SocketHandlerThread(threading.Thread):
     """
@@ -789,7 +910,10 @@ class SocketHandlerThread(threading.Thread):
         logger.debug("Sockets.Handler(): ("+self.socket.name+"): Calling self.socket._create_and_connect to set the socket up...")
 
         while not config.EXITING:
-            self.socket._create_and_connect()
+            self.socket.internal_request_exit = True
+
+            if self.socket.peer_alive():
+                self.socket._create_and_connect()
 
             #If we have connected without error, break out of this loop and enter the main loop.
             if not self.socket.internal_request_exit:
@@ -810,15 +934,29 @@ class SocketHandlerThread(threading.Thread):
 
         #-------------------- Manage the connection, sending and receiving data --------------------
         #Keep sending and receiving messages until we're asked to exit.
+        iters_count = 0
+        last_ping_good = True
+
         while not config.EXITING:
             #Send any pending messages.
             write_result = self.socket._send_pending_messages()
 
+            #Queue any messages to forward on the correct socket.
+            self.socket._forward_messages()
+
             #Receive messages if there are any.
             read_result = self.socket._read_pending_messages()
 
-            #Check if the peer left.
-            if read_result == -1 or write_result is False:
+            #Do a ping, if it's time (we don't want to do one every time and flood the network).
+            #This should be roughly every 30 seconds.
+            if iters_count < 30:
+                iters_count += 1
+
+            else:
+                iters_count = 0
+                last_ping_good = self.socket.peer_alive()
+
+            if read_result == -1 or write_result is False or not last_ping_good:
                 logger.error("Sockets.Handler(): ("+self.socket.name+"): Lost connection. Attempting to reconnect...")
 
                 if self.socket.verbose:
@@ -827,7 +965,7 @@ class SocketHandlerThread(threading.Thread):
 
                 #Wait for the socket to reconnect, unless the user ends the program
                 #(this allows us to exit cleanly if the peer is gone).
-                while not config.EXITING:
+                while not config.EXITING: #FIXME code duplication
                     #Reset the socket. Also resets the status trackers.
                     logger.error("Sockets.Handler(): ("+self.socket.name+"): Resetting socket...")
                     self.socket.reset()
@@ -835,13 +973,17 @@ class SocketHandlerThread(threading.Thread):
                     #Wait for 10 seconds in between attempts.
                     time.sleep(10)
 
+                    self.socket.internal_request_exit = True
+
                     logger.debug("Sockets.Handler(): ("+self.socket.name+"): Recreating and reconnecting the socket...")
-                    self.socket._create_and_connect()
+                    if self.socket.peer_alive():
+                        self.socket._create_and_connect()
 
                     #If reconnection was successful, set flag and return to normal operation.
                     if not self.socket.internal_request_exit:
                         logger.debug("Sockets.Handler(): ("+self.socket.name+"): Success! Re-entering main loop...")
                         self.socket.reconnected = True
+                        last_ping_good = True
 
                         if self.socket.verbose:
                             print("Reconnected to peer ("+self.socket.name+").")
