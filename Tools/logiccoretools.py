@@ -226,6 +226,8 @@ def release_control(site_id, sensor_id, retries=3):
 def log_event(event, severity="INFO", retries=3):
     """
     This method logs the given event message in the database.
+    
+    Use it sparingly, to log events that seem significant.
 
     Args:
         event (str).                The event to log.
@@ -250,6 +252,17 @@ def log_event(event, severity="INFO", retries=3):
 def update_status(pi_status, sw_status, current_action, retries=3):
     """
     This method logs the given statuses and action(s) in the database.
+    
+    pi_status can be used to provide useful hardware and OS status.
+    
+    sw_status can be used to provide useful information about the status of the
+    river control system software, which could include a current state or mode
+    of the control logic.
+    
+    current_action can be used to describe current physical actions such as
+    intended water movements.
+    
+    All should be concise.
 
     Args:
         pi_status (str).            The current status of this pi.
