@@ -1996,7 +1996,7 @@ class StagePiReadingsParser():
     
     def g4FullOrMore(self):
         """
-        Returns true if G4 is full (>900mm)
+        Returns true if G4 is full or more (>900mm)
         """
         return (not self.G4_full or self.G4_level > 900)
     
@@ -2079,7 +2079,7 @@ class StagePiG4OverfilledState(ControlStateABC):
         logger.info("Setting up state " + self.getStateName())
         print("Setting up state " + self.getStateName())
         
-        #Close V12 to stop V6/V4 water flow
+        #Close V12 to stop G6/G4 water flow
         sockets["SOCK22"].write("Valve Position 0")
         
         #TODO: When the matrix pump is implemented, instead of closing
@@ -2118,7 +2118,7 @@ class StagePiG4FilledState(ControlStateABC):
         logger.info("Setting up state " + self.getStateName())
         print("Setting up state " + self.getStateName())
         
-        #Close V12 to stop V6/V4 water flow
+        #Close V12 to stop G6/G4 water flow
         sockets["SOCK22"].write("Valve Position 0")
         
         #TODO: when the matrix pump is implemented, we need to request it to
@@ -2163,7 +2163,7 @@ class StagePiG4VeryNearlyFilledState(ControlStateABC):
         logger.info("Setting up state " + self.getStateName())
         print("Setting up state " + self.getStateName())
         
-        #Open V12 slightly to allow some water flow from V6 to V4
+        #Open V12 slightly to allow some water flow from G6 to G4
         sockets["SOCK22"].write("Valve Position 25")
         
         #TODO: when the matrix pump is implemented, we need to:
@@ -2210,7 +2210,7 @@ class StagePiG4NearlyFilledState(ControlStateABC):
         logger.info("Setting up state " + self.getStateName())
         print("Setting up state " + self.getStateName())
         
-        #Open V12 a bit to allow some water flow from V6 to V4
+        #Open V12 a bit to allow some water flow from G6 to G4
         sockets["SOCK22"].write("Valve Position 50")
         
         #TODO: when the matrix pump is implemented, we need to:
@@ -2252,7 +2252,7 @@ class StagePiG4FillingState(ControlStateABC):
         logger.info("Setting up state " + self.getStateName())
         print("Setting up state " + self.getStateName())
         
-        #Open V12 fully to allow water flow from V6 to V4
+        #Open V12 fully to allow water flow from G6 to G4
         sockets["SOCK22"].write("Valve Position 100")
         
         #TODO: when the matrix pump is implemented, we need to:
@@ -2364,7 +2364,7 @@ def stagepi_control_logic(readings, devices, monitors, sockets, reading_interval
     
     This just wraps StagePiControlLogic.doLogic().
     
-    See StagePiValveOnlyControlLogic for documentation.
+    See StagePiControlLogic for documentation.
 
     Args:
         readings (list):                A list of the latest readings for each probe/device.

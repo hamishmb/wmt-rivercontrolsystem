@@ -366,17 +366,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "True",
                                             "OK")
-    
-    #TESTING FUDGE: Creat some dummy readings to enable Stage Pi Control logic
-    #to be tested using old version of main.py.
-    #NO CODE FROM BETWEEN THE FOLLOWING TWO HORIZONTAL DASHED LINES SHOULD GET
-    #COMITTED INTO THE GITLAB REPOSITORY. IF FOUND OUTSIDE OF PATRICK'S LAPTOP,
-    #PLEASE REMOVE THIS PART.
-    #---------------------------------------------------------------------------
-    
-    readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "0mm", "OK")
-    
-    #---------------------------------------------------------------------------
 
     #Make a reading intervals dictionary for temporary storage of the reading intervals.
     #Assume 15 seconds by default.
