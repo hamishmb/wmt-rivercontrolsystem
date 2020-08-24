@@ -85,7 +85,7 @@ class ControlStateABC(metaclass=ABCMeta):
         return 60
     
     @abstractmethod
-    def doLogic(self, readings, devices, monitors, sockets, reading_interval):
+    def doLogic(self, reading_interval):
         """
         Performs control logic appropriate to this state, returns an
         updated reading_interval, and transitions to another state if
@@ -252,7 +252,7 @@ class ControlStateMachineABC(metaclass=ABCMeta):
         """
         raise NotImplementedError
     
-    def doLogic(self, readings, devices, monitors, sockets, reading_interval):
+    def doLogic(self, reading_interval):
         """
         Executes the control logic of this control strategy.
 
@@ -283,4 +283,4 @@ class ControlStateMachineABC(metaclass=ABCMeta):
             >>>                                     <listofsockets>, <areadinginterval)
 
         """
-        return self.state.doLogic(readings, devices, monitors, sockets, reading_interval)
+        return self.state.doLogic(reading_interval)
