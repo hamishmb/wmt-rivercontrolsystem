@@ -772,7 +772,9 @@ class DatabaseConnection(threading.Thread):
             for site_id in config.SITE_SETTINGS:
                 #-- Repair all site-specific tables in case of corruption --
                 self.do_query("""REPAIR TABLE `"""+site_id+"""Control`;""", 0)
-                self.do_query("""REPAIR TABLE `"""+site_id+"""Readings`;""", 0)
+
+                if site_id != "NAS":
+                    self.do_query("""REPAIR TABLE `"""+site_id+"""Readings`;""", 0)
 
                 query = """DELETE FROM `"""+site_id+"""Control`;"""
 
