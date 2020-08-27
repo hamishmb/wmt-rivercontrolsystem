@@ -750,6 +750,11 @@ class DatabaseConnection(threading.Thread):
         #It doesn't matter that these aren't done immediately - every query is done on
         #a first-come first-served basis.
 
+        # -- NAS box: Repair system status and system tick tables in case of corruption --
+        if self.site_id == "NAS":
+            self.do_query("""REPAIR TABLE `SystemStatus`;""", 0)
+            self.do_query("""REPAIR TABLE `SystemTick`;""", 0)
+        
         #----- Remove and reset the status entry for this device, if it exists -----
         query = """DELETE FROM `SystemStatus` """ \
                 + """ WHERE `System ID` = '"""+self.site_id+"""';"""
@@ -765,7 +770,11 @@ class DatabaseConnection(threading.Thread):
         #----- NAS box: Clear any locks we're holding and create control entries for devices -----
         if self.site_id == "NAS":
             for site_id in config.SITE_SETTINGS:
-                query = """DELETE FROM `"""+site_id+"""Control;"""
+                #-- Repair all site-specific tables in case of corruption --
+                self.do_query("""REPAIR TABLE `"""+site_id+"""Control`;""", 0)
+                self.do_query("""REPAIR TABLE `"""+site_id+"""Readings`;""", 0)
+
+                query = """DELETE FROM `"""+site_id+"""Control`;"""
 
                 self.do_query(query, 0)
 
