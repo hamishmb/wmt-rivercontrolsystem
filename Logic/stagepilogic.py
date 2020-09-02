@@ -44,6 +44,15 @@ logger.setLevel(logging.getLogger('River System Control Software').getEffectiveL
 for handler in logging.getLogger('River System Control Software').handlers:
     logger.addHandler(handler)
 
+csm = None
+"""
+The csm variable holds an instance of the StagePiControlLogic control state
+machine, to enable state persistence.
+
+Used by the stagepi_control_logic function.
+Initialised by the stagepi_control_logic_setup function.
+"""
+
 class StagePiReadingsParser():
     """
     This class extracts data from sensor readings and presents it
@@ -183,10 +192,6 @@ class StagePiInitState(ControlStateABC):
         return 15
     
     def doLogic(self, reading_interval):
-        initmsg = "Control logic state is StagePiInitState."
-        logger.info(initmsg)
-        print(initmsg)
-        
         ri = self.getPreferredReadingInterval()
         
         #Create readings parser

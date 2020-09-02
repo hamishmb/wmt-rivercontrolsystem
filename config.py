@@ -505,6 +505,7 @@ SITE_SETTINGS = {
             "IPAddress": "192.168.0.6",
             "HostingSockets": False,
             "ControlLogicFunction": "stagepi_control_logic",
+            "ControlLogicSetupFunction": "stagepi_control_logic_setup",
             "DBUser": "sbuttspi",
             "DBPasswd": "river20",
             "DBHost": "192.168.0.25",

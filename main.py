@@ -373,6 +373,14 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     for _siteid in config.SITE_SETTINGS:
         reading_intervals[_siteid] = 15
+    
+    #Run logic set-up function
+    if "ControlLogicSetupFunction" in config.SITE_SETTINGS[system_id]:
+        function = getattr(core_tools,
+                            config.SITE_SETTINGS[system_id]["ControlLogicSetupFunction"])
+
+        function()
+    
 
     #Keep tabs on its progress so we can write new readings to the file.
     try:

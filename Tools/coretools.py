@@ -44,7 +44,7 @@ import os.path
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from Logic.stagepilogic import StagePiControlLogic
+from Logic import stagepilogic
 import inspect
 
 import config
@@ -1941,6 +1941,8 @@ def stagepi_control_logic(readings, devices, monitors, sockets, reading_interval
     
     This just wraps StagePiControlLogic.doLogic().
     
+    Run stagepi_control_logic_setup once before first running this function.
+    
     See StagePiControlLogic for documentation.
 
     Args:
@@ -1968,33 +1970,51 @@ def stagepi_control_logic(readings, devices, monitors, sockets, reading_interval
         >>>                                     <listofsockets>, <areadinginterval)
 
     """
-    #G6 Stage Pi doesn't have any devices, so devices list will be empty.
-
-    #G6 Stage Pi doesn't host any sockets, so sockets list will be empty.
-    
     #Check that the reading interval is positive, and greater than 0.
     assert reading_interval > 0
     
-    #TODO: Refactor config.py and main.py to run a set-up function
-    #      before the logic, which will instantiate the control logic
-    #      state machine somewhere where this function can reference it
+    try:
+        #TODO: write a test that checks that none of the control state
+        #      names is long enough to cause this string to exceed the
+        #      maximum accepted by the database
+        software_status = "OK, in " + stagepilogic.csm.getCurrentStateName()
     
-    #For now, just initialise the object here. It will constatnly reset
-    #to its initial state, but it's enough for a simple test run
-    csm = StagePiControlLogic()
+    except AttributeError:
+        software_status = "OUT COLD. No CSM."
+        
     
     try:
         logiccoretools.update_status("Up, CPU: " + config.CPU
                                      +"%, MEM: " + config.MEM + " MB",
-                                     "OK, in " + csm.getCurrentStateName(),
+                                     software_status,
                                      "None")
-        #TODO: implement current_action status other than "None".
+        #TODO: implement current_action status other than "None" by extending
+        #      ControlStateABC with a currentAction member to be overriden by
+        #      each state class.
 
     except RuntimeError:
         print("Error: Couldn't update site status!")
         logger.error("Error: Couldn't update site status!")
     
-    return csm.doLogic(reading_interval)
+    try:
+        return stagepilogic.csm.doLogic(reading_interval)
+    
+    except AttributeError:
+        msg = ("CRITICAL ERROR: Stage Pi logic has not been initialised. "
+               "Check whether the setup function has been run.")
+        print(msg)
+        logger.critical(msg)
+        
+        return reading_interval
+
+def stagepi_control_logic_setup():
+    """
+    Set-up function for stagepi's control logic.
+    
+    Initialises a StagePiControlLogic object for state persistence.
+    """
+    #Initialise the control state machine
+    stagepilogic.csm = stagepilogic.StagePiControlLogic()
 
 # -------------------- MISCELLANEOUS FUNCTIONS --------------------
 def setup_devices(system_id, dictionary="Probes"):
