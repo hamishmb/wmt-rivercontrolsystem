@@ -227,6 +227,8 @@ class ControlStateMachineABC(metaclass=ABCMeta):
         print(stateChangeMsg)
         
         self.state = self._getNamedState(stateName)
+        
+        self.state.setupState()
     
     def getCurrentStateName(self):
         """
