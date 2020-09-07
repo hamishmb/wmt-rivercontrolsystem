@@ -1656,9 +1656,26 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
     #Remove the 'mm' from the end of the reading value and convert to int.
     sump_reading = int(readings["SUMP:M0"].get_value().replace("m", ""))
 
-    butts_reading = int(logiccoretools.get_latest_reading("G4", "M0").get_value().replace("m", ""))
-    butts_float_reading = logiccoretools.get_latest_reading("G4", "FS0")
+    try:
+        butts_reading = int(logiccoretools.get_latest_reading("G4", "M0").get_value().replace("m", ""))
 
+    except RuntimeError:
+        print("Error: Error trying to get latest G4:M0 reading!")
+        logger.error("Error: Error trying to get latest G4:M0 reading!")
+
+        #Default to empty instead.  
+        butts_reading = 0
+
+    try:
+        butts_float_reading = logiccoretools.get_latest_reading("G4", "FS0")
+
+    except RuntimeError:
+        print("Error: Error trying to get latest G4:FS0 reading!")
+        logger.error("Error: Error trying to get latest G4:FS0 reading!")
+
+        #Default to empty instead.  
+        butts_float_reading = "False"
+    
     #Get a reference to both pumps.
     main_pump = None
     butts_pump = None
