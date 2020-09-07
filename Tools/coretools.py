@@ -1171,6 +1171,12 @@ class DatabaseConnection(threading.Thread):
 
             return False
 
+        #If everything is already as we want it then don't do anything but return True.
+        if state[0] == "Locked" and state[1] == request and \
+            state[2] == self.site_id:
+
+            return True
+
         #Otherwise we may now take control.
         query = """UPDATE `"""+site_id+"""Control` SET `Device Status` = 'Locked', """ \
                 + """`Request` = '"""+request+"""', `Locked By` = '"""+self.site_id \
