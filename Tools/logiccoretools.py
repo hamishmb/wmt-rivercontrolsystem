@@ -270,6 +270,32 @@ def update_status(pi_status, sw_status, current_action, retries=3):
 
     return config.DBCONNECTION.update_status(pi_status, sw_status, current_action, retries)
 
+def get_latest_tick(retries=3):
+    """
+    This method gets the latest tick from the database. Used to restore
+    the system tick on NAS bootup.
+
+    .. warning::
+            This is only meant to be run from the NAS box. The pis
+            get the ticks over the socket - this is a much less
+            efficient way to deliver system ticks.
+
+    Kwargs:
+        retries[=3] (int).          The number of times to retry before giving up
+                                    and raising an error.
+
+    Throws:
+        RuntimeError, if the query failed too many times.
+
+    Returns:
+        int. The latest system tick.
+
+    Usage:
+        >>> tick = get_latest_tick()
+    """
+
+    return config.DBCONNECTION.get_latest_tick(retries)
+
 def store_tick(tick, retries=3):
     """
     This method stores the given system tick in the database.

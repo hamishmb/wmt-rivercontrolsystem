@@ -1346,6 +1346,47 @@ class DatabaseConnection(threading.Thread):
 
         self.log_event("Updated status")
 
+    def get_latest_tick(self, retries=3):
+        """
+        This method gets the latest tick from the database. Used to restore
+        the system tick on NAS bootup.
+
+        .. warning::
+                This is only meant to be run from the NAS box. The pis
+                get the ticks over the socket - this is a much less
+                efficient way to deliver system ticks.
+
+        Kwargs:
+            retries[=3] (int).          The number of times to retry before giving up
+                                        and raising an error.
+
+        Throws:
+            RuntimeError, if the query failed too many times.
+
+        Returns:
+            int. The latest system tick.
+
+        Usage:
+            >>> tick = get_latest_tick()
+        """
+
+        if config.SYSTEM_ID != "NAS":
+            return
+
+        query = """SELECT * FROM `SystemTick` ORDER BY `ID` DESC """ \
+                + """LIMIT 0, 1;"""
+
+        result = self.do_query(query, retries)
+
+        #Store the part of the results that we want (only the tick).
+        try:
+            result = result[0][1]
+
+        except IndexError:
+            result = None
+
+        return result
+
     def store_tick(self, tick, retries=3):
         """
         This method stores the given system tick in the database.
@@ -1422,24 +1463,13 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
     #---------- System tick ----------
     #Restore the system tick from the database if needed.
     if config.TICK == 0:
-        #Get the latest readings for each probe, and
-        #find the last tick that was used.
-        for _site_id in config.SITE_SETTINGS:
-            for _probe in config.SITE_SETTINGS[_site_id]["Probes"]:
-                _probe_id = _probe.split(":")[1]
+        #Get the latest tick from the system tick table.
+        try:
+            config.TICK = logiccoretools.get_latest_tick()
 
-                try:
-                    reading = logiccoretools.get_latest_reading(_site_id, _probe_id)
-
-                except RuntimeError:
-                    print("Error: Couldn't get reading for "+_site_id+":"+_probe_id+"!")
-                    logger.error("Error: Couldn't get reading for "+_site_id+":"+_probe_id+"!")
-
-                    reading = None
-
-                if reading is not None:
-                    if reading.get_tick() > config.TICK:
-                        config.TICK = reading.get_tick()
+        except RuntimeError:
+            print("Error: Couldn't get latest tick!")
+            logger.error("Error: Couldn't get latest tick!")
 
         #Log if we managed to get a newer tick.
         if config.TICK != 0:
