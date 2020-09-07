@@ -1469,19 +1469,19 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
     #---------- Monitor the temperature of the NAS box and the drives ----------
     #System board temp.
     cmd = subprocess.run(["temperature_monitor", "-b"],
-                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
 
     sys_temp = cmd.stdout.decode("UTF-8", errors="ignore").split()[-1]
 
     #HDD 0 temp.
     cmd = subprocess.run(["temperature_monitor", "-c", "0"],
-                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
 
     hdd0_temp = cmd.stdout.decode("UTF-8", errors="ignore").split()[-1]
 
     #HDD 1 temp.
     cmd = subprocess.run(["temperature_monitor", "-c", "1"],
-                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
 
     hdd1_temp = cmd.stdout.decode("UTF-8", errors="ignore").split()[-1]
 
