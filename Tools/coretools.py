@@ -466,8 +466,11 @@ class DatabaseConnection(threading.Thread):
         #A flag to show if the DB thread is running or not.
         self.is_running = False
 
-        #Stop us filling up the event log with identical events.
+        #Stop us filling up the event log with identical events and statuses.
         self.last_event = None
+        self.last_pi_status = None
+        self.last_sw_status = None
+        self.last_current_action = None
 
         #We need a queue for the asynchronous database write operations.
         self.in_queue = deque()
@@ -1317,6 +1320,16 @@ class DatabaseConnection(threading.Thread):
             current_action == "":
 
             raise ValueError("Invalid Current Action: "+str(current_action))
+
+        #Ignore if this status is exactly the same as the last one.
+        if pi_status == self.last_pi_status and sw_status == self.last_sw_status \
+            and current_action == self.last_current_action:
+
+            return
+
+        self.last_pi_status = pi_status
+        self.last_sw_status = sw_status
+        self.last_current_action = current_action
 
         query = """UPDATE SystemStatus SET `Pi Status` = '"""+pi_status \
                 + """', `Software Status` = '"""+sw_status \
