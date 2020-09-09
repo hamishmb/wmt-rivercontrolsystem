@@ -137,7 +137,7 @@ class ControlStateMachineABC(metaclass=ABCMeta):
         """
         self.states = {} # initialise dictionary to hold list of states
     
-    def _addState(self, state):
+    def _addState(self, stateClass):
         """
         Adds a new state to this machine's dictionary of possible
         states. This method is only for use in subclass initialisers.
@@ -146,9 +146,9 @@ class ControlStateMachineABC(metaclass=ABCMeta):
         functioning of getNamedState.
         
         Args:
-            state (ControlStateABC): state to add
+            stateClass (ControlStateABC): state class to add
         """
-        self.states[state.getStateName()] = state(self)
+        self.states[stateClass.getStateName()] = stateClass(self)
     
     def _getNamedState(self, stateName):
         """
