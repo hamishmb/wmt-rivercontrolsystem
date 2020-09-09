@@ -93,28 +93,41 @@ class StagePiReadingsParser():
         self.G6_full = G6FS0 == "True"
         self.G6_empty = G6FS1 == "True"
     
+    def _g6sensorContradictionError(self):
+        """
+        Private method to to print and log an error about G6 appearing
+        to be simultaneously full and empty.
+        """
+        msg = ("\nERROR! G6 Stage Butts Group reads as full and empty "
+               "simultaneously, with sensor readings:\n"
+               "G6:FS0 (high) = " + str(self.G6_full) + "\n"
+               "G6:FS1 (low) = " + str(self.G6_empty) + "\n"
+               "G6:M0 (depth) = " + str(self.G6_level) + "mm\n"
+               "Check for sensor faults in G6.")
+        print(msg)
+        logger.error(msg)
+        
+        try:
+            logiccoretools.log_event("G6 sensors contradict", "ERROR")
+        except RuntimeError:
+            msg = "Error while trying to log error event over network."
+            print(msg)
+            logger.error(msg)
+    
     def g6Full(self):
         """
         Returns true if G6 is full
         """
         if(self.G6_full or self.G6_level > 975):
-            try:
-                assert self.G6_empty == False
+            if(self.G6_empty == False):
                 return true
-            except:
-                msg = ("ERROR! G6 Stage Butts Group reads as full and empty "
-                       "simultaneously, with sensor readings:\n"
-                       "G6:FS0 (high) = " + self.G6_full + "\n"
-                       "G6:FS1 (low) = " + self.G6_empty + "\n"
-                       "G6:M0 (float) = " + self.G6_level + "mm\n"
-                       "Check for sensor faults in G6.")
-                logger.error(msg)
-                try:
-                    logiccoretools.log_event(msg, "ERROR")
-                except RuntimeError:
-                    msg = "Error while trying to log error event over network."
-                    print(msg)
-                    logger.error(msg)
+            else:
+                self._g6sensorContradictionError()
+                
+                #The following error could be raised in __init__(), but
+                #raising it here avoids stalling the logic if it doesn't
+                #actually need to know whether G6 is full.
+                raise ValueError("G6 sensor values contradict")
         else:
             return false
     
@@ -123,24 +136,15 @@ class StagePiReadingsParser():
         Returns true if G6 is empty (<25mm)
         """
         if(self.G6_empty or self.G6_level <= 25):
-            try:
-                assert self.G6_full == False
+            if(self.G6_full == False):
                 return true
-            except:
-                msg = ("ERROR! G6 Stage Butts Group reads as full and empty "
-                       "simultaneously, with sensor readings:\n"
-                       "G6:FS0 (high) = " + self.G6_full + "\n"
-                       "G6:FS1 (low) = " + self.G6_empty + "\n"
-                       "G6:M0 (float) = " + self.G6_level + "mm\n"
-                       "Check for sensor faults in G6.")
-                logger.error(msg)
-                try:
-                    logiccoretools.log_event(msg, "ERROR")
-                except RuntimeError:
-                    msg = "Error while trying to log error event over network."
-                    print(msg)
-                    logger.error(msg)
-                    
+            else:
+                self._g6sensorContradictionError()
+                
+                #The following error could be raised in __init__(), but
+                #raising it here avoids stalling the logic if it doesn't
+                #actually need to know whether G6 is empty.
+                raise ValueError("G6 sensor values contradict")
         else:
             return false
     
@@ -205,25 +209,33 @@ class StagePiInitState(ControlStateABC):
             logger.error(msg)
             return ri
         
-        #Prepare to transition to new state
-        if parser.g4Overfull():
-            ri = self.csm.setStateBy(StagePiG4OverfilledState, self)
- 
-        else:
-            if parser.g6Empty():
-                ri = self.csm.setStateBy(StagePiG6EmptyState, self)
-                
-            elif parser.g4FullOrMore():
-                ri = self.csm.setStateBy(StagePiG4FilledState, self)
-                
-            elif parser.g4VeryNearlyFullOrMore():
-                ri = self.csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
-                
-            elif parser.g4NearlyFullOrMore():
-                ri = self.csm.setStateBy(StagePiG4NearlyFilledState, self)
-                
+        try:
+            #Prepare to transition to new state
+            if parser.g4Overfull():
+                ri = self.csm.setStateBy(StagePiG4OverfilledState, self)
+    
             else:
-                ri = self.csm.setStateBy(StagePiG4FillingState, self)
+                if parser.g6Empty():
+                    ri = self.csm.setStateBy(StagePiG6EmptyState, self)
+                    
+                elif parser.g4FullOrMore():
+                    ri = self.csm.setStateBy(StagePiG4FilledState, self)
+                    
+                elif parser.g4VeryNearlyFullOrMore():
+                    ri = self.csm.setStateBy(StagePiG4VeryNearlyFilledState,
+                                             self)
+                    
+                elif parser.g4NearlyFullOrMore():
+                    ri = self.csm.setStateBy(StagePiG4NearlyFilledState, self)
+                    
+                else:
+                    ri = self.csm.setStateBy(StagePiG4FillingState, self)
+                    
+        except ValueError:
+            msg = ("Could not parse sensor readings. Control logic is "
+                   "stalled.")
+            print(msg)
+            logger.error(msg)
 
         return ri
 
@@ -266,13 +278,20 @@ class StagePiG4OverfilledState(ControlStateABC):
             logger.error(msg)
             return ri
         
-        #Evaluate possible transitions to new states
-        if not parser.g6Empty():
-            if not parser.g4Overfull():
-                ri = self.csm.setStateBy(StagePiG4FilledState, self)
-                
-        #In the event that G6 is empty, then we want to stay in
-        #G4OverfilledState, so that water can be pumped back into G6.
+        try:
+            #Evaluate possible transitions to new states
+            if not parser.g6Empty():
+                if not parser.g4Overfull():
+                    ri = self.csm.setStateBy(StagePiG4FilledState, self)
+                    
+            #In the event that G6 is empty, then we want to stay in
+            #G4OverfilledState, so that water can be pumped back into G6.
+            
+        except ValueError:
+            msg = ("Could not parse sensor readings. Control logic is "
+                   "stalled.")
+            print(msg)
+            logger.error(msg)
         
         return ri
     
@@ -317,16 +336,24 @@ class StagePiG4FilledState(ControlStateABC):
             logger.error(msg)
             return ri
         
-        #Evaluate possible transitions to new states
-        if not parser.g6Empty():
-            if parser.g4Overfull():
-                ri = self.csm.setStateBy(StagePiG4OverfilledState, self)
+        try:
+            #Evaluate possible transitions to new states
+            if not parser.g6Empty():
+                if parser.g4Overfull():
+                    ri = self.csm.setStateBy(StagePiG4OverfilledState, self)
+                    
+                elif not parser.g4FullOrMore():
+                    ri = self.csm.setStateBy(StagePiG4VeryNearlyFilledState,
+                                             self)
                 
-            elif not parser.g4FullOrMore():
-                ri = self.csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
-            
-        else:
-            ri = self.csm.setStateBy(StagePiG6EmptyState, self)
+            else:
+                ri = self.csm.setStateBy(StagePiG6EmptyState, self)
+        
+        except ValueError:
+            msg = ("Could not parse sensor readings. Control logic is "
+                   "stalled.")
+            print(msg)
+            logger.error(msg)
         
         return ri
 
@@ -378,16 +405,23 @@ class StagePiG4VeryNearlyFilledState(ControlStateABC):
             logger.error(msg)
             return ri
         
-        #Evaluate possible transitions to new states
-        if not parser.g6Empty():
-            if parser.g4FullOrMore():
-                ri = self.csm.setStateBy(StagePiG4FilledState, self)
+        try:
+            #Evaluate possible transitions to new states
+            if not parser.g6Empty():
+                if parser.g4FullOrMore():
+                    ri = self.csm.setStateBy(StagePiG4FilledState, self)
+                    
+                elif not parser.g4VeryNearlyFullOrMore():
+                    ri = self.csm.setStateBy(StagePiG4NearlyFilledState, self)
                 
-            elif not parser.g4VeryNearlyFullOrMore():
-                ri = self.csm.setStateBy(StagePiG4NearlyFilledState, self)
-            
-        else:
-            ri = self.csm.setStateBy(StagePiG6EmptyState, self)
+            else:
+                ri = self.csm.setStateBy(StagePiG6EmptyState, self)
+        
+        except ValueError:
+            msg = ("Could not parse sensor readings. Control logic is "
+                   "stalled.")
+            print(msg)
+            logger.error(msg)
         
         return ri
 
@@ -439,16 +473,24 @@ class StagePiG4NearlyFilledState(ControlStateABC):
             logger.error(msg)
             return ri
         
-        #Evaluate possible transitions to new states
-        if not parser.g6Empty():
-            if parser.g4VeryNearlyFullOrMore():
-                ri = self.csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
+        try:
+            #Evaluate possible transitions to new states
+            if not parser.g6Empty():
+                if parser.g4VeryNearlyFullOrMore():
+                    ri = self.csm.setStateBy(StagePiG4VeryNearlyFilledState,
+                                             self)
+                    
+                elif not parser.g4NearlyFullOrMore():
+                    ri = self.csm.setStateBy(StagePiG4FillingState, self)
                 
-            elif not parser.g4NearlyFullOrMore():
-                ri = self.csm.setStateBy(StagePiG4FillingState, self)
-            
-        else:
-            ri = self.csm.setStateBy(StagePiG6EmptyState, self)
+            else:
+                ri = self.csm.setStateBy(StagePiG6EmptyState, self)
+        
+        except ValueError:
+            msg = ("Could not parse sensor readings. Control logic is "
+                   "stalled.")
+            print(msg)
+            logger.error(msg)
         
         return ri
 
@@ -495,13 +537,20 @@ class StagePiG4FillingState(ControlStateABC):
             logger.error(msg)
             return ri
         
-        #Evaluate possible transitions to new states
-        if not parser.g6Empty():
-            if parser.g4NearlyFullOrMore():
-                ri = self.csm.setStateBy(StagePiG4NearlyFilledState, self)
-                
-        else:
-            ri = self.csm.setStateBy(StagePiG6EmptyState, self)
+        try:
+            #Evaluate possible transitions to new states
+            if not parser.g6Empty():
+                if parser.g4NearlyFullOrMore():
+                    ri = self.csm.setStateBy(StagePiG4NearlyFilledState, self)
+                    
+            else:
+                ri = self.csm.setStateBy(StagePiG6EmptyState, self)
+        
+        except ValueError:
+            msg = ("Could not parse sensor readings. Control logic is "
+                   "stalled.")
+            print(msg)
+            logger.error(msg)
         
         return ri
     
@@ -546,27 +595,35 @@ class StagePiG6EmptyState(ControlStateABC):
             logger.error(msg)
             return ri
         
-        #Evaluate possible transitions to new states
+        try:
+            #Evaluate possible transitions to new states
+            
+            #Unlike the other four states, we can enter G4OverfilledState even if
+            #G6 remains empty
+            if(parser.g4Overfull()):
+                ri = self.csm.setState(StagePiG4OverfilledState)
+            
+            #If G6 is no longer empty, enter the appropriate filling state for
+            #the current G4 fill level
+            elif not parser.g6Empty():
+                if parser.g4FullOrMore():
+                    ri = self.csm.setStateBy(StagePiG4FilledState, self)
+                
+                elif parser.g4VeryNearlyFullOrMore():
+                    ri = self.csm.setStateBy(StagePiG4VeryNearlyFilledState,
+                                             self)
+                
+                elif parser.g4NearlyFullOrMore():
+                    ri = self.csm.setStateBy(StagePiG4NearlyFilledState, self)
+                
+                else:
+                    ri = self.csm.setStateBy(StagePiG4FillingState, self)
         
-        #Unlike the other four states, we can enter G4OverfilledState even if
-        #G6 remains empty
-        if(parser.g4Overfull()):
-            ri = self.csm.setState(StagePiG4OverfilledState)
-        
-        #If G6 is no longer empty, enter the appropriate filling state for
-        #the current G4 fill level
-        elif not parser.g6Empty():
-            if parser.g4FullOrMore():
-                ri = self.csm.setStateBy(StagePiG4FilledState, self)
-            
-            elif parser.g4VeryNearlyFullOrMore():
-                ri = self.csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
-            
-            elif parser.g4NearlyFullOrMore():
-                ri = self.csm.setStateBy(StagePiG4NearlyFilledState, self)
-            
-            else:
-                ri = self.csm.setStateBy(StagePiG4FillingState, self)
+        except ValueError:
+            msg = ("Could not parse sensor readings. Control logic is "
+                   "stalled.")
+            print(msg)
+            logger.error(msg)
         
         return ri
 
