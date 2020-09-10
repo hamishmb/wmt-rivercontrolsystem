@@ -1716,7 +1716,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         butts_reading = 0
 
     try:
-        butts_float_reading = logiccoretools.get_latest_reading("G4", "FS0")
+        butts_float_reading = logiccoretools.get_latest_reading("G4", "FS0").get_value()
 
     except RuntimeError:
         print("Error: Error trying to get latest G4:FS0 reading!")
@@ -1747,7 +1747,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
     assert reading_interval > 0
 
     #Check that the butts float switch reading is sane.
-    assert butts_float_reading.get_value() in ("True", "False")
+    assert butts_float_reading in ("True", "False")
 
     if sump_reading >= 600:
         #Level in the sump is getting high.
@@ -1773,7 +1773,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
         #Pump some water to the butts if they aren't full.
         #If they are full, do nothing and let the sump overflow.
-        if butts_float_reading.get_value() == "False":
+        if butts_float_reading == "False":
             #Pump to the butts.
             logger.warning("Pumping water to the butts...")
             print("Pumping water to the butts...")
