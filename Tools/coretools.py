@@ -738,6 +738,14 @@ class DatabaseConnection(threading.Thread):
 
             time.sleep(10)
 
+        except Exception:
+            logger.error("DatabaseConnection: Unexpected error while connecting: "+str(error)
+                         + "Retrying in 10 seconds...")
+
+            self._cleanup(database, cursor)
+
+            time.sleep(10)
+
         else:
             #We are connected!
             self.is_connected = True
