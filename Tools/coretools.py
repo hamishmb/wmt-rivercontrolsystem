@@ -1494,6 +1494,9 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
                 logger.error("Error: Couldn't log event saying that tick was restored to "
                              + str(config.TICK)+"!")
 
+    if config.TICK is None:
+        config.TICK = 0
+
     #Increment the system tick by 1.
     config.TICK += 1
 
