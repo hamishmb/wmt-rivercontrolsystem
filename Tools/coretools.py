@@ -1719,7 +1719,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
     try:
         butts_reading = int(logiccoretools.get_latest_reading("G4", "M0").get_value().replace("m", ""))
 
-    except RuntimeError:
+    except (RuntimeError, AttributeError):
         print("Error: Error trying to get latest G4:M0 reading!")
         logger.error("Error: Error trying to get latest G4:M0 reading!")
 
@@ -1729,7 +1729,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
     try:
         butts_float_reading = logiccoretools.get_latest_reading("G4", "FS0").get_value()
 
-    except RuntimeError:
+    except (RuntimeError, AttributeError):
         print("Error: Error trying to get latest G4:FS0 reading!")
         logger.error("Error: Error trying to get latest G4:FS0 reading!")
 
