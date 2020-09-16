@@ -1480,7 +1480,7 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
             logger.error("Error: Couldn't get latest tick!")
 
         #Log if we managed to get a newer tick.
-        if config.TICK != 0:
+        if config.TICK not in (0, None):
             print("Restored system tick from database: "+str(config.TICK))
             logger.info("Restored system tick from database: "+str(config.TICK))
 
