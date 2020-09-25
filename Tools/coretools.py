@@ -1939,7 +1939,8 @@ def stagepi_control_logic(readings, devices, monitors, sockets, reading_interval
     """
     Control logic for stagepi's zone of responsibility.
     
-    This just wraps StagePiControlLogic.doLogic().
+    This mainly just wraps StagePiControlLogic.doLogic(), but it also contains
+    some other integration glue.
     
     Run stagepi_control_logic_setup once before first running this function.
     
