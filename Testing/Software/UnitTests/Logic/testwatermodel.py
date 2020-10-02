@@ -30,9 +30,11 @@ for the purpose of testing control logic.
 .. moduleauthor:: Patrick Wigmore <pwbugreports@gmx.com>
 """
 import re
+import sys
+import os.path
 
 sys.path.insert(0, os.path.abspath('../../../..'))
-import Tools.coretools.Reading as Reading
+from Tools.coretools import Reading
 
 class Vessel():
     """
@@ -63,6 +65,20 @@ class Vessel():
         """
         return self._level
     
+    def setLevel(self, level):
+        """
+        Sets this Vessel's level to the specified level, in mm.
+        
+        If the level is less than 0, then it will be taken to be 0.
+        
+        Args:
+            level (int):    The new water level for this Vessel, in mm
+        """
+        if level < 0:
+            level = 0
+        
+        self._level = level
+    
     def getID(self):
         """
         Returns the ID of this Vessel
@@ -71,28 +87,6 @@ class Vessel():
             string  this Vessel's ID
         """
         return self._id
-    
-    def drain(self, amount):
-        """
-        Drains a number of millimetres from this Vessel's water level.
-        
-        Args:
-            amount (int)    amount of water to drain from the Vessel, in mm
-        """
-        self._level = self._level - amount
-        
-        if self._level < 0:
-            self._level = 0
-    
-    def fill(self, amount):
-        """
-        Fills a number of millimetres of water into this Vessel, raising
-        its level.
-        
-        Args:
-            amount (int)    amount of water to fill into the Vessel, in mm
-        """
-        self._level = self._level + amount
 
 class ModelObject():
     """
@@ -163,7 +157,7 @@ class ModelObject():
         Returns:
             (int)   number of fault states
         """
-        raise NotImplementedError()
+        return 1    # Default to no fault states
     
     def identifyFault(self):
         """
@@ -268,17 +262,21 @@ class LevelSensor(Sensor):
     
     TODO: Fault conditions: not yet implemented
     """
+    def __init__(self, vessel, site_id, sensor_id):
+        super().__init__(vessel, site_id, sensor_id)
+        self._sensor_fault = False
+    
     def getState(self):
         """
         Refer to superclass documentation
         """
         return str(self._vessel.getLevel()) + "mm"
     
-    def getReading(self):
+    def getReading(self, time, tick):
         """
         Refer to superclass documentation
         """
-        return self._getReadingImpl(self, time, tick, self._sensor_fault)
+        return self._getReadingImpl(time, tick, self._sensor_fault)
     
     def setFault(self, n):
         """
@@ -310,12 +308,17 @@ class LimitSensor(Sensor):
     Abstract class representing a sensor that indicates that the water level
     in a Vessel is at some limit.
     """
+    def __init__(self, vessel, site_id, sensor_id):
+        super().__init__(vessel, site_id, sensor_id)
+        self._stuck = False
+        self._stuckState = None
+        self._sensor_fault = False
     
-    def getReading(self):
+    def getReading(self, time, tick):
         """
         Refer to superclass documentation
         """
-        return self._getReadingImpl(self, time, tick, self._sensor_fault)
+        return self._getReadingImpl(time, tick, self._sensor_fault)
     
     def setFault(self, n):
         """
@@ -376,12 +379,12 @@ class LimitSensor(Sensor):
         """
         if self._stuck:
             if self._stuckState:
-                if !self._sensor_fault:
+                if not self._sensor_fault:
                     return 1    # stuck on, no reading fault indication
                 else:
                     return 3    # stuck on, reading fault indication
             else:
-                if !self._sensor_fault:
+                if not self._sensor_fault:
                     return 2    # stuck off, no reading fault indication
                 else:
                     return 4    # stuck off, reading fault indication
@@ -493,7 +496,7 @@ class ControllableDevice():
             self._locked_to = locker
             return True
         
-        elif self._locked_to = locker
+        elif self._locked_to == locker:
             return True
         
         else:
@@ -526,7 +529,7 @@ class ControllableDevice():
             locker (int):   Identifies who has the lock
         """
         if self._locked_to is not None:
-            if self._locked_to = locker:
+            if self._locked_to == locker:
                 self._locked_to = None
 
 class Valve(ModelObject, ControllableDevice):
@@ -558,8 +561,8 @@ class Valve(ModelObject, ControllableDevice):
         # usable, since the logic ought to cope with real devices not
         # raising an error.
         if isinstance(state, str):
-            m = self._state_pattern.match(state):
-            if m.group() = state: # if the whole string matches the regex
+            m = self._state_pattern.match(state)
+            if m.group() == state: # if the whole string matches the regex
                 self._position = int(state[:-1]) # remove % and convert to int
                 self._has_been_set = True
             
@@ -692,7 +695,7 @@ class WaterModel():
             return self._devices[site_id][sensor_id]
         except KeyError as e:
             raise ValueError("The device " + site_id + ":" +sensor_id +
-                             " does not exist in this WaterModel.")
+                             " does not exist in this WaterModel.") \
                              from e
     
     def addVessel(self, site_id, init_level):
@@ -759,7 +762,8 @@ class WaterModel():
 
         s = sensor_class(self._vessels[site_id], site_id, sensor_id)
         
-        if isinstance(self._devices[site_id], dict):
+        if (site_id in self._devices
+            and isinstance(self._devices[site_id], dict)):
             self._devices[site_id][sensor_id] = s
         else:
             self._devices[site_id] = { sensor_id : s }
@@ -796,12 +800,33 @@ class WaterModel():
         
         d = device_class()
         
-        if isinstance(self._devices[site_id], dict):
-            self._devices[site_id][device_id] = d
+        if (site_id in self._devices
+            and isinstance(self._devices[site_id], dict)):
+            self._devices[site_id][sensor_id] = d
         else:
-            self._devices[site_id] = { device_id : d }
+            self._devices[site_id] = { sensor_id : d }
         
         self.resetFaults()
+    
+    def setVesselLevel(self, site_id, level):
+        """
+        Sets the water level of the Vessel identified by site_id.
+        
+        Args:
+            site_id (str):  The site ID identifying the vessel
+            level (int):    The new water level for the vessel, in mm
+        """
+        if isinstance(level, int):
+            try:
+                self._vessels[site_id].setLevel(level)
+            
+            except KeyError as e:
+                raise ValueError("There is no Vessel with site ID '"
+                                 + str(site_id)
+                                 + "' in this WaterModel" ) from e
+            
+        else:
+            raise ValueError("New water level for Vessel must be an integer.")
     
     def getDeviceState(self, site_id, sensor_id):
         """
@@ -820,7 +845,9 @@ class WaterModel():
             AttributeError, if the device cannot report a state value.
         """
         d = self._validateDevice(site_id, sensor_id, "")
-        return d.getState()
+        
+        try:
+            return d.getState()
         
         except AttributeError:
             raise
@@ -853,13 +880,13 @@ class WaterModel():
         
         # And then proceed through the known devices, applying their faults,
         # leaving remaining faults to apply to subsequent devices.
-        for d in self._devices:
-            if instanceof(d, dict):
-                for d2 in d:
-                    f = _applyFaultsToDevice(d2)
+        for d in self._devices.values():
+            if isinstance(d, dict):
+                for d2 in d.values():
+                    f = self._applyFaultsToDevice(f, d2)
             else:
                 # This branch should never be reached, but belt and braces.
-                f = _applyFaultsToDevice(d)
+                f = self._applyFaultsToDevice(f, d)
         
         # NOTE: It is critical that the for loop always proceeds in the
         #       same order as it did last time, otherwise, when we
@@ -894,9 +921,9 @@ class WaterModel():
         self._total_faults = 0
         
         # Re-calculate total possible fault combinations
-        for d in self._devices:
-            if instanceof(d, dict):
-                for d2 in d:
+        for d in self._devices.values():
+            if isinstance(d, dict):
+                for d2 in d.values():
                     self._addFaults(d2)
             else:
                 # This branch should never be reached, but belt and braces.
@@ -943,7 +970,7 @@ class WaterModel():
         """
         f = {}
         for site_id, s in self._devices.items():
-            if instanceof(s, dict):
+            if isinstance(s, dict):
                 for sensor_id, d in s.items():
                     f[site_id + ":" + sensor_id] = d.identifyFault()
             else:
@@ -962,7 +989,7 @@ class WaterModel():
         """
         f = ""
         for site_id, s in self._devices.items():
-            if instanceof(s, dict):
+            if isinstance(s, dict):
                 for sensor_id, d in s.items():
                     f = (f + "[" + site_id + ":" + sensor_id + "]: " +
                          d.describeFault() + "\n")
@@ -990,16 +1017,76 @@ class WaterModel():
         Args:
             module (Module):   Name of module in which to override functions
         """
+        self._overridden_module = module
+        
+        self._overridden_get_latest_reading = module.get_latest_reading
+        self._overridden_get_n_latest_readings = module.get_n_latest_readings
+        self._overridden_get_state = module.get_state
+        self._overridden_get_status = module.get_status
+        self._overridden_attempt_to_control = module.attempt_to_control
+        self._overridden_release_control = module.release_control
+        self._overridden_log_event = module.log_event
+        self._overridden_update_status = module.update_status
+        self._overridden_store_tick = module.store_tick
+        self._overridden_store_reading = module.store_reading
+        
         module.get_latest_reading = self._get_latest_reading
         module.get_n_latest_readings = self._get_n_latest_readings
         module.get_state = self._get_state
         module.get_status = None
-        module.attempt_to_control self._attempt_to_control
+        module.attempt_to_control = self._attempt_to_control
         module.release_control = self._release_control
         module.log_event = self._log_event
         module.update_status = self._update_status
         module.store_tick = None
         module.store_reading = None
+    
+    def unOverrideFunctions(self):
+        """
+        Undoes the actions of overrideFunctions.
+        
+        This method is intended to be used where tests need to restore the
+        original state of the overridden functions.
+        """
+        self._overridden_module.get_latest_reading = \
+            self._overridden_get_latest_reading
+        
+        self._overridden_module.get_n_latest_readings = \
+            self._overridden_get_n_latest_readings
+        
+        self._overridden_module.get_state = \
+            self._overridden_get_state
+        
+        self._overridden_module.get_status = \
+            self._overridden_get_status
+        
+        self._overridden_module.attempt_to_control = \
+            self._overridden_attempt_to_control
+        
+        self._overridden_module.release_control = \
+            self._overridden_release_control
+        
+        self._overridden_module.log_event = \
+            self._overridden_log_event
+        
+        self._overridden_module.update_status = \
+            self._overridden_update_status
+        
+        self._overridden_module.store_tick = \
+            self._overridden_store_tick
+        
+        self._overridden_module.store_reading = \
+            self._overridden_store_reading
+    
+    def resetLoggedItems(self):
+        """
+        Clears any logged events or statuses in the WaterModel
+        """
+        self.event = None
+        self.event_severity = None
+        self.pi_status = None
+        self.sw_status = None
+        self.current_action = None
     
     def _get_latest_reading(self, site_id, sensor_id, retries=3):
         """
@@ -1083,10 +1170,9 @@ class WaterModel():
         d = self._validateDevice(site_id, sensor_id, "To query a lock state, ")
         l = d.getLockState()
         
-        return ("none" if l is None
-                else ("this" if l == self.THIS_SITE
-                      else "other" if l == self.OTHER_SITE)
-               )
+        return "none" if l is None \
+          else "this" if l == self.THIS_SITE \
+          else "other"
     
     def otherPiLock(self, site_id, sensor_id, lock):
         """
@@ -1202,9 +1288,9 @@ class WaterModel():
         since generally tests will only be testing for the presence of
         one specific status update.
         """
-        if isinstance(pi_status, str)
+        if (isinstance(pi_status, str)
         and isinstance(sw_status, str)
-        and isinstance(current_action, str):
+        and isinstance(current_action, str)):
             self.pi_status = pi_status
             self.sw_status = sw_status
             self.current_action = current_action
