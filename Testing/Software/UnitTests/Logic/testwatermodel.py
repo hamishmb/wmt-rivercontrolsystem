@@ -425,7 +425,7 @@ class HighLimitSensor(LimitSensor):
         """
         if self._stuck:
             # Return fake value if simulating being "stuck".
-            return self._stuckState
+            return str(self._stuckState)
         
         else:
             # We'll assume the sensor triggers a bit before 1000mm water depth
@@ -444,7 +444,7 @@ class LowLimitSensor(LimitSensor):
         """
         if self._stuck:
             # Return fake value if simulating being "stuck".
-            return self._stuckState
+            return str(self._stuckState)
         
         else:
             # We'll assume the sensor triggers a bit before 0mm water depth
@@ -634,7 +634,7 @@ class WaterModel():
         self._vessels = {}  # To contain the model vessels
         self._devices = {}  # To contain the model Sensors and Devices
         self._current_fault = 0 # Index of current error combination
-        self._total_faults = 0  # Number of fault combinations
+        self._total_faults = 1  # Number of fault combinations
         
         # Properties to hold details logged by _log_event()
         self.event = None
@@ -644,6 +644,9 @@ class WaterModel():
         self.pi_status = None
         self.sw_status = None
         self.current_action = None
+        
+        # Property to log whether control of devices was attempted
+        self.controlled_devices = []
     
     def _validateID(self, an_id, context):
         """
@@ -918,7 +921,10 @@ class WaterModel():
         self._current_fault = 0
         self._applyFaults()
         
-        self._total_faults = 0
+        # Start from 1. There is always a "no faults" state
+        # (Also, _addFaults needs a non-zero value here, but that's not the
+        # justification for the value.)
+        self._total_faults = 1
         
         # Re-calculate total possible fault combinations
         for d in self._devices.values():
@@ -1233,6 +1239,8 @@ class WaterModel():
         """
         d = self._validateDevice(site_id, sensor_id,
                                  "When trying to control a device, ")
+        
+        self.controlled_devices.append(site_id + ":" + sensor_id)
         
         if d.getLock(self.THIS_SITE): # If we have the lock or can get it
             d.setState(request)
