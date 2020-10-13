@@ -476,8 +476,11 @@ class DatabaseConnection(threading.Thread):
         #A flag to show if the DB thread is running or not.
         self.is_running = False
 
-        #Stop us filling up the event log with identical events.
+        #Stop us filling up the event log with identical events and statuses.
         self.last_event = None
+        self.last_pi_status = None
+        self.last_sw_status = None
+        self.last_current_action = None
 
         #We need a queue for the asynchronous database write operations.
         self.in_queue = deque()
@@ -745,6 +748,14 @@ class DatabaseConnection(threading.Thread):
 
             time.sleep(10)
 
+        except Exception:
+            logger.error("DatabaseConnection: Unexpected error while connecting: "+str(error)
+                         + "Retrying in 10 seconds...")
+
+            self._cleanup(database, cursor)
+
+            time.sleep(10)
+
         else:
             #We are connected!
             self.is_connected = True
@@ -760,6 +771,11 @@ class DatabaseConnection(threading.Thread):
         #It doesn't matter that these aren't done immediately - every query is done on
         #a first-come first-served basis.
 
+        # -- NAS box: Repair system status and system tick tables in case of corruption --
+        if self.site_id == "NAS":
+            self.do_query("""REPAIR TABLE `SystemStatus`;""", 0)
+            self.do_query("""REPAIR TABLE `SystemTick`;""", 0)
+        
         #----- Remove and reset the status entry for this device, if it exists -----
         query = """DELETE FROM `SystemStatus` """ \
                 + """ WHERE `System ID` = '"""+self.site_id+"""';"""
@@ -775,7 +791,13 @@ class DatabaseConnection(threading.Thread):
         #----- NAS box: Clear any locks we're holding and create control entries for devices -----
         if self.site_id == "NAS":
             for site_id in config.SITE_SETTINGS:
-                query = """DELETE FROM `"""+site_id+"""Control;"""
+                #-- Repair all site-specific tables in case of corruption --
+                self.do_query("""REPAIR TABLE `"""+site_id+"""Control`;""", 0)
+
+                if site_id != "NAS":
+                    self.do_query("""REPAIR TABLE `"""+site_id+"""Readings`;""", 0)
+
+                query = """DELETE FROM `"""+site_id+"""Control`;"""
 
                 self.do_query(query, 0)
 
@@ -1167,6 +1189,12 @@ class DatabaseConnection(threading.Thread):
 
             return False
 
+        #If everything is already as we want it then don't do anything but return True.
+        if state[0] == "Locked" and state[1] == request and \
+            state[2] == self.site_id:
+
+            return True
+
         #Otherwise we may now take control.
         query = """UPDATE `"""+site_id+"""Control` SET `Device Status` = 'Locked', """ \
                 + """`Request` = '"""+request+"""', `Locked By` = '"""+self.site_id \
@@ -1317,6 +1345,16 @@ class DatabaseConnection(threading.Thread):
 
             raise ValueError("Invalid Current Action: "+str(current_action))
 
+        #Ignore if this status is exactly the same as the last one.
+        if pi_status == self.last_pi_status and sw_status == self.last_sw_status \
+            and current_action == self.last_current_action:
+
+            return
+
+        self.last_pi_status = pi_status
+        self.last_sw_status = sw_status
+        self.last_current_action = current_action
+
         query = """UPDATE SystemStatus SET `Pi Status` = '"""+pi_status \
                 + """', `Software Status` = '"""+sw_status \
                 + """', `Current Action` =  '"""+current_action \
@@ -1325,6 +1363,47 @@ class DatabaseConnection(threading.Thread):
         self.do_query(query, retries)
 
         self.log_event("Updated status")
+
+    def get_latest_tick(self, retries=3):
+        """
+        This method gets the latest tick from the database. Used to restore
+        the system tick on NAS bootup.
+
+        .. warning::
+                This is only meant to be run from the NAS box. The pis
+                get the ticks over the socket - this is a much less
+                efficient way to deliver system ticks.
+
+        Kwargs:
+            retries[=3] (int).          The number of times to retry before giving up
+                                        and raising an error.
+
+        Throws:
+            RuntimeError, if the query failed too many times.
+
+        Returns:
+            int. The latest system tick.
+
+        Usage:
+            >>> tick = get_latest_tick()
+        """
+
+        if config.SYSTEM_ID != "NAS":
+            return
+
+        query = """SELECT * FROM `SystemTick` ORDER BY `ID` DESC """ \
+                + """LIMIT 0, 1;"""
+
+        result = self.do_query(query, retries)
+
+        #Store the part of the results that we want (only the tick).
+        try:
+            result = result[0][1]
+
+        except IndexError:
+            result = None
+
+        return result
 
     def store_tick(self, tick, retries=3):
         """
@@ -1402,27 +1481,16 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
     #---------- System tick ----------
     #Restore the system tick from the database if needed.
     if config.TICK == 0:
-        #Get the latest readings for each probe, and
-        #find the last tick that was used.
-        for _site_id in config.SITE_SETTINGS:
-            for _probe in config.SITE_SETTINGS[_site_id]["Probes"]:
-                _probe_id = _probe.split(":")[1]
+        #Get the latest tick from the system tick table.
+        try:
+            config.TICK = logiccoretools.get_latest_tick()
 
-                try:
-                    reading = logiccoretools.get_latest_reading(_site_id, _probe_id)
-
-                except RuntimeError:
-                    print("Error: Couldn't get reading for "+_site_id+":"+_probe_id+"!")
-                    logger.error("Error: Couldn't get reading for "+_site_id+":"+_probe_id+"!")
-
-                    reading = None
-
-                if reading is not None:
-                    if reading.get_tick() > config.TICK:
-                        config.TICK = reading.get_tick()
+        except RuntimeError:
+            print("Error: Couldn't get latest tick!")
+            logger.error("Error: Couldn't get latest tick!")
 
         #Log if we managed to get a newer tick.
-        if config.TICK != 0:
+        if config.TICK not in (0, None):
             print("Restored system tick from database: "+str(config.TICK))
             logger.info("Restored system tick from database: "+str(config.TICK))
 
@@ -1435,6 +1503,9 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
 
                 logger.error("Error: Couldn't log event saying that tick was restored to "
                              + str(config.TICK)+"!")
+
+    if config.TICK is None:
+        config.TICK = 0
 
     #Increment the system tick by 1.
     config.TICK += 1
@@ -1468,19 +1539,19 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
     #---------- Monitor the temperature of the NAS box and the drives ----------
     #System board temp.
     cmd = subprocess.run(["temperature_monitor", "-b"],
-                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
 
     sys_temp = cmd.stdout.decode("UTF-8", errors="ignore").split()[-1]
 
     #HDD 0 temp.
     cmd = subprocess.run(["temperature_monitor", "-c", "0"],
-                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
 
     hdd0_temp = cmd.stdout.decode("UTF-8", errors="ignore").split()[-1]
 
     #HDD 1 temp.
     cmd = subprocess.run(["temperature_monitor", "-c", "1"],
-                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
 
     hdd1_temp = cmd.stdout.decode("UTF-8", errors="ignore").split()[-1]
 
@@ -1654,9 +1725,27 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
     #Remove the 'mm' from the end of the reading value and convert to int.
     sump_reading = int(readings["SUMP:M0"].get_value().replace("m", ""))
-    butts_reading = int(readings["G4:M0"].get_value().replace("m", ""))
-    butts_float_reading = readings["G4:FS0"]
 
+    try:
+        butts_reading = int(logiccoretools.get_latest_reading("G4", "M0").get_value().replace("m", ""))
+
+    except (RuntimeError, AttributeError):
+        print("Error: Error trying to get latest G4:M0 reading!")
+        logger.error("Error: Error trying to get latest G4:M0 reading!")
+
+        #Default to empty instead.  
+        butts_reading = 0
+
+    try:
+        butts_float_reading = logiccoretools.get_latest_reading("G4", "FS0").get_value()
+
+    except (RuntimeError, AttributeError):
+        print("Error: Error trying to get latest G4:FS0 reading!")
+        logger.error("Error: Error trying to get latest G4:FS0 reading!")
+
+        #Default to empty instead.  
+        butts_float_reading = "False"
+    
     #Get a reference to both pumps.
     main_pump = None
     butts_pump = None
@@ -1679,7 +1768,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
     assert reading_interval > 0
 
     #Check that the butts float switch reading is sane.
-    assert butts_float_reading.get_value() in ("True", "False")
+    assert butts_float_reading in ("True", "False")
 
     if sump_reading >= 600:
         #Level in the sump is getting high.
@@ -1705,7 +1794,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
         #Pump some water to the butts if they aren't full.
         #If they are full, do nothing and let the sump overflow.
-        if butts_float_reading.get_value() == "False":
+        if butts_float_reading == "False":
             #Pump to the butts.
             logger.warning("Pumping water to the butts...")
             print("Pumping water to the butts...")

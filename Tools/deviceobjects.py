@@ -854,7 +854,7 @@ class GateValve(BaseDeviceClass):
         self.ref_voltage = None #Reference voltage.
         self.i2c_address = None #The hardware address for the A2D (ADC)
 
-    def set_pins(self, pins, _input=True):
+    def set_pins(self, pins, _input=False):
         """Wrapper for BaseDeviceClass that also sets forward_pin, reverse_pin, and clutch_pin."""
         if (not isinstance(pins, list) and \
             not isinstance(pins, tuple)) or \

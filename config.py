@@ -560,138 +560,138 @@ SITE_SETTINGS = {
 
         },
 
-    #Gate Valves.
-    "VALVE1":
-        {
-            "ID":   "VALVE1",
-            "Name": "Gate Valve V1 Pi",
-            "Default Interval": 15,
-            "IPAddress": "192.168.0.11",
-            "HostingSockets": False,
-            "ControlLogicFunction": "valve_control_logic",
-            "DBUser": "valve1",
-            "DBPasswd": "river20",
-            "DBHost": "192.168.0.25",
-            "DBPort": 3306,
+#    #Gate Valves.
+#    "VALVE1":
+#        {
+#            "ID":   "VALVE1",
+#            "Name": "Gate Valve V1 Pi",
+#            "Default Interval": 15,
+#            "IPAddress": "192.168.0.11",
+#            "HostingSockets": False,
+#            "ControlLogicFunction": "valve_control_logic",
+#            "DBUser": "valve1",
+#            "DBPasswd": "river20",
+#            "DBHost": "192.168.0.25",
+#            "DBPort": 3306,
 
-            #Here for compatibility reasons.
-            "Probes": {},
+#            #Here for compatibility reasons.
+#            "Probes": {},
 
-            #Devices to control.
-            "Devices":
-                {
-                    "VALVE1:V1":
-                        {
-                            "Type": "Gate Valve",
-                            "ID": "VALVE1:V1",
-                            "Name": "Gate Valve V1",
-                            "Class": Tools.deviceobjects.GateValve,
-                            "ADCAddress": 0x48,
+#            #Devices to control.
+#            "Devices":
+#                {
+#                    "VALVE1:V1":
+#                        {
+#                            "Type": "Gate Valve",
+#                            "ID": "VALVE1:V1",
+#                            "Name": "Gate Valve V1",
+#                            "Class": Tools.deviceobjects.GateValve,
+#                            "ADCAddress": 0x48,
 
-                            "Pins":  (17, 27, 19),
-                            "posTolerance": 1,
-                            "maxOpen": 90,
-                            "minOpen": 1,
-                            "refVoltage": 3.3,
-                        },
-                },
-
-            #Config for server connection.
-            "ServerAddress": "192.168.0.25",
-            "ServerPort": 30011,
-            "ServerName": "NAS",
-            "SocketName": "Gate Valve V1 Socket",
-            "SocketID": "SOCK11",
-
-        },
-
-    "VALVE2":
-        {
-            "ID":   "VALVE2",
-            "Name": "Gate Valve V2 Pi",
-            "Default Interval": 15,
-            "IPAddress": "192.168.0.12",
-            "HostingSockets": False,
-            "ControlLogicFunction": "valve_control_logic",
-            "DBUser": "valve2",
-            "DBPasswd": "river20",
-            "DBHost": "192.168.0.25",
-            "DBPort": 3306,
-
-            #Here for compatibility reasons.
-            "Probes": {},
-
-            #Devices to control.
-            "Devices":
-                {
-                    "VALVE2:V2":
-                        {
-                            "Type": "Gate Valve",
-                            "ID": "VALVE2:V2",
-                            "Name": "Gate Valve V2",
-                            "Class": Tools.deviceobjects.GateValve,
-                            "ADCAddress": 0x48,
-
-                            "Pins":  (17, 27, 19),
-                            "posTolerance": 1,
-                            "maxOpen": 90,
-                            "minOpen": 1,
-                            "refVoltage": 3.3,
-                        },
-                },
+#                            "Pins":  (17, 27, 19),
+#                            "posTolerance": 1,
+#                            "maxOpen": 90,
+#                            "minOpen": 1,
+#                            "refVoltage": 3.3,
+#                        },
+#                },
 
             #Config for server connection.
-            "ServerAddress": "192.168.0.25",
-            "ServerPort": 30012,
-            "ServerName": "NAS",
-            "SocketName": "Gate Valve V2 Socket",
-            "SocketID": "SOCK12",
+#            "ServerAddress": "192.168.0.25",
+#            "ServerPort": 30011,
+#            "ServerName": "NAS",
+#            "SocketName": "Gate Valve V1 Socket",
+#            "SocketID": "SOCK11",
 
-        },
+#        },
 
-    "VALVE3":
-        {
-            "ID":   "VALVE3",
-            "Name": "Gate Valve V3 Pi",
-            "Default Interval": 15,
-            "IPAddress": "192.168.0.13",
-            "HostingSockets": False,
-            "ControlLogicFunction": "valve_control_logic",
-            "DBUser": "valve3",
-            "DBPasswd": "river20",
-            "DBHost": "192.168.0.25",
-            "DBPort": 3306,
+#    "VALVE2":
+#        {
+#            "ID":   "VALVE2",
+#            "Name": "Gate Valve V2 Pi",
+#            "Default Interval": 15,
+#            "IPAddress": "192.168.0.12",
+#            "HostingSockets": False,
+#            "ControlLogicFunction": "valve_control_logic",
+#            "DBUser": "valve2",
+#            "DBPasswd": "river20",
+#            "DBHost": "192.168.0.25",
+#            "DBPort": 3306,
 
-            #Here for compatibility reasons.
-            "Probes": {},
+#            #Here for compatibility reasons.
+#            "Probes": {},
 
-            #Devices to control.
-            "Devices":
-                {
-                    "VALVE3:V3":
-                        {
-                            "Type": "Gate Valve",
-                            "ID": "VALVE3:V3",
-                            "Name": "Gate Valve V3",
-                            "Class": Tools.deviceobjects.GateValve,
-                            "ADCAddress": 0x48,
+#            #Devices to control.
+#            "Devices":
+#                {
+#                    "VALVE2:V2":
+#                        {
+#                            "Type": "Gate Valve",
+#                            "ID": "VALVE2:V2",
+#                            "Name": "Gate Valve V2",
+#                            "Class": Tools.deviceobjects.GateValve,
+#                            "ADCAddress": 0x48,
 
-                            "Pins":  (17, 27, 19),
-                            "posTolerance": 1,
-                            "maxOpen": 90,
-                            "minOpen": 1,
-                            "refVoltage": 3.3,
-                        },
-                },
+#                            "Pins":  (17, 27, 19),
+#                            "posTolerance": 1,
+#                            "maxOpen": 90,
+#                            "minOpen": 1,
+#                            "refVoltage": 3.3,
+#                        },
+#                },
 
-            #Config for server connection.
-            "ServerAddress": "192.168.0.25",
-            "ServerPort": 30013,
-            "ServerName": "NAS",
-            "SocketName": "Gate Valve V3 Socket",
-            "SocketID": "SOCK13",
+#            #Config for server connection.
+#            "ServerAddress": "192.168.0.25",
+#            "ServerPort": 30012,
+#            "ServerName": "NAS",
+#            "SocketName": "Gate Valve V2 Socket",
+#            "SocketID": "SOCK12",
 
-        },
+#        },
+
+#    "VALVE3":
+#        {
+#            "ID":   "VALVE3",
+#            "Name": "Gate Valve V3 Pi",
+#            "Default Interval": 15,
+#            "IPAddress": "192.168.0.13",
+#            "HostingSockets": False,
+#            "ControlLogicFunction": "valve_control_logic",
+#            "DBUser": "valve3",
+#            "DBPasswd": "river20",
+#            "DBHost": "192.168.0.25",
+#            "DBPort": 3306,
+
+#            #Here for compatibility reasons.
+#            "Probes": {},
+
+#            #Devices to control.
+#            "Devices":
+#                {
+#                    "VALVE3:V3":
+#                        {
+#                            "Type": "Gate Valve",
+#                            "ID": "VALVE3:V3",
+#                            "Name": "Gate Valve V3",
+#                            "Class": Tools.deviceobjects.GateValve,
+#                            "ADCAddress": 0x48,
+
+#                            "Pins":  (17, 27, 19),
+#                            "posTolerance": 1,
+#                            "maxOpen": 90,
+#                            "minOpen": 1,
+#                            "refVoltage": 3.3,
+#                        },
+#                },
+
+#            #Config for server connection.
+#            "ServerAddress": "192.168.0.25",
+#            "ServerPort": 30013,
+#            "ServerName": "NAS",
+#            "SocketName": "Gate Valve V3 Socket",
+#            "SocketID": "SOCK13",
+
+#        },
 
     "VALVE4":
         {
@@ -913,48 +913,48 @@ SITE_SETTINGS = {
 #
 #        },
 
-#    "VALVE12":
-#        {
-#            "ID":   "VALVE8",
-#            "Name": "Gate Valve V12 Pi",
-#            "Default Interval": 15,
-#            "IPAddress": "192.168.0.22",
-#            "HostingSockets": False,
-#            "ControlLogicFunction": "valve_control_logic",
-#            "DBUser": "valve12",
-#            "DBPasswd": "river20",
-#            "DBHost": "192.168.0.25",
-#            "DBPort": 3306,
-#
-#            #Here for compatibility reasons.
-#            "Probes": {},
-#
-#            #Devices to control.
-#            "Devices":
-#                {
-#                    "VALVE12:V12":
-#                        {
-#                            "Type": "Gate Valve",
-#                            "ID": "VALVE12:V12",
-#                            "Name": "Gate Valve V12",
-#                            "Class": Tools.deviceobjects.GateValve,
-#                            "ADCAddress": 0x48,
-#
-#                            "Pins":  (17, 27, 19),
-#                            "posTolerance": 1,
-#                            "maxOpen": 90,
-#                            "minOpen": 1,
-#                            "refVoltage": 3.3,
-#                        },
-#                },
-#
-#            #Config for server connection.
-#            "ServerAddress": "192.168.0.25",
-#            "ServerPort": 30022,
-#            "ServerName": "NAS",
-#            "SocketName": "Stage Butts Gate Valve V12 Socket",
-#            "SocketID": "SOCK22",
-#
-#        },
+    "VALVE12":
+        {
+            "ID":   "VALVE8",
+            "Name": "Gate Valve V12 Pi",
+            "Default Interval": 15,
+            "IPAddress": "192.168.0.22",
+            "HostingSockets": False,
+            "ControlLogicFunction": "valve_control_logic",
+            "DBUser": "valve12",
+            "DBPasswd": "river20",
+            "DBHost": "192.168.0.25",
+            "DBPort": 3306,
+
+            #Here for compatibility reasons.
+            "Probes": {},
+
+            #Devices to control.
+            "Devices":
+                {
+                    "VALVE12:V12":
+                        {
+                            "Type": "Gate Valve",
+                            "ID": "VALVE12:V12",
+                            "Name": "Gate Valve V12",
+                            "Class": Tools.deviceobjects.GateValve,
+                            "ADCAddress": 0x48,
+
+                            "Pins":  (17, 27, 19),
+                            "posTolerance": 1,
+                            "maxOpen": 90,
+                            "minOpen": 1,
+                            "refVoltage": 3.3,
+                        },
+                },
+
+            #Config for server connection.
+            "ServerAddress": "192.168.0.25",
+            "ServerPort": 30022,
+            "ServerName": "NAS",
+            "SocketName": "Stage Butts Gate Valve V12 Socket",
+            "SocketID": "SOCK22",
+
+        },
 
 }
