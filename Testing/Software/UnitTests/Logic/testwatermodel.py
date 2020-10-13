@@ -226,10 +226,6 @@ class Sensor(ModelObject):
             tick (int):    The tick to say the reading is from
             fault (bool):  If True, the reading will indicate a sensor fault
         """
-        # Need to decide the best way to get the site_id:sensor_id string
-        # into this method (as argument, or make Sensor aware of its
-        # own ID?)
-        #
         # Status should normally be "OK", but can also be "FAULT DETECTED".
         status = "OK" if not fault else "FAULT DETECTED"
         return Reading(time, tick, self._id_string, self.getState(), status)
@@ -268,37 +264,37 @@ class LevelSensor(Sensor):
     
     def getState(self):
         """
-        Refer to superclass documentation
+        Refer to Sensor superclass documentation
         """
         return str(self._vessel.getLevel()) + "mm"
     
     def getReading(self, time, tick):
         """
-        Refer to superclass documentation
+        Refer to Sensor superclass documentation
         """
         return self._getReadingImpl(time, tick, self._sensor_fault)
     
     def setFault(self, n):
         """
-        Refer to superclass documentation
+        Refer to Sensor superclass documentation
         """
         self._sensor_fault = (n == 1)
     
     def getFaultCount(self):
         """
-        Refer to superclass documentation
+        Refer to Sensor superclass documentation
         """
         return 2
     
     def identifyFault(self):
         """
-        Refer to superclass documentation
+        Refer to Sensor superclass documentation
         """
         return 0 if not self._sensor_fault else 1
     
     def describeFault(self):
         """
-        Refer to superclass documentation
+        Refer to Sensor superclass documentation
         """
         return ("No fault." if not self._sensor_fault
                 else "Reading status fault.")
@@ -316,13 +312,13 @@ class LimitSensor(Sensor):
     
     def getReading(self, time, tick):
         """
-        Refer to superclass documentation
+        Refer to Sensor superclass documentation
         """
         return self._getReadingImpl(time, tick, self._sensor_fault)
     
     def setFault(self, n):
         """
-        Refer to superclass documentation
+        Refer to Sensor superclass documentation
         
         0 --> No fault
         1 --> Stuck on, not indicated in Readings
@@ -361,13 +357,13 @@ class LimitSensor(Sensor):
     
     def getFaultCount(self):
         """
-        Refer to superclass documentation
+        Refer to Sensor superclass documentation
         """
         return 6    # was 3
     
     def identifyFault(self):
         """
-        Refer to superclass documentation
+        Refer to Sensor superclass documentation
         
         Returns:
             (int)   0 if no fault
@@ -396,7 +392,7 @@ class LimitSensor(Sensor):
     
     def describeFault(self):
         """
-        Refer to superclass documentation
+        Refer to Sensor superclass documentation
         """
         n = self.identifyFault()
         if n == 0:
@@ -421,7 +417,7 @@ class HighLimitSensor(LimitSensor):
     """
     def getState(self):
         """
-        Refer to superclass documentation
+        Refer to LimitSensor superclass documentation
         """
         if self._stuck:
             # Return fake value if simulating being "stuck".
@@ -440,7 +436,7 @@ class LowLimitSensor(LimitSensor):
     """
     def getState(self):
         """
-        Refer to superclass documentation
+        Refer to LimitSensor superclass documentation
         """
         if self._stuck:
             # Return fake value if simulating being "stuck".
@@ -618,10 +614,15 @@ class WaterModel():
         "100%"
         
         Test the same scenario under different sensor fault combinations
-        >>> while(w.hasMoreFaults()):
-                w.nextFault()
+        >>> while(True):
                 (run the control logic)
+                
                 w.getDeviceState("VALVE12", "V12")
+                
+                if w.hasMoreFaults():
+                    w.nextFault()
+                
+                
     """
     # Locker identifiers for device locking:
     THIS_SITE = 0
