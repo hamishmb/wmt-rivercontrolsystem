@@ -31,7 +31,11 @@ import logging
 import sys
 import os.path
 
-sys.path.insert(0, os.path.abspath('..'))
+# Add root of rivercontrolsystem to path
+# this was done using sys.path.insert(0, os.path.abspath('..'))
+# but that doesn't work when running unit tests. This does:
+sys.path.insert(0, os.path.abspath(os.path.split(os.path.dirname(__file__))[0]))
+
 
 from Tools import logiccoretools
 from Tools.statetools import ControlStateABC, ControlStateMachineABC
@@ -53,6 +57,27 @@ Used by the stagepi_control_logic function.
 Initialised by the stagepi_control_logic_setup function.
 """
 
+levels = { 
+    "G6Full": 975,
+    "G6NotEmpty": 25,
+    "G4Overfull": 975,
+    "G4Full": 900,
+    "G4VeryNearlyFull": 800,
+    "G4NearlyFull": 700
+    }
+"""
+The levels variable parameterises the relationship between measured
+water level and the set of named water levels used by the Stage Pi
+logic.
+
+This variable is used in testing the logic.
+
+All of the levels defined here are inclusive lower bounds for the named
+levels. The (exclusive) upper bound for each level is implicitly
+defined by the lower bound for the next level up (considering levels in
+the same butts group).
+"""
+
 class StagePiReadingsParser():
     """
     This class extracts data from sensor readings and presents it
@@ -70,6 +95,7 @@ class StagePiReadingsParser():
         try:
             G4M0 =  logiccoretools.get_latest_reading("G4", "M0").get_value()
             G4FS0 = logiccoretools.get_latest_reading("G4", "FS0").get_value()
+            G4FS1 = logiccoretools.get_latest_reading("G4", "FS1").get_value()
             G6M0 =  logiccoretools.get_latest_reading("G6", "M0").get_value()
             G6FS0 = logiccoretools.get_latest_reading("G6", "FS0").get_value()
             G6FS1 = logiccoretools.get_latest_reading("G6", "FS1").get_value()
@@ -82,12 +108,14 @@ class StagePiReadingsParser():
         
         #Check that the float switch readings are sane.
         assert G4FS0 in ("True", "False")
+        assert G4FS1 in ("True", "False")
         assert G6FS0 in ("True", "False")
         assert G6FS1 in ("True", "False")
         
         #Load readings into self
         self.G4_level = int(G4M0.replace("m", ""))
         self.G4_full = G4FS0 == "True"
+        self.G4_empty = G4FS1 == "True"
         
         self.G6_level = int(G6M0.replace("m", ""))
         self.G6_full = G6FS0 == "True"
@@ -118,9 +146,9 @@ class StagePiReadingsParser():
         """
         Returns true if G6 is full
         """
-        if(self.G6_full or self.G6_level > 975):
+        if(self.G6_full or self.G6_level >= levels["G6Full"]):
             if(self.G6_empty == False):
-                return true
+                return True
             else:
                 self._g6sensorContradictionError()
                 
@@ -129,15 +157,15 @@ class StagePiReadingsParser():
                 #actually need to know whether G6 is full.
                 raise ValueError("G6 sensor values contradict")
         else:
-            return false
+            return False
     
     def g6Empty(self):
         """
         Returns true if G6 is empty (<25mm)
         """
-        if(self.G6_empty or self.G6_level <= 25):
+        if(self.G6_empty or self.G6_level < levels["G6NotEmpty"]):
             if(self.G6_full == False):
-                return true
+                return True
             else:
                 self._g6sensorContradictionError()
                 
@@ -146,31 +174,39 @@ class StagePiReadingsParser():
                 #actually need to know whether G6 is empty.
                 raise ValueError("G6 sensor values contradict")
         else:
-            return false
+            return False
     
     def g4Overfull(self):
         """
         Returns true if G4 is overfull (full to the limit)
         """
-        return (self.G4_full or self.G4_level > 975)
+        return (not self.G4_empty
+                and (self.G4_full or
+                     self.G4_level >= levels["G4Overfull"]))
     
     def g4FullOrMore(self):
         """
         Returns true if G4 is full or more (>900mm)
         """
-        return (not self.G4_full or self.G4_level > 900)
+        return (not self.G4_empty
+                and (self.G4_full or
+                     self.G4_level >= levels["G4Full"]))
     
     def g4VeryNearlyFullOrMore(self):
         """
         Returns true if G4 level is very nearly full or more (>800mm)
         """
-        return (not self.G4_full and self.G4_level > 800)
+        return (not self.G4_empty
+                and (self.G4_full or
+                     self.G4_level >= levels["G4VeryNearlyFull"]))
     
     def g4NearlyFullOrMore(self):
         """
         Returns true if G4 level is nearly full or more (>700mm)
         """
-        return (not self.G4_full and self.G4_level > 700)
+        return (not self.G4_empty
+                and (self.G4_full or
+                     self.G4_level >= levels["G4NearlyFull"]))
 
 # -------------------- Stage Pi control states ---------------------
 # Each state class defines the behaviour of the control logic in that state,
@@ -280,12 +316,16 @@ class StagePiG4OverfilledState(ControlStateABC):
         
         try:
             #Evaluate possible transitions to new states
-            if not parser.g6Empty():
-                if not parser.g4Overfull():
+            if not parser.g4Overfull():
+                if not parser.g6Empty():
                     ri = self.csm.setStateBy(StagePiG4FilledState, self)
-                    
-            #In the event that G6 is empty, then we want to stay in
-            #G4OverfilledState, so that water can be pumped back into G6.
+                else:
+                    ri = self.csm.setStateBy(StagePiG6EmptyState, self)
+            
+            #G4 being overfull overrides G6 being empty. If G6 is empty
+            #and G4 is still overfilled, then we want to stay in
+            #G4OverfilledState, so that water can be pumped back into
+            #G6.
             
         except ValueError:
             msg = ("Could not parse sensor readings. Control logic is "
@@ -338,16 +378,21 @@ class StagePiG4FilledState(ControlStateABC):
         
         try:
             #Evaluate possible transitions to new states
-            if not parser.g6Empty():
-                if parser.g4Overfull():
-                    ri = self.csm.setStateBy(StagePiG4OverfilledState, self)
-                    
-                elif not parser.g4FullOrMore():
-                    ri = self.csm.setStateBy(StagePiG4VeryNearlyFilledState,
-                                             self)
-                
-            else:
+            if parser.g4Overfull():
+                #If "overfull", unconditionally go into G4OverfilledState
+                ri = self.csm.setStateBy(StagePiG4OverfilledState, self)
+            
+            elif parser.g6Empty():
+                #If G6 empty and G4 not overfull go into G6EmptyState
                 ri = self.csm.setStateBy(StagePiG6EmptyState, self)
+                
+            elif not parser.g4FullOrMore():
+                #If G4 is no longer "full" and G6 is not empty and G4
+                #is not overfilled, then go into G4VeryNearlyFilledState
+                ri = self.csm.setStateBy(StagePiG4VeryNearlyFilledState,
+                                         self)
+            
+            #else: G4 must be "full", so stay in this state.
         
         except ValueError:
             msg = ("Could not parse sensor readings. Control logic is "
@@ -601,7 +646,7 @@ class StagePiG6EmptyState(ControlStateABC):
             #Unlike the other four states, we can enter G4OverfilledState even if
             #G6 remains empty
             if(parser.g4Overfull()):
-                ri = self.csm.setState(StagePiG4OverfilledState)
+                ri = self.csm.setStateBy(StagePiG4OverfilledState, self)
             
             #If G6 is no longer empty, enter the appropriate filling state for
             #the current G4 fill level
@@ -626,6 +671,10 @@ class StagePiG6EmptyState(ControlStateABC):
             logger.error(msg)
         
         return ri
+
+# ---------------- Stage Pi control state machine ------------------
+# The control state machine class (StagePiControlLogic) defines the
+# state machine within which the control states exist.
 
 class StagePiControlLogic(ControlStateMachineABC):
     """
