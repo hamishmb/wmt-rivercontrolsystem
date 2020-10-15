@@ -248,7 +248,7 @@ class Sensor(ModelObject):
             (Reading)   A reading for this Sensor
         """
         raise NotImplementedError()
-        
+
 class LevelSensor(Sensor):
     """
     Class representing a water level sensor in a WaterModel.
@@ -407,7 +407,7 @@ class LimitSensor(Sensor):
             return "Stuck in 'False' state. Fault indicated in Readings."
         else:
             return "Unaccountable fault indication in Readings."
-            
+
 class HighLimitSensor(LimitSensor):
     """
     Class representing a sensor that indicates a full state of a Vessel.
@@ -426,7 +426,7 @@ class HighLimitSensor(LimitSensor):
         else:
             # We'll assume the sensor triggers a bit before 1000mm water depth
             return str(self._vessel.getLevel() > 987)
-    
+
 class LowLimitSensor(LimitSensor):
     """
     Class representing a sensor that indicates an empty state of a Vessel.
@@ -561,7 +561,62 @@ class Valve(ModelObject, ControllableDevice):
             if m.group() == state: # if the whole string matches the regex
                 self._position = int(state[:-1]) # remove % and convert to int
                 self._has_been_set = True
-            
+
+class WaterModelNoMoreFaults(Exception):
+    """
+    Exception to be raised by WaterModel._nextFault() when there are no more
+    fault states to enter.
+    """
+    pass
+
+class WaterModelFaultIterationContextManager():
+    """
+    Context manager for iterating through fault combinations.
+    
+    Using a context manager for this functionality ensures that the
+    iteration always starts from the initial, "no faults" state and
+    that the WaterModel is left in "no faults" state afterwards.
+    """
+    def __init__(self, waterModel):
+        """
+        Args:
+            waterModel  The WaterModel associated with this context manager
+        """
+        self.wm = waterModel
+        self.started = False
+    
+    def __enter__(self):
+        self.wm.resetFaults()
+        return self.nextFault
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        # Catch WaterModelNoMoreFaults at end of iteration
+        if exc_type == WaterModelNoMoreFaults:
+            # No need to reset faults; WaterModel.nextFault() does this
+            # for us, before raising WaterModelNoMoreFaults.
+            return True     # Suppress this expected exception
+        else:
+            self.wm.resetFaults()
+            return False
+    
+    def nextFault(self):
+        """
+        Advances the WaterModel to the next fault state.
+        """
+        # We want to return the no-fault state on the first call of
+        # nextFault, so that it can be used as a while loop condition
+        #
+        # This differs from the behaviour of WaterModel._nextFault(),
+        # hence this check to see whether we've started.
+        if self.started:
+            self.wm._nextFault()
+        else:
+            self.started = True
+        
+        # Always return True
+        # We end iteration using an exception, not by returning False
+        return True
+
 class WaterModel():
     """
     Class representing a rough model of the water system for the purpose of
@@ -614,13 +669,12 @@ class WaterModel():
         "100%"
         
         Test the same scenario under different sensor fault combinations
-        >>> while(True):
-                (run the control logic)
-                
-                w.getDeviceState("VALVE12", "V12")
-                
-                if w.hasMoreFaults():
-                    w.nextFault()
+        >>> with w.faultIteration() as nextFault:
+                while(nextFault()):
+                    (run the control logic)
+                    w.getDeviceState("VALVE12", "V12")
+                    
+                    # No need to clean up fault state afterwards
                 
                 
     """
@@ -936,9 +990,12 @@ class WaterModel():
                 # This branch should never be reached, but belt and braces.
                 self._addFaults(d)
 
-    def hasMoreFaults(self):
+    def _hasMoreFaults(self):
         """
         Returns true if there are more sensor error combinations available.
+        
+        Don't use this method directly. Instead, use the context manager
+        returned by getFaultStateCM().
         
         Returns:
             bool    True if there are more sensor error combinations available.
@@ -947,13 +1004,62 @@ class WaterModel():
         # e.g. if _total_faults = 9 and _current_fault == 8, then return False
         return self._current_fault < self._total_faults - 1
 
-    def nextFault(self):
+    def _nextFault(self):
         """
-        Advances the WaterModel to its next sensor error combination.
+        Advances the WaterModel to its next sensor fault combination.
+        
+        Rather than calling this method directly, use the context
+        manager returned by getFaultStateCM().
+        
+        If there are no more fault combinations possible, then the
+        exception WaterModelNoMoreFaults is raised, and the fault state
+        is returned to "no faults".
+        
+        Note that the WaterModel always starts in the initial no-fault
+        state, so if you use _nextFault() as a while loop condition,
+        (which you shouldn't do) the loop will miss off the no-fault
+        state at the beginning.
+        
+        Throws:
+            WaterModelNoMoreFaults      if here are no more faults
         """
-        if self.hasMoreFaults():
+        if self._hasMoreFaults():
             self._current_fault = self._current_fault + 1
             self._applyFaults()
+        else:
+            self._current_fault = 0
+            raise WaterModelNoMoreFaults()
+
+    def faultIteration(self):
+        """
+        Returns a context manager that can be used to iterate through
+        fault states of the WaterModel.
+        
+        The iteration will begin with the initial "no faults" state.
+        
+        Use the context manager in a with statement with a target:
+            with <WaterModel object>.faultIteration() as target:
+        
+        The target of the with statement will have a 'next fault state'
+        function assigned to it, which can be used as the condition for
+        a while loop, to iterate through all fault states including "no
+        faults":
+            while(target()):
+        
+        Returns:
+            WaterModelFaultIterationContextManager  a context manager
+        
+        Usage:
+            # Where 'wm' is a WaterModel instance
+            with wm.faultIteration() as nextFault:
+                while(nextFault()):
+                    # Do something (per fault state)
+                    
+            # After the last fault state, the loop and the 'with'
+            # context are safely terminated automatically
+        """
+        # Pass in a reference to this WaterModel as an argument
+        return WaterModelFaultIterationContextManager(self)
 
     def currentFault(self):
         """

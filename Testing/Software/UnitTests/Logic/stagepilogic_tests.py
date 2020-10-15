@@ -99,52 +99,46 @@ class TestStagePiReadingsParser(unittest.TestCase):
             self.wm.setVesselLevel("G6", l)
             
             # Iterate through fault possibilities, including no faults
-            self.wm.resetFaults()
-            while True:
-                cf = self.wm.currentFault()
-                
-                # For now, only the "no faults" subtest is expected to pass
-                # because the test code does not yet reflect the desired
-                # outcome in all fault states.
-                if not all(f == 0 for f in cf.values()):
-                    print("Info: Testing simulated fault states other "
-                          "than \"no faults\" is not yet implemented")
-                    break
-                else:
-                    print("Testing the \"no faults\" state.")
-                
-                sprp = stagepilogic.StagePiReadingsParser()
-                
-                with self.subTest("\nSubtest using simulated fault states:\n"
-                                  + self.wm.describeCurrentFault()
-                                  + "\n",
-                                  g6_level = l,
-                                  faults = cf):
-                                      
-                    if expected[l] and cf["G6:FS1"] in [1,3]:
-                        # if full with low limit float switch stuck on
-                        self.assertRaises(ValueError, sprp.g6Full(),
-                                          "The readings parser should "
-                                          "have raised an error due to "
-                                          "the contradictory sensor "
-                                          "readings.")
+            with self.wm.faultIteration() as nextFault:
+                while (nextFault()):
+                    cf = self.wm.currentFault()
                     
+                    # For now, only the "no faults" subtest is expected
+                    # to pass because the test code does not yet
+                    # reflect the desired outcome in all fault states.
+                    if not all(f == 0 for f in cf.values()):
+                        print("Info: Testing simulated fault states other "
+                            "than \"no faults\" is not yet implemented")
+                        break
                     else:
-                        self.assertEqual(sprp.g6Full(), expected[l],
-                                         "The readings were not parsed "
-                                         "as expected. Make sure any "
-                                         "simulated sensor faults were "
-                                         "correctly handled.")
+                        print("Testing the \"no faults\" state.")
                     
-                    # Readings parser shouldn't log events or status in any case
-                    self.assertNoLoggedEvents()
-                    self.assertNoLoggedStatus()
-                
-                if self.wm.hasMoreFaults():
-                    self.wm.nextFault()
-                    self.wm.resetLoggedItems()
-                else:
-                    break
+                    sprp = stagepilogic.StagePiReadingsParser()
+                    
+                    with self.subTest("\nSubtest using simulated fault states:\n"
+                                    + self.wm.describeCurrentFault()
+                                    + "\n",
+                                    g6_level = l,
+                                    faults = cf):
+                                        
+                        if expected[l] and cf["G6:FS1"] in [1,3]:
+                            # if full with low limit float switch stuck on
+                            self.assertRaises(ValueError, sprp.g6Full(),
+                                            "The readings parser should "
+                                            "have raised an error due to "
+                                            "the contradictory sensor "
+                                            "readings.")
+                        
+                        else:
+                            self.assertEqual(sprp.g6Full(), expected[l],
+                                            "The readings were not parsed "
+                                            "as expected. Make sure any "
+                                            "simulated sensor faults were "
+                                            "correctly handled.")
+                        
+                        # Readings parser shouldn't log events or status in any case
+                        self.assertNoLoggedEvents()
+                        self.assertNoLoggedStatus()
     
     def testG6Empty(self):
         # Expected fault-free g6Empty return values for selected G6 levels
@@ -162,47 +156,42 @@ class TestStagePiReadingsParser(unittest.TestCase):
             self.wm.setVesselLevel("G6", l)
             
             # Iterate through fault possibilities, including no faults
-            self.wm.resetFaults()
-            while True:
-                cf = self.wm.currentFault()
-                
-                # For now, only the "no faults" subtest is expected to pass
-                # because the test code does not yet reflect the desired
-                # outcome in all fault states.
-                if not all(f == 0 for f in cf.values()):
-                    print("Info: Testing simulated fault states other "
-                          "than \"no faults\" is not yet implemented")
-                    break
-                else:
-                    print("Testing the \"no faults\" state.")
-                
-                sprp = stagepilogic.StagePiReadingsParser()
-                
-                with self.subTest("\nSubtest using simulated fault states:\n"
-                                  + self.wm.describeCurrentFault()
-                                  + "\n",
-                                  g6_level = l,
-                                  faults = cf):
+            with self.wm.faultIteration() as nextFault:
+                while(nextFault()):
+                    cf = self.wm.currentFault()
                     
-                    if expected[l] and cf["G6:FS0"] in [1,3]:
-                        # if empty with high limit float switch stuck on
-                        self.assertRaises(ValueError, sprp.g6Empty(),
-                                          "The readings parser should "
-                                          "have raised an error due to "
-                                          "the contradictory sensor "
-                                          "readings.")
-                    
+                    # For now, only the "no faults" subtest is expected to pass
+                    # because the test code does not yet reflect the desired
+                    # outcome in all fault states.
+                    if not all(f == 0 for f in cf.values()):
+                        print("Info: Testing simulated fault states other "
+                            "than \"no faults\" is not yet implemented")
+                        break
                     else:
-                        self.assertEqual(sprp.g6Empty(), expected[l],
-                                         "The readings were not parsed "
-                                         "as expected. Make sure any "
-                                         "simulated sensor faults were "
-                                         "correctly handled.")
-                
-                if self.wm.hasMoreFaults():
-                    self.wm.nextFault()
-                else:
-                    break
+                        print("Testing the \"no faults\" state.")
+                    
+                    sprp = stagepilogic.StagePiReadingsParser()
+                    
+                    with self.subTest("\nSubtest using simulated fault states:\n"
+                                    + self.wm.describeCurrentFault()
+                                    + "\n",
+                                    g6_level = l,
+                                    faults = cf):
+                        
+                        if expected[l] and cf["G6:FS0"] in [1,3]:
+                            # if empty with high limit float switch stuck on
+                            self.assertRaises(ValueError, sprp.g6Empty(),
+                                            "The readings parser should "
+                                            "have raised an error due to "
+                                            "the contradictory sensor "
+                                            "readings.")
+                        
+                        else:
+                            self.assertEqual(sprp.g6Empty(), expected[l],
+                                            "The readings were not parsed "
+                                            "as expected. Make sure any "
+                                            "simulated sensor faults were "
+                                            "correctly handled.")
     
     def testG4Overfull(self):
         # Expected fault-free g4Overfull return values for selected G4 levels
@@ -216,38 +205,33 @@ class TestStagePiReadingsParser(unittest.TestCase):
             self.wm.setVesselLevel("G4", l)
             
             # Iterate through fault possibilities, including no faults
-            self.wm.resetFaults()
-            while True:
-                cf = self.wm.currentFault()
-                
-                # For now, only the "no faults" subtest is expected to pass
-                # because the test code does not yet reflect the desired
-                # outcome in all fault states.
-                if not all(f == 0 for f in cf.values()):
-                    print("Info: Testing simulated fault states other "
-                          "than \"no faults\" is not yet implemented")
-                    break
-                else:
-                    print("Testing the \"no faults\" state.")
-                
-                sprp = stagepilogic.StagePiReadingsParser()
-                
-                with self.subTest("\nSubtest using simulated fault states:\n"
-                                  + self.wm.describeCurrentFault()
-                                  + "\n",
-                                  g4_level = l,
-                                  faults = cf):
+            with self.wm.faultIteration() as nextFault:
+                while(nextFault()):
+                    cf = self.wm.currentFault()
                     
-                    self.assertEqual(sprp.g4Overfull(), expected[l],
-                                         "The readings were not parsed "
-                                         "as expected. Make sure any "
-                                         "simulated sensor faults were "
-                                         "correctly handled.")
-                
-                if self.wm.hasMoreFaults():
-                    self.wm.nextFault()
-                else:
-                    break
+                    # For now, only the "no faults" subtest is expected to pass
+                    # because the test code does not yet reflect the desired
+                    # outcome in all fault states.
+                    if not all(f == 0 for f in cf.values()):
+                        print("Info: Testing simulated fault states other "
+                            "than \"no faults\" is not yet implemented")
+                        break
+                    else:
+                        print("Testing the \"no faults\" state.")
+                    
+                    sprp = stagepilogic.StagePiReadingsParser()
+                    
+                    with self.subTest("\nSubtest using simulated fault states:\n"
+                                    + self.wm.describeCurrentFault()
+                                    + "\n",
+                                    g4_level = l,
+                                    faults = cf):
+                        
+                        self.assertEqual(sprp.g4Overfull(), expected[l],
+                                            "The readings were not parsed "
+                                            "as expected. Make sure any "
+                                            "simulated sensor faults were "
+                                            "correctly handled.")
     
     def testG4FullOrMore(self):
         # Expected fault-free g4FullOrMore return values for selected G4 levels
@@ -263,38 +247,33 @@ class TestStagePiReadingsParser(unittest.TestCase):
             self.wm.setVesselLevel("G4", l)
             
             # Iterate through fault possibilities, including no faults
-            self.wm.resetFaults()
-            while True:
-                cf = self.wm.currentFault()
-                
-                # For now, only the "no faults" subtest is expected to pass
-                # because the test code does not yet reflect the desired
-                # outcome in all fault states.
-                if not all(f == 0 for f in cf.values()):
-                    print("Info: Testing simulated fault states other "
-                          "than \"no faults\" is not yet implemented")
-                    break
-                else:
-                    print("Testing the \"no faults\" state.")
-                
-                sprp = stagepilogic.StagePiReadingsParser()
-                
-                with self.subTest("\nSubtest using simulated fault states:\n"
-                                  + self.wm.describeCurrentFault()
-                                  + "\n",
-                                  g4_level = l,
-                                  faults = cf):
+            with self.wm.faultIteration() as nextFault:
+                while(nextFault()):
+                    cf = self.wm.currentFault()
                     
-                    self.assertEqual(sprp.g4FullOrMore(), expected[l],
-                                         "The readings were not parsed "
-                                         "as expected. Make sure any "
-                                         "simulated sensor faults were "
-                                         "correctly handled.")
-                
-                if self.wm.hasMoreFaults():
-                    self.wm.nextFault()
-                else:
-                    break
+                    # For now, only the "no faults" subtest is expected to pass
+                    # because the test code does not yet reflect the desired
+                    # outcome in all fault states.
+                    if not all(f == 0 for f in cf.values()):
+                        print("Info: Testing simulated fault states other "
+                            "than \"no faults\" is not yet implemented")
+                        break
+                    else:
+                        print("Testing the \"no faults\" state.")
+                    
+                    sprp = stagepilogic.StagePiReadingsParser()
+                    
+                    with self.subTest("\nSubtest using simulated fault states:\n"
+                                    + self.wm.describeCurrentFault()
+                                    + "\n",
+                                    g4_level = l,
+                                    faults = cf):
+                        
+                        self.assertEqual(sprp.g4FullOrMore(), expected[l],
+                                            "The readings were not parsed "
+                                            "as expected. Make sure any "
+                                            "simulated sensor faults were "
+                                            "correctly handled.")
     
     def testG4VeryNearlyFullOrMore(self):
         # Expected fault-free g4Overfull return values for selected G4 levels
@@ -310,38 +289,33 @@ class TestStagePiReadingsParser(unittest.TestCase):
             self.wm.setVesselLevel("G4", l)
             
             # Iterate through fault possibilities, including no faults
-            self.wm.resetFaults()
-            while True:
-                cf = self.wm.currentFault()
-                
-                # For now, only the "no faults" subtest is expected to pass
-                # because the test code does not yet reflect the desired
-                # outcome in all fault states.
-                if not all(f == 0 for f in cf.values()):
-                    print("Info: Testing simulated fault states other "
-                          "than \"no faults\" is not yet implemented")
-                    break
-                else:
-                    print("Testing the \"no faults\" state.")
-                
-                sprp = stagepilogic.StagePiReadingsParser()
-                
-                with self.subTest("\nSubtest using simulated fault states:\n"
-                                  + self.wm.describeCurrentFault()
-                                  + "\n",
-                                  g4_level = l,
-                                  faults = cf):
+            with self.wm.faultIteration() as nextFault:
+                while(nextFault()):
+                    cf = self.wm.currentFault()
                     
-                    self.assertEqual(sprp.g4VeryNearlyFullOrMore(), expected[l],
-                                         "The readings were not parsed "
-                                         "as expected. Make sure any "
-                                         "simulated sensor faults were "
-                                         "correctly handled.")
-                
-                if self.wm.hasMoreFaults():
-                    self.wm.nextFault()
-                else:
-                    break
+                    # For now, only the "no faults" subtest is expected to pass
+                    # because the test code does not yet reflect the desired
+                    # outcome in all fault states.
+                    if not all(f == 0 for f in cf.values()):
+                        print("Info: Testing simulated fault states other "
+                            "than \"no faults\" is not yet implemented")
+                        break
+                    else:
+                        print("Testing the \"no faults\" state.")
+                    
+                    sprp = stagepilogic.StagePiReadingsParser()
+                    
+                    with self.subTest("\nSubtest using simulated fault states:\n"
+                                    + self.wm.describeCurrentFault()
+                                    + "\n",
+                                    g4_level = l,
+                                    faults = cf):
+                        
+                        self.assertEqual(sprp.g4VeryNearlyFullOrMore(), expected[l],
+                                            "The readings were not parsed "
+                                            "as expected. Make sure any "
+                                            "simulated sensor faults were "
+                                            "correctly handled.")
     
     def testG4NearlyFullOrMore(self):
         # Expected fault-free g4Overfull return values for selected G4 levels
@@ -357,38 +331,33 @@ class TestStagePiReadingsParser(unittest.TestCase):
             self.wm.setVesselLevel("G4", l)
             
             # Iterate through fault possibilities, including no faults
-            self.wm.resetFaults()
-            while True:
-                cf = self.wm.currentFault()
-                
-                # For now, only the "no faults" subtest is expected to pass
-                # because the test code does not yet reflect the desired
-                # outcome in all fault states.
-                if not all(f == 0 for f in cf.values()):
-                    print("Info: Testing simulated fault states other "
-                          "than \"no faults\" is not yet implemented")
-                    break
-                else:
-                    print("Testing the \"no faults\" state.")
-                
-                sprp = stagepilogic.StagePiReadingsParser()
-                
-                with self.subTest("\nSubtest using simulated fault states:\n"
-                                  + self.wm.describeCurrentFault()
-                                  + "\n",
-                                  g4_level = l,
-                                  faults = cf):
+            with self.wm.faultIteration() as nextFault:
+                while(nextFault()):
+                    cf = self.wm.currentFault()
                     
-                    self.assertEqual(sprp.g4NearlyFullOrMore(), expected[l],
-                                         "The readings were not parsed "
-                                         "as expected. Make sure any "
-                                         "simulated sensor faults were "
-                                         "correctly handled.")
-                
-                if self.wm.hasMoreFaults():
-                    self.wm.nextFault()
-                else:
-                    break
+                    # For now, only the "no faults" subtest is expected to pass
+                    # because the test code does not yet reflect the desired
+                    # outcome in all fault states.
+                    if not all(f == 0 for f in cf.values()):
+                        print("Info: Testing simulated fault states other "
+                            "than \"no faults\" is not yet implemented")
+                        break
+                    else:
+                        print("Testing the \"no faults\" state.")
+                    
+                    sprp = stagepilogic.StagePiReadingsParser()
+                    
+                    with self.subTest("\nSubtest using simulated fault states:\n"
+                                    + self.wm.describeCurrentFault()
+                                    + "\n",
+                                    g4_level = l,
+                                    faults = cf):
+                        
+                        self.assertEqual(sprp.g4NearlyFullOrMore(), expected[l],
+                                            "The readings were not parsed "
+                                            "as expected. Make sure any "
+                                            "simulated sensor faults were "
+                                            "correctly handled.")
     
 class TestStagePiControlLogic(unittest.TestCase):
     """
