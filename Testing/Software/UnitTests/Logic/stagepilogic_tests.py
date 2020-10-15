@@ -99,6 +99,7 @@ class TestStagePiReadingsParser(unittest.TestCase):
             self.wm.setVesselLevel("G6", l)
             
             # Iterate through fault possibilities, including no faults
+            self.wm.resetFaults()
             while True:
                 cf = self.wm.currentFault()
                 
@@ -161,6 +162,7 @@ class TestStagePiReadingsParser(unittest.TestCase):
             self.wm.setVesselLevel("G6", l)
             
             # Iterate through fault possibilities, including no faults
+            self.wm.resetFaults()
             while True:
                 cf = self.wm.currentFault()
                 
@@ -214,6 +216,7 @@ class TestStagePiReadingsParser(unittest.TestCase):
             self.wm.setVesselLevel("G4", l)
             
             # Iterate through fault possibilities, including no faults
+            self.wm.resetFaults()
             while True:
                 cf = self.wm.currentFault()
                 
@@ -260,6 +263,7 @@ class TestStagePiReadingsParser(unittest.TestCase):
             self.wm.setVesselLevel("G4", l)
             
             # Iterate through fault possibilities, including no faults
+            self.wm.resetFaults()
             while True:
                 cf = self.wm.currentFault()
                 
@@ -306,6 +310,7 @@ class TestStagePiReadingsParser(unittest.TestCase):
             self.wm.setVesselLevel("G4", l)
             
             # Iterate through fault possibilities, including no faults
+            self.wm.resetFaults()
             while True:
                 cf = self.wm.currentFault()
                 
@@ -352,6 +357,7 @@ class TestStagePiReadingsParser(unittest.TestCase):
             self.wm.setVesselLevel("G4", l)
             
             # Iterate through fault possibilities, including no faults
+            self.wm.resetFaults()
             while True:
                 cf = self.wm.currentFault()
                 
