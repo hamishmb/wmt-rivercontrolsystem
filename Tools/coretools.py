@@ -59,9 +59,6 @@ logger.setLevel(logging.getLogger('River System Control Software').getEffectiveL
 for handler in logging.getLogger('River System Control Software').handlers:
     logger.addHandler(handler)
 
-print("coretools.py __name__:")
-print(__name__)
-
 class Reading:
     """
     This class is used to represent a reading. Each reading has an ID, a time,
