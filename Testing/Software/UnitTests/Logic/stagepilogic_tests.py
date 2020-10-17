@@ -87,7 +87,11 @@ class TestStagePiReadingsParser(unittest.TestCase):
         self.assertIsNone(self.wm.sw_status, msg)
         self.assertIsNone(self.wm.current_action, msg)
         
-    def testG6Full(self):        
+    def testG6Full(self):
+        """
+        Test that StagePiReadingsParser.g6Full() behaves as expected
+        under various conditions.
+        """
         # Expected fault-free g6Full return values for selected G6 level values
         expected = {
             stagepilogic.levels["G6Full"] + 100: True, # well within range
@@ -141,6 +145,10 @@ class TestStagePiReadingsParser(unittest.TestCase):
                         self.assertNoLoggedStatus()
     
     def testG6Empty(self):
+        """
+        Test that StagePiReadingsParser.g6Empty() behaves as expected
+        under various conditions.
+        """
         # Expected fault-free g6Empty return values for selected G6 levels
         expected = {
             # N.B. G6 Empty is defined by the lower bound for "not empty"
@@ -194,6 +202,10 @@ class TestStagePiReadingsParser(unittest.TestCase):
                                             "correctly handled.")
     
     def testG4Overfull(self):
+        """
+        Test that StagePiReadingsParser.g4Overfull() behaves as
+        expected under various conditions.
+        """
         # Expected fault-free g4Overfull return values for selected G4 levels
         expected = {
             stagepilogic.levels["G4Overfull"] + 100: True, # within range
@@ -234,6 +246,10 @@ class TestStagePiReadingsParser(unittest.TestCase):
                                             "correctly handled.")
     
     def testG4FullOrMore(self):
+        """
+        Test that StagePiReadingsParser.g4FullOrMore() behaves as
+        expected under various conditions.
+        """
         # Expected fault-free g4FullOrMore return values for selected G4 levels
         expected = {
             # N.B. "full or more"; there is no upper bound
@@ -276,6 +292,10 @@ class TestStagePiReadingsParser(unittest.TestCase):
                                             "correctly handled.")
     
     def testG4VeryNearlyFullOrMore(self):
+        """
+        Test that StagePiReadingsParser.g4VeryNearlyFullOrMore()
+        behaves as expected under various conditions.
+        """
         # Expected fault-free g4Overfull return values for selected G4 levels
         expected = {
             # N.B. "very nearly full or more"; there is no upper bound
@@ -318,6 +338,10 @@ class TestStagePiReadingsParser(unittest.TestCase):
                                             "correctly handled.")
     
     def testG4NearlyFullOrMore(self):
+        """
+        Test that StagePiReadingsParser.g4NearlyFullOrMore() behaves as
+        expected under various conditions.
+        """
         # Expected fault-free g4Overfull return values for selected G4 levels
         expected = {
             # N.B. "nearly full or more"; there is no upper bound
