@@ -83,43 +83,80 @@ class StagePiReadingsParser():
     This class extracts data from sensor readings and presents it
     in a format that's convenient for the Stage Pi control logic
     """
+    #TODO: Handle sensor faults and failure to get readings in a more
+    #      robust manner.
+    #      
+    #      Each g4x or g6x method should try to return a best guess
+    #      result based on the sensor readings available, even if
+    #      some are missing, contradictory or indicate faults. Only
+    #      when none of the readings agree, or when none are
+    #      available, should these methods raise ValueError.
+    #
+    #      Implementing such a policy will require the initialiser to
+    #      record the fault status of the readings, in addition to
+    #      their values.
     def __init__(self):
         """
         Initialiser. Puts relevant readings data into instance variables.
         
         Throws:
             AssertionError  if the readings fail to pass suitability tests
-        """
+        """      
+        #Get readings, check they are sane and load into self
+        failed_to_get_some_readings = False
         
-        #Get readings
         try:
             G4M0 =  logiccoretools.get_latest_reading("G4", "M0").get_value()
-            G4FS0 = logiccoretools.get_latest_reading("G4", "FS0").get_value()
-            G4FS1 = logiccoretools.get_latest_reading("G4", "FS1").get_value()
-            G6M0 =  logiccoretools.get_latest_reading("G6", "M0").get_value()
-            G6FS0 = logiccoretools.get_latest_reading("G6", "FS0").get_value()
-            G6FS1 = logiccoretools.get_latest_reading("G6", "FS1").get_value()
-        
+            self.G4_level = int(G4M0.replace("m", ""))
         except RuntimeError:
+            self.G4_level = None
+            failed_to_get_some_readings = True
+        
+        try:
+            G4FS0 = logiccoretools.get_latest_reading("G4", "FS0").get_value()
+            assert G4FS0 in ("True", "False")
+            self.G4_full = G4FS0 == "True"
+        except RuntimeError:
+            self.G4_full = None
+            failed_to_get_some_readings = True
+        
+        try:
+            G4FS1 = logiccoretools.get_latest_reading("G4", "FS1").get_value()
+            assert G4FS1 in ("True", "False")
+            self.G4_empty = G4FS1 == "True"
+        except RuntimeError:
+            self.G4_empty = None
+            failed_to_get_some_readings = True
+        
+        try:
+            G6M0 =  logiccoretools.get_latest_reading("G6", "M0").get_value()
+            self.G6_level = int(G6M0.replace("m", ""))
+        except RuntimeError:
+            self.G6_level = None
+            failed_to_get_some_readings = True
+        
+        try:
+            G6FS0 = logiccoretools.get_latest_reading("G6", "FS0").get_value()
+            assert G6FS0 in ("True", "False")
+            self.G6_full = G6FS0 == "True"
+        except RuntimeError:
+            self.G6_full = None
+            failed_to_get_some_readings = True
+        
+        try:
+            G6FS1 = logiccoretools.get_latest_reading("G6", "FS1").get_value()
+            assert G6FS1 in ("True", "False")
+            self.G6_empty = G6FS1 == "True"
+        except RuntimeError:
+            self.G6_empty = None
+            failed_to_get_some_readings = True
+        
+        if failed_to_get_some_readings:
             msg = "Error: Could not get readings for one or more devices on "\
                   "G4 or G6"
             print(msg)
             logger.error(msg)
         
-        #Check that the float switch readings are sane.
-        assert G4FS0 in ("True", "False")
-        assert G4FS1 in ("True", "False")
-        assert G6FS0 in ("True", "False")
-        assert G6FS1 in ("True", "False")
-        
-        #Load readings into self
-        self.G4_level = int(G4M0.replace("m", ""))
-        self.G4_full = G4FS0 == "True"
-        self.G4_empty = G4FS1 == "True"
-        
-        self.G6_level = int(G6M0.replace("m", ""))
-        self.G6_full = G6FS0 == "True"
-        self.G6_empty = G6FS1 == "True"
     
     def _g6sensorContradictionError(self):
         """
@@ -146,6 +183,11 @@ class StagePiReadingsParser():
         """
         Returns true if G6 is full
         """
+        if (self.G6_full is None
+            or self.G6_level is None
+            or self.G6_empty is None):
+            raise ValueError("Sensor readings unavailable.")
+        
         if(self.G6_full or self.G6_level >= levels["G6Full"]):
             if(self.G6_empty == False):
                 return True
@@ -163,6 +205,11 @@ class StagePiReadingsParser():
         """
         Returns true if G6 is empty (<25mm)
         """
+        if (self.G6_empty is None
+            or self.G6_level is None
+            or self.G6_full is None):
+            raise ValueError("Sensor readings unavailable.")
+        
         if(self.G6_empty or self.G6_level < levels["G6NotEmpty"]):
             if(self.G6_full == False):
                 return True
@@ -180,6 +227,11 @@ class StagePiReadingsParser():
         """
         Returns true if G4 is overfull (full to the limit)
         """
+        if (self.G4_empty is None
+            or self.G4_full is None
+            or self.G4_level is None):
+            raise ValueError("Sensor readings unavailable.")
+        
         return (not self.G4_empty
                 and (self.G4_full or
                      self.G4_level >= levels["G4Overfull"]))
@@ -188,6 +240,11 @@ class StagePiReadingsParser():
         """
         Returns true if G4 is full or more (>900mm)
         """
+        if (self.G4_empty is None
+            or self.G4_full is None
+            or self.G4_level is None):
+            raise ValueError("Sensor readings unavailable.")
+        
         return (not self.G4_empty
                 and (self.G4_full or
                      self.G4_level >= levels["G4Full"]))
@@ -196,6 +253,11 @@ class StagePiReadingsParser():
         """
         Returns true if G4 level is very nearly full or more (>800mm)
         """
+        if (self.G4_empty is None
+            or self.G4_full is None
+            or self.G4_level is None):
+            raise ValueError("Sensor readings unavailable.")
+        
         return (not self.G4_empty
                 and (self.G4_full or
                      self.G4_level >= levels["G4VeryNearlyFull"]))
@@ -204,6 +266,11 @@ class StagePiReadingsParser():
         """
         Returns true if G4 level is nearly full or more (>700mm)
         """
+        if (self.G4_empty is None
+            or self.G4_full is None
+            or self.G4_level is None):
+            raise ValueError("Sensor readings unavailable.")
+        
         return (not self.G4_empty
                 and (self.G4_full or
                      self.G4_level >= levels["G4NearlyFull"]))

@@ -17,7 +17,7 @@
 #Import modules
 import unittest
 import sys
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 sys.path.append('../../../..') #Need to be able to import Logic and Tools
 import Logic.stagepilogic as stagepilogic
@@ -53,6 +53,13 @@ def stagePiWaterModel(G6Level, G4Level):
     
     return wm
 
+class LogiccoretoolsTestError(RuntimeError):
+    """
+    Exception to be raised when testing scenarios in which
+    the functions in logiccoretools raise errors.
+    """
+    pass
+
 class TestStagePiReadingsParser(unittest.TestCase):
     """
     Full tests of class StagePiReadingsParser
@@ -86,6 +93,59 @@ class TestStagePiReadingsParser(unittest.TestCase):
         self.assertIsNone(self.wm.pi_status, msg)
         self.assertIsNone(self.wm.sw_status, msg)
         self.assertIsNone(self.wm.current_action, msg)
+    
+    def testLogiccoretoolsError(self):
+        """
+        Test that the readings parser gracefully handles the scenario
+        where logiccoretools functions raise errors and don't return
+        normally.
+        """
+        # TODO: Consider replacing this test with WaterModel fault
+        #       simulation testing, by adding an exception-raising
+        #       fault state to each WaterModel sensor type -- the
+        #       ReadingsParser should be handling these errors in the
+        #       same way that it handles sensor faults, so it makes
+        #       sense to test it in the same way.
+        mock = Mock(side_effect=LogiccoretoolsTestError())
+        with patch('Tools.logiccoretools.get_latest_reading', new=mock),\
+             patch('Tools.logiccoretools.get_n_latest_readings', new=mock),\
+             patch('Tools.logiccoretools.get_state', new=mock),\
+             patch('Tools.logiccoretools.get_status', new=mock),\
+             patch('Tools.logiccoretools.attempt_to_control', new=mock),\
+             patch('Tools.logiccoretools.release_control', new=mock),\
+             patch('Tools.logiccoretools.log_event', new=mock),\
+             patch('Tools.logiccoretools.update_status', new=mock),\
+             patch('Tools.logiccoretools.get_latest_tick', new=mock),\
+             patch('Tools.logiccoretools.store_tick', new=mock),\
+             patch('Tools.logiccoretools.store_reading', new=mock):
+                 
+            # Check that we can initialise the readings parser
+            sprp = stagepilogic.StagePiReadingsParser()
+            
+            # Check that all of its methods raise ValueError.
+            with self.subTest("g6Full"):
+                with self.assertRaises(ValueError):
+                    sprp.g6Full()
+                    
+            with self.subTest("g6Empty"):
+                with self.assertRaises(ValueError):
+                    sprp.g6Empty()
+            
+            with self.subTest("g4Overfull"):
+                with self.assertRaises(ValueError):
+                    sprp.g4Overfull()
+            
+            with self.subTest("g4FullOrMore"):
+                with self.assertRaises(ValueError):
+                    sprp.g4FullOrMore()
+            
+            with self.subTest("g4VeryNearlyFullOrMore"):
+                with self.assertRaises(ValueError):
+                    sprp.g4VeryNearlyFullOrMore()
+            
+            with self.subTest("g4NearlyFullOrMore"):
+                with self.assertRaises(ValueError):
+                    sprp.g4NearlyFullOrMore()
         
     def testG6Full(self):
         """
