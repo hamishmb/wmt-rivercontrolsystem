@@ -111,4 +111,26 @@ testingtools.py
 This module defines some testing classes and functions that simulate hardware, in order for the
 control software to be run more easily in test deployments without real hardware, such as
 in virtual machines.
+
+statetools.py
+=============
+
+This module contains Abstract Base Classes for writing control logic based
+on The State Pattern.
+
+ControlStateMachineABC defines the basis for a state machine object which
+has a number of different control states. The machine should initialise
+itself by loading in a set of state objects that it will use. It remembers
+the current state and gives the current state responsibility for handling
+the 'doLogic' method.
+
+ControlStateABC defines the basis of a control state object for use in a
+control state machine. States have the responsibility for handling doLogic
+while they are the current state, and for transitioning the machine into
+a different state under some set of defined conditions.
+
+Contains Classes:
+
+- ControlStateABC
+- ControlStateMachineABC
 """

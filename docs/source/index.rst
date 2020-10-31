@@ -23,6 +23,7 @@ Contents:
     devicemanagement
     sockettools
     testingtools
+    statetools
 
 
 Indices and tables

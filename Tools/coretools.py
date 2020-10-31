@@ -28,6 +28,7 @@ this is likely to move to some new files once we have the new algorithms.
     :synopsis: Contains tools used by all parts of the software.
 
 .. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
+.. moduleauthor:: Patrick Wigmore <pwbugreports@gmx.com>
 """
 
 import sys
@@ -39,6 +40,12 @@ from collections import deque
 import datetime
 import MySQLdb as mysql
 import psutil
+import os.path
+
+sys.path.insert(0, os.path.abspath('..'))
+
+from Logic import stagepilogic
+import inspect
 
 import config
 
@@ -1458,7 +1465,7 @@ class DatabaseConnection(threading.Thread):
 
         self.do_query(query, retries)
 
-# -------------------- CONTROL LOGIC FUNCTIONS --------------------
+# -------------------- CONTROL LOGIC FUNCTIONS AND CLASSES --------------------
 def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
     """
     This control logic runs on the NAS box, and is responsible for:
@@ -1956,7 +1963,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
     else:
         #Level in the sump is critically low!
-        #If the butts pump is on, turn it oactuaff.
+        #If the butts pump is on, turn it off.
         butts_pump.disable()
 
         if butts_reading >= 300:
@@ -2013,6 +2020,88 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         logger.error("Error: Couldn't update site status!")
 
     return reading_interval
+
+def stagepi_control_logic(readings, devices, monitors, sockets, reading_interval):
+    """
+    Control logic for stagepi's zone of responsibility.
+    
+    This mainly just wraps StagePiControlLogic.doLogic(), but it also contains
+    some other integration glue.
+    
+    Run stagepi_control_logic_setup once before first running this function.
+    
+    See StagePiControlLogic for documentation.
+
+    Args:
+        readings (list):                A list of the latest readings for each probe/device.
+
+        devices  (list):                A list of all master pi device objects.
+
+        monitors (list):                A list of all master pi monitor objects.
+
+        sockets (list of Socket):       A list of Socket objects that represent
+                                        the data connections between pis. Passed
+                                        here so we can control the reading
+                                        interval at that end.
+
+        reading_interval (int):     The current reading interval, in
+                                    seconds.
+
+    Returns:
+        int: The reading interval, in seconds.
+
+    Usage:
+
+        >>> reading_interval = stagepi_control_logic(<listofreadings>,
+        >>>                                     <listofprobes>, <listofmonitors>,
+        >>>                                     <listofsockets>, <areadinginterval)
+
+    """
+    #Check that the reading interval is positive, and greater than 0.
+    assert reading_interval > 0
+    
+    try:
+        #TODO: write a test that checks that none of the control state
+        #      names is long enough to cause this string to exceed the
+        #      maximum accepted by the database
+        software_status = "OK, in " + stagepilogic.csm.getCurrentStateName()
+    
+    except AttributeError:
+        software_status = "OUT COLD. No CSM."
+        
+    
+    try:
+        logiccoretools.update_status("Up, CPU: " + config.CPU
+                                     +"%, MEM: " + config.MEM + " MB",
+                                     software_status,
+                                     "None")
+        #TODO: implement current_action status other than "None" by extending
+        #      ControlStateABC with a currentAction member to be overriden by
+        #      each state class.
+
+    except RuntimeError:
+        print("Error: Couldn't update site status!")
+        logger.error("Error: Couldn't update site status!")
+    
+    try:
+        return stagepilogic.csm.doLogic(reading_interval)
+    
+    except AttributeError:
+        msg = ("CRITICAL ERROR: Stage Pi logic has not been initialised. "
+               "Check whether the setup function has been run.")
+        print(msg)
+        logger.critical(msg)
+        
+        return reading_interval
+
+def stagepi_control_logic_setup():
+    """
+    Set-up function for stagepi's control logic.
+    
+    Initialises a StagePiControlLogic object for state persistence.
+    """
+    #Initialise the control state machine
+    stagepilogic.csm = stagepilogic.StagePiControlLogic()
 
 # -------------------- MISCELLANEOUS FUNCTIONS --------------------
 def setup_devices(system_id, dictionary="Probes"):

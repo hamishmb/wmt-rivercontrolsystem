@@ -373,6 +373,14 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     for _siteid in config.SITE_SETTINGS:
         reading_intervals[_siteid] = 15
+    
+    #Run logic set-up function
+    if "ControlLogicSetupFunction" in config.SITE_SETTINGS[system_id]:
+        function = getattr(core_tools,
+                            config.SITE_SETTINGS[system_id]["ControlLogicSetupFunction"])
+
+        function()
+    
 
     #Keep tabs on its progress so we can write new readings to the file.
     try:
@@ -420,6 +428,12 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
             #I know we could use a long time.sleep(),
             #but we need to be able to respond to messages from the sockets.
+            #
+            #What would be really useful here is if the sockets library
+            #provided a function that just sleeps until either the socket
+            #has data or a specified timeout expires, and then returns
+            #true/false. Does such a function exist?
+            #
             #TODO refactor into a separate function.
             asked_for_tick = False
             count = 0
