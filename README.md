@@ -111,4 +111,4 @@ To generate the report. To view the report, run:
 
     xdg-open ./htmlcov/index.html
 
-Coverage isn't at 100% as of the time of writing, but it will continue to improve as the software is developed. The total coverage is around 80% at the time of writing (17/07/2020).
+Coverage isn't at 100% as of the time of writing, but it will continue to improve as the software is developed. The total coverage is around 68% at the time of writing (06/11/2020).
