@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Unit Tests for the River System Control and Monitoring Software
-# Copyright (C) 2017-2019 Wimborne Model Town
+# Copyright (C) 2017-2020 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
 # at your option, any later version.
@@ -56,6 +56,9 @@ def usage():
     print("       -a, --all:                    Run all the tests. The default.")
     print("       -c, --coretools:              Run only the tests for the")
     print("                                     coretools module.")
+    print("       -l, --logic:                  Run only the tests for the")
+    print("                                     controllogic (integration)")
+    print("                                     module.")
     print("       -d, --deviceobjects:          Run only the tests for the")
     print("                                     deviceobjects module.")
     print("       -e, --devicemanagement:       Run only the tests for the")
@@ -71,8 +74,8 @@ def usage():
 if __name__ == "__main__":
     #Check all cmdline options are valid.
     try:
-        OPTIONS, ARGUMENTS = getopt.getopt(sys.argv[1:], "hDcdemsa",
-                                           ["help", "debug", "coretools", "deviceobjects",
+        OPTIONS, ARGUMENTS = getopt.getopt(sys.argv[1:], "hDcldemsa",
+                                           ["help", "debug", "coretools", "logic", "deviceobjects",
                                             "devicemanagement", "monitortools", "sockettools",
                                             "all"])
 
@@ -93,6 +96,7 @@ if __name__ == "__main__":
 
     #Import test modules here so the logging level is right - debug mode will work.
     from UnitTests.Tools import coretools_tests
+    from UnitTests.Logic import controllogic_tests
     from UnitTests.Tools import deviceobjects_tests
     from UnitTests.Tools import devicemanagement_tests
     from UnitTests.Tools import monitortools_tests
@@ -104,11 +108,14 @@ if __name__ == "__main__":
 
     for o, a in OPTIONS:
         if o in ["-a", "--all"]:
-            TEST_SUITES = [coretools_tests, deviceobjects_tests, devicemanagement_tests,
+            TEST_SUITES = [coretools_tests, controllogic_tests, deviceobjects_tests, devicemanagement_tests,
                            monitortools_tests, sockettools_tests]
 
         elif o in ["-c", "--coretools"]:
             TEST_SUITES = [coretools_tests]
+
+        elif o in ("-l", "--logic"):
+            TEST_SUITES = [controllogic_tests]
 
         elif o in ["-d", "--deviceobjects"]:
             TEST_SUITES = [deviceobjects_tests]
