@@ -72,10 +72,8 @@ change into the "Testing/Software" directory and run:
     python3 ./unittets.py
 
 There are a number of test suites that can be specified (use the -h flag for more details).
-For each one of these, the output format is as follows:
+The output format is as follows
 
-    ---------------------------- Tests for (suite name) from (file name) ----------------------------
-    
     test_1 (name_of_test) ... (result)
     ...
     
@@ -84,7 +82,7 @@ For each one of these, the output format is as follows:
     
     (overall result)
 
-As a result of this, it's worth either running the suites independently, or carefully checking through the output.
+The results used to be printed intermediately if multiple modules were selected at once (eg with -a), but now they are always displayed at the end so failures cannot be missed.
 
 
 Determining Test Coverage

@@ -146,7 +146,10 @@ if __name__ == "__main__":
         else:
             assert False, "unhandled option"
 
+    tests = unittest.TestSuite()
+
     for module in TEST_SUITES:
-        print("\n\n---------------------------- Tests for "
-              + str(module)+" ----------------------------\n\n")
-        unittest.TextTestRunner(verbosity=2).run(unittest.TestLoader().loadTestsFromModule(module))
+        tests.addTest(unittest.TestLoader().loadTestsFromModule(module))
+
+    #Run the tests.
+    unittest.TextTestRunner(verbosity=2).run(tests)
