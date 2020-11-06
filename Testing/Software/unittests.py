@@ -59,6 +59,8 @@ def usage():
     print("       -l, --logic:                  Run only the tests for the")
     print("                                     controllogic (integration)")
     print("                                     module.")
+    print("       --stagepilogic:               Run only the tests for the")
+    print("                                     stagepilogic module.")
     print("       -d, --deviceobjects:          Run only the tests for the")
     print("                                     deviceobjects module.")
     print("       -e, --devicemanagement:       Run only the tests for the")
@@ -75,9 +77,9 @@ if __name__ == "__main__":
     #Check all cmdline options are valid.
     try:
         OPTIONS, ARGUMENTS = getopt.getopt(sys.argv[1:], "hDcldemsa",
-                                           ["help", "debug", "coretools", "logic", "deviceobjects",
-                                            "devicemanagement", "monitortools", "sockettools",
-                                            "all"])
+                                           ["help", "debug", "coretools", "logic", "stagepilogic",
+                                            "deviceobjects", "devicemanagement", "monitortools",
+                                            "sockettools", "all"])
 
     except getopt.GetoptError as err:
         #Invalid option. Show the help message and then exit.
@@ -97,25 +99,30 @@ if __name__ == "__main__":
     #Import test modules here so the logging level is right - debug mode will work.
     from UnitTests.Tools import coretools_tests
     from UnitTests.Logic import controllogic_tests
+    from UnitTests.Logic import stagepilogic_tests
     from UnitTests.Tools import deviceobjects_tests
     from UnitTests.Tools import devicemanagement_tests
     from UnitTests.Tools import monitortools_tests
     from UnitTests.Tools import sockettools_tests
 
     #Set up which tests to run based on options given.
-    TEST_SUITES = [coretools_tests, deviceobjects_tests, devicemanagement_tests,
-                   monitortools_tests, sockettools_tests]
+    TEST_SUITES = [coretools_tests, controllogic_tests, stagepilogic_tests, deviceobjects_tests,
+                   devicemanagement_tests, monitortools_tests, sockettools_tests]
 
     for o, a in OPTIONS:
         if o in ["-a", "--all"]:
-            TEST_SUITES = [coretools_tests, controllogic_tests, deviceobjects_tests, devicemanagement_tests,
-                           monitortools_tests, sockettools_tests]
+            TEST_SUITES = [coretools_tests, controllogic_tests, stagepilogic_tests,
+                           deviceobjects_tests, devicemanagement_tests, monitortools_tests,
+                           sockettools_tests]
 
         elif o in ["-c", "--coretools"]:
             TEST_SUITES = [coretools_tests]
 
         elif o in ("-l", "--logic"):
             TEST_SUITES = [controllogic_tests]
+
+        elif o in ("--stagepilogic"):
+            TEST_SUITES = [stagepilogic_tests]
 
         elif o in ["-d", "--deviceobjects"]:
             TEST_SUITES = [deviceobjects_tests]

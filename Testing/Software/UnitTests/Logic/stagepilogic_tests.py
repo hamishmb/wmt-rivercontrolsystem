@@ -22,7 +22,8 @@ from unittest.mock import Mock, patch
 sys.path.append('../../../..') #Need to be able to import Logic and Tools
 import Logic.stagepilogic as stagepilogic
 import Tools.logiccoretools
-from testwatermodel import *
+
+from .testwatermodel import *
 
 def stagePiWaterModel(G6Level, G4Level):
     """
