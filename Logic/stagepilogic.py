@@ -27,6 +27,7 @@ This is the stagepilogic module, which contains control logic for Stage Pi.
 
 .. moduleauthor:: Patrick Wigmore <pwbugreports@gmx.com>
 """
+
 import logging
 import sys
 import os.path

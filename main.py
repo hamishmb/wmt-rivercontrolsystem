@@ -48,6 +48,8 @@ import config
 from Tools import loggingtools
 from Tools import logiccoretools
 
+from Logic import controllogic
+
 def usage():
     """
     This function is used to output help information to the standard output
@@ -376,7 +378,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     
     #Run logic set-up function
     if "ControlLogicSetupFunction" in config.SITE_SETTINGS[system_id]:
-        function = getattr(core_tools,
+        function = getattr(controllogic,
                             config.SITE_SETTINGS[system_id]["ControlLogicSetupFunction"])
 
         function()
@@ -421,7 +423,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
             #Logic.
             if "ControlLogicFunction" in config.SITE_SETTINGS[system_id]:
-                function = getattr(core_tools,
+                function = getattr(controllogic,
                                    config.SITE_SETTINGS[system_id]["ControlLogicFunction"])
 
                 reading_interval = function(readings, devices, monitors, sockets, reading_interval)
