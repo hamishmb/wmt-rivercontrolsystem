@@ -84,6 +84,7 @@ The output format is as follows
 
 The results used to be printed intermediately if multiple modules were selected at once (eg with -a), but now they are always displayed at the end so failures cannot be missed.
 
+It currently takes around 5 minutes to run the whole test suite. This is due to threading being involved in various parts of the software and the complexities involved in making sure the tests are reproducible and simulate the behaviour of the real system accurately.
 
 Determining Test Coverage
 -------------------------
