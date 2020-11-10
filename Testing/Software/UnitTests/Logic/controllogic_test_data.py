@@ -93,6 +93,9 @@ class Sockets:
     def write(self, data):
         self.out_queue.append(data)
 
+#Readings dictionary to hold fake readings for each sensor for sumppi control logic tests.
+readings = {}
+
 #Dummy logiccoretools.attempt_to_control method for sumppi control logic.
 def fake_attempt_to_control(site_id, sensor_id, request, retries=3):
     return True
@@ -100,3 +103,7 @@ def fake_attempt_to_control(site_id, sensor_id, request, retries=3):
 #Dummy logiccoretools.update_status method for sumppi control logic.
 def fake_update_status(pi_status, sw_status, current_action, retries=3):
     return True
+
+#Dummy logiccoretools.get_latest_reading method for sumppi contro logic.
+def fake_get_latest_reading(site_id, sensor_id):
+    return readings[site_id+":"+sensor_id][-1]

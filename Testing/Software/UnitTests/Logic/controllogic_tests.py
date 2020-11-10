@@ -77,8 +77,11 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Disabling functions in logiccoretools because we aren't testing them here.
         self.orig_attempt_to_control = logiccoretools.attempt_to_control
         self.orig_update_status = logiccoretools.update_status
+        self.orig_get_latest_reading = logiccoretools.get_latest_reading
+
         logiccoretools.attempt_to_control = data.fake_attempt_to_control
         logiccoretools.update_status = data.fake_update_status
+        logiccoretools.get_latest_reading = data.fake_get_latest_reading
 
         config.CPU = "50"
         config.MEM = "50"
@@ -92,6 +95,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
 
         logiccoretools.attempt_to_control = self.orig_attempt_to_control
         logiccoretools.update_status = self.orig_update_status
+        logiccoretools.get_latest_reading = self.orig_get_latest_reading
+
+        #Reset readings dictionary in data.
+        data.readings.clear()
 
         config.CPU = None
         config.MEM = None
@@ -102,8 +109,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
-        readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "800mm", "OK")
-        readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "True", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "800mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "True", "OK")]
 
         reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
                                                            self.monitors, self.sockets,
@@ -126,8 +135,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
-        readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "800mm", "OK")
-        readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "800mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
 
         reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
                                                            self.monitors, self.sockets,
@@ -150,8 +161,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "700mm", "OK")
-        readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "700mm", "OK")
-        readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "700mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
 
         reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
                                                            self.monitors, self.sockets,
@@ -174,8 +187,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "600mm", "OK")
-        readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "600mm", "OK")
-        readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "600mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
 
         reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
                                                            self.monitors, self.sockets,
@@ -197,8 +212,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "500mm", "OK")
-        readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "500mm", "OK")
-        readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "500mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
 
         reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
                                                            self.monitors, self.sockets,
@@ -225,8 +242,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "500mm", "OK")
-        readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "500mm", "OK")
-        readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "500mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
 
         #Turn the fake butts pump on.
         self.butts_pump.enable()
@@ -256,8 +275,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "400mm", "OK")
-        readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "400mm", "OK")
-        readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "400mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
 
         reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
                                                            self.monitors, self.sockets,
@@ -280,8 +301,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "300mm", "OK")
-        readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "300mm", "OK")
-        readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "300mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
 
         reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
                                                            self.monitors, self.sockets,
@@ -304,8 +327,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "300mm", "OK")
-        readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "200mm", "OK")
-        readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "200mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
 
         reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
                                                            self.monitors, self.sockets,
@@ -327,8 +352,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "200mm", "OK")
-        readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "600mm", "OK")
-        readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "600mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
 
         reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
                                                            self.monitors, self.sockets,
@@ -351,8 +378,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "200mm", "OK")
-        readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "200mm", "OK")
-        readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "200mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
 
         reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
                                                            self.monitors, self.sockets,
@@ -375,8 +404,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "100mm", "OK")
-        readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "100mm", "OK")
-        readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "100mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
 
         reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
                                                            self.monitors, self.sockets,
@@ -399,8 +430,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "100mm", "OK")
-        readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "400mm", "OK")
-        readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "400mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
 
         reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
                                                            self.monitors, self.sockets,
@@ -425,8 +458,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "100mm", "OK")
-        readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "400mm", "OK")
-        readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "400mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
 
         #Remove main circulation pump from device list.
         self.devices.pop(1)
@@ -440,8 +475,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "100mm", "OK")
-        readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "400mm", "OK")
-        readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "400mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
 
         #Remove butts pump from device list.
         self.devices.pop(0)
@@ -456,8 +493,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "100mm", "OK")
-        readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "400mm", "OK")
-        readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "400mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
 
         #Clear the devices list.
         self.devices = []
@@ -472,8 +511,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "100mm", "OK")
-        readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "400mm", "OK")
-        readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "400mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
 
         #Clear the sockets list.
         self.sockets = []
@@ -488,8 +529,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "100mm", "OK")
-        readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "400mm", "OK")
-        readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "400mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
 
         reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
                                                            self.monitors, self.sockets,
@@ -500,8 +543,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "1100mm", "OK")
-        readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "4400mm", "OK")
-        readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "4400mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
 
         reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
                                                            self.monitors, self.sockets,
@@ -512,8 +557,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "-100mm", "OK")
-        readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "-400mm", "OK")
-        readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "-400mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
 
         reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
                                                            self.monitors, self.sockets,
@@ -526,8 +573,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "100mm", "OK")
-        readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "400mm", "OK")
-        readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "400mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
 
         reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
                                                            self.monitors, self.sockets,
@@ -539,8 +588,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = None
-        readings["G4:M0"] = None
-        readings["G4:FS0"] = None
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [None]
+        data.readings["G4:FS0"] = [None]
 
         reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
                                                            self.monitors, self.sockets,
@@ -552,8 +603,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "100mm", "OK")
-        readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "400mm", "OK")
-        readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "ABCDEF", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "400mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "ABCDEF", "OK")]
 
         reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
                                                            self.monitors, self.sockets,
@@ -564,8 +617,10 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #Create reading objects.
         readings = {}
         readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "0xemm", "OK")
-        readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "rydfmm", "OK")
-        readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "rydfmm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
 
         reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
                                                            self.monitors, self.sockets,
