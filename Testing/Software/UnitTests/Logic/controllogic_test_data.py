@@ -96,9 +96,13 @@ class Sockets:
 #Readings dictionary to hold fake readings for each sensor for sumppi control logic tests.
 readings = {}
 
+#Dictionary to hold devices that have been attempted to be controlled, and the state requested.
+states = {}
+
 #Dummy logiccoretools.attempt_to_control method for sumppi control logic.
 def fake_attempt_to_control(site_id, sensor_id, request, retries=3):
-    return True
+    states[site_id+":"+sensor_id] = []
+    states[site_id+":"+sensor_id].append(request)
 
 #Dummy logiccoretools.update_status method for sumppi control logic.
 def fake_update_status(pi_status, sw_status, current_action, retries=3):
