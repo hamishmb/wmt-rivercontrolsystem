@@ -752,23 +752,20 @@ class StagePiControlLogic(ControlStateMachineABC):
     ControlStateMachineABC, which, in turn, delegates entirely to the
     object representing the current state.
     
-    .. figure:: ../docs/source/stagepistatediagram.png
-       :alt: The diagram describes the following operation:
-             
+    .. figure:: stagepistatediagram.png
+       :alt:
+             The diagram describes the following operation:            
              If G6 is empty, then there is nothing to do until either G6 is no
              longer empty, or G4 becomes overfilled. Sit in "G6 Empty" state.
-            
              If G6 is not empty, then transfer water from G6 to G4 until either
              G4 is filled or G6 is empty. A series of fill level states are
              defined for G4 based on the rising or falling level in G4, each
              with a different rate of water transfer. ("G4 Overfilled",
              "G4 Filled", "G4 Very Nearly Filled", "G4 Nearly Filled" and, the
              least full, "G4 Filling".)
-             
              Regardless of whether or not G6 is empty, if G4 becomes overfilled,
              (the "G4 Overfilled" state) water is pumped from G4 to G6 to
              prevent G4 from overflowing.
-             
              If the matrix pump is not available, actions involving it are not
              taken.
     

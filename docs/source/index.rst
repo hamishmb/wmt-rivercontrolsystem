@@ -18,6 +18,9 @@ Contents:
     coretools
     loggingtools
     logiccoretools
+    logic
+    genericlogic
+    stagepilogic
     monitortools
     deviceobjects
     devicemanagement
