@@ -138,8 +138,8 @@ import os
 import sys
 
 #Define global variables.
-VERSION = "0.11.0"
-RELEASEDATE = "18/8/2020"
+VERSION = "0.12.0"
+RELEASEDATE = "24/11/2020"
 
 #System ID of this Pi.
 SYSTEM_ID = None
