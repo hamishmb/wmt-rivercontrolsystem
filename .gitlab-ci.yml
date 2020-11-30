@@ -1,5 +1,5 @@
 default:
-  image: python:3.9
+  image: python:3.7
   before_script:
     - apt-get update
     - apt-get install -y util-linux binutils coreutils pylint lsb-release python3-mysqldb python3-sphinx dvipng imagemagick-6.q16 latexmk sphinx-doc libjs-mathjax texlive-fonts-recommended texlive-latex-base texlive-latex-recommended texlive-latex-extra xzdec
