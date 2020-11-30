@@ -2,7 +2,7 @@ default:
   image: debian:buster
   before_script:
     - apt-get update
-    - apt-get install -y util-linux binutils coreutils pylint lsb-release python3 python3-pip python3-mysqldb python3-sphinx dvipng imagemagick-6.q16 latexmk sphinx-doc libjs-mathjax texlive-fonts-recommended texlive-latex-base texlive-latex-recommended texlive-latex-extra xzdec
+    - apt-get install -y util-linux binutils coreutils pylint lsb-release python3 python3-psutil python3-mysqldb python3-sphinx dvipng imagemagick-6.q16 latexmk sphinx-doc libjs-mathjax texlive-fonts-recommended texlive-latex-base texlive-latex-recommended texlive-latex-extra xzdec
     - python3 --version
     - lsb_release -a
 
@@ -25,7 +25,6 @@ pyunit:
   script:
     - cd Testing/Software/
     - ls -l
-    - python3 --version
     - python3 ./unittests.py -a
 
 sphinx:
