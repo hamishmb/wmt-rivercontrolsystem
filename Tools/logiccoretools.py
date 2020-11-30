@@ -40,6 +40,16 @@ logger.setLevel(logging.getLogger('River System Control Software').getEffectiveL
 for handler in logging.getLogger('River System Control Software').handlers:
     logger.addHandler(handler)
 
+def reconfigure_logger():
+    """
+    Reconfigures the logging level for this module.
+    """
+
+    logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
+
+    for handler in logging.getLogger('River System Control Software').handlers:
+        logger.addHandler(handler)
+
 def get_latest_reading(site_id, sensor_id, retries=3):
     """
     This method returns the latest reading for the given sensor at the given site.

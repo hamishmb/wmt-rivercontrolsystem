@@ -192,7 +192,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     system_id = handle_cmdline_options()
     config.SYSTEM_ID = system_id
 
-    #Reconfigure logging for module imported before we set the logger up.
+    #Reconfigure logging for modules imported before we set the logger up.
     config.reconfigure_logging()
 
     #The NAS box needs more time to stabalise before we continue.

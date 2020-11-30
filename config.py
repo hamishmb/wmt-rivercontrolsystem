@@ -194,12 +194,18 @@ UPDATE = False
 import Tools #pylint: disable=wrong-import-position
 import Tools.deviceobjects #pylint: disable=wrong-import-position
 
+import Logic #pylint: disable=wrong-import-position
+
 def reconfigure_logging():
     """
     Causes logging to be reconfigured for any modules imported before the logger was set up.
     """
 
     Tools.devicemanagement.reconfigure_logger()
+    Tools.deviceobjects.reconfigure_logger()
+    Tools.logiccoretools.reconfigure_logger()
+    Logic.controllogic.reconfigure_logger()
+    Logic.stagepilogic.reconfigure_logger()
 
 SITE_SETTINGS = {
 

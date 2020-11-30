@@ -69,6 +69,16 @@ except (ImportError, NotImplementedError):
         #Import dummy class.
         from Tools.testingtools import GPIO
 
+def reconfigure_logger():
+    """
+    Reconfigures the logging level for this module.
+    """
+
+    logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
+
+    for handler in logging.getLogger('River System Control Software').handlers:
+        logger.addHandler(handler)
+
 class BaseDeviceClass:
     """
     This is a base control/probe/sensor type that defines features common to all

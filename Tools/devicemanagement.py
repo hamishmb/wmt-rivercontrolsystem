@@ -97,6 +97,9 @@ def reconfigure_logger():
 
     logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
 
+    for handler in logging.getLogger('River System Control Software').handlers:
+        logger.addHandler(handler)
+
 class ManageHallEffectProbe(threading.Thread):
     """
     This class is used to repeatedly poll the level of the hall effect probe, and

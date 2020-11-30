@@ -47,6 +47,16 @@ logger.setLevel(logging.getLogger('River System Control Software').getEffectiveL
 for handler in logging.getLogger('River System Control Software').handlers:
     logger.addHandler(handler)
 
+def reconfigure_logger():
+    """
+    Reconfigures the logging level for this module.
+    """
+
+    logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
+
+    for handler in logging.getLogger('River System Control Software').handlers:
+        logger.addHandler(handler)
+
 #----- NAS Control Logic -----
 def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
     """
