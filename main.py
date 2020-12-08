@@ -379,10 +379,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #Run logic set-up function
     if "ControlLogicSetupFunction" in config.SITE_SETTINGS[system_id]:
         function = getattr(controllogic,
-                            config.SITE_SETTINGS[system_id]["ControlLogicSetupFunction"])
+                           config.SITE_SETTINGS[system_id]["ControlLogicSetupFunction"])
 
         function()
-    
 
     #Keep tabs on its progress so we can write new readings to the file.
     try:
@@ -540,8 +539,18 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             #update using the database.
             if config.UPDATE and system_id == "NAS":
                 #Make the update available to the pis at http://192.168.0.25/rivercontrolsystem.tar.gz
-                subprocess.run(["ln", "-s", "/mnt/HD/HD_a2/rivercontrolsystem.tar.gz", "/var/www"],
-                               check=False)
+                logger.info("Making new software available to all pis using webserver...")
+                cmd = subprocess.run(["ln", "-s", "/mnt/HD/HD_a2/rivercontrolsystem.tar.gz", "/var/www"],
+                                     check=False)
+
+                stdout = cmd.stdout.decode("UTF-8", errors="ignore")
+
+                if cmd.returncode != 0:
+                    print("Error! Unable to host software update on webserver. "
+                          + "Error was:\n"+stdout+"\n")
+
+                    logger.critical("Error! Unable to host software update on webserver. "
+                                    + "Error was:\n"+stdout+"\n")
 
                 #Signal that we are updating.
                 try:
@@ -563,8 +572,18 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
             elif config.UPDATE and system_id != "NAS":
                 #Download the update from the NAS box.
-                subprocess.run(["wget", "-O", "/tmp/rivercontrolsystem.tar.gz",
-                                "http://192.168.0.25/rivercontrolsystem.tar.gz"], check=False)
+                logger.info("Downloading software update from NAS box...")
+                cmd = subprocess.run(["wget", "-O", "/tmp/rivercontrolsystem.tar.gz",
+                                      "http://192.168.0.25/rivercontrolsystem.tar.gz"], check=False)
+
+                stdout = cmd.stdout.decode("UTF-8", errors="ignore")
+
+                if cmd.returncode != 0:
+                    print("Error! Unable to download software update. "
+                          + "Error was:\n"+stdout+"\n")
+
+                    logger.critical("Error! Unable to download software update. "
+                                    + "Error was:\n"+stdout+"\n")
 
                 #Signal that we got it.
                 try:
@@ -721,9 +740,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                                 done.append(site_id)
 
                 #When all have shut down (ignoring NAS), break out.
-                if len(done) > 0 and \
-                    len(done) == len(config.SITE_SETTINGS.keys()) - 1:
-
+                if done and len(done) == len(config.SITE_SETTINGS.keys()) - 1:
                     break
 
                 time.sleep(5)
@@ -774,9 +791,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                                 done.append(site_id)
 
                 #When all have rebooted (ignoring NAS), break out.
-                if len(done) > 0 and \
-                    len(done) == len(config.SITE_SETTINGS.keys()) - 1:
-
+                if done and len(done) == len(config.SITE_SETTINGS.keys()) - 1:
                     break
 
                 time.sleep(5)
@@ -824,20 +839,49 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                                 done.append(site_id)
 
                 #When all have grabbed the file (ignoring NAS), break out.
-                if len(done) > 0 and \
-                    len(done) == len(config.SITE_SETTINGS.keys()) - 1:
-
+                if done and len(done) == len(config.SITE_SETTINGS.keys()) - 1:
                     break
 
                 time.sleep(5)
 
             #Move files into place.
-            subprocess.run(["rm", "-rf", "/mnt/HD/HD_a2/rivercontrolsystem.old"], check=False)
-            subprocess.run(["mv", "/mnt/HD/HD_a2/rivercontrolsystem",
-                            "/mnt/HD/HD_a2/rivercontrolsystem.old"], check=False)
+            if os.path.exists("/mnt/HD/HD_a2/rivercontrolsystem.old"):
+                logger.info("Removing old software backup...")
+                cmd = subprocess.run(["rm", "-rf", "/mnt/HD/HD_a2/rivercontrolsystem.old"], check=False)
+                stdout = cmd.stdout.decode("UTF-8", errors="ignore")
 
-            subprocess.run(["tar", "-xf", "/mnt/HD/HD_a2/rivercontrolsystem.tar.gz", "-C",
-                            "/mnt/HD/HD_a2"], check=False)
+                if cmd.returncode != 0:
+                    print("Error! Unable to remove software backup. "
+                          + "Error was:\n"+stdout+"\n")
+
+                    logger.critical("Error! Unable to remove software backup. "
+                                    + "Error was:\n"+stdout+"\n")
+
+            logger.info("Backing up existing software to rivercontrolsystem.old...")
+            cmd = subprocess.run(["mv", "/mnt/HD/HD_a2/rivercontrolsystem",
+                                  "/mnt/HD/HD_a2/rivercontrolsystem.old"], check=False)
+
+            stdout = cmd.stdout.decode("UTF-8", errors="ignore")
+
+            if cmd.returncode != 0:
+                print("Error! Unable to backup existing software. "
+                      + "Error was:\n"+stdout+"\n")
+
+                logger.critical("Error! Unable to backup existing software. "
+                                + "Error was:\n"+stdout+"\n")
+
+            logger.info("Extracting new software...")
+            cmd = subprocess.run(["tar", "-xf", "/mnt/HD/HD_a2/rivercontrolsystem.tar.gz", "-C",
+                                  "/mnt/HD/HD_a2"], check=False)
+
+            stdout = cmd.stdout.decode("UTF-8", errors="ignore")
+
+            if cmd.returncode != 0:
+                print("Error! Unable to extract new software. "
+                      + "Error was:\n"+stdout+"\n")
+
+                logger.critical("Error! Unable to extract new software. "
+                                + "Error was:\n"+stdout+"\n")
 
             #Reboot.
             print("Restarting...")
@@ -846,12 +890,44 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
         else:
             #Move files into place.
-            subprocess.run(["rm", "-rf", "/home/pi/rivercontrolsystem.old"], check=False)
-            subprocess.run(["mv", "/home/pi/rivercontrolsystem", "/home/pi/rivercontrolsystem.old"],
-                           check=False)
+            if os.path.exists("/home/pi/rivercontrolsystem.old"):
+                logger.info("Removing old software backup...")
+                cmd = subprocess.run(["rm", "-rf", "/home/pi/rivercontrolsystem.old"], check=False)
+                stdout = cmd.stdout.decode("UTF-8", errors="ignore")
 
-            subprocess.run(["tar", "-xf", "/tmp/rivercontrolsystem.tar.gz", "-C", "/home/pi"],
-                           check=False)
+                if cmd.returncode != 0:
+                    print("Error! Unable to remove software backup. "
+                          + "Error was:\n"+stdout+"\n")
+
+                    logger.critical("Error! Unable to remove software backup. "
+                                    + "Error was:\n"+stdout+"\n")
+
+
+            logger.info("Backing up existing software to rivercontrolsystem.old...")
+            cmd = subprocess.run(["mv", "/home/pi/rivercontrolsystem", "/home/pi/rivercontrolsystem.old"],
+                                 check=False)
+
+            stdout = cmd.stdout.decode("UTF-8", errors="ignore")
+
+            if cmd.returncode != 0:
+                print("Error! Unable to backup existing software. "
+                      + "Error was:\n"+stdout+"\n")
+
+                logger.critical("Error! Unable to backup existing software. "
+                                + "Error was:\n"+stdout+"\n")
+
+            logger.info("Extracting new software...")
+            cmd = subprocess.run(["tar", "-xf", "/tmp/rivercontrolsystem.tar.gz", "-C", "/home/pi"],
+                                 check=False)
+
+            stdout = cmd.stdout.decode("UTF-8", errors="ignore")
+
+            if cmd.returncode != 0:
+                print("Error! Unable to extract new software. "
+                      + "Error was:\n"+stdout+"\n")
+
+                logger.critical("Error! Unable to extract new software. "
+                                + "Error was:\n"+stdout+"\n")
 
             #Reboot.
             print("Restarting...")
@@ -863,7 +939,7 @@ def init_logging():
     Used as part of the logging initialisation process during startup.
     """
 
-    logger = logging.getLogger('River System Control Software')
+    logger = logging.getLogger('River System Control Software') #pylint: disable=redefined-outer-name
 
     #Remove the console handler.
     logger.handlers = []
