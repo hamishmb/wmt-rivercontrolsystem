@@ -591,6 +591,11 @@ class Sockets:
             >>> <Sockets-Obj>.write(<some_data_in_any_format>)
         """
 
+        #Don't fill up with queue with duplicate tick requests - causes extra load.
+        if isinstance(data, str) and data == "Tick?" and data in self.out_queue:
+            logger.debug("Sockets.write(): ("+self.name+"): Dropping redundant request for system tick...")
+            return
+
         logger.debug("Sockets.write(): ("+self.name+"): Appending "+str(data)+" to OutgoingQueue...")
         self.out_queue.append(data)
 
