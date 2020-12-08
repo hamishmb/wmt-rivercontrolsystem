@@ -541,7 +541,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                 #Make the update available to the pis at http://192.168.0.25/rivercontrolsystem.tar.gz
                 logger.info("Making new software available to all pis using webserver...")
                 cmd = subprocess.run(["ln", "-s", "/mnt/HD/HD_a2/rivercontrolsystem.tar.gz", "/var/www"],
-                                     check=False)
+                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
 
                 stdout = cmd.stdout.decode("UTF-8", errors="ignore")
 
@@ -574,7 +574,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                 #Download the update from the NAS box.
                 logger.info("Downloading software update from NAS box...")
                 cmd = subprocess.run(["wget", "-O", "/tmp/rivercontrolsystem.tar.gz",
-                                      "http://192.168.0.25/rivercontrolsystem.tar.gz"], check=False)
+                                      "http://192.168.0.25/rivercontrolsystem.tar.gz"],
+                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
 
                 stdout = cmd.stdout.decode("UTF-8", errors="ignore")
 
@@ -847,7 +848,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             #Move files into place.
             if os.path.exists("/mnt/HD/HD_a2/rivercontrolsystem.old"):
                 logger.info("Removing old software backup...")
-                cmd = subprocess.run(["rm", "-rf", "/mnt/HD/HD_a2/rivercontrolsystem.old"], check=False)
+                cmd = subprocess.run(["rm", "-rf", "/mnt/HD/HD_a2/rivercontrolsystem.old"],
+                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
+
                 stdout = cmd.stdout.decode("UTF-8", errors="ignore")
 
                 if cmd.returncode != 0:
@@ -859,7 +862,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
             logger.info("Backing up existing software to rivercontrolsystem.old...")
             cmd = subprocess.run(["mv", "/mnt/HD/HD_a2/rivercontrolsystem",
-                                  "/mnt/HD/HD_a2/rivercontrolsystem.old"], check=False)
+                                  "/mnt/HD/HD_a2/rivercontrolsystem.old"],
+                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
 
             stdout = cmd.stdout.decode("UTF-8", errors="ignore")
 
@@ -872,7 +876,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
             logger.info("Extracting new software...")
             cmd = subprocess.run(["tar", "-xf", "/mnt/HD/HD_a2/rivercontrolsystem.tar.gz", "-C",
-                                  "/mnt/HD/HD_a2"], check=False)
+                                  "/mnt/HD/HD_a2"], stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT, check=False)
 
             stdout = cmd.stdout.decode("UTF-8", errors="ignore")
 
@@ -892,7 +897,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             #Move files into place.
             if os.path.exists("/home/pi/rivercontrolsystem.old"):
                 logger.info("Removing old software backup...")
-                cmd = subprocess.run(["rm", "-rf", "/home/pi/rivercontrolsystem.old"], check=False)
+                cmd = subprocess.run(["rm", "-rf", "/home/pi/rivercontrolsystem.old"],
+                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
+
                 stdout = cmd.stdout.decode("UTF-8", errors="ignore")
 
                 if cmd.returncode != 0:
@@ -904,8 +911,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
 
             logger.info("Backing up existing software to rivercontrolsystem.old...")
-            cmd = subprocess.run(["mv", "/home/pi/rivercontrolsystem", "/home/pi/rivercontrolsystem.old"],
-                                 check=False)
+            cmd = subprocess.run(["mv", "/home/pi/rivercontrolsystem",
+                                  "/home/pi/rivercontrolsystem.old"],
+                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
 
             stdout = cmd.stdout.decode("UTF-8", errors="ignore")
 
@@ -917,8 +925,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                                 + "Error was:\n"+stdout+"\n")
 
             logger.info("Extracting new software...")
-            cmd = subprocess.run(["tar", "-xf", "/tmp/rivercontrolsystem.tar.gz", "-C", "/home/pi"],
-                                 check=False)
+            cmd = subprocess.run(["tar", "-xf", "/tmp/rivercontrolsystem.tar.gz", "-C",
+                                  "/home/pi"],
+                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
 
             stdout = cmd.stdout.decode("UTF-8", errors="ignore")
 
