@@ -37,6 +37,7 @@ device.
 
 import sys
 import os
+import shutil
 import subprocess
 import getopt
 import time
@@ -848,17 +849,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             #Move files into place.
             if os.path.exists("/mnt/HD/HD_a2/rivercontrolsystem.old"):
                 logger.info("Removing old software backup...")
-                cmd = subprocess.run(["rm", "-rf", "/mnt/HD/HD_a2/rivercontrolsystem.old"],
-                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
-
-                stdout = cmd.stdout.decode("UTF-8", errors="ignore")
-
-                if cmd.returncode != 0:
-                    print("Error! Unable to remove software backup. "
-                          + "Error was:\n"+stdout+"\n")
-
-                    logger.critical("Error! Unable to remove software backup. "
-                                    + "Error was:\n"+stdout+"\n")
+                shutil.rmtree("/mnt/HD/HD_a2/rivercontrolsystem.old")
 
             logger.info("Backing up existing software to rivercontrolsystem.old...")
             cmd = subprocess.run(["mv", "/mnt/HD/HD_a2/rivercontrolsystem",
@@ -888,6 +879,11 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                 logger.critical("Error! Unable to extract new software. "
                                 + "Error was:\n"+stdout+"\n")
 
+            #Clean up.
+            if os.path.exists("/mnt/HD/HD_a2/rivercontrolsystem.tar.gz"):
+                logger.info("Removing software tarball...")
+                os.remove("/mnt/HD/HD_a2/rivercontrolsystem.tar.gz")
+
             #Reboot.
             print("Restarting...")
             logger.info("Restarting...")
@@ -895,20 +891,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
         else:
             #Move files into place.
-            if os.path.exists("/home/pi/rivercontrolsystem.old"):
+            if os.path.exists("/mnt/HD/HD_a2/rivercontrolsystem.old"):
                 logger.info("Removing old software backup...")
-                cmd = subprocess.run(["rm", "-rf", "/home/pi/rivercontrolsystem.old"],
-                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
-
-                stdout = cmd.stdout.decode("UTF-8", errors="ignore")
-
-                if cmd.returncode != 0:
-                    print("Error! Unable to remove software backup. "
-                          + "Error was:\n"+stdout+"\n")
-
-                    logger.critical("Error! Unable to remove software backup. "
-                                    + "Error was:\n"+stdout+"\n")
-
+                shutil.rmtree("/mnt/HD/HD_a2/rivercontrolsystem.old")
 
             logger.info("Backing up existing software to rivercontrolsystem.old...")
             cmd = subprocess.run(["mv", "/home/pi/rivercontrolsystem",
@@ -937,6 +922,11 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                 logger.critical("Error! Unable to extract new software. "
                                 + "Error was:\n"+stdout+"\n")
+
+            #Clean up.
+            if os.path.exists("/mnt/HD/HD_a2/rivercontrolsystem.tar.gz"):
+                logger.info("Removing software tarball...")
+                os.remove("/mnt/HD/HD_a2/rivercontrolsystem.tar.gz")
 
             #Reboot.
             print("Restarting...")
