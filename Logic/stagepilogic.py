@@ -361,10 +361,11 @@ class StagePiG4OverfilledState(ControlStateABC):
     def getStateName():
         return "StagePiG4OverfilledState"
     
-    def setupState(self):
-        logger.info("Setting up state " + self.getStateName())
-        print("Setting up state " + self.getStateName())
-        
+    def controlDevices(self):
+        """
+        Sets the valves and pumps to the positions required by this
+        control state.
+        """
         #Close V12 to stop G6/G4 water flow
         try:
             logiccoretools.attempt_to_control("VALVE12", "V12", "0%")
@@ -378,6 +379,12 @@ class StagePiG4OverfilledState(ControlStateABC):
         #V12, we should check here whether G6 is full. If it is, we
         #should just close the valve. If it isn't full, then we should
         #pump water in reverse, from G4 to G6.
+    
+    def setupState(self):
+        logger.info("Setting up state " + self.getStateName())
+        print("Setting up state " + self.getStateName())
+        
+        self.controlDevices()
     
     def doLogic(self, reading_interval):
         ri = self.getPreferredReadingInterval()
@@ -405,11 +412,19 @@ class StagePiG4OverfilledState(ControlStateABC):
             #G4OverfilledState, so that water can be pumped back into
             #G6.
             
+            #If not transitioning to a new state, refresh device
+            #control for this state
+            else:
+                self.controlDevices()
+            
         except ValueError:
             msg = ("Could not parse sensor readings. Control logic is "
                    "stalled.")
             print(msg)
             logger.error(msg)
+            
+            #We can still refresh device control for this state
+            self.controlDevices()
         
         return ri
     
@@ -421,10 +436,11 @@ class StagePiG4FilledState(ControlStateABC):
     def getStateName():
         return "StagePiG4FilledState"
     
-    def setupState(self):
-        logger.info("Setting up state " + self.getStateName())
-        print("Setting up state " + self.getStateName())
-        
+    def controlDevices(self):
+        """
+        Sets the valves and pumps to the positions required by this
+        control state.
+        """
         #Close V12 to stop G6/G4 water flow
         try:
             logiccoretools.attempt_to_control("VALVE12", "V12", "0%")
@@ -440,6 +456,12 @@ class StagePiG4FilledState(ControlStateABC):
         #TODO: When the matrix pump is implemented, remember to include
         #a check that the reference we get from the devices dictionary
         #is not a reference to nothing.
+        
+    def setupState(self):
+        logger.info("Setting up state " + self.getStateName())
+        print("Setting up state " + self.getStateName())
+        
+        self.controlDevices()
     
     def doLogic(self, reading_interval):
         ri = self.getPreferredReadingInterval()
@@ -470,13 +492,19 @@ class StagePiG4FilledState(ControlStateABC):
                 ri = self.csm.setStateBy(StagePiG4VeryNearlyFilledState,
                                          self)
             
-            #else: G4 must be "full", so stay in this state.
+            #else: G4 must be "full", so stay in this state and refresh
+            #device control
+            else:
+                self.controlDevices()
         
         except ValueError:
             msg = ("Could not parse sensor readings. Control logic is "
                    "stalled.")
             print(msg)
             logger.error(msg)
+            
+            #We can still refresh device control for this state
+            self.controlDevices()
         
         return ri
 
@@ -493,10 +521,11 @@ class StagePiG4VeryNearlyFilledState(ControlStateABC):
         # Prefer a fast reading interval, since we're so close to full
         return 15
     
-    def setupState(self):
-        logger.info("Setting up state " + self.getStateName())
-        print("Setting up state " + self.getStateName())
-        
+    def controlDevices(self):
+        """
+        Sets the valves and pumps to the positions required by this
+        control state.
+        """
         #Open V12 slightly to allow some water flow from G6 to G4
         try:
             logiccoretools.attempt_to_control("VALVE12", "V12", "25%")
@@ -514,6 +543,12 @@ class StagePiG4VeryNearlyFilledState(ControlStateABC):
         #TODO: When the matrix pump is implemented, remember to include
         #a check that the reference we get from the devices dictionary
         #is not a reference to nothing.
+    
+    def setupState(self):
+        logger.info("Setting up state " + self.getStateName())
+        print("Setting up state " + self.getStateName())
+        
+        self.controlDevices()
     
     def doLogic(self, reading_interval):
         ri = self.getPreferredReadingInterval()
@@ -537,6 +572,11 @@ class StagePiG4VeryNearlyFilledState(ControlStateABC):
                 elif not parser.g4VeryNearlyFullOrMore():
                     ri = self.csm.setStateBy(StagePiG4NearlyFilledState, self)
                 
+                #If not transitioning to a new state, refresh device
+                #control for this state
+                else:
+                    self.controlDevices()
+                
             else:
                 ri = self.csm.setStateBy(StagePiG6EmptyState, self)
         
@@ -545,6 +585,9 @@ class StagePiG4VeryNearlyFilledState(ControlStateABC):
                    "stalled.")
             print(msg)
             logger.error(msg)
+            
+            #We can still refresh device control for this state
+            self.controlDevices()
         
         return ri
 
@@ -561,10 +604,11 @@ class StagePiG4NearlyFilledState(ControlStateABC):
         # Prefer a fastish reading interval since we're near full
         return 30
     
-    def setupState(self):
-        logger.info("Setting up state " + self.getStateName())
-        print("Setting up state " + self.getStateName())
-        
+    def controlDevices(self):
+        """
+        Sets the valves and pumps to the positions required by this
+        control state.
+        """
         #Open V12 a bit to allow some water flow from G6 to G4
         try:
             logiccoretools.attempt_to_control("VALVE12", "V12", "50%")
@@ -582,6 +626,12 @@ class StagePiG4NearlyFilledState(ControlStateABC):
         #TODO: When the matrix pump is implemented, remember to include
         #a check that the reference we get from the devices dictionary
         #is not a reference to nothing.
+    
+    def setupState(self):
+        logger.info("Setting up state " + self.getStateName())
+        print("Setting up state " + self.getStateName())
+        
+        self.controlDevices()
     
     def doLogic(self, reading_interval):
         ri = self.getPreferredReadingInterval()
@@ -606,6 +656,11 @@ class StagePiG4NearlyFilledState(ControlStateABC):
                 elif not parser.g4NearlyFullOrMore():
                     ri = self.csm.setStateBy(StagePiG4FillingState, self)
                 
+                #If not transitioning to a new state, refresh device
+                #control for this state.
+                else:
+                    self.controlDevices()
+                
             else:
                 ri = self.csm.setStateBy(StagePiG6EmptyState, self)
         
@@ -614,6 +669,9 @@ class StagePiG4NearlyFilledState(ControlStateABC):
                    "stalled.")
             print(msg)
             logger.error(msg)
+            
+            #We can still refresh device control for this state
+            self.controlDevices()
         
         return ri
 
@@ -625,10 +683,11 @@ class StagePiG4FillingState(ControlStateABC):
     def getStateName():
         return "StagePiG4FillingState"
     
-    def setupState(self):
-        logger.info("Setting up state " + self.getStateName())
-        print("Setting up state " + self.getStateName())
-        
+    def controlDevices(self):
+        """
+        Sets the valves and pumps to the positions required by this
+        control state.
+        """
         #Open V12 fully to allow water flow from G6 to G4
         try:
             logiccoretools.attempt_to_control("VALVE12", "V12", "100%")
@@ -646,6 +705,12 @@ class StagePiG4FillingState(ControlStateABC):
         #TODO: When the matrix pump is implemented, remember to include
         #a check that the reference we get from the devices dictionary
         #is not a reference to nothing.
+    
+    def setupState(self):
+        logger.info("Setting up state " + self.getStateName())
+        print("Setting up state " + self.getStateName())
+        
+        self.controlDevices()
     
     def doLogic(self, reading_interval):
         ri = self.getPreferredReadingInterval()
@@ -665,6 +730,11 @@ class StagePiG4FillingState(ControlStateABC):
             if not parser.g6Empty():
                 if parser.g4NearlyFullOrMore():
                     ri = self.csm.setStateBy(StagePiG4NearlyFilledState, self)
+                
+                #If not transitioning to a new state, refresh device
+                #control for this state.
+                else:
+                    self.controlDevices()
                     
             else:
                 ri = self.csm.setStateBy(StagePiG6EmptyState, self)
@@ -674,6 +744,9 @@ class StagePiG4FillingState(ControlStateABC):
                    "stalled.")
             print(msg)
             logger.error(msg)
+            
+            #We can still refresh device control for this state
+            self.controlDevices()
         
         return ri
     
@@ -685,10 +758,11 @@ class StagePiG6EmptyState(ControlStateABC):
     def getStateName():
         return "StagePiG6EmptyState"
     
-    def setupState(self):
-        logger.info("Setting up state " + self.getStateName())
-        print("Setting up state " + self.getStateName())
-        
+    def controlDevices(self):
+        """
+        Sets the valves and pumps to the positions required by this
+        control state.
+        """
         #Close V12 fully, since there's no water to flow either direction
         try:
             logiccoretools.attempt_to_control("VALVE12", "V12", "0%")
@@ -704,6 +778,12 @@ class StagePiG6EmptyState(ControlStateABC):
         #TODO: When the matrix pump is implemented, remember to include
         #a check that the reference we get from the devices dictionary
         #is not a reference to nothing.
+    
+    def setupState(self):
+        logger.info("Setting up state " + self.getStateName())
+        print("Setting up state " + self.getStateName())
+        
+        self.controlDevices()
     
     def doLogic(self, reading_interval):
         ri = self.getPreferredReadingInterval()
@@ -721,8 +801,8 @@ class StagePiG6EmptyState(ControlStateABC):
         try:
             #Evaluate possible transitions to new states
             
-            #Unlike the other four states, we can enter G4OverfilledState even if
-            #G6 remains empty
+            #Unlike the other four states, we can enter G4OverfilledState
+            #even if G6 remains empty
             if(parser.g4Overfull()):
                 ri = self.csm.setStateBy(StagePiG4OverfilledState, self)
             
@@ -741,12 +821,20 @@ class StagePiG6EmptyState(ControlStateABC):
                 
                 else:
                     ri = self.csm.setStateBy(StagePiG4FillingState, self)
+            
+            #If not transitioning to a new state, refresh device
+            #control for this state
+            else:
+                self.controlDevices()
         
         except ValueError:
             msg = ("Could not parse sensor readings. Control logic is "
                    "stalled.")
             print(msg)
             logger.error(msg)
+            
+            #We can still refresh device control for this state
+            self.controlDevices()
         
         return ri
 
