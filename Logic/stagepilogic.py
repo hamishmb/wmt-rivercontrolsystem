@@ -39,7 +39,7 @@ sys.path.insert(0, os.path.abspath(os.path.split(os.path.dirname(__file__))[0]))
 
 
 from Tools import logiccoretools
-from Tools.statetools import ControlStateABC, ControlStateMachineABC
+from Tools.statetools import ControlStateMachineABC, GenericControlState
 
 #Don't ask for a logger name, so this works with both main.py
 #and the universal monitor.
@@ -150,7 +150,7 @@ class StagePiReadingsParser():
             G6FS0 = logiccoretools.get_latest_reading("G6", "FS0").get_value()
             assert G6FS0 in ("True", "False")
             self.G6_full = G6FS0 == "True"
-        except RuntimeError:
+        except (RuntimeError, AssertionError):
             self.G6_full = None
             failed_to_get_some_readings = True
         
@@ -158,7 +158,7 @@ class StagePiReadingsParser():
             G6FS1 = logiccoretools.get_latest_reading("G6", "FS1").get_value()
             assert G6FS1 in ("True", "False")
             self.G6_empty = G6FS1 == "True"
-        except RuntimeError:
+        except (RuntimeError, AssertionError):
             self.G6_empty = None
             failed_to_get_some_readings = True
         
@@ -286,11 +286,60 @@ class StagePiReadingsParser():
                 and (self.G4_full or
                      self.G4_level >= levels["G4NearlyFull"]))
 
+class StagePiDeviceController():
+    """
+    This class wraps logiccoretools.attempt_to_control with logging and
+    error handling that is common to most Stage Pi control states.
+    """
+    def __init__(self, v12state):
+        """
+        Initialiser.
+        
+        TODO: When the matrix pump is implemented, add optional
+              arguments for specifying the state of the matrix pump.
+        
+        Args:
+            v12state (string) state to request of VALVE12:V12
+        """
+        self.v12state=v12state
+        
+    
+    def controlDevices(self, logEvent=False):
+        """
+        Sets the valves and pumps to the states configured for this
+        device controller.
+        """
+        try:
+            logiccoretools.attempt_to_control("VALVE12",
+                                              "V12",
+                                              self.v12state)
+        
+        except RuntimeError:
+            msg = "Error: Error trying to control VALVE12:V12!"
+            print(msg)
+            logger.error(msg)
+        
+        if logEvent:
+            try:
+                logiccoretools.log_event("New device state required: "
+                                         "VALVE12:V12: "
+                                         + self.v12state,
+                                         "INFO")
+            except RuntimeError:
+                msg = "Error while trying to log event over network."
+                print(msg)
+                logger.error(msg)
+        
+        #TODO: When the matrix pump is implemented, add matrix pump
+        #      control and event logging here, as above for V12.
+
+
+
 # -------------------- Stage Pi control states ---------------------
 # Each state class defines the behaviour of the control logic in that state,
 # and the possible state transitions away from that state.
 
-class StagePiInitState(ControlStateABC):
+class StagePiInitState(GenericControlState):
     """
     An initial state for the Stage Pi control logic, which doesn't do
     anything except transition into the appropriate state after a cold
@@ -300,28 +349,19 @@ class StagePiInitState(ControlStateABC):
     def getStateName():
         return "StagePiInitState"
     
-    def setupState(self):
-        logger.info("Setting up " + self.getStateName())
-        print("Setting up " + self.getStateName())
-    
     @staticmethod
     def getPreferredReadingInterval():
         # Prefer a fast reading interval until we're in the right state
         return 15
     
-    def doLogic(self, reading_interval):
-        ri = self.getPreferredReadingInterval()
-        
-        #Create readings parser
+    def logEvent(self, *args):
         try:
-            parser = StagePiReadingsParser()
-        
-        except AssertionError:
-            msg = ("Error: Could not initialise StagePiReadingsParser. Readings"
-                   " did not meet conditions.")
-            print(msg)
-            logger.error(msg)
-            return ri
+            logiccoretools.log_event(*args)
+        except RuntimeError as e:
+            raise GenericControlState.LogEventError from e
+    
+    def stateTransition(self):
+        parser = StagePiReadingsParser()
         
         try:
             #Prepare to transition to new state
@@ -345,15 +385,10 @@ class StagePiInitState(ControlStateABC):
                 else:
                     ri = self.csm.setStateBy(StagePiG4FillingState, self)
                     
-        except ValueError:
-            msg = ("Could not parse sensor readings. Control logic is "
-                   "stalled.")
-            print(msg)
-            logger.error(msg)
+        except ValueError as e:
+            raise GenericControlState.StateTransitionError from e
 
-        return ri
-
-class StagePiG4OverfilledState(ControlStateABC):
+class StagePiG4OverfilledState(GenericControlState):
     """
     Stage Pi control logic state when G4 is overfilled
     """
@@ -361,43 +396,23 @@ class StagePiG4OverfilledState(ControlStateABC):
     def getStateName():
         return "StagePiG4OverfilledState"
     
-    def controlDevices(self):
-        """
-        Sets the valves and pumps to the positions required by this
-        control state.
-        """
-        #Close V12 to stop G6/G4 water flow
+    def logEvent(self, *args):
         try:
-            logiccoretools.attempt_to_control("VALVE12", "V12", "0%")
-        
-        except RuntimeError:
-            msg = "Error: Error trying to control valve V12!"
-            print(msg)
-            logger.error(msg)
-        
+            logiccoretools.log_event(*args)
+        except RuntimeError as e:
+            raise GenericControlState.LogEventError from e
+    
+    def controlDevices(self, logEvent=False):
+        #This state requires V12 closed to stop G6-G4 water flow
+        dc = StagePiDeviceController("0%")
+        dc.controlDevices(logEvent)
         #TODO: When the matrix pump is implemented, instead of closing
-        #V12, we should check here whether G6 is full. If it is, we
-        #should just close the valve. If it isn't full, then we should
-        #pump water in reverse, from G4 to G6.
+        #      V12, we should check whether G6 is full. If it is, we
+        #      should just close the valve. If it isn't full, then we
+        #      should pump water the other way, from G4 to G6.
     
-    def setupState(self):
-        logger.info("Setting up state " + self.getStateName())
-        print("Setting up state " + self.getStateName())
-        
-        self.controlDevices()
-    
-    def doLogic(self, reading_interval):
-        ri = self.getPreferredReadingInterval()
-        
-        try:
-            parser = StagePiReadingsParser()
-        
-        except AssertionError:
-            msg = ("Error: Could not initialise StagePiReadingsParser. Readings"
-                   " did not meet conditions.")
-            print(msg)
-            logger.error(msg)
-            return ri
+    def stateTransition(self):
+        parser = StagePiReadingsParser()
         
         try:
             #Evaluate possible transitions to new states
@@ -412,23 +427,13 @@ class StagePiG4OverfilledState(ControlStateABC):
             #G4OverfilledState, so that water can be pumped back into
             #G6.
             
-            #If not transitioning to a new state, refresh device
-            #control for this state
             else:
-                self.controlDevices()
+                self.noTransition()
             
-        except ValueError:
-            msg = ("Could not parse sensor readings. Control logic is "
-                   "stalled.")
-            print(msg)
-            logger.error(msg)
-            
-            #We can still refresh device control for this state
-            self.controlDevices()
-        
-        return ri
+        except ValueError as e:
+            raise GenericControlState.StateTransitionError from e
     
-class StagePiG4FilledState(ControlStateABC):
+class StagePiG4FilledState(GenericControlState):
     """
     Stage Pi control logic state when G4 is filled
     """
@@ -436,45 +441,23 @@ class StagePiG4FilledState(ControlStateABC):
     def getStateName():
         return "StagePiG4FilledState"
     
-    def controlDevices(self):
-        """
-        Sets the valves and pumps to the positions required by this
-        control state.
-        """
-        #Close V12 to stop G6/G4 water flow
+    def logEvent(self, *args):
         try:
-            logiccoretools.attempt_to_control("VALVE12", "V12", "0%")
-        
-        except RuntimeError:
-            msg = "Error: Error trying to control valve V12!"
-            print(msg)
-            logger.error(msg)
-        
-        #TODO: when the matrix pump is implemented, we need to request it to
-        #be turned off and release any lock this Pi holds on using the pump.
-        
-        #TODO: When the matrix pump is implemented, remember to include
-        #a check that the reference we get from the devices dictionary
-        #is not a reference to nothing.
-        
-    def setupState(self):
-        logger.info("Setting up state " + self.getStateName())
-        print("Setting up state " + self.getStateName())
-        
-        self.controlDevices()
+            logiccoretools.log_event(*args)
+        except RuntimeError as e:
+            raise GenericControlState.LogEventError from e
     
-    def doLogic(self, reading_interval):
-        ri = self.getPreferredReadingInterval()
+    def controlDevices(self, logEvent=False):
+        #Close V12 to stop G6/G4 water flow
+        dc = StagePiDeviceController("0%")
+        dc.controlDevices(logEvent)
         
-        try:
-            parser = StagePiReadingsParser()
-        
-        except AssertionError:
-            msg = ("Error: Could not initialise StagePiReadingsParser. Readings"
-                   " did not meet conditions.")
-            print(msg)
-            logger.error(msg)
-            return ri
+        #TODO: when the matrix pump is implemented, we need to request
+        #      it to be turned off and release any lock this Pi holds
+        #      on using the pump.
+    
+    def stateTransition(self):
+        parser = StagePiReadingsParser()
         
         try:
             #Evaluate possible transitions to new states
@@ -492,23 +475,13 @@ class StagePiG4FilledState(ControlStateABC):
                 ri = self.csm.setStateBy(StagePiG4VeryNearlyFilledState,
                                          self)
             
-            #else: G4 must be "full", so stay in this state and refresh
-            #device control
             else:
-                self.controlDevices()
+                self.noTransition()
         
-        except ValueError:
-            msg = ("Could not parse sensor readings. Control logic is "
-                   "stalled.")
-            print(msg)
-            logger.error(msg)
-            
-            #We can still refresh device control for this state
-            self.controlDevices()
-        
-        return ri
+        except ValueError as e:
+            raise GenericControlState.StateTransitionError from e
 
-class StagePiG4VeryNearlyFilledState(ControlStateABC):
+class StagePiG4VeryNearlyFilledState(GenericControlState):
     """
     Stage Pi control logic state when G4 is very nearly filled
     """
@@ -521,47 +494,25 @@ class StagePiG4VeryNearlyFilledState(ControlStateABC):
         # Prefer a fast reading interval, since we're so close to full
         return 15
     
-    def controlDevices(self):
-        """
-        Sets the valves and pumps to the positions required by this
-        control state.
-        """
-        #Open V12 slightly to allow some water flow from G6 to G4
+    def logEvent(self, *args):
         try:
-            logiccoretools.attempt_to_control("VALVE12", "V12", "25%")
-        
-        except RuntimeError:
-            msg = "Error: Error trying to control valve V12!"
-            print(msg)
-            logger.error(msg)
+            logiccoretools.log_event(*args)
+        except RuntimeError as e:
+            raise GenericControlState.LogEventError from e
+    
+    def controlDevices(self, logEvent=False):
+        #Open V12 slightly to allow some water flow from G6 to G4
+        dc = StagePiDeviceController("25%")
+        dc.controlDevices(logEvent)
         
         #TODO: when the matrix pump is implemented, we need to:
-        #    (a) get the lock to control the pump before we open V12
-        #    (b) either open the pump's valves to allow passive water flow,
-        #        or start pumping downstream at a low rate
-        
-        #TODO: When the matrix pump is implemented, remember to include
-        #a check that the reference we get from the devices dictionary
-        #is not a reference to nothing.
+        #    (a) get the lock to control the pump *before* we open V12;
+        #        and
+        #    (b) either open the pump's valves to allow passive water
+        #        flow, or start pumping downstream at a low rate.
     
-    def setupState(self):
-        logger.info("Setting up state " + self.getStateName())
-        print("Setting up state " + self.getStateName())
-        
-        self.controlDevices()
-    
-    def doLogic(self, reading_interval):
-        ri = self.getPreferredReadingInterval()
-        
-        try:
-            parser = StagePiReadingsParser()
-        
-        except AssertionError:
-            msg = ("Error: Could not initialise StagePiReadingsParser. Readings"
-                   " did not meet conditions.")
-            print(msg)
-            logger.error(msg)
-            return ri
+    def stateTransition(self):
+        parser = StagePiReadingsParser()
         
         try:
             #Evaluate possible transitions to new states
@@ -572,26 +523,16 @@ class StagePiG4VeryNearlyFilledState(ControlStateABC):
                 elif not parser.g4VeryNearlyFullOrMore():
                     ri = self.csm.setStateBy(StagePiG4NearlyFilledState, self)
                 
-                #If not transitioning to a new state, refresh device
-                #control for this state
                 else:
-                    self.controlDevices()
+                    self.noTransition()
                 
             else:
                 ri = self.csm.setStateBy(StagePiG6EmptyState, self)
         
-        except ValueError:
-            msg = ("Could not parse sensor readings. Control logic is "
-                   "stalled.")
-            print(msg)
-            logger.error(msg)
-            
-            #We can still refresh device control for this state
-            self.controlDevices()
-        
-        return ri
+        except ValueError as e:
+            raise GenericControlState.StateTransitionError from e
 
-class StagePiG4NearlyFilledState(ControlStateABC):
+class StagePiG4NearlyFilledState(GenericControlState):
     """
     Stage Pi control state when G4 is nearly filled
     """
@@ -604,48 +545,26 @@ class StagePiG4NearlyFilledState(ControlStateABC):
         # Prefer a fastish reading interval since we're near full
         return 30
     
-    def controlDevices(self):
-        """
-        Sets the valves and pumps to the positions required by this
-        control state.
-        """
-        #Open V12 a bit to allow some water flow from G6 to G4
+    def logEvent(self, *args):
         try:
-            logiccoretools.attempt_to_control("VALVE12", "V12", "50%")
-        
-        except RuntimeError:
-            msg = "Error: Error trying to control valve V12!"
-            print(msg)
-            logger.error(msg)
+            logiccoretools.log_event(*args)
+        except RuntimeError as e:
+            raise GenericControlState.LogEventError from e
+    
+    def controlDevices(self, logEvent=False):
+        #Open V12 a bit to allow some water flow from G6 to G4
+        dc = StagePiDeviceController("50%")
+        dc.controlDevices(logEvent)
         
         #TODO: when the matrix pump is implemented, we need to:
-        #    (a) get the lock to control the pump before we open V12
-        #    (b) either open the pump's valves to allow passive water flow,
-        #        or start pumping downstream at a medium rate
-        
-        #TODO: When the matrix pump is implemented, remember to include
-        #a check that the reference we get from the devices dictionary
-        #is not a reference to nothing.
+        #    (a) get the lock to control the pump before we open V12;
+        #        and
+        #    (b) either open the pump's valves to allow passive water
+        #        flow, or start pumping downstream at a medium rate.
     
-    def setupState(self):
-        logger.info("Setting up state " + self.getStateName())
-        print("Setting up state " + self.getStateName())
-        
-        self.controlDevices()
-    
-    def doLogic(self, reading_interval):
-        ri = self.getPreferredReadingInterval()
-        
-        try:
-            parser = StagePiReadingsParser()
-        
-        except AssertionError:
-            msg = ("Error: Could not initialise StagePiReadingsParser. Readings"
-                   " did not meet conditions.")
-            print(msg)
-            logger.error(msg)
-            return ri
-        
+    def stateTransition(self):
+        parser = StagePiReadingsParser()
+
         try:
             #Evaluate possible transitions to new states
             if not parser.g6Empty():
@@ -656,26 +575,16 @@ class StagePiG4NearlyFilledState(ControlStateABC):
                 elif not parser.g4NearlyFullOrMore():
                     ri = self.csm.setStateBy(StagePiG4FillingState, self)
                 
-                #If not transitioning to a new state, refresh device
-                #control for this state.
                 else:
-                    self.controlDevices()
+                    self.noTransition()
                 
             else:
                 ri = self.csm.setStateBy(StagePiG6EmptyState, self)
         
-        except ValueError:
-            msg = ("Could not parse sensor readings. Control logic is "
-                   "stalled.")
-            print(msg)
-            logger.error(msg)
-            
-            #We can still refresh device control for this state
-            self.controlDevices()
-        
-        return ri
+        except ValueError as e:
+            raise GenericControlState.StateTransitionError from e
 
-class StagePiG4FillingState(ControlStateABC):
+class StagePiG4FillingState(GenericControlState):
     """
     Stage Pi control state when G4 is filling and not nearly full
     """
@@ -683,47 +592,25 @@ class StagePiG4FillingState(ControlStateABC):
     def getStateName():
         return "StagePiG4FillingState"
     
-    def controlDevices(self):
-        """
-        Sets the valves and pumps to the positions required by this
-        control state.
-        """
-        #Open V12 fully to allow water flow from G6 to G4
+    def logEvent(self, *args):
         try:
-            logiccoretools.attempt_to_control("VALVE12", "V12", "100%")
-        
-        except RuntimeError:
-            msg = "Error: Error trying to control valve V12!"
-            print(msg)
-            logger.error(msg)
+            logiccoretools.log_event(*args)
+        except RuntimeError as e:
+            raise GenericControlState.LogEventError from e
+    
+    def controlDevices(self, logEvent=False):
+        #Open V12 fully to allow water flow from G6 to G4
+        dc = StagePiDeviceController("100%")
+        dc.controlDevices(logEvent)
         
         #TODO: when the matrix pump is implemented, we need to:
-        #    (a) get the lock to control the pump before we open V12
-        #    (b) either open the pump's valves to allow passive water flow,
-        #        or start pumping downstream at a high rate
-        
-        #TODO: When the matrix pump is implemented, remember to include
-        #a check that the reference we get from the devices dictionary
-        #is not a reference to nothing.
+        #    (a) get the lock to control the pump before we open V12;
+        #        and
+        #    (b) either open the pump's valves to allow passive water
+        #        flow, or start pumping downstream at a high rate.
     
-    def setupState(self):
-        logger.info("Setting up state " + self.getStateName())
-        print("Setting up state " + self.getStateName())
-        
-        self.controlDevices()
-    
-    def doLogic(self, reading_interval):
-        ri = self.getPreferredReadingInterval()
-        
-        try:
-            parser = StagePiReadingsParser()
-        
-        except AssertionError:
-            msg = ("Error: Could not initialise StagePiReadingsParser. Readings"
-                   " did not meet conditions.")
-            print(msg)
-            logger.error(msg)
-            return ri
+    def stateTransition(self):
+        parser = StagePiReadingsParser()
         
         try:
             #Evaluate possible transitions to new states
@@ -731,26 +618,16 @@ class StagePiG4FillingState(ControlStateABC):
                 if parser.g4NearlyFullOrMore():
                     ri = self.csm.setStateBy(StagePiG4NearlyFilledState, self)
                 
-                #If not transitioning to a new state, refresh device
-                #control for this state.
                 else:
-                    self.controlDevices()
+                    self.noTransition()
                     
             else:
                 ri = self.csm.setStateBy(StagePiG6EmptyState, self)
         
-        except ValueError:
-            msg = ("Could not parse sensor readings. Control logic is "
-                   "stalled.")
-            print(msg)
-            logger.error(msg)
-            
-            #We can still refresh device control for this state
-            self.controlDevices()
-        
-        return ri
+        except ValueError as e:
+            raise GenericControlState.StateTransitionError from e
     
-class StagePiG6EmptyState(ControlStateABC):
+class StagePiG6EmptyState(GenericControlState):
     """
     Stage Pi control state when G6 is empty and G4 is NOT overfilled
     """
@@ -758,45 +635,24 @@ class StagePiG6EmptyState(ControlStateABC):
     def getStateName():
         return "StagePiG6EmptyState"
     
-    def controlDevices(self):
-        """
-        Sets the valves and pumps to the positions required by this
-        control state.
-        """
-        #Close V12 fully, since there's no water to flow either direction
+    def logEvent(self, *args):
         try:
-            logiccoretools.attempt_to_control("VALVE12", "V12", "0%")
-        
-        except RuntimeError:
-            msg = "Error: Error trying to control valve V12!"
-            print(msg)
-            logger.error(msg)
-        
-        #TODO: when the matrix pump is implemented, we need to request it to
-        #be turned off and release any lock this Pi holds on using the pump.
-        
-        #TODO: When the matrix pump is implemented, remember to include
-        #a check that the reference we get from the devices dictionary
-        #is not a reference to nothing.
+            logiccoretools.log_event(*args)
+        except RuntimeError as e:
+            raise GenericControlState.LogEventError from e
     
-    def setupState(self):
-        logger.info("Setting up state " + self.getStateName())
-        print("Setting up state " + self.getStateName())
+    def controlDevices(self, logEvent=False):
+        #Close V12 fully, since there's no water to flow either
+        #direction
+        dc = StagePiDeviceController("0%")
+        dc.controlDevices(logEvent)
         
-        self.controlDevices()
+        #TODO: when the matrix pump is implemented, we need to request
+        #      it to be turned off and release any lock this Pi holds
+        #      on using the pump.
     
-    def doLogic(self, reading_interval):
-        ri = self.getPreferredReadingInterval()
-        
-        try:
-            parser = StagePiReadingsParser()
-        
-        except AssertionError:
-            msg = ("Error: Could not initialise StagePiReadingsParser. Readings"
-                   " did not meet conditions.")
-            print(msg)
-            logger.error(msg)
-            return ri
+    def stateTransition(self):
+        parser = StagePiReadingsParser()
         
         try:
             #Evaluate possible transitions to new states
@@ -822,21 +678,11 @@ class StagePiG6EmptyState(ControlStateABC):
                 else:
                     ri = self.csm.setStateBy(StagePiG4FillingState, self)
             
-            #If not transitioning to a new state, refresh device
-            #control for this state
             else:
-                self.controlDevices()
+                self.noTransition()
         
-        except ValueError:
-            msg = ("Could not parse sensor readings. Control logic is "
-                   "stalled.")
-            print(msg)
-            logger.error(msg)
-            
-            #We can still refresh device control for this state
-            self.controlDevices()
-        
-        return ri
+        except ValueError as e:
+            raise GenericControlState.StateTransitionError from e
 
 # ---------------- Stage Pi control state machine ------------------
 # The control state machine class (StagePiControlLogic) defines the
