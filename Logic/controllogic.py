@@ -666,7 +666,11 @@ def stagepi_control_logic(readings, devices, monitors, sockets, reading_interval
 
     except AttributeError:
         software_status = "OUT COLD. No CSM."
-
+    
+    msg = ("Stage Pi Control Logic status: " + software_status)
+    print(msg)
+    logger.info(msg)
+    
     try:
         logiccoretools.update_status("Up, CPU: " + config.CPU
                                      +"%, MEM: " + config.MEM + " MB",
