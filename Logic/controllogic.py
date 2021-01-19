@@ -688,10 +688,14 @@ def stagepi_control_logic(readings, devices, monitors, sockets, reading_interval
         return stagepilogic.csm.doLogic(reading_interval)
 
     except AttributeError:
-        msg = ("CRITICAL ERROR: Stage Pi logic has not been initialised. "
-               "Check whether the setup function has been run.")
-        print(msg)
-        logger.critical(msg)
+        if not isinstance(stagepilogic.csm, stagepilogic.StagePiControlLogic):
+            msg  = ("CRITICAL ERROR: Stage Pi logic has not been initialised. "
+                "Check whether the setup function has been run.")
+            print(msg)
+            logger.critical(msg)
+            
+        else:
+            raise
 
         return reading_interval
 
