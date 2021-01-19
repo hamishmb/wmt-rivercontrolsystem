@@ -309,7 +309,7 @@ class GenericControlState(ControlStateABC):
         """
         pass
     
-    class EventLogFailure(RuntimeError):
+    class LogEventError(RuntimeError):
         """
         Exception to be raised by logEvent in the event that it was not
         possible to log an event.
