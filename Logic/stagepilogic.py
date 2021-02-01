@@ -109,9 +109,6 @@ class StagePiReadingsParser():
     def __init__(self):
         """
         Initialiser. Puts relevant readings data into instance variables.
-        
-        Throws:
-            AssertionError  if the readings fail to pass suitability tests
         """      
         #Get readings, check they are sane and load into self
         failed_to_get_some_readings = False
@@ -125,7 +122,7 @@ class StagePiReadingsParser():
         
         try:
             G4FS0 = logiccoretools.get_latest_reading("G4", "FS0").get_value()
-            assert G4FS0 in ("True", "False")
+            if not G4FS0 in ("True", "False") raise AssertionError
             self.G4_full = G4FS0 == "True"
         except RuntimeError:
             self.G4_full = None
@@ -133,7 +130,7 @@ class StagePiReadingsParser():
         
         try:
             G4FS1 = logiccoretools.get_latest_reading("G4", "FS1").get_value()
-            assert G4FS1 in ("True", "False")
+            if not G4FS1 in ("True", "False") raise AssertionError
             self.G4_empty = G4FS1 == "True"
         except RuntimeError:
             self.G4_empty = None
@@ -148,7 +145,7 @@ class StagePiReadingsParser():
         
         try:
             G6FS0 = logiccoretools.get_latest_reading("G6", "FS0").get_value()
-            assert G6FS0 in ("True", "False")
+            if not G6FS0 in ("True", "False") raise AssertionError
             self.G6_full = G6FS0 == "True"
         except (RuntimeError, AssertionError):
             self.G6_full = None
@@ -156,7 +153,7 @@ class StagePiReadingsParser():
         
         try:
             G6FS1 = logiccoretools.get_latest_reading("G6", "FS1").get_value()
-            assert G6FS1 in ("True", "False")
+            if not G6FS1 in ("True", "False") raise AssertionError
             self.G6_empty = G6FS1 == "True"
         except (RuntimeError, AssertionError):
             self.G6_empty = None
