@@ -113,62 +113,79 @@ class StagePiReadingsParser():
         #Get readings, check they are sane and load into self
         failed_to_get_some_readings = False
         
+        # When there is no reading available yet, get_latest_reading
+        # returns None, which we catch as an exception by detecting the
+        # AttributeError that results from trying to call
+        # None.get_value()
+        
+        # The Stage Pi logic is only interested in the latest reading,
+        # so if there is an error getting the reading, we ultimately
+        # parse it by throwing a ValueError. The logic will keep doing
+        # what it was already doing, until a reading is obtained, so
+        # there is no need to feed it the previous reading.
+        
         try:
-            G4M0 =  logiccoretools.get_latest_reading("G4", "M0").get_value()
+            G4M0r =  logiccoretools.get_latest_reading("G4", "M0")
+            G4M0  =  G4M0r.get_value()
             self.G4_level = int(G4M0.replace("m", ""))
         except (RuntimeError, AttributeError) as e:
             self.G4_level = None
             failed_to_get_some_readings = True
-            if isinstance(e, AttributeError) and not GM40 is None:
+            if isinstance(e, AttributeError) and not G4M0r is None:
                 raise e
         
         try:
-            G4FS0 = logiccoretools.get_latest_reading("G4", "FS0").get_value()
-            if not G4FS0 in ("True", "False") raise AssertionError
+            G4FS0r = logiccoretools.get_latest_reading("G4", "FS0")
+            G4FS0  = G4FS0r.get_value()
+            if not G4FS0 in ("True", "False"): raise AssertionError
             self.G4_full = G4FS0 == "True"
         except (RuntimeError, AssertionError, AttributeError) as e:
             self.G4_full = None
             failed_to_get_some_readings = True
-            if isinstance(e, AttributeError) and not GM40 is None:
+            if isinstance(e, AttributeError) and not G4FS0r is None:
                 raise e
         
         try:
-            G4FS1 = logiccoretools.get_latest_reading("G4", "FS1").get_value()
-            if not G4FS1 in ("True", "False") raise AssertionError
+            G4FS1r = logiccoretools.get_latest_reading("G4", "FS1")
+            G4FS1  = G4FS1r.get_value()
+            if not G4FS1 in ("True", "False"): raise AssertionError
             self.G4_empty = G4FS1 == "True"
         except (RuntimeError, AssertionError, AttributeError) as e:
             self.G4_empty = None
             failed_to_get_some_readings = True
-            if isinstance(e, AttributeError) and not GM40 is None:
+            if isinstance(e, AttributeError) and not G4FS1r is None:
                 raise e
         
         try:
-            G6M0 =  logiccoretools.get_latest_reading("G6", "M0").get_value()
+            G6M0r =  logiccoretools.get_latest_reading("G6", "M0")
+            G6M0  =  G6M0r.get_value()
             self.G6_level = int(G6M0.replace("m", ""))
         except (RuntimeError, AttributeError) as e:
             self.G6_level = None
             failed_to_get_some_readings = True
-            if isinstance(e, AttributeError) and not GM40 is None:
+            if isinstance(e, AttributeError) and not G6M0r is None:
                 raise e
         
         try:
-            G6FS0 = logiccoretools.get_latest_reading("G6", "FS0").get_value()
-            if not G6FS0 in ("True", "False") raise AssertionError
+            G6FS0r = logiccoretools.get_latest_reading("G6", "FS0")
+            G6FS0  = G6FS0r.get_value()
+            if not G6FS0 in ("True", "False"): raise AssertionError
             self.G6_full = G6FS0 == "True"
         except (RuntimeError, AssertionError, AttributeError) as e:
             self.G6_full = None
             failed_to_get_some_readings = True
-            if isinstance(e, AttributeError) and not GM40 is None:
+            if isinstance(e, AttributeError) and not G6FS0r is None:
                 raise e
         
         try:
-            G6FS1 = logiccoretools.get_latest_reading("G6", "FS1").get_value()
-            if not G6FS1 in ("True", "False") raise AssertionError
+            G6FS1r = logiccoretools.get_latest_reading("G6", "FS1")
+            G6FS1  = G6FS1r.get_value()
+            if not G6FS1 in ("True", "False"): raise AssertionError
             self.G6_empty = G6FS1 == "True"
         except (RuntimeError, AssertionError, AttributeError) as e:
             self.G6_empty = None
             failed_to_get_some_readings = True
-            if isinstance(e, AttributeError) and not GM40 is None:
+            if isinstance(e, AttributeError) and not G6FS1r is None:
                 raise e
         
         if failed_to_get_some_readings:

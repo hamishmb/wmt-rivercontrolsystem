@@ -143,6 +143,44 @@ class TestStagePiReadingsParser(unittest.TestCase):
             with self.subTest("g4NearlyFullOrMore"):
                 with self.assertRaises(ValueError):
                     sprp.g4NearlyFullOrMore()
+    
+    
+    def testNoReadings(self):
+        """Test that the readings parser handles the case where there are no readings yet."""
+        #TODO: Re-implement this by including "no reading yet" as a
+        #      fault type in WaterModel sensors, so that when the other
+        #      tests have fault iteration enabled, the "no reading yet"
+        #      case is automatically considered by the tests.
+        mock = Mock(return_value=None)
+        with patch('Tools.logiccoretools.get_latest_reading', new=mock),\
+             patch('Tools.logiccoretools.get_n_latest_readings', new=mock):
+            
+            sprp = stagepilogic.StagePiReadingsParser()
+            
+            # Check that all the parser's methods raise ValueError
+            with self.subTest("g6Full"):
+                with self.assertRaises(ValueError):
+                    sprp.g6Full()
+                    
+            with self.subTest("g6Empty"):
+                with self.assertRaises(ValueError):
+                    sprp.g6Empty()
+            
+            with self.subTest("g4Overfull"):
+                with self.assertRaises(ValueError):
+                    sprp.g4Overfull()
+            
+            with self.subTest("g4FullOrMore"):
+                with self.assertRaises(ValueError):
+                    sprp.g4FullOrMore()
+            
+            with self.subTest("g4VeryNearlyFullOrMore"):
+                with self.assertRaises(ValueError):
+                    sprp.g4VeryNearlyFullOrMore()
+            
+            with self.subTest("g4NearlyFullOrMore"):
+                with self.assertRaises(ValueError):
+                    sprp.g4NearlyFullOrMore()
         
     def testG6Full(self):
         """Test that StagePiReadingsParser.g6Full() behaves as expected under various conditions."""
