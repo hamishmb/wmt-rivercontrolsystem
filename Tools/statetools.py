@@ -286,3 +286,131 @@ class ControlStateMachineABC(metaclass=ABCMeta):
 
         """
         return self.state.doLogic(reading_interval)
+
+class GenericControlState(ControlStateABC):
+    """
+    A generic control state implementation allowing for defined state
+    transitions and control outputs and some built-in logging and event
+    output.
+    
+    This abstract class implements more specific functionality than the
+    base ControlStateABC class. This functionality is useful for
+    concrete control state classes.
+    
+    Subclasses of GenericControlState should implement an initialiser
+    that provides the required dependencies by calling
+    GenericControlState.__init__().
+    """
+    class StateTransitionError(RuntimeError):
+        """
+        Exception to be raised by stateTransition in the event that it
+        was not possible to determine whether a state transition should
+        occur, due to a problem parsing readings.
+        """
+        pass
+    
+    class LogEventError(RuntimeError):
+        """
+        Exception to be raised by logEvent in the event that it was not
+        possible to log an event.
+        """
+        pass
+    
+    @abstractmethod
+    def stateTransition(self):
+        """
+        Defines the state transition function for this control state.
+        
+        It should raise StateTransitionError in the event that it was
+        not possible to determine whether a state transition should
+        occur, due to a problem parsing readings.
+        
+        This is an abstract method in GenericControlState, and should
+        be overridden by each subclass.
+        
+        Raises:
+            StateTransitionError
+        """
+        raise NotImplementedError
+    
+    def controlDevices(self, logEvent=False):
+        """
+        Defines the device control function for this control state.
+        
+        It should control some devices so that they end up in the state
+        required by this control state. If logEvent is True, then it
+        should also log an event about the control of the devices by
+        calling self.logEventCE().
+        
+        If this state requires device control, then the subclass should
+        override this method with one containing suitable logic.
+        
+        If this state does not require device control, then this method
+        should simply do nothing. (i.e. If device control is not
+        required, don't override this version, which does nothing.)
+        """
+        pass
+    
+    @abstractmethod
+    def logEvent(self, *args):
+        """
+        Log an event.
+        
+        This method should implement the function signature of
+        Tools.logiccoretools.log_event() and should log an event.
+        
+        This method should raise self.LogEventError in the event of
+        failure to log an event.
+        
+        For the purposes of error messages, this method will be
+        assumed to log events over a network.
+        
+        This is an abstract method, which subclasses must override in
+        order to specify a means of logging errors.
+        """
+        raise NotImplementedError
+    
+    def logEventCE(self, *args):
+        """
+        Log an event and catch errors.
+        
+        Accepts any arguments accepted by self.logEvent.
+        """
+        try:
+            self.logEvent(*args)
+        
+        except self.LogEventError:
+            msg = "Error while trying to log event over network."
+            print(msg)
+            logger.error(msg)
+    
+    def setupState(self):
+        logger.info("Setting up state " + self.getStateName())
+        print("Setting up state " + self.getStateName())
+        self.logEventCE("Entering " + self.getStateName())
+        self.controlDevices(logEvent=True)
+    
+    def noTransition(self):
+        """
+        This should be called by stateTransition if no transition is
+        currently required.
+        """
+        self.controlDevices()
+    
+    def doLogic(self, reading_interval):
+        ri = self.getPreferredReadingInterval()
+        
+        try:
+            self.stateTransition()
+            
+        except self.StateTransitionError:
+            msg = ("Could not parse sensor readings. Control logic is "
+                   "stalled.")
+            print(msg)
+            logger.error(msg)
+            
+            #If state transition failed, we can still refresh device
+            #control for this state
+            self.controlDevices()
+        
+        return ri
