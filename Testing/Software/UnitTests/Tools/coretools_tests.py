@@ -242,11 +242,8 @@ class TestDatabaseConnection(unittest.TestCase):
         """Test that the thread can be started and stopped without connecting and without error."""
         #Change the database host IP to 127.0.0.1 and a strange port so we don't actually connect
         #to a real database during this test.
-        original_dbhost = config.SITE_SETTINGS["SUMP"]["DBHost"]
-        original_dbport = config.SITE_SETTINGS["SUMP"]["DBPort"]
-
-        config.SITE_SETTINGS["SUMP"]["DBHost"] = "127.0.0.1"
-        config.SITE_SETTINGS["SUMP"]["DBPort"] = 65534
+        original_mysql = core_tools.mysql
+        core_tools.mysql = data.FakeMysqlConnectionFailure
 
         #Start the thread.
         self.dbconn.start_thread()
@@ -259,9 +256,7 @@ class TestDatabaseConnection(unittest.TestCase):
         while self.dbconn.thread_running():
             time.sleep(1)
 
-        #Reset db host IP.
-        config.SITE_SETTINGS["SUMP"]["DBHost"] = original_dbhost
-        config.SITE_SETTINGS["SUMP"]["DBPort"] = original_dbport
+        core_tools.mysql = original_mysql
 
     def test__connect_1(self):
         """Test this works as expected when connecting succeeds with valid arguments"""
