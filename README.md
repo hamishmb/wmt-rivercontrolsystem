@@ -3,6 +3,11 @@
 This repository holds the latest bleeding edge versions
 of the river control software.
 
+Pipeline Status
+===============
+
+[![pipeline status](https://gitlab.com/wmtprojectsteam/rivercontrolsystem/badges/master/pipeline.svg)](https://gitlab.com/wmtprojectsteam/rivercontrolsystem/-/commits/master)
+
 Release Management
 ==================
 
