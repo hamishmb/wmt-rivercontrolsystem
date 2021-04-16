@@ -562,6 +562,40 @@ class Valve(ModelObject, ControllableDevice):
                 self._position = int(state[:-1]) # remove % and convert to int
                 self._has_been_set = True
 
+class Motor(ModelObject, ControllableDevice):
+    """
+    Class representing a motor that can be enabled or disabled.
+    """
+    def __init__(self):
+        super().__init__()
+        self._state = "disabled"
+        self._has_been_set = False
+        
+        # COmpile regular expression to match valid motor state values
+        self._state_pattern = re.compile('enabled|disabled')
+    
+    def getState(self):
+        """
+        Refer to ModelObject superclass documentation
+        """
+        if self._has_been_set:
+            return self._state
+        else:
+            return "Unspecified"
+    
+    def setState(self, state):
+        """
+        Refer to ControllableDevice superclass documentation
+        """
+        # Intentionally there is no error raised if the state is not
+        # usable, since the logic ought to cope with real devices not
+        # raising an error.
+        if isinstance(state, str):
+            m = self._state_pattern.match(state)
+            if m.group() == state: # if the whole string matches the regex
+                self._state = state
+                self._has_been_set = True
+
 class WaterModelNoMoreFaults(Exception):
     """
     Exception to be raised by WaterModel._nextFault() when there are no more
@@ -761,7 +795,9 @@ class WaterModel():
         Adds a water vessel to the water model.
         
         site_id  should be the site_id that the control logic under test
-        is expected to use to read sensor values on said vessel.
+        is expected to use to read sensor values on said vessel. If not,
+        it will be necessary to use the vessel_id argument when calling
+        addSensor.
         
         Args:
             site_id (str):   An arbitrary identifier for the new vessel
@@ -782,12 +818,17 @@ class WaterModel():
         
         self.resetFaults()
     
-    def addSensor(self, sensor_class, site_id, sensor_id):
+    def addSensor(self, sensor_class, site_id, sensor_id, vessel_id=None):
         """
         Adds a Sensor to the water model.
         
-        site_id must match the site_id of a Vessel that has already been
-        added to the model.
+        If vessel_id is not specified, then site_id must match the site_id
+        of a Vessel that has already been added to the model.
+        
+        If the site_id of the sensor does not match the site_id of the
+        vessel that it will take readings of, then vessel_id must be
+        specified to override that assumption and specify the vessel's
+        site_id directly.
         
         site_id and sensor_id should be the site_id and sensor_id that
         the control logic under test is expected to use to read sensor
@@ -804,21 +845,29 @@ class WaterModel():
             sensor_class (Sensor):  name of a subclass of testwatermodel.Sensor
             site_id (str):       An arbitrary site ID for the sensor
             sensor_id (str):     An arbitrary sensor ID for the sensor
+            vessel_id (str):     (Optional) site ID of the vessel to measure
         
         Throws:
             ValueError, if the arguments are invalid, given the current model.
         """
-        if (not isinstance(site_id, str) or 
-            site_id == "" or
-            not isinstance(self._vessels[site_id], Vessel)):
-            raise ValueError("When adding a Sensor to a WaterModel, site_id "
-                             "must match the site_id of a Vessel that has "
-                             "already been loaded into the model.")
+        self._validateID(site_id,
+                         "When adding a Sensor to a WaterModel, site_id")
+        
+        if vessel_id is None:
+            vessel_id = site_id
+        
+        if (not isinstance(vessel_id, str) or 
+            vessel_id == "" or
+            not isinstance(self._vessels[vessel_id], Vessel)):
+            raise ValueError("When adding a Sensor to a WaterModel, either "
+                             "site_id or vessel_id must match the site_id "
+                             "of a Vessel that has already been loaded into "
+                             "the model.")
         
         self._validateID(sensor_id,
                          "When adding a Sensor to a WaterModel, sensor_id")
 
-        s = sensor_class(self._vessels[site_id], site_id, sensor_id)
+        s = sensor_class(self._vessels[vessel_id], site_id, sensor_id)
         
         if (site_id in self._devices
             and isinstance(self._devices[site_id], dict)):
@@ -1112,6 +1161,71 @@ class WaterModel():
         
         return f.rstrip("\n") # remove trailing newline
 
+    def _getReadingsDict(self, site_id):
+        """
+        Provides a 'readings dictionary' for sensors in a given site_id,
+        similar to that which is passed into control logic functions as an
+        argument.
+        
+        The dictionary will be limited to containing only sensors in the
+        given site_id.
+        
+        Args:
+            site_id (str)   specify which site ID to return readings for
+        
+        Returns:
+            (dict)          readings dictionary
+        """
+        self._validateID(site_id,
+                         "When getting a readings dictionary, site_id")
+        
+        try:
+            site_devices = self._devices[site_id]
+        except KeyError:
+            # If the site_id has no devices, then we should return no devices
+            return {}
+        
+        # For now, just use arbitrary time and tick values for readings
+        # (If the method of determining time/tick is changed, then also
+        # change it in _get_latest_reading.)
+        
+        tick = 0
+        time = "2020-09-23 16:19:17.413922"
+        
+        output_dict = {}
+        for key, device in site_devices.items():
+            # We're only interested in sensors here
+            if isinstance(device, Sensor):
+                output_dict[site_id + ":" + key] = device.getReading(time, tick)
+        
+        return output_dict
+
+    def getReadingsDict(self, *site_ids):
+        """
+        Provides a 'readings dictionary' for sensors in the given site_ids,
+        similar to that which is passed into control logic functions as an
+        argument.
+        
+        The dictionary will be limited to containing only sensors with the
+        given site_ids. site_ids may be a tuple of strings or a single
+        string.
+        
+        Args:
+            site_id (str)    one or more site IDs to return readings for
+        
+        Returns:
+            (dict)                  readings dictionary
+        """
+        if isinstance(site_ids, str):
+            output_dict = self._getReadingsDict(site_ids)
+        
+        elif isinstance(site_ids, tuple):
+            output_dict = {}
+            for site_id in site_ids:
+                output_dict.update(self._getReadingsDict(site_id))
+        
+        return output_dict
+
     def overrideFunctions(self, module):
         """
         Overrides functions found in the given module with methods of this
@@ -1230,6 +1344,8 @@ class WaterModel():
         # For now, just hard code arbitrary tick and time values
         # TODO: maybe implement something more elaborate for determining
         # realistic and/or test-specified tick and time values.
+        # (If the method of determining time/tick is changed, then also
+        # change it in _getReadingsDict.)
         self._validateID(site_id, "When fetching readings, site_id")
         self._validateID(site_id, "When fetching readings, sensor_id")
         tick = 0

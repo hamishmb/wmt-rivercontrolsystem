@@ -750,6 +750,9 @@ def temptopup_control_logic(readings, devices, monitors, sockets, reading_interv
     #Check that the reading interval is positive, and greater than 0.
     assert reading_interval > 0
     
+    # Pass on readings dictionary to the logic
+    temptopuplogic.readings = readings
+    
     # Try to get a reference to the solenoid valve if we don't have one yet
     # (Can't do this in the setup function because it doesn't have access to
     # the devices dictionary.)
@@ -768,8 +771,8 @@ def temptopup_control_logic(readings, devices, monitors, sockets, reading_interv
             software_status = "OK, in "
 
     try:
-        software_status = software_status +
-                          temptopuplogic.csm.getCurrentStateName()
+        software_status = (software_status +
+                           temptopuplogic.csm.getCurrentStateName())
 
     except AttributeError:
         software_status = "OUT COLD. No CSM."

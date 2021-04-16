@@ -40,8 +40,7 @@ sys.path.insert(0, os.path.abspath(os.path.split(os.path.dirname(__file__))[0]))
 
 from Tools import logiccoretools
 from Tools.statetools import ControlStateMachineABC, GenericControlState
-import datetime.time
-import datetime.datetime
+import datetime
 
 #Don't ask for a logger name, so this works with both main.py
 #and the universal monitor.
@@ -76,10 +75,18 @@ The solenoid variable holds a reference to the solenoid valve device object.
 It should be initialised by the temptopup_control_logic function.
 """
 
+readings = {}
+"""
+The readings variable holds a reference to the local readings dictionary.
+It should be set by the temptopup_control_logic function.
+"""
+
 start_time = (datetime.time(15), datetime.time(15,2))
 """
 Defines a window in time during which the daily mains-water top-up can begin.
 A tuple. First element is the beginning of the window, second is the end.
+The length of this period should be at least 2 minutes to account for the
+reading interval.
 This does not constrain the end time of the top-up.
 """
 
@@ -152,7 +159,7 @@ class TempTopUpReadingsParser():
                 raise e
         
         try:
-            G3FS1r = readings["G4:FS1"]
+            G3FS1r = readings["G3:FS1"]
             G3FS1  = G3FS1r.get_value()
             if not G3FS1 in ("True", "False"): raise AssertionError
             self.G1_empty = G3FS1 == "True"
@@ -221,7 +228,7 @@ class TempTopUpReadingsParser():
             or self.G1_empty is None):
             raise ValueError("Sensor readings unavailable.")
         
-        if (self.G1_full or self.G1_level >= end_level):
+        if (self.G1_full or self.G1_level >= stop_level):
             if(self.G1_empty == False):
                 return True
             else:
@@ -256,7 +263,7 @@ class TempTopUpDeviceController():
         device controller.
         """
         try:
-            if(solenoidState == "enable"):
+            if(self.solenoidState == "enable"):
                 solenoid.enable()
             else:
                 solenoid.disable()
@@ -308,7 +315,7 @@ class TTUIdleState(GenericControlState):
         try:
             #Prepare to transition to new state
             if (datetime.datetime.now().time() >= start_time[0] and
-                datetime.datetime.now().time() < start_time[1] and
+                datetime.datetime.now().time() <= start_time[1] and
                 parser.g1NeedsTopUp()):
                 ri = self.csm.setStateBy(TTUToppingUpState, self)
             
