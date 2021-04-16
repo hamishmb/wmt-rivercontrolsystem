@@ -708,3 +708,110 @@ def stagepi_control_logic_setup():
     """
     #Initialise the control state machine
     stagepilogic.csm = stagepilogic.StagePiControlLogic()
+
+
+def temptopup_control_logic(readings, devices, monitors, sockets, reading_interval):
+    """
+    Control logic function for the temporary top-up control logic, which
+    tops up the G1 butts group with mains water at about 15:00 daily if
+    the level is too low.
+    
+    This mainly just wraps TempTopUpLogic.doLogic(), but it also contains
+    some other integration glue.
+
+    Run temptopup_control_logic_setup once before first running this function.
+
+    See TempTopUpLogic for documentation.
+
+    Args:
+        readings (list):                A list of the latest readings for each probe/device.
+
+        devices  (list):                A list of all master pi device objects.
+
+        monitors (list):                A list of all master pi monitor objects.
+
+        sockets (list of Socket):       A list of Socket objects that represent
+                                        the data connections between pis. Passed
+                                        here so we can control the reading
+                                        interval at that end.
+
+        reading_interval (int):     The current reading interval, in
+                                    seconds.
+
+    Returns:
+        int: The reading interval, in seconds.
+
+    Usage:
+
+        >>> reading_interval = stagepi_control_logic(<listofreadings>,
+        >>>                                     <listofprobes>, <listofmonitors>,
+        >>>                                     <listofsockets>, <areadinginterval)
+    """
+    #Check that the reading interval is positive, and greater than 0.
+    assert reading_interval > 0
+    
+    # Try to get a reference to the solenoid valve if we don't have one yet
+    # (Can't do this in the setup function because it doesn't have access to
+    # the devices dictionary.)
+    if temptopuplogic.solenoid is None:
+        for device in devices:
+            if device.get_id() == "G3:S0":
+                temptopuplogic.solenoid = device
+        
+        if temptopuplogic.solenoid is None:
+            msg = "CRITICAL ERROR: Could not find solenoid valve device."
+            print(msg)
+            logger.critical(msg)
+            software_status = "Error: No solenoid. In "
+        
+        else:
+            software_status = "OK, in "
+
+    try:
+        software_status = software_status +
+                          temptopuplogic.csm.getCurrentStateName()
+
+    except AttributeError:
+        software_status = "OUT COLD. No CSM."
+    
+    msg = ("Temporary Top Up Control Logic status: " + software_status)
+    print(msg)
+    logger.info(msg)
+    
+    try:
+        logiccoretools.update_status("Up, CPU: " + config.CPU
+                                     +"%, MEM: " + config.MEM + " MB",
+                                     software_status,
+                                     "None")
+
+    except RuntimeError:
+        print("Error: Couldn't update site status!")
+        logger.error("Error: Couldn't update site status!")
+
+    try:
+        return temptopuplogic.csm.doLogic(reading_interval)
+
+    except AttributeError:
+        if not isinstance(temptopuplogic.csm,
+                          temptopuplogic.TempTopUpControlLogic):
+            msg  = ("CRITICAL ERROR: Temporary Top Up Pi logic has not "
+                    "been initialised. Check whether the setup function "
+                    "has been run.")
+            print(msg)
+            logger.critical(msg)
+            
+        else:
+            raise
+
+        return reading_interval
+
+
+def temptopup_control_logic_setup():
+    """
+    Set-up function for the temporary top-up control logic.
+    
+    Initialises solenoid valve and a TemporaryTopUpControlLogic object
+    for state persistence.
+    """
+    
+    temptopuplogic.csm = temptopuplogic.TempTopUpControlLogic()
