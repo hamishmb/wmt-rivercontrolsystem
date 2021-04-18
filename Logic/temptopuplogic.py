@@ -97,7 +97,7 @@ reading interval.
 This does not constrain the end time of the top-up.
 """
 
-failsafe_end_time = datetime.time(15,30)
+failsafe_end_time = datetime.time(16,00)
 """
 Defines a cut-off time for the top-up as a last resort failsafe to limit water
 wastage in the event of a sensor failure. This should not normally come into
