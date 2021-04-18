@@ -813,8 +813,7 @@ def temptopup_control_logic_setup():
     """
     Set-up function for the temporary top-up control logic.
     
-    Initialises solenoid valve and a TemporaryTopUpControlLogic object
-    for state persistence.
+    Initialises a TemporaryTopUpControlLogic object for state persistence.
     """
     
     temptopuplogic.csm = temptopuplogic.TempTopUpControlLogic()

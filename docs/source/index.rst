@@ -21,6 +21,7 @@ Contents:
     logic
     genericlogic
     stagepilogic
+    temptopuplogic
     monitortools
     deviceobjects
     devicemanagement

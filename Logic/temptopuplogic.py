@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # 'Temporary Top Up' Logic for the River System Control and Monitoring Software
-# Copyright (C) 2020 Wimborne Model Town
+# Copyright (C) 2021 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
 # at your option, any later version.
@@ -19,7 +19,14 @@
 #Reason (logging-not-lazy): Harder to understand the logging statements that way.
 
 """
-This is the temptopuplogic module, which contains interim control logic for Lady Hanham Pi to provide a daily mains water top-up
+This is the temptopuplogic module, which contains interim control logic for Lady Hanham Pi to provide a daily mains water top-up.
+
+This logic is intended as an interim measure to reduce the burden of manually
+topping up with mains water, until the "full" control logic is available for
+the Lady Hanham Pi/SAC module.
+
+When the full logic is available, this Temporary Top Up logic will become
+redundant.
 
 .. module:: temptopuplogic.py
     :platform: Linux
