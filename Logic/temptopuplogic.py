@@ -21,6 +21,19 @@
 """
 This is the temptopuplogic module, which contains interim control logic for Lady Hanham Pi to provide a daily mains water top-up.
 
+This logic features a manual override function for the G3:S0 mains water inlet
+solenoid valve. The manual override can be activated by creating the file
+> rivercontrolsystem/overrides/device/S0
+containing the word 'on', 'off', or 'auto', where 'rivercontrolsystem' is the
+root of the River Control System software package.
+
+A value of 'on' on the first line of the override file forces the solenoid
+valve to open, 'off' forces it to close and 'auto' requests normal operation.
+If the file is not present, 'auto' is assumed. If the file contains a value
+other than these, or if the file is present but not accessible, then 'off' is
+assumed. Only the first line of the override file is read, and whitespace is
+ignored.
+
 This logic is intended as an interim measure to reduce the burden of manually
 topping up with mains water, until the "full" control logic is available for
 the Lady Hanham Pi/SAC module.
@@ -248,6 +261,55 @@ class TempTopUpReadingsParser():
         else:
             return False
 
+def G3S0OverrideState():
+    """
+    This function returns the current state of the mains water inlet
+    solenoid manual override; one of 'on', 'off' or 'auto'.
+    """
+    
+    file_root = os.path.abspath(os.path.split(os.path.dirname(__file__))[0])
+    
+    file_path = file_root + "/overrides/device/S0"
+    
+    try:
+        with open(file_path, "r") as f:
+            # read first line only and discard whitespace (e.g. newline)
+            file_text = f.readline().strip()
+            msg = "Found manual override file: " + file_path
+            print(msg)
+            logger.warn(msg)
+    
+    except FileNotFoundError:
+        # This is the 'normal' case (no manual override requested).
+        # So, no need to output messages about it.
+        file_text = "auto"
+    
+    except (PermissionError, IsADirectoryError, TimeoutError):
+        msg = ("Found manual override file: " + file_path +
+               "...but could not read its value.\n" +
+               "Defaulting to 'off'.")
+        print(msg)
+        logger.error(msg)
+        file_text = "off"
+    
+    allowable_values = ["on", "off", "auto"]
+    notifiable_values = ["on", "off"]
+    
+    if file_text not in allowable_values:
+        msg = ("The override file did not contain a recognised text value.\n"
+               "Defaulting to 'off'.")
+        print(msg)
+        logger.error(msg)
+        
+        file_text = "off"
+    
+    if file_text in notifiable_values:
+        msg = ("Solenoid is in manual override and will be held '" +
+               file_text + "'.")
+        print(msg)
+        logger.warn(msg)
+            
+    return file_text
 
 class TempTopUpDeviceController():
     """
@@ -318,12 +380,22 @@ class TTUIdleState(GenericControlState):
     
     def stateTransition(self):
         parser = TempTopUpReadingsParser()
+        s0_override = G3S0OverrideState() # solenoid override state
         
         try:
-            #Prepare to transition to new state
-            if (datetime.datetime.now().time() >= start_time[0] and
-                datetime.datetime.now().time() <= start_time[1] and
-                parser.g1NeedsTopUp()):
+            #Evaluate possible transitions to new states
+            if s0_override == 'off':
+                # Stay in idle state to keep solenoid off
+                self.noTransition()
+                
+            elif s0_override == 'on':
+                # Enter topping up state to switch solenoid on
+                self.csm.setStateBy(TTUToppingUpState, self)
+                
+            elif (parser.g1NeedsTopUp()
+                  and datetime.datetime.now().time() >= start_time[0]
+                  and datetime.datetime.now().time() <= start_time[1]):
+                # Start daily top-up
                 ri = self.csm.setStateBy(TTUToppingUpState, self)
             
             else:
@@ -354,12 +426,22 @@ class TTUToppingUpState(GenericControlState):
     
     def stateTransition(self):
         parser = TempTopUpReadingsParser()
+        s0_override = G3S0OverrideState() # solenoid override state
         
         try:
             #Evaluate possible transitions to new states
-            if (parser.g1ToppedUp() or
-                datetime.datetime.now().time() >= failsafe_end_time or
-                datetime.datetime.now().time() < start_time[0]):
+            if s0_override == 'on':
+                # Stay in topping up state to keep solenoid on
+                self.noTransition()
+                
+            elif s0_override == 'off':
+                # Enter idle state to switch solenoid off
+                self.csm.setStateBy(TTUIdleState, self)
+                
+            elif (parser.g1ToppedUp()
+                  or datetime.datetime.now().time() >= failsafe_end_time
+                  or datetime.datetime.now().time() < start_time[0]):
+                # Terminate daily top-up
                 ri = self.csm.setStateBy(TTUIdleState, self)
             
             else:
@@ -383,18 +465,40 @@ class TempTopUpControlLogic(ControlStateMachineABC):
     
     .. figure:: temptopupstatediagram.png
        :alt:
-             The diagram describes the following operation:            
+             The diagram describes the following operation:   
+             
              At the start, the state machine enters the Idle state.
-             In the idle state, nothing happens.
+             
+             In the idle state, the G1:S0 mains water inlet solenoid
+             valve is closed.
+             
              In Idle state, if the time of day is within the start_time
              range, and the G1 water level is below start_level, then
-             the state machine transitions to the Topping Up state. In
-             the topping up state, the solenoid valve is open, allowing
+             the state machine transitions to the Topping Up state.
+             
+             In the topping up state, the solenoid valve is open, allowing
              mains water to enter G1 and increase its level.
+             
              In Topping Up state, if the water level reaches or exceeds
              stop_level, or if the time of day is after failsafe_end_time
              or before the start_time range, then the state machine
              transitions into Idle state.
+             
+             In addition to this normal operation, a manual override can
+             be enabled with a value of 'off', 'on' or 'auto'.
+             
+             When the manual override is 'off', all transitions into
+             Topping Up state are blocked. If Topping Up is the current
+             state, then there will be a transition into Idle state,
+             regardless of water level or time of day.
+             
+             When the manual override is 'on', all transitions into Idle
+             state are blocked. If Idle is the current state, then there
+             will be a transition into Topping Up state, regardless of
+             water level or time of day.
+             
+             (A manual override value of 'auto' has no effect on the
+            normal operation.)
     
        This diagram describes the state model for the Temporary Top Up
        control logic. In the diagram, "do/" denotes the action during the
