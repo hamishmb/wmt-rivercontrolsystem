@@ -34,6 +34,8 @@ other than these, or if the file is present but not accessible, then 'off' is
 assumed. Only the first line of the override file is read, and whitespace is
 ignored.
 
+N.B. The solenoid override will override failsafe_end_time.
+
 This logic is intended as an interim measure to reduce the burden of manually
 topping up with mains water, until the "full" control logic is available for
 the Lady Hanham Pi/SAC module.

@@ -17,7 +17,7 @@
 #Import modules
 import unittest
 import sys
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, mock_open
 
 sys.path.append('../../../..') #Need to be able to import Logic and Tools
 import Logic.temptopuplogic as temptopuplogic
@@ -248,11 +248,16 @@ class TestTempTopUpControlLogic(unittest.TestCase):
         self.wm.overrideFunctions(Tools.logiccoretools)
         
         temptopuplogic.solenoid = TempTopUpFakeSolenoid(self.wm)
+        
+        # Disable the manual override feature for the solenoid valve
+        self.real_G3S0OverrideState = temptopuplogic.G3S0OverrideState
+        temptopuplogic.G3S0OverrideState = Mock(return_value="auto")
     
     def tearDown(self):
         temptopuplogic.readings = {}
         self.wm.unOverrideFunctions()
         temptopuplogic.solenoid = None
+        temptopuplogic.G3S0OverrideState = self.real_G3S0OverrideState
         self.wm = None
     
     # The control state machine doesn't need much testing, except to
@@ -289,13 +294,64 @@ class TestTempTopUpControlLogic(unittest.TestCase):
                                          temptopuplogic.start_time[0])
         
         with patch('datetime.datetime') as mock_dt:
+            # Override the 'now' method, keep the others available
             mock_dt.now.return_value = time
-            mock_dt.site_effect = lambda *args, **kw: datetime(*args, **kw)
+            mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
             sm = temptopuplogic.TempTopUpControlLogic()
             sm.doLogic(30)
             self.assertEqual(sm.getCurrentStateName(),
                          "TTUToppingUpState")
+
+class TestG3S0OverrideState(unittest.TestCase):
+    """
+    Full tests of function G3S0OverrideState
+    """
+    def testFileNotFound(self):
+        """Test solenoid override state when override file not present"""
+        with patch('Logic.temptopuplogic.open',
+                   side_effect=FileNotFoundError):
+            self.assertEqual(temptopuplogic.G3S0OverrideState(), "auto")
+    
+    def testOn(self):
+        """Test solenoid override state 'on' (set in override file)"""
+        with patch('Logic.temptopuplogic.open', mock_open(read_data="on\n")):
+            self.assertEqual(temptopuplogic.G3S0OverrideState(), "on")
+    
+    def testOff(self):
+        """Test solenoid override state 'off' (set in override file)"""
+        with patch('Logic.temptopuplogic.open', mock_open(read_data="off\n")):
+            self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+    
+    def testAuto(self):
+        """Test solenoid override state 'auto' (set in override file)"""
+        with patch('Logic.temptopuplogic.open', mock_open(read_data="auto\n")):
+            self.assertEqual(temptopuplogic.G3S0OverrideState(), "auto")
+    
+    def testFileInaccessible(self):
+        """Test solenoid override state when override file inaccessible"""
+        with patch('Logic.temptopuplogic.open',
+                   side_effect=PermissionError):
+            self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+        
+        with patch('Logic.temptopuplogic.open',
+                   side_effect=IsADirectoryError):
+            self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+        
+        with patch('Logic.temptopuplogic.open',
+                   side_effect=TimeoutError):
+            self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+    
+    def testUnrecognisedValue(self):
+        """Test solenoid override state when override file contains unrecognised value"""
+        with patch('Logic.temptopuplogic.open', mock_open(read_data="foo\n")):
+            self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+        
+        with patch('Logic.temptopuplogic.open', mock_open(read_data="\nbar")):
+            self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+        
+        with patch('Logic.temptopuplogic.open', mock_open(read_data="\non")):
+            self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
 
 def singleStateTestSetUp(testInstance, stateClassUnderTest, G1Level):
     """
@@ -380,80 +436,132 @@ class TestTTUIdleState(unittest.TestCase):
     
     def testSetupState(self):
         """Tests whether TTUIdleState has the correct control outputs when first set up."""
-        # It is a bit messy to specify the time here. It should be in the
-        # initial test conditions, but we can't set it there. So, we must
-        # specify it before all the tests that assume the initial test
-        # conditions.
         time = datetime.datetime.combine(datetime.date.today(),
                                          temptopuplogic.start_time[1])
         time = time - datetime.timedelta(hours=1)
         
         with patch('datetime.datetime') as mock_dt:
+            # Override the 'now' method, keep the others available
             mock_dt.now.return_value = time
-            mock_dt.site_effect = lambda *args, **kw: datetime(*args, **kw)
+            mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
-            # Check that TTUIdle tries to turn off the solenoid valve
-            self.s.setupState()
-            self.assertStateControlOutputsCorrect()
+            # Disable solenoid valve override for this test
+            with patch('Logic.temptopuplogic.G3S0OverrideState',
+                       return_value="auto"):
+                # Check that TTUIdle tries to turn off the solenoid valve
+                self.s.setupState()
+                self.assertStateControlOutputsCorrect()
     
     def testNoTransition(self):
-        """Tests that TTUToppingUpState does not transition into another state under the initial test conditions.
+        """Tests that TTUToppingUpState does not transition into another state under the expected conditions.
         
         The initial conditions should be chosen so that they do not
         justify a transition. This permits the other tests to assume
         that no transition would have occurred if they did not alter
         the conditions.
+        
+        (However, in this case, we cannot easily include time or
+        solenoid override state in the initial conditions.)
         """
-        # It is a bit messy to specify the time here. It should be in the
-        # initial test conditions, but we can't set it there. So, we must
-        # specify it before all the tests that assume the initial test
-        # conditions.
+        
+        # Check that transition does not occur with water above threshold,
+        # time before start_time range
         time = datetime.datetime.combine(datetime.date.today(),
-                                         temptopuplogic.start_time[1])
+                                         temptopuplogic.start_time[0])
         time = time - datetime.timedelta(hours=1)
         
         with patch('datetime.datetime') as mock_dt:
+            # Override the 'now' method, keep the others available
             mock_dt.now.return_value = time
-            mock_dt.site_effect = lambda *args, **kw: datetime(*args, **kw)
+            mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
-            self.s.doLogic(30)
-            self.csm.setStateBy.assert_not_called()
-            self.assertStateControlOutputsCorrect()
-    
-    def testTransitionToToppingUp(self):
-        """Tests whether TTUIdleState will transition into TTUToppingUpState under the expected conditions."""
+            # Disable solenoid valve override for this test
+            with patch('Logic.temptopuplogic.G3S0OverrideState',
+                       return_value="auto"):
+                self.s.doLogic(30)
+                self.csm.setStateBy.assert_not_called()
+                self.assertStateControlOutputsCorrect()
         
-        # It is a bit messy to specify the time here. It should be in the
-        # initial test conditions, but we can't set it there. So, we must
-        # specify it before all the tests that assume the initial test
-        # conditions.
-        time = datetime.datetime.combine(datetime.date.today(),
-                                         temptopuplogic.start_time[1])
-        time = time - datetime.timedelta(hours=1)
-        
-        with patch('datetime.datetime') as mock_dt:
-            mock_dt.now.return_value = time
-            mock_dt.site_effect = lambda *args, **kw: datetime(*args, **kw)
-            
-            # Check that transition occurs with water below threshold and time
-            # at start of start_time range
-            self.wm.setVesselLevel("G1", temptopuplogic.start_level - 10)
-            temptopuplogic.readings = self.wm.getReadingsDict("G1","G2","G3")
-        
+        # Check that transition does not occur with water above threshold,
+        # time at start of start_time range
+        self.wm.controlled_devices = []
         time = datetime.datetime.combine(datetime.date.today(),
                                          temptopuplogic.start_time[0])
         
         with patch('datetime.datetime') as mock_dt:
+            # Override the 'now' method, keep the others available
             mock_dt.now.return_value = time
-            mock_dt.site_effect = lambda *args, **kw: datetime(*args, **kw)
+            mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
-            self.s.doLogic(30)
-            self.csm.setStateBy.assert_called_once_with(
-                temptopuplogic.TTUToppingUpState,
-                self.s)
+            with patch('Logic.temptopuplogic.G3S0OverrideState',
+                       return_value="auto"):
+                self.s.doLogic(30)
+                self.csm.setStateBy.assert_not_called()
+                self.assertStateControlOutputsCorrect()
+        
+        # Check that transition does not occur with water below threshold and
+        # time outside start_time range
+        self.wm.controlled_devices = []
+        self.wm.setVesselLevel("G1", temptopuplogic.start_level - 10)
+        temptopuplogic.readings = self.wm.getReadingsDict("G1","G2","G3")
+        time = datetime.datetime.combine(datetime.date.today(),
+                                         temptopuplogic.start_time[0])
+        time = time - datetime.timedelta(hours=1)
+        
+        with patch('datetime.datetime') as mock_dt:
+            # Override the 'now' method, keep the others available
+            mock_dt.now.return_value = time
+            mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
+            
+            with patch('Logic.temptopuplogic.G3S0OverrideState',
+                       return_value="auto"):
+                self.s.doLogic(30)
+                self.csm.setStateBy.assert_not_called()
+                self.assertStateControlOutputsCorrect()
+        
+        # Check that transition does not occur with water below threshold,
+        # time at start of start_time range and solenoid overridden to 'off'
+        self.wm.controlled_devices = []
+        time = datetime.datetime.combine(datetime.date.today(),
+                                         temptopuplogic.start_time[0])
+        
+        with patch('datetime.datetime') as mock_dt:
+            # Override the 'now' method, keep the others available
+            mock_dt.now.return_value = time
+            mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
+            
+            with patch('Logic.temptopuplogic.G3S0OverrideState',
+                       return_value="off"):
+                self.s.doLogic(30)
+                self.csm.setStateBy.assert_not_called()
+                self.assertStateControlOutputsCorrect()
+    
+    def testTransitionToToppingUp(self):
+        """Tests whether TTUIdleState will transition into TTUToppingUpState under the expected conditions."""
+        
+        # Check that transition occurs with water below threshold and time
+        # at start of start_time range
+        time = datetime.datetime.combine(datetime.date.today(),
+                                         temptopuplogic.start_time[0])
+        
+        self.wm.setVesselLevel("G1", temptopuplogic.start_level - 10)
+        temptopuplogic.readings = self.wm.getReadingsDict("G1","G2","G3")
+        
+        with patch('datetime.datetime') as mock_dt:
+            # Override the 'now' method, keep the others available
+            mock_dt.now.return_value = time
+            mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
+            
+            with patch('Logic.temptopuplogic.G3S0OverrideState',
+                       return_value="auto"):
+                self.s.doLogic(30)
+                self.csm.setStateBy.assert_called_once_with(
+                    temptopuplogic.TTUToppingUpState,
+                    self.s)
         
         # Check that transition occurs with water below threshold and time
         # in middle of start_time range
+        self.csm.setStateBy.reset_mock()
         time = (datetime.datetime.combine(datetime.date.today(),
                                           temptopuplogic.start_time[0])
                 +
@@ -465,31 +573,57 @@ class TestTTUIdleState(unittest.TestCase):
                    / 2))
         
         with patch('datetime.datetime') as mock_dt:
+            # Override the 'now' method, keep the others available
             mock_dt.now.return_value = time
-            mock_dt.site_effect = lambda *args, **kw: datetime(*args, **kw)
+            mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
-            self.csm.setStateBy.reset_mock()
-            self.s.doLogic(30)
-            self.csm.setStateBy.assert_called_once_with(
-                temptopuplogic.TTUToppingUpState,
-                self.s)
+            with patch('Logic.temptopuplogic.G3S0OverrideState',
+                       return_value="auto"):
+                self.s.doLogic(30)
+                self.csm.setStateBy.assert_called_once_with(
+                    temptopuplogic.TTUToppingUpState,
+                    self.s)
         
         # Check that transition occurs with water below threshold and time
         # at end of start_time range
+        self.csm.setStateBy.reset_mock()
         time = datetime.datetime.combine(datetime.date.today(),
                                          temptopuplogic.start_time[1])
         
         with patch('datetime.datetime') as mock_dt:
+            # Override the 'now' method, keep the others available
             mock_dt.now.return_value = time
-            mock_dt.site_effect = lambda *args, **kw: datetime(*args, **kw)
+            mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
-            self.csm.setStateBy.reset_mock()
-            self.s.doLogic(30)
-            self.csm.setStateBy.assert_called_once_with(
-                temptopuplogic.TTUToppingUpState,
-                self.s)
+            with patch('Logic.temptopuplogic.G3S0OverrideState',
+                       return_value="auto"):
+                self.s.doLogic(30)
+                self.csm.setStateBy.assert_called_once_with(
+                    temptopuplogic.TTUToppingUpState,
+                    self.s)
         
-        # Check that TTUIdleState did not try to control any devices
+        # Check that transition occurs with water above threshold, time
+        # before start_time and solenoid overridden to 'on'
+        self.csm.setStateBy.reset_mock()
+        self.wm.setVesselLevel("G1", temptopuplogic.start_level + 10)
+        temptopuplogic.readings = self.wm.getReadingsDict("G1","G2","G3")
+        time = datetime.datetime.combine(datetime.date.today(),
+                                         temptopuplogic.start_time[0])
+        time = time - datetime.timedelta(hours=1)
+        
+        with patch('datetime.datetime') as mock_dt:
+            # Override the 'now' method, keep the others available
+            mock_dt.now.return_value = time
+            mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
+            
+            with patch('Logic.temptopuplogic.G3S0OverrideState',
+                       return_value="on"):
+                self.s.doLogic(30)
+                self.csm.setStateBy.assert_called_once_with(
+                    temptopuplogic.TTUToppingUpState,
+                    self.s)
+        
+        # None of the above should have caused control outputs
         self.assertStateNoControlOutputs()
 
 class TestTTUToppingUpState(unittest.TestCase):
@@ -535,16 +669,13 @@ class TestTTUToppingUpState(unittest.TestCase):
     
     def testSetupState(self):
         """Tests whether TTUToppingUpState has the correct control outputs when first set up."""
-        # It is a bit messy to specify the time here. It should be in the
-        # initial test conditions, but we can't set it there. So, we must
-        # specify it before all the tests that assume the initial test
-        # conditions.
         time = datetime.datetime.combine(datetime.date.today(),
                                          temptopuplogic.start_time[1])
         
         with patch('datetime.datetime') as mock_dt:
+            # Override the 'now' method, keep the others available
             mock_dt.now.return_value = time
-            mock_dt.site_effect = lambda *args, **kw: datetime(*args, **kw)
+            mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
             self.s.setupState()
             self.assertStateControlOutputsCorrect()
@@ -556,57 +687,124 @@ class TestTTUToppingUpState(unittest.TestCase):
         justify a transition. This permits the other tests to assume
         that no transition would have occurred if they did not alter
         the conditions.
+        
+        (However, in this case, we cannot easily include time or
+        solenoid override state in the initial conditions.)
         """
-        # It is a bit messy to specify the time here. It should be in the
-        # initial test conditions, but we can't set it there. So, we must
-        # specify it before all the tests that assume the initial test
-        # conditions.
+        
+        # Check that transition does not occur with water below stop_level
+        # and time at end of start_time
         time = datetime.datetime.combine(datetime.date.today(),
                                          temptopuplogic.start_time[1])
         
         with patch('datetime.datetime') as mock_dt:
+            # Override the 'now' method, keep the others available
             mock_dt.now.return_value = time
-            mock_dt.site_effect = lambda *args, **kw: datetime(*args, **kw)
+            mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
-            self.s.doLogic(30)
-            self.csm.setStateBy.assert_not_called()
-            self.assertStateControlOutputsCorrect()
-    
-    def testTransitionToTTUIdle(self):
-        """Tests whether TTUToppingUpState will transition into TTUIdleState under the expected conditions"""
-        # It is a bit messy to specify the time here. It should be in the
-        # initial test conditions, but we can't set it there. So, we must
-        # specify it before all the tests that assume the initial test
-        # conditions.
-        time = datetime.datetime.combine(datetime.date.today(),
-                                         temptopuplogic.start_time[1])
+            with patch('Logic.temptopuplogic.G3S0OverrideState',
+                       return_value="auto"):
+                self.s.doLogic(30)
+                self.csm.setStateBy.assert_not_called()
+                self.assertStateControlOutputsCorrect()
         
-        with patch('datetime.datetime') as mock_dt:
-            mock_dt.now.return_value = time
-            mock_dt.site_effect = lambda *args, **kw: datetime(*args, **kw)
-            
-            # Check that transition occurs when G1 reaches stop_level
-            self.wm.setVesselLevel("G1", temptopuplogic.stop_level)
-            temptopuplogic.readings = self.wm.getReadingsDict("G1","G2","G3")
-            
-            self.s.doLogic(30)
-            self.csm.setStateBy.assert_called_once_with(
-                temptopuplogic.TTUIdleState,
-                self.s)
+        # Check that transition does not occur with time at
+        # failsafe_end_time and solenoid override set to 'on'
+        self.wm.controlled_devices = []
         
-        # Check that transition occurs when time passes failsafe_end_time
         time = datetime.datetime.combine(datetime.date.today(),
                                          temptopuplogic.failsafe_end_time)
         
         with patch('datetime.datetime') as mock_dt:
+            # Override the 'now' method, keep the others available
             mock_dt.now.return_value = time
-            mock_dt.site_effect = lambda *args, **kw: datetime(*args, **kw)
+            mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
-            self.csm.setStateBy.reset_mock()
-            self.s.doLogic(30)
-            self.csm.setStateBy.assert_called_once_with(
-                temptopuplogic.TTUIdleState,
-                self.s)
+            with patch('Logic.temptopuplogic.G3S0OverrideState',
+                       return_value="on"):
+                self.s.doLogic(30)
+                self.csm.setStateBy.assert_not_called()
+                self.assertStateControlOutputsCorrect()
+        
+        # Check that transition does not occur with water above stop_level
+        # and solenoid override set to 'on'
+        self.wm.controlled_devices = []
+        
+        time = datetime.datetime.combine(datetime.date.today(),
+                                         temptopuplogic.start_time[1])
+        
+        self.wm.setVesselLevel("G1", temptopuplogic.stop_level + 10)
+        temptopuplogic.readings = self.wm.getReadingsDict("G1","G2","G3")
+        
+        with patch('datetime.datetime') as mock_dt:
+            # Override the 'now' method, keep the others available
+            mock_dt.now.return_value = time
+            mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
+            
+            with patch('Logic.temptopuplogic.G3S0OverrideState',
+                       return_value="on"):
+                self.s.doLogic(30)
+                self.csm.setStateBy.assert_not_called()
+                self.assertStateControlOutputsCorrect()
+    
+    def testTransitionToTTUIdle(self):
+        """Tests whether TTUToppingUpState will transition into TTUIdleState under the expected conditions"""
+        
+        # Check that transition occurs when G1 reaches stop_level
+        time = datetime.datetime.combine(datetime.date.today(),
+                                         temptopuplogic.start_time[1])
+        self.wm.setVesselLevel("G1", temptopuplogic.stop_level)
+        temptopuplogic.readings = self.wm.getReadingsDict("G1","G2","G3")
+        
+        with patch('datetime.datetime') as mock_dt:
+            # Override the 'now' method, keep the others available
+            mock_dt.now.return_value = time
+            mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
+            
+            with patch('Logic.temptopuplogic.G3S0OverrideState',
+                       return_value="auto"):
+                self.s.doLogic(30)
+                self.csm.setStateBy.assert_called_once_with(
+                    temptopuplogic.TTUIdleState,
+                    self.s)
+        
+        # Check that transition occurs when time passes failsafe_end_time
+        self.csm.setStateBy.reset_mock()
+        time = datetime.datetime.combine(datetime.date.today(),
+                                         temptopuplogic.failsafe_end_time)
+        
+        with patch('datetime.datetime') as mock_dt:
+            # Override the 'now' method, keep the others available
+            mock_dt.now.return_value = time
+            mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
+            
+            with patch('Logic.temptopuplogic.G3S0OverrideState',
+                       return_value="auto"):
+                self.s.doLogic(30)
+                self.csm.setStateBy.assert_called_once_with(
+                    temptopuplogic.TTUIdleState,
+                    self.s)
+        
+        # Check that transition occurs when solenoid override is 'off' but
+        # when water level and time are such that no transition would occur
+        # without an override
+        self.csm.setStateBy.reset_mock()
+        time = datetime.datetime.combine(datetime.date.today(),
+                                         temptopuplogic.start_time[1])
+        self.wm.setVesselLevel("G1", temptopuplogic.stop_level - 10)
+        temptopuplogic.readings = self.wm.getReadingsDict("G1","G2","G3")
+        
+        with patch('datetime.datetime') as mock_dt:
+            # Override the 'now' method, keep the others available
+            mock_dt.now.return_value = time
+            mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
+            
+            with patch('Logic.temptopuplogic.G3S0OverrideState',
+                       return_value="off"):
+                self.s.doLogic(30)
+                self.csm.setStateBy.assert_called_once_with(
+                    temptopuplogic.TTUIdleState,
+                    self.s)
         
         # None of the above should have caused control outputs
         self.assertStateNoControlOutputs()
