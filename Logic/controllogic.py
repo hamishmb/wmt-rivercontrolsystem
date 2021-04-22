@@ -38,7 +38,7 @@ sys.path.insert(0, os.path.abspath('..'))
 import config
 from Tools import logiccoretools
 
-from . import stagepilogic
+from . import stagepilogic, temptopuplogic
 
 #Don't ask for a logger name, so this works with all modules.
 logger = logging.getLogger(__name__)
@@ -769,7 +769,17 @@ def temptopup_control_logic(readings, devices, monitors, sockets, reading_interv
         
         else:
             software_status = "OK, in "
-
+    
+    else:
+        software_status = "OK, in "
+    
+    # We have to create the CSM here, after the solenoid object has
+    # been assigned, rather than in a control logic setup function,
+    # otherwise there will be a spurious error message about not being
+    # able to control G3:S0.
+    if temptopuplogic.csm is None:
+        temptopuplogic.csm = temptopuplogic.TempTopUpControlLogic()
+    
     try:
         software_status = (software_status +
                            temptopuplogic.csm.getCurrentStateName())
@@ -790,30 +800,22 @@ def temptopup_control_logic(readings, devices, monitors, sockets, reading_interv
     except RuntimeError:
         print("Error: Couldn't update site status!")
         logger.error("Error: Couldn't update site status!")
-
-    try:
-        return temptopuplogic.csm.doLogic(reading_interval)
-
-    except AttributeError:
-        if not isinstance(temptopuplogic.csm,
-                          temptopuplogic.TempTopUpControlLogic):
-            msg  = ("CRITICAL ERROR: Temporary Top Up Pi logic has not "
-                    "been initialised. Check whether the setup function "
-                    "has been run.")
-            print(msg)
-            logger.critical(msg)
-            
-        else:
-            raise
-
-        return reading_interval
-
-
-def temptopup_control_logic_setup():
-    """
-    Set-up function for the temporary top-up control logic.
     
-    Initialises a TemporaryTopUpControlLogic object for state persistence.
-    """
-    
-    temptopuplogic.csm = temptopuplogic.TempTopUpControlLogic()
+    if temptopuplogic.solenoid is not None:
+        try:
+            return temptopuplogic.csm.doLogic(reading_interval)
+
+        except AttributeError:
+            if not isinstance(temptopuplogic.csm,
+                            temptopuplogic.TempTopUpControlLogic):
+                msg  = ("CRITICAL ERROR: Temporary Top Up Pi logic has not "
+                        "been initialised. Check whether the setup function "
+                        "has been run.")
+                print(msg)
+                logger.critical(msg)
+                
+            else:
+                raise
+
+    return reading_interval
+

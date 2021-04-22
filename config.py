@@ -307,7 +307,6 @@ SITE_SETTINGS = {
             "IPAddress": "192.168.0.3",
             "HostingSockets": False,
             "ControlLogicFunction": "temptopup_control_logic",
-            "ControlLogicSetupFunction": "temptopup_control_logic_setup",
             "DBUser": "hanhampi",
             "DBPasswd": "river20",
             "DBHost": "192.168.0.25",

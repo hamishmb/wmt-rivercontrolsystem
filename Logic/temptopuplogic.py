@@ -339,7 +339,7 @@ class TempTopUpDeviceController():
             else:
                 solenoid.disable()
         
-        except RuntimeError:
+        except (AttributeError, RuntimeError):
             msg = "Error: Error trying to control G3:S0!"
             print(msg)
             logger.error(msg)
