@@ -394,7 +394,7 @@ class TTUIdleState(GenericControlState):
                   and datetime.datetime.now().time() >= start_time[0]
                   and datetime.datetime.now().time() <= start_time[1]):
                 # Start daily top-up
-                ri = self.csm.setStateBy(TTUToppingUpState, self)
+                self.csm.setStateBy(TTUToppingUpState, self)
             
             else:
                 self.noTransition()
@@ -440,7 +440,7 @@ class TTUToppingUpState(GenericControlState):
                   or datetime.datetime.now().time() >= failsafe_end_time
                   or datetime.datetime.now().time() < start_time[0]):
                 # Terminate daily top-up
-                ri = self.csm.setStateBy(TTUIdleState, self)
+                self.csm.setStateBy(TTUIdleState, self)
             
             else:
                 self.noTransition()
