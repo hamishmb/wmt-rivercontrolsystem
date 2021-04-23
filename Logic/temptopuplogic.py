@@ -446,7 +446,11 @@ class TTUToppingUpState(GenericControlState):
                 self.noTransition()
             
         except ValueError as e:
-            raise GenericControlState.StateTransitionError from e
+            msg = ("Could not parse sensor readings. "
+                   "Falling back to TTUIdleState as failsafe.")
+            print(msg)
+            logger.error(msg)
+            self.csm.setStateBy(TTUIdleState, self)
 
 
 # ---------------- Temporary Top Up control state machine ------------------
