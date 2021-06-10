@@ -22,8 +22,10 @@
 This is the temptopuplogic module, which contains interim control logic for Lady Hanham Pi to provide a daily mains water top-up.
 
 This logic features a manual override function for the G3:S0 mains water inlet
-solenoid valve. The manual override can be activated by creating the file
-> rivercontrolsystem/overrides/device/S0
+solenoid valve. The manual override can be activated by creating the file::
+
+    rivercontrolsystem/overrides/device/S0
+
 containing the word 'on', 'off', 'auto', 'remote/off' or 'remote/auto', where
 'rivercontrolsystem' is the root of the River Control System software package.
 
@@ -32,6 +34,7 @@ accessible, then 'off' is assumed. Only the first line of the override file is
 read, and whitespace is ignored.
 
 If the override file contains a value of:
+
 - 'on', the solenoid valve is held open indefinitely
 - 'off', the solenoid valve is held closed indefinitely
 - 'auto', normal operation occurs; i.e. no override
@@ -40,6 +43,7 @@ If the override file contains a value of:
 
 For remote overrides, use logiccoretools device control to request a G3:S0
 device state of:
+
 - 'None', to make no request and enter the fallback state
 - 'on', to hold the solenoid valve open indefinitely
 - 'off', to hold the solenoid valve closed indefinitely, or
