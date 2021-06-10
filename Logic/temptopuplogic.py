@@ -24,17 +24,32 @@ This is the temptopuplogic module, which contains interim control logic for Lady
 This logic features a manual override function for the G3:S0 mains water inlet
 solenoid valve. The manual override can be activated by creating the file
 > rivercontrolsystem/overrides/device/S0
-containing the word 'on', 'off', or 'auto', where 'rivercontrolsystem' is the
-root of the River Control System software package.
+containing the word 'on', 'off', 'auto', 'remote/off' or 'remote/auto', where
+'rivercontrolsystem' is the root of the River Control System software package.
 
-A value of 'on' on the first line of the override file forces the solenoid
-valve to open, 'off' forces it to close and 'auto' requests normal operation.
-If the file is not present, 'auto' is assumed. If the file contains a value
-other than these, or if the file is present but not accessible, then 'off' is
-assumed. Only the first line of the override file is read, and whitespace is
-ignored.
+If the file contains a value other than these, or if the file is present but not
+accessible, then 'off' is assumed. Only the first line of the override file is
+read, and whitespace is ignored.
 
-N.B. The solenoid override will override failsafe_end_time.
+If the override file contains a value of:
+- 'on', the solenoid valve is held open indefinitely
+- 'off', the solenoid valve is held closed indefinitely
+- 'auto', normal operation occurs; i.e. no override
+- 'remote/off', a remote override is applied, with fallback to 'off'
+- 'remote/auto', a remote override is applied, with fallback to 'auto'
+
+For remote overrides, use logiccoretools device control to request a G3:S0
+device state of:
+- 'None', to make no request and enter the fallback state
+- 'on', to hold the solenoid valve open indefinitely
+- 'off', to hold the solenoid valve closed indefinitely, or
+- 'auto' to request automatic operation.
+
+The fallback state for 'remote/off' and 'remote/auto' occurs when the
+requested state is 'None', but also when there is a failure to determine the requested state (for example, due to a network failure or a database failure).
+
+N.B. The solenoid override will override failsafe_end_time. Do not leave an 'on'
+override unattended!
 
 This logic is intended as an interim measure to reduce the burden of manually
 topping up with mains water, until the "full" control logic is available for
@@ -276,38 +291,70 @@ def G3S0OverrideState():
     try:
         with open(file_path, "r") as f:
             # read first line only and discard whitespace (e.g. newline)
-            file_text = f.readline().strip()
+            ovr_state = f.readline().strip()
             msg = "Found manual override file: " + file_path
             logger.warn(msg)
     
     except FileNotFoundError:
         # This is the 'normal' case (no manual override requested).
         # So, no need to output messages about it.
-        file_text = "auto"
+        ovr_state = "auto"
     
     except (PermissionError, IsADirectoryError, TimeoutError):
         msg = ("Found manual override file: " + file_path +
                "...but could not read its value.\n" +
                "Defaulting to 'off'.")
         logger.error(msg)
-        file_text = "off"
+        ovr_state = "off"
     
-    allowable_values = ["on", "off", "auto"]
-    notifiable_values = ["on", "off"]
+    allowable_values = ("on", "off", "auto", "remote/off", "remote/auto")
     
-    if file_text not in allowable_values:
+    if ovr_state not in allowable_values:
         msg = ("The override file did not contain a recognised text value.\n"
                "Defaulting to 'off'.")
         logger.error(msg)
         
-        file_text = "off"
+        ovr_state = "off"
     
-    if file_text in notifiable_values:
+    if ovr_state in ("remote/off", "remote/auto"):
+        logger.warn("Solenoid is under remote manual override.")
+        try:
+            remote_ovr = logiccoretools.get_state("G3","S0")
+        except RuntimeError:
+            logger.error("Error while trying to check whether an override "
+                         " state has been requested remotely.")
+        
+        if remote_ovr in ("on", "off"):
+            ovr_state = remote_ovr
+        
+        else:
+            if remote_ovr == "None":
+                logger.info("Remote control requests no solenoid override "
+                            "(requested state: 'None').")
+            else:
+                logger.error("Unrecognised remote solenoid override state "
+                             "request: '" + remote_ovr + "'.")
+            
+            if ovr_state == "remote/off":
+                ovr_state = "off"
+                msg = ("Defaulting solenoid to 'off' while in "
+                      "'remote/off' mode.")
+                
+            else: # ovr_state == "remote_auto"
+                ovr_state = "auto"
+                msg = ("Defaulting solenoid to 'auto' while in "
+                       "'remote/auto' mode.")
+                
+            logger.info(msg)
+    
+    notifiable_values = ("on", "off")
+    
+    if ovr_state in notifiable_values:
         msg = ("Solenoid is in manual override and will be held '" +
-               file_text + "'.")
+               ovr_state + "'.")
         logger.warn(msg)
             
-    return file_text
+    return ovr_state
 
 class TempTopUpDeviceController():
     """
