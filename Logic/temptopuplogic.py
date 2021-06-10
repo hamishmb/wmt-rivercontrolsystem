@@ -321,16 +321,18 @@ def G3S0OverrideState():
         try:
             remote_ovr = logiccoretools.get_state("G3","S0")
         except RuntimeError:
-            logger.error("Error while trying to check whether an override "
-                         " state has been requested remotely.")
+            remote_ovr = None
         
-        if remote_ovr in ("on", "off"):
+        if remote_ovr in ("on", "off", "auto"):
             ovr_state = remote_ovr
         
         else:
             if remote_ovr == "None":
                 logger.info("Remote control requests no solenoid override "
                             "(requested state: 'None').")
+            elif remote_ovr is None:
+                logger.error("Error while trying to check whether an override "
+                             "state has been requested remotely.")
             else:
                 logger.error("Unrecognised remote solenoid override state "
                              "request: '" + remote_ovr + "'.")
