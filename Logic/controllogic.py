@@ -399,15 +399,15 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
                 main_pump.disable()
                 
         else:
-            msg = "Received a request to put the main circulation pump "
+            msg = ("Received a request to put the main circulation pump "
                 + "into manual override, but the requested state (\""
                 + main_pump_ovr
-                + "\") is not understood. Not overriding."
+                + "\") is not understood. Not overriding.")
             logger.warning(msg)
             print(msg)
     
     if butts_pump_ovr is not None:
-        if butts_pump_ovr in ("enabled", "disabled")
+        if butts_pump_ovr in ("enabled", "disabled"):
             logger.warning("*** BUTTS PUMP IS IN MANUAL OVERRIDE ***")
             print("*** BUTTS PUMP IS IN MANUAL OVERRIDE ***")
             if butts_pump_ovr == "enabled":
@@ -423,10 +423,10 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
                 butts_pump.disable()
             
         else:
-            msg = "Received a request to put the butts pump into manual "
+            msg = ("Received a request to put the butts pump into manual "
                 + "override, but the requested state (\""
                 + main_pump_ovr
-                +"\") is not understood. Not overriding."
+                +"\") is not understood. Not overriding.")
             logger.warning(msg)
             print(msg)
 
