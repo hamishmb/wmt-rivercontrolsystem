@@ -122,7 +122,7 @@ The readings variable holds a reference to the local readings dictionary.
 It should be set by the temptopup_control_logic function.
 """
 
-start_time = (datetime.time(15), datetime.time(15,2))
+start_time = (datetime.time(14), datetime.time(14,2))
 """
 Defines a window in time during which the daily mains-water top-up can begin.
 A tuple. First element is the beginning of the window, second is the end.
@@ -131,7 +131,7 @@ reading interval.
 This does not constrain the end time of the top-up.
 """
 
-failsafe_end_time = datetime.time(16,00)
+failsafe_end_time = datetime.time(15,00)
 """
 Defines a cut-off time for the top-up as a last resort failsafe to limit water
 wastage in the event of a sensor failure. This should not normally come into
