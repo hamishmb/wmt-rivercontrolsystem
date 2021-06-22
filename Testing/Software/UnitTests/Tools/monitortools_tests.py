@@ -53,6 +53,8 @@ class TestBaseMonitorClass(unittest.TestCase):
         self.orig_store_reading = logiccoretools.store_reading
         logiccoretools.store_reading = data.fake_store_reading
 
+        print(os.getcwd())
+
     def tearDown(self):
         del self.reading
         del self.basemonitor
