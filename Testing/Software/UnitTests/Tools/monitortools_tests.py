@@ -222,7 +222,6 @@ class TestBaseMonitorClass(unittest.TestCase):
             if error is not None:
                 raise error
 
-    @unittest.expectedFailure
     def test_create_file_handle_4(self):
         """Test that create_file_handle fails when we can't write the start time and CSV header"""
         #Create the readings directory.
