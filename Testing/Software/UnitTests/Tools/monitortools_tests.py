@@ -156,6 +156,12 @@ class TestBaseMonitorClass(unittest.TestCase):
             except:
                 pass
 
+            try:
+                shutil.rmtree("readings")
+
+            except:
+                pass
+
             os.chdir("../")
 
     def test_create_file_handle_2(self):
@@ -172,14 +178,18 @@ class TestBaseMonitorClass(unittest.TestCase):
             self.basemonitor.create_file_handle()
             self.basemonitor.file_handle.close()
 
-            shutil.rmtree("readings")
-
         except Exception as e:
             raise e
 
         finally:
             try:
                 self.basemonitor.file_handle.close()
+
+            except:
+                pass
+
+            try:
+                shutil.rmtree("readings")
 
             except:
                 pass
@@ -204,8 +214,6 @@ class TestBaseMonitorClass(unittest.TestCase):
             self.basemonitor.create_file_handle()
             self.basemonitor.file_handle.close()
 
-            shutil.rmtree("readings")
-
         except Exception as e:
             error = e
 
@@ -216,12 +224,24 @@ class TestBaseMonitorClass(unittest.TestCase):
             except:
                 pass
 
-            os.rmdir("readings")
+            try:
+                subprocess.check_call(["chmod", "a+rwx", "readings"])
+
+            except subprocess.CalledProcessError:
+                print("Error when restoring permissions.")
+
+            try:
+                shutil.rmtree("readings")
+
+            except:
+                print("Error when deleting temporary readings folder.")
+
             os.chdir("../")
 
             if error is not None:
                 raise error
 
+    @unittest.expectedFailure
     def test_create_file_handle_4(self):
         """Test that create_file_handle fails when we can't write the start time and CSV header"""
         #Create the readings directory.
@@ -241,8 +261,6 @@ class TestBaseMonitorClass(unittest.TestCase):
             self.basemonitor.create_file_handle()
             self.basemonitor.file_handle.close()
 
-            shutil.rmtree("readings")
-
         except Exception as e:
             error = e
 
@@ -255,7 +273,12 @@ class TestBaseMonitorClass(unittest.TestCase):
 
             monitor_tools.open = open
 
-            os.rmdir("readings")
+            try:
+                shutil.rmtree("readings")
+
+            except:
+                pass
+
             os.chdir("../")
 
             if error is not None:
