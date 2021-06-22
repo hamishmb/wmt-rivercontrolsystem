@@ -152,4 +152,8 @@ if __name__ == "__main__":
         tests.addTest(unittest.TestLoader().loadTestsFromModule(module))
 
     #Run the tests.
-    unittest.TextTestRunner(verbosity=2).run(tests)
+    runner = unittest.TextTestRunner(verbosity=2)
+    result = runner.run(tests)
+
+    if result.errors:
+        sys.exit(1)
