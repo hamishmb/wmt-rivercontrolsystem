@@ -198,51 +198,6 @@ class TestBaseMonitorClass(unittest.TestCase):
 
     @unittest.expectedFailure
     def test_create_file_handle_3(self):
-        """Test that create_file_handle fails when the readings directory is there, but we don't have permission to write to it"""
-        #Create the readings directory, and change its permissions so we have no access to it.
-        os.chdir("UnitTests")
-
-        error = None
-
-        try:
-            if os.path.exists("readings"):
-                shutil.rmtree("readings")
-
-            os.mkdir("readings")
-            subprocess.check_call(["chmod", "a-rwx", "readings"])
-
-            self.basemonitor.create_file_handle()
-            self.basemonitor.file_handle.close()
-
-        except Exception as e:
-            error = e
-
-        finally:
-            try:
-                self.basemonitor.file_handle.close()
-
-            except:
-                pass
-
-            try:
-                subprocess.check_call(["chmod", "a+rwx", "readings"])
-
-            except subprocess.CalledProcessError:
-                print("Error when restoring permissions.")
-
-            try:
-                shutil.rmtree("readings")
-
-            except:
-                print("Error when deleting temporary readings folder.")
-
-            os.chdir("../")
-
-            if error is not None:
-                raise error
-
-    @unittest.expectedFailure
-    def test_create_file_handle_4(self):
         """Test that create_file_handle fails when we can't write the start time and CSV header"""
         #Create the readings directory.
         os.chdir("UnitTests")
