@@ -303,7 +303,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
     
     - 'None' to remove the override (normal operation)
     - 'ON' to manually keep the pump turned on indefinitely
-    - 'ON' to manually keep the pump turned off indefinitely
+    - 'OFF' to manually keep the pump turned off indefinitely
     
     If any other device state value is requested an error will be
     logged and the pumps will operate as though no override was
@@ -452,8 +452,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         else:
             msg = ("Received a request to put the butts pump into manual "
                 + "override, but the requested state (\""
-                + main_pump_ovr
-                +"\") is not understood. Not overriding.")
+                + butts_pump_ovr
+                + "\") is not understood. Not overriding.")
             logger.warning(msg)
             print(msg)
 
