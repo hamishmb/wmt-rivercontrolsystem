@@ -78,10 +78,14 @@ class TestSumpPiControlLogic(unittest.TestCase):
         self.orig_attempt_to_control = logiccoretools.attempt_to_control
         self.orig_update_status = logiccoretools.update_status
         self.orig_get_latest_reading = logiccoretools.get_latest_reading
+        self.orig_get_state = logiccoretools.get_state
+
+        self.fake_get_state = data.FakeGetState()
 
         logiccoretools.attempt_to_control = data.fake_attempt_to_control
         logiccoretools.update_status = data.fake_update_status
         logiccoretools.get_latest_reading = data.fake_get_latest_reading
+        logiccoretools.get_state = self.fake_get_state.get_state
 
         config.CPU = "50"
         config.MEM = "50"
@@ -96,6 +100,7 @@ class TestSumpPiControlLogic(unittest.TestCase):
         logiccoretools.attempt_to_control = self.orig_attempt_to_control
         logiccoretools.update_status = self.orig_update_status
         logiccoretools.get_latest_reading = self.orig_get_latest_reading
+        logiccoretools.get_state = self.orig_get_state
 
         #Reset readings dictionary in data.
         data.readings.clear()
@@ -620,3 +625,137 @@ class TestSumpPiControlLogic(unittest.TestCase):
         reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
                                                            self.monitors, self.sockets,
                                                            self.reading_interval)
+    
+    def test_sumppi_control_logic_manual_override_P0_ON(self):
+        """Test that butts pump "ON" override works."""
+        # Set up a situation we already tested, where the butts pump ends up off
+        # (Same situation as test_sumppi_control_logic_11)
+        
+        #Create reading objects.
+        readings = {}
+        readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "200mm", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "600mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
+        
+        # Mock that the butts pump override is "ON"
+        self.fake_get_state.set_override("SUMP","P0","ON")
+        
+        reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
+                                                           self.monitors, self.sockets,
+                                                           self.reading_interval)
+
+        # If the butts pump is on, then the override worked
+        #Expected behaviour:
+        #Butts Pump: on.
+        #Circulation Pump: off.
+        #Gate Valve Position: 50.
+        #Reading Interval: 30.
+
+        self.assertTrue(self.butts_pump.is_enabled())
+        self.assertFalse(self.sump_pump.is_enabled())
+        self.assertEqual(self.gate_valve_socket.get_queue(), [])
+        self.assertEqual(data.states["VALVE4:V4"][0], "50%")
+        self.assertEqual(reading_interval, 30)
+        self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
+
+    def test_sumppi_control_logic_manual_override_P0_OFF(self):
+        """Test that butts pump "OFF" override works."""
+        # Set up a situation we already tested, where the butts pump ends up on
+        # (Same situation as test_sumppi_control_logic_2)
+        #Create reading objects.
+        readings = {}
+        readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "800mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
+        
+        # Mock that the butts pump override is "OFF"
+        self.fake_get_state.set_override("SUMP","P0","OFF")
+
+        reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
+                                                           self.monitors, self.sockets,
+                                                           self.reading_interval)
+
+        # If the butts pump is off, then the override worked
+        #Expected behaviour:
+        #Butts Pump: off.
+        #Circulation Pump: on.
+        #Gate Valve Position: 0.
+        #Reading Interval: 30.
+
+        self.assertFalse(self.butts_pump.is_enabled())
+        self.assertTrue(self.sump_pump.is_enabled())
+        self.assertEqual(self.gate_valve_socket.get_queue(), [])
+        self.assertEqual(data.states["VALVE4:V4"][0], "0%")
+        self.assertEqual(reading_interval, 30)
+        self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
+
+    def test_sumppi_control_logic_manual_override_P1_ON(self):
+        """Test that main pump "ON" override works."""
+        # Set up a situation we already tested, where the main pump ends up off
+        # (Same situation as test_sumppi_control_logic_11)
+        
+        #Create reading objects.
+        readings = {}
+        readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "200mm", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "600mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
+        
+        # Mock that the main pump override is "ON"
+        self.fake_get_state.set_override("SUMP","P1","ON")
+        
+        reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
+                                                           self.monitors, self.sockets,
+                                                           self.reading_interval)
+
+        # If the main pump is on, then the override worked
+        #Expected behaviour:
+        #Butts Pump: off.
+        #Circulation Pump: on.
+        #Gate Valve Position: 50.
+        #Reading Interval: 30.
+
+        self.assertFalse(self.butts_pump.is_enabled())
+        self.assertTrue(self.sump_pump.is_enabled())
+        self.assertEqual(self.gate_valve_socket.get_queue(), [])
+        self.assertEqual(data.states["VALVE4:V4"][0], "50%")
+        self.assertEqual(reading_interval, 30)
+        self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
+
+    def test_sumppi_control_logic_manual_override_P1_OFF(self):
+        """Test that main pump "OFF" override works."""
+        # Set up a situation we already tested, where the main pump ends up on
+        # (Same situation as test_sumppi_control_logic_2)
+        #Create reading objects.
+        readings = {}
+        readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "800mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
+        
+        # Mock that the main pump override is "OFF"
+        self.fake_get_state.set_override("SUMP","P1","OFF")
+
+        reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
+                                                           self.monitors, self.sockets,
+                                                           self.reading_interval)
+
+        # If the main pump is off, then the override worked
+        #Expected behaviour:
+        #Butts Pump: on.
+        #Circulation Pump: off.
+        #Gate Valve Position: 0.
+        #Reading Interval: 30.
+
+        self.assertTrue(self.butts_pump.is_enabled())
+        self.assertFalse(self.sump_pump.is_enabled())
+        self.assertEqual(self.gate_valve_socket.get_queue(), [])
+        self.assertEqual(data.states["VALVE4:V4"][0], "0%")
+        self.assertEqual(reading_interval, 30)
+        self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
