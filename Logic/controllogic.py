@@ -432,6 +432,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
                 + "\") is not understood. Not overriding.")
             logger.warning(msg)
             print(msg)
+            main_pump_ovr = None
     
     if butts_pump_ovr is not None:
         if butts_pump_ovr in ("ON", "OFF"):
@@ -456,6 +457,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
                 + "\") is not understood. Not overriding.")
             logger.warning(msg)
             print(msg)
+            butts_pump_ovr = None
 
     if sump_reading >= 600:
         #Level in the sump is getting high.
@@ -466,7 +468,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         if main_pump_ovr is None:
             logger.info("Turning the main circulation pump on, if it was off...")
             print("Turning the main circulation pump on, if it was off...")
-        else:
+        elif main_pump_ovr == "OFF":
             logger.info("Not turning the main circulation pump on, due to manual override...")
             print("Not turning the main circulation pump on, due to manual override...")
 
@@ -534,7 +536,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         if main_pump_ovr is None:
             logger.info("Turning the main circulation pump on, if it was off...")
             print("Turning the main circulation pump on, if it was off...")
-        else:
+        elif main_pump_ovr == "OFF":
             logger.info("Not turning the main circulation pump on, due to manual override...")
             print("Not turning the main circulation pump on, due to manual override...")
 
@@ -574,7 +576,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         if main_pump_ovr is None:
             logger.info("Turning the main circulation pump on, if it was off...")
             print("Turning the main circulation pump on, if it was off...")
-        else:
+        elif main_pump_ovr == "OFF":
             logger.info("Not turning the main circulation pump on, due to manual override...")
             print("Not turning the main circulation pump on, due to manual override...")
 
@@ -641,8 +643,10 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
             print("Turning the main circulation pump on, if it was off...")
             main_pump.enable()
         else:
-            logger.info("Not turning the main circulation pump on, due to manual override...")
-            print("Not turning the main circulation pump on, due to manual override...")
+            if main_pump_ovr == "OFF":
+                logger.info("Not turning the main circulation pump on, due to manual override...")
+                print("Not turning the main circulation pump on, due to manual override...")
+
             logger.warning("A manual override is controlling the main circulation pump.")
             print("A manual override is controlling the main circulation pump.")
 
@@ -695,8 +699,10 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
             print("Disabling the main circulation pump, if it was on...")
             main_pump.disable()
         else:
-            logger.info("Not turning the main circulation pump on, due to manual override...")
-            print("Not turning the main circulation pump on, due to manual override...")
+            if main_pump_ovr == "ON":
+                logger.info("Not turning the main circulation pump off, due to manual override...")
+                print("Not turning the main circulation pump off, due to manual override...")
+
             logger.warning("A manual override is controlling the main circulation pump.")
             print("A manual override is controlling the main circulation pump.")
 
@@ -755,8 +761,10 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
             print("Disabling the main circulation pump, if it was on...")
             main_pump.disable()
         else:
-            logger.info("Not turning the main circulation pump on, due to manual override...")
-            print("Not turning the main circulation pump on, due to manual override...")
+            if main_pump_ovr == "ON":
+                logger.info("Not turning the main circulation pump off, due to manual override...")
+                print("Not turning the main circulation pump off, due to manual override...")
+
             logger.warning("A manual override is controlling the main circulation pump.")
             print("A manual override is controlling the main circulation pump.")
 

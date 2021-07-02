@@ -693,6 +693,40 @@ class TestSumpPiControlLogic(unittest.TestCase):
         self.assertEqual(reading_interval, 30)
         self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
 
+    def test_sumppi_control_logic_manual_override_P0_invalid(self):
+        """Test that butts pump override correctly handles invalid values."""
+        # Set up a situation we already tested, where the butts pump ends up off
+        # (Same situation as test_sumppi_control_logic_11)
+        
+        #Create reading objects.
+        readings = {}
+        readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "200mm", "OK")
+
+        #Prepare fake logiccoretools readings.
+        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "600mm", "OK")]
+        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
+        
+        # Mock that the butts pump override is an invalid value
+        self.fake_get_state.set_override("SUMP","P0","MAYBE")
+        
+        reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
+                                                           self.monitors, self.sockets,
+                                                           self.reading_interval)
+
+        # Butts pump should stay off, since the override value is invalid
+        #Expected behaviour:
+        #Butts Pump: off.
+        #Circulation Pump: off.
+        #Gate Valve Position: 50.
+        #Reading Interval: 30.
+
+        self.assertFalse(self.butts_pump.is_enabled())
+        self.assertFalse(self.sump_pump.is_enabled())
+        self.assertEqual(self.gate_valve_socket.get_queue(), [])
+        self.assertEqual(data.states["VALVE4:V4"][0], "50%")
+        self.assertEqual(reading_interval, 30)
+        self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
+
     def test_sumppi_control_logic_manual_override_P1_ON(self):
         """Test that main pump "ON" override works."""
         # Set up a situation we already tested, where the main pump ends up off
@@ -757,40 +791,6 @@ class TestSumpPiControlLogic(unittest.TestCase):
         self.assertFalse(self.sump_pump.is_enabled())
         self.assertEqual(self.gate_valve_socket.get_queue(), [])
         self.assertEqual(data.states["VALVE4:V4"][0], "0%")
-        self.assertEqual(reading_interval, 30)
-        self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
-
-    def test_sumppi_control_logic_manual_override_P0_invalid(self):
-        """Test that butts pump override correctly handles invalid values."""
-        # Set up a situation we already tested, where the butts pump ends up off
-        # (Same situation as test_sumppi_control_logic_11)
-        
-        #Create reading objects.
-        readings = {}
-        readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "200mm", "OK")
-
-        #Prepare fake logiccoretools readings.
-        data.readings["G4:M0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "600mm", "OK")]
-        data.readings["G4:FS0"] = [core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "False", "OK")]
-        
-        # Mock that the butts pump override is an invalid value
-        self.fake_get_state.set_override("SUMP","P0","MAYBE")
-        
-        reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
-                                                           self.monitors, self.sockets,
-                                                           self.reading_interval)
-
-        # Butts pump should stay off, since the override value is invalid
-        #Expected behaviour:
-        #Butts Pump: off.
-        #Circulation Pump: off.
-        #Gate Valve Position: 50.
-        #Reading Interval: 30.
-
-        self.assertFalse(self.butts_pump.is_enabled())
-        self.assertFalse(self.sump_pump.is_enabled())
-        self.assertEqual(self.gate_valve_socket.get_queue(), [])
-        self.assertEqual(data.states["VALVE4:V4"][0], "50%")
         self.assertEqual(reading_interval, 30)
         self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
         
