@@ -45,9 +45,9 @@ For remote overrides, use logiccoretools device control to request a G3:S0
 device state of:
 
 - 'None', to make no request and enter the fallback state
-- 'on', to hold the solenoid valve open indefinitely
-- 'off', to hold the solenoid valve closed indefinitely, or
-- 'auto' to request automatic operation.
+- 'ON', to hold the solenoid valve open indefinitely
+- 'OFF', to hold the solenoid valve closed indefinitely, or
+- 'AUTO' to request automatic operation.
 
 The fallback state for 'remote/off' and 'remote/auto' occurs when the
 requested state is 'None', but also when there is a failure to determine the requested state (for example, due to a network failure or a database failure).
@@ -311,6 +311,7 @@ def G3S0OverrideState():
         logger.error(msg)
         ovr_state = "off"
     
+    # Values allowed in the FILE
     allowable_values = ("on", "off", "auto", "remote/off", "remote/auto")
     
     if ovr_state not in allowable_values:
@@ -323,7 +324,9 @@ def G3S0OverrideState():
     if ovr_state in ("remote/off", "remote/auto"):
         logger.warn("Solenoid is under remote manual override.")
         try:
-            remote_ovr = logiccoretools.get_state("G3","S0")
+            # Device state should be in second (1th) element of tuple
+            # Convert to lowercase for case-insensitivity
+            remote_ovr = str(logiccoretools.get_state("G3","S0")[1]).lower()
         except RuntimeError:
             remote_ovr = None
         
@@ -331,7 +334,11 @@ def G3S0OverrideState():
             ovr_state = remote_ovr
         
         else:
-            if remote_ovr == "None":
+            # There's no override.
+            
+            # Output an explanation for why there's no override
+            # (Test for "none" not "None", because converted to lowercase)
+            if remote_ovr == "none":
                 logger.info("Remote control requests no solenoid override "
                             "(requested state: 'None').")
             elif remote_ovr is None:
@@ -341,6 +348,8 @@ def G3S0OverrideState():
                 logger.error("Unrecognised remote solenoid override state "
                              "request: '" + remote_ovr + "'.")
             
+            # Apply the "no override", defaulting to "off" or "auto"
+            # as applicable
             if ovr_state == "remote/off":
                 ovr_state = "off"
                 msg = ("Defaulting solenoid to 'off' while in "

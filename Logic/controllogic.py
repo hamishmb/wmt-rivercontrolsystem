@@ -302,8 +302,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
     Request a device state of:
     
     - 'None' to remove the override (normal operation)
-    - 'enable' to manually keep the pump turned on indefinitely
-    - 'disable' to manually keep the pump turned off indefinitely
+    - 'ON' to manually keep the pump turned on indefinitely
+    - 'ON' to manually keep the pump turned off indefinitely
     
     If any other device state value is requested an error will be
     logged and the pumps will operate as though no override was
