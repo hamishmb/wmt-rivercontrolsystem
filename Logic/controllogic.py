@@ -463,8 +463,12 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         print("Water level in the sump ("+str(sump_reading)+") >= 600 mm!")
 
         #Make sure the main circulation pump is on.
-        logger.info("Turning the main circulation pump on, if it was off...")
-        print("Turning the main circulation pump on, if it was off...")
+        if main_pump_ovr is None:
+            logger.info("Turning the main circulation pump on, if it was off...")
+            print("Turning the main circulation pump on, if it was off...")
+        else:
+            logger.info("Not turning the main circulation pump on, due to manual override...")
+            print("Not turning the main circulation pump on, due to manual override...")
 
         #Close the wendy butts gate valve.
         logger.info("Closing the wendy butts gate valve...")
@@ -527,8 +531,12 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         print("Water level in the sump is between 500 and 600 mm.")
 
         #Make sure the main circulation pump is on.
-        logger.info("Turning the main circulation pump on, if it was off...")
-        print("Turning the main circulation pump on, if it was off...")
+        if main_pump_ovr is None:
+            logger.info("Turning the main circulation pump on, if it was off...")
+            print("Turning the main circulation pump on, if it was off...")
+        else:
+            logger.info("Not turning the main circulation pump on, due to manual override...")
+            print("Not turning the main circulation pump on, due to manual override...")
 
         #Close gate valve.
         logger.info("Closing wendy butts gate valve...")
@@ -563,8 +571,12 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
               + "Turned the butts pump off, if it was on.")
 
         #Make sure the main circulation pump is on.
-        logger.info("Turning the main circulation pump on, if it was off...")
-        print("Turning the main circulation pump on, if it was off...")
+        if main_pump_ovr is None:
+            logger.info("Turning the main circulation pump on, if it was off...")
+            print("Turning the main circulation pump on, if it was off...")
+        else:
+            logger.info("Not turning the main circulation pump on, due to manual override...")
+            print("Not turning the main circulation pump on, due to manual override...")
 
         #Close gate valve.
         logger.info("Closing wendy butts gate valve...")
@@ -629,6 +641,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
             print("Turning the main circulation pump on, if it was off...")
             main_pump.enable()
         else:
+            logger.info("Not turning the main circulation pump on, due to manual override...")
+            print("Not turning the main circulation pump on, due to manual override...")
             logger.warning("A manual override is controlling the main circulation pump.")
             print("A manual override is controlling the main circulation pump.")
 
@@ -681,6 +695,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
             print("Disabling the main circulation pump, if it was on...")
             main_pump.disable()
         else:
+            logger.info("Not turning the main circulation pump on, due to manual override...")
+            print("Not turning the main circulation pump on, due to manual override...")
             logger.warning("A manual override is controlling the main circulation pump.")
             print("A manual override is controlling the main circulation pump.")
 
@@ -722,11 +738,16 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
             logger.critical("*** CRITICAL ***: Water level in the sump less than 200 mm!")
             logger.critical("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to system.")
-            logger.critical("*** INFO ***: The pump won't run dry; it has been temporarily disabled.")
 
             print("\n\n*** CRITICAL ***: Water level in the sump less than 200 mm!")
             print("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
-            print("*** INFO ***: The pump won't run dry; it has been temporarily disabled.")
+            
+            if main_pump_ovr != "ON":
+                logger.critical("*** INFO ***: The pump won't run dry; it has been temporarily disabled.")
+                print("*** INFO ***: The pump won't run dry; it has been temporarily disabled.")
+            else:
+                logger.critical("*** CRITICAL ***: RUNNING THE PUMP **DRY** DUE TO MANUAL OVERRIDE. Damage might occur.")
+                print("*** CRITICAL ***: RUNNING THE PUMP **DRY** DUE TO MANUAL OVERRIDE. Damage might occur.")
 
         #Make sure the main circulation pump is off.
         if main_pump_ovr is None:
@@ -734,6 +755,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
             print("Disabling the main circulation pump, if it was on...")
             main_pump.disable()
         else:
+            logger.info("Not turning the main circulation pump on, due to manual override...")
+            print("Not turning the main circulation pump on, due to manual override...")
             logger.warning("A manual override is controlling the main circulation pump.")
             print("A manual override is controlling the main circulation pump.")
 
