@@ -376,6 +376,10 @@ class TestG3S0OverrideState(unittest.TestCase):
             with patch('Tools.logiccoretools.get_state',
                        Mock(return_value=("Locked","AUTO","NAS"))):
                 self.assertEqual(temptopuplogic.G3S0OverrideState(), "auto")
+            
+            with patch('Tools.logiccoretools.get_state',
+                       Mock(return_value=("Locked","MAYBE","NAS"))):
+                self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
         
     def testRemoteAuto(self):
         """Test solenoid override state 'remote/auto' (set in override file)"""
@@ -399,6 +403,10 @@ class TestG3S0OverrideState(unittest.TestCase):
             
             with patch('Tools.logiccoretools.get_state',
                        Mock(return_value=("Locked","AUTO","NAS"))):
+                self.assertEqual(temptopuplogic.G3S0OverrideState(), "auto")
+            
+            with patch('Tools.logiccoretools.get_state',
+                       Mock(return_value=("Locked","MAYBE","NAS"))):
                 self.assertEqual(temptopuplogic.G3S0OverrideState(), "auto")
 
 def singleStateTestSetUp(testInstance, stateClassUnderTest, G1Level):
