@@ -290,6 +290,25 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
     Otherwise, nothing currently happens because there is nothing
     else we can take control of at the moment.
+    
+    There is a remote manual override feature. If a device state
+    has been requested for SUMP:P0 or SUMP:P1 using logiccoretools,
+    it will be taken to be a request for a manual override.
+    
+    In an override, only the requested pump will be taken out of
+    automatic control. The remaining automatic operations will
+    continue to occur.
+    
+    Request a device state of:
+    
+    - 'None' to remove the override (normal operation)
+    - 'enable' to manually keep the pump turned on indefinitely
+    - 'disable' to manually keep the pump turned off indefinitely
+    
+    If any other device state value is requested an error will be
+    logged and the pumps will operate as though no override was
+    requested. The outcome is the same if an error occurs when
+    trying to determine whether an override has been requested.
 
     Args:
         readings (list):                A list of the latest readings for each probe/device.
@@ -367,12 +386,20 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
     #Apply manual overrides if requested
     try:
         main_pump_ovr = logiccoretools.get_state("SUMP", "P1")
-        if main_pump_ovr == "None":
-            main_pump_ovr == None
+        if main_pump_ovr is not None:
+            # get device state from second (1th) element of tuple
+            if main_pump_ovr[1] == "None":
+                main_pump_ovr = None
+            else:
+                main_pump_ovr = main_pump_ovr[1]
         
         butts_pump_ovr = logiccoretools.get_state("SUMP", "P0")
-        if butts_pump_ovr == "None":
-            butts_pump_ovr == None
+        if butts_pump_ovr is not None:
+            # get device state from second (1th) element of tuple
+            if butts_pump_ovr[1] == "None":
+                butts_pump_ovr = None
+            else:
+                butts_pump_ovr = butts_pump_ovr[1]
 
     except RuntimeError:
         main_pump_ovr = None
@@ -383,16 +410,16 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
                      "been requested. No override will be applied.")
     
     if main_pump_ovr is not None:
-        if main_pump_ovr in ("enabled", "disabled"):
+        if main_pump_ovr in ("ON", "OFF"):
             logger.warning("*** MAIN CIRCULATION PUMP IS IN MANUAL OVERRIDE ***")
             print("*** MAIN CIRCULATION PUMP IS IN MANUAL OVERRIDE ***")
-            if main_pump_ovr == "enabled":
+            if main_pump_ovr == "ON":
                 msg = "Holding main circulation pump on."
                 logger.info(msg)
                 print(msg)
                 main_pump.enable()
                 
-            else: # must be "disabled"
+            else: # must be "OFF"
                 msg = "Holding main circulation pump off."
                 logger.info(msg)
                 print(msg)
@@ -407,16 +434,16 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
             print(msg)
     
     if butts_pump_ovr is not None:
-        if butts_pump_ovr in ("enabled", "disabled"):
+        if butts_pump_ovr in ("ON", "OFF"):
             logger.warning("*** BUTTS PUMP IS IN MANUAL OVERRIDE ***")
             print("*** BUTTS PUMP IS IN MANUAL OVERRIDE ***")
-            if butts_pump_ovr == "enabled":
+            if butts_pump_ovr == "ON":
                 msg = "Holding butts pump on."
                 logger.info(msg)
                 print(msg)
                 butts_pump.enable()
             
-            else: # must be "disabled"
+            else: # must be "OFF"
                 msg = "Holding butts pump off."
                 logger.info(msg)
                 print(msg)
@@ -452,15 +479,21 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
         if main_pump_ovr is None:
             main_pump.enable()
+        else:
+            logger.warning("A manual override is controlling the main circulation pump.")
+            print("A manual override is controlling the main circulation pump.")
 
         #Pump some water to the butts if they aren't full.
         #If they are full, do nothing and let the sump overflow.
         if butts_float_reading == "False":
             #Pump to the butts.
-            logger.warning("Pumping water to the butts...")
-            print("Pumping water to the butts...")
             if butts_pump_ovr is None:
+                logger.warning("Pumping water to the butts...")
+                print("Pumping water to the butts...")
                 butts_pump.enable()
+            else:
+                logger.warning("A manual override is controlling the butts pump.")
+                print("A manual override is controlling the butts pump.")
 
             logger.warning("Changing reading interval to 30 seconds so we can "
                            +"keep a close eye on what's happening...")
@@ -474,6 +507,9 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
             #Butts are full. Do nothing, but warn user.
             if butts_pump_ovr is None:
                 butts_pump.disable()
+            else:
+                logger.warning("A manual override is controlling the butts pump.")
+                print("A manual override is controlling the butts pump.")
 
             logger.warning("The water butts are full. Allowing the sump to overflow.")
             print("The water butts are full.")
@@ -507,12 +543,18 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
         if main_pump_ovr is None:
             main_pump.enable()
+        else:
+            logger.warning("A manual override is controlling the main circulation pump.")
+            print("A manual override is controlling the main circulation pump.")
 
     elif sump_reading >= 400 and sump_reading <= 500:
         #Level in the sump is good.
         #If the butts pump is on, turn it off.
         if butts_pump_ovr is None:
-                butts_pump.disable()
+            butts_pump.disable()
+        else:
+            logger.warning("A manual override is controlling the butts pump.")
+            print("A manual override is controlling the butts pump.")
 
         logger.info("Water level in the sump is between 400 and 500 mm. "
                     + "Turned the butts pump off, if it was on.")
@@ -537,6 +579,9 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
         if main_pump_ovr is None:
             main_pump.enable()
+        else:
+            logger.warning("A manual override is controlling the main circulation pump.")
+            print("A manual override is controlling the main circulation pump.")
 
         logger.info("Setting reading interval to 1 minute...")
         print("Setting reading interval to 1 minute...")
@@ -546,7 +591,10 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         #Level in the sump is getting low.
         #If the butts pump is on, turn it off.
         if butts_pump_ovr is None:
-                butts_pump.disable()
+            butts_pump.disable()
+        else:
+            logger.warning("A manual override is controlling the butts pump.")
+            print("A manual override is controlling the butts pump.")
 
         logger.warning("Water level in the sump is between 300 and 400 mm!")
         logger.warning("Opening wendy butts gate valve to 25%...")
@@ -576,11 +624,13 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
                 logger.error("Error: Error trying to control valve V4!")
 
         #Make sure the main circulation pump is on.
-        logger.info("Turning the main cirulation pump on, if it was off...")
-        print("Turning the main circulation pump on, if it was off...")
-
         if main_pump_ovr is None:
+            logger.info("Turning the main cirulation pump on, if it was off...")
+            print("Turning the main circulation pump on, if it was off...")
             main_pump.enable()
+        else:
+            logger.warning("A manual override is controlling the main circulation pump.")
+            print("A manual override is controlling the main circulation pump.")
 
         logger.warning("Setting reading interval to 1 minute so we can monitor more closely...")
         print("Setting reading interval to 1 minute so we can monitor more closely...")
@@ -591,7 +641,10 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         #Level in the sump is very low!
         #If the butts pump is on, turn it off.
         if butts_pump_ovr is None:
-                butts_pump.disable()
+            butts_pump.disable()
+        else:
+            logger.warning("A manual override is controlling the butts pump.")
+            print("A manual override is controlling the butts pump.")
 
         if butts_reading >= 300:
             logger.info("Opening wendy butts gate valve to 50%...")
@@ -623,11 +676,13 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
             print("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
 
         #Make sure the main circulation pump is off.
-        logger.warning("Disabling the main circulation pump, if it was on...")
-        print("Disabling the main circulation pump, if it was on...")
-
         if main_pump_ovr is None:
+            logger.warning("Disabling the main circulation pump, if it was on...")
+            print("Disabling the main circulation pump, if it was on...")
             main_pump.disable()
+        else:
+            logger.warning("A manual override is controlling the main circulation pump.")
+            print("A manual override is controlling the main circulation pump.")
 
         logger.warning("Setting reading interval to 30 seconds for close monitoring...")
         print("Setting reading interval to 30 seconds for close monitoring...")
@@ -638,7 +693,10 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         #Level in the sump is critically low!
         #If the butts pump is on, turn it off.
         if butts_pump_ovr is None:
-                butts_pump.disable()
+            butts_pump.disable()
+        else:
+            logger.warning("A manual override is controlling the butts pump.")
+            print("A manual override is controlling the butts pump.")
 
         if butts_reading >= 300:
             logger.info("Opening wendy butts gate valve to 100%...")
@@ -671,11 +729,13 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
             print("*** INFO ***: The pump won't run dry; it has been temporarily disabled.")
 
         #Make sure the main circulation pump is off.
-        logger.warning("Disabling the main circulation pump, if it was on...")
-        print("Disabling the main circulation pump, if it was on...")
-
         if main_pump_ovr is None:
+            logger.warning("Disabling the main circulation pump, if it was on...")
+            print("Disabling the main circulation pump, if it was on...")
             main_pump.disable()
+        else:
+            logger.warning("A manual override is controlling the main circulation pump.")
+            print("A manual override is controlling the main circulation pump.")
 
         logger.critical("Setting reading interval to 15 seconds for super close monitoring...")
         print("Setting reading interval to 15 seconds for super close monitoring...")
