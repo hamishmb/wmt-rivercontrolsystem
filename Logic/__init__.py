@@ -51,4 +51,14 @@ stagepilogic.py
 This module contains control logic for Stage Pi, which is primarily responsible
 for keeping butts group G4 full of water whenever possible, using water from
 butts group G6.
+
+temptopuplogic.py
+===============
+
+This module contains interim measure "Temporary Top Up" control logic for
+Lady Hanham Pi. It provides a daily mains water top up at a fixed time of day,
+if the level in G1 is sufficiently low. The purpose of the logic is to alleviate
+the burden of manually filling the system, prior to the introduction of the full
+control logic for Lady Hanham Pi. It will be made obsolete upon introduction of
+the full control logic.
 """
