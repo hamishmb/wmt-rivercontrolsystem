@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SAC.py - V05: 
+# SAC.py - V05:
 #                Wimborne Model Town
 #      River System Sensor and Control Assy Test Functions
 #
@@ -10,11 +10,11 @@
 #          (one for the standard SAC and three for the Lady Hanham SAC).
 #      b.  Carrying out compensation arithmetic on the measured value.
 #      c.  Using the result to determine the Depth that the magnet is at; move
-#          the magnet up and down the tube to various positions and observer the 
+#          the magnet up and down the tube to various positions and observer the
 #          reported depth.
-#    2.  Checking the Solid State Relay function by switching a 12 V voltage to the 
+#    2.  Checking the Solid State Relay function by switching a 12 V voltage to the
 #        relevant outputs.
-#    3.  Checking the Float Switch functions by detecting a short applied to the 
+#    3.  Checking the Float Switch functions by detecting a short applied to the
 #        relevant inputs.
 #    4.  For the Lady Hanham Butts Pi only, by by switching a 12 V high currnt
 #        voltage to the relevant output.
@@ -79,8 +79,8 @@ GPIO.output(SolPin, GPIO.LOW)               # Set pin low (0 V across MOSFET gat
 # Create global vars for use by Hall Effect measurements
 fh = open("results.txt","a")
 
-high_limit = [0.07,0.17,0.35,0.56,0.73,0.92,1.22,1.54,2.1,2.45]
-low_limit = [0.05,0.15,0.33,0.53,0.7,0.88,1.18,1.5,2,2.4]
+high_limit = [0.11, 0.25, 0.44, 0.63, 0.805, 1.05, 1.36, 1.77, 2.25, 3.0]
+low_limit = [0.05,0.111,0.251,0.441,0.631,0.806,1.051,1.361,1.771,2.251]
 
 depth = ([0,100,200,300,400,500,600,700,800,900],
          [25,125,225,325,425,525,625,725,825,925],
@@ -101,10 +101,10 @@ def setup_adc(addr):
     except ValueError:
         print(" ValueError. No I2C Device.  Exiting...")
         exit(0)
-        
+
     # Create four single-ended inputs on channels 0 to 3
     chan = [0,0,0,0]
-    
+
     try:
         chan[0] = AnalogIn(ads, ADS.P0)
         chan[1] = AnalogIn(ads, ADS.P1)
@@ -112,7 +112,7 @@ def setup_adc(addr):
         chan[3] = AnalogIn(ads, ADS.P3)
     except OSError:
         print(" OSError. A/D Channel(s) missing.")
-    
+
     return chan
 
 def measure_probe_voltages(chan):
@@ -127,6 +127,7 @@ def measure_probe_voltages(chan):
         Vmeas[1] = chan[1].voltage
         Vmeas[2] = chan[2].voltage
         Vmeas[3] = chan[3].voltage
+
     except OSError:
         print(" OSError. ADS Channel(s) not responding.")
 
@@ -135,12 +136,13 @@ def measure_probe_voltages(chan):
 
     # Find the column that the minimum value is in
     min_column = Vmeas.index(min(Vmeas))
-        
+
     # Work out the average of the three highest measurements (thus ignoring the 'dipped' channel.
     Vtot = Vmeas[0] + Vmeas[1] + Vmeas[2] + Vmeas[3]
+
     Vav = (Vtot - Vmin)/3
 
-    # Calculate the compensated value for each channel. 
+    # Calculate the compensated value for each channel.
     if Vmin >= 3.0:                                          # Take a shortcut when the magnet is between sensors
         Vcomp[0] = Vcomp[1] = Vcomp[2] = Vcomp[3] = Vav - Vmin
     else:
@@ -156,7 +158,7 @@ def measure_probe_voltages(chan):
             Vcomp[min_column] = Vav
 
     result = Vcomp,min_column
-    
+
     return result
 
 def test_levels(chan):
@@ -187,7 +189,7 @@ def loop(chan):
             print("No Sensors Triggered")
         else:
             print("level = " + str(level))
-        
+
         i -= 1
 
 def solenoid_test():
@@ -205,15 +207,15 @@ def solenoid_test():
         print('')
         print('')
         sleep(5)
-        
+
         i -= 1
 
 def fs_test(type):
     print('The following cycle will repeat 5 times before returning to the menu')
     print('')
-    
+
     i = 5
-    
+
     if type == 1:
         while i > 0:
             if GPIO.input(FullFloatSwitchPin):
@@ -225,11 +227,11 @@ def fs_test(type):
             else:
                 print("Butts Group Empty Float Switch Low")
             print('')
-                
+
             sleep(5)
 
             i -= 1
-        
+
     elif type == 2:
         while i > 0:
             if GPIO.input(FullFloatSwitchPin):
@@ -241,7 +243,7 @@ def fs_test(type):
             else:
                 print("Standard Butts Group Empty Float Switch Low")
             print('')
-                
+
             if GPIO.input(G2_FullFloatSwitchPin):
                 print("G2 Butts Group Full Float Switch High")
             else:
@@ -264,15 +266,15 @@ def fs_test(type):
             print('')
 
             sleep(5)
-        
+
             i -= 1
 
 def ssr_test():
     print('The following cycle will repeat 5 times before returning to the menu')
     print('')
-    
+
     i = 5
-    
+
     while i > 0:
         print('...Butts SSR off')
         GPIO.output(ButtsPin, GPIO.HIGH)     # Butts SSR Off
@@ -288,13 +290,13 @@ def ssr_test():
         GPIO.output(SumpPin, GPIO.HIGH)     # Sump SSR On
 
         sleep(5)
-        
+
         i -= 1
-        
+
     GPIO.output(SumpPin, GPIO.LOW)     # Clean up
 
 def destroy():
-    GPIO.output(ButtsPin, GPIO.HIGH)    # Butts SSR off 
+    GPIO.output(ButtsPin, GPIO.HIGH)    # Butts SSR off
     GPIO.output(SumpPin, GPIO.HIGH)     # Sump SSR off
     GPIO.output(SolPin, GPIO.LOW)       # Set pin low (0 V across MOSFET gate)
     GPIO.cleanup()                      # Release resource
@@ -304,8 +306,8 @@ try:
     while True:
         print ("Select from the following Menu")
         print ("    Press '1' to fully test a Hall Effect Probe at address 0x48 (all Assys)")
-        print ("    Press '2' to fully test a Hall Effect Probe at address 0x49 (Lady Hanham Assy only)")    
-        print ("    Press '3' to fully test a Hall Effect Probe at address 0x4B (Lady Hanham Assy only)")    
+        print ("    Press '2' to fully test a Hall Effect Probe at address 0x49 (Lady Hanham Assy only)")
+        print ("    Press '3' to fully test a Hall Effect Probe at address 0x4B (Lady Hanham Assy only)")
         print ("    Press 's' to check SSR driver outputs")
         print ("    Press 'f' to check Float Switch inputs")
         print ("    Press 'F' to check Lady Hanham Float Switch inputs")
@@ -341,12 +343,12 @@ try:
 
         elif (char == "v"):
             solenoid_test()
-            
+
     fh.close()               # Results file closed.
     destroy()                # All GPIO outputs low.
-        
 
-   
+
+
 except KeyboardInterrupt:    # When 'Ctrl+C' is pressed:
     fh.close()               # Results file closed.
     destroy()                # All GPIO outputs low.
