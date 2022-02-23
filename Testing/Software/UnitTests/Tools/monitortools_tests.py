@@ -154,6 +154,12 @@ class TestBaseMonitorClass(unittest.TestCase):
             except:
                 pass
 
+            try:
+                shutil.rmtree("readings")
+
+            except:
+                pass
+
             os.chdir("../")
 
     def test_create_file_handle_2(self):
@@ -170,8 +176,6 @@ class TestBaseMonitorClass(unittest.TestCase):
             self.basemonitor.create_file_handle()
             self.basemonitor.file_handle.close()
 
-            shutil.rmtree("readings")
-
         except Exception as e:
             raise e
 
@@ -182,46 +186,16 @@ class TestBaseMonitorClass(unittest.TestCase):
             except:
                 pass
 
-            os.chdir("../")
-
-    @unittest.expectedFailure
-    def test_create_file_handle_3(self):
-        """Test that create_file_handle fails when the readings directory is there, but we don't have permission to write to it"""
-        #Create the readings directory, and change its permissions so we have no access to it.
-        os.chdir("UnitTests")
-
-        error = None
-
-        try:
-            if os.path.exists("readings"):
-                shutil.rmtree("readings")
-
-            os.mkdir("readings")
-            subprocess.check_call(["chmod", "a-rwx", "readings"])
-
-            self.basemonitor.create_file_handle()
-            self.basemonitor.file_handle.close()
-
-            shutil.rmtree("readings")
-
-        except Exception as e:
-            error = e
-
-        finally:
             try:
-                self.basemonitor.file_handle.close()
+                shutil.rmtree("readings")
 
             except:
                 pass
 
-            os.rmdir("readings")
             os.chdir("../")
 
-            if error is not None:
-                raise error
-
     @unittest.expectedFailure
-    def test_create_file_handle_4(self):
+    def test_create_file_handle_3(self):
         """Test that create_file_handle fails when we can't write the start time and CSV header"""
         #Create the readings directory.
         os.chdir("UnitTests")
@@ -240,8 +214,6 @@ class TestBaseMonitorClass(unittest.TestCase):
             self.basemonitor.create_file_handle()
             self.basemonitor.file_handle.close()
 
-            shutil.rmtree("readings")
-
         except Exception as e:
             error = e
 
@@ -254,7 +226,12 @@ class TestBaseMonitorClass(unittest.TestCase):
 
             monitor_tools.open = open
 
-            os.rmdir("readings")
+            try:
+                shutil.rmtree("readings")
+
+            except:
+                pass
+
             os.chdir("../")
 
             if error is not None:
