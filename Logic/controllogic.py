@@ -32,6 +32,7 @@ import sys
 import os
 import logging
 import subprocess
+from datetime import datetime
 
 sys.path.insert(0, os.path.abspath('..'))
 
@@ -287,6 +288,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
     .. note::
         Just added support for SSR 2 (circulation pump).
+    .. note 2:
+        Added support for water backup strategy (TJC, 27/04/2022)
 
     Otherwise, nothing currently happens because there is nothing
     else we can take control of at the moment.
@@ -316,6 +319,14 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         >>>                                         <listofsockets>, <areadinginterval)
 
     """
+
+    # Call water backup function if not Opening Hours
+    timenow = datetime.now()
+    
+    hour = int(timenow.hour)
+    
+    if (hour >= 16 or hour <= 7):
+        return sumppi_water_backup_control_logic(readings, devices, monitors, reading_interval)
 
     #Remove the 'mm' from the end of the reading value and convert to int.
     sump_reading = int(readings["SUMP:M0"].get_value().replace("m", ""))
@@ -412,14 +423,15 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
             logger.warning("Setting reading interval to 1 minute...")
             print("Setting reading interval to 1 minute...")
+            
             reading_interval = 60
 
     elif sump_reading >= 500 and sump_reading <= 600:
         #Level is okay.
         #We might be pumping right now, or the level is increasing, but do nothing.
-        #^ Do NOT change the state of the butts pump.
-        logger.info("Water level in the sump is between 500 and 600 mm.")
-        print("Water level in the sump is between 500 and 600 mm.")
+        # Do NOT change the state of the butts pump.
+        logger.info("Water level in the sump ("+str(sump_reading)+") between 500 mm and 600 mm.")
+        print("Water level in the sump ("+str(sump_reading)+") between 500 mm and 600 mm.")
 
         #Make sure the main circulation pump is on.
         logger.info("Turning the main circulation pump on, if it was off...")
@@ -438,16 +450,44 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
         main_pump.enable()
 
+        #Pump some water to the butts if they aren't full.
+        #If they are full, do nothing and let the sump overflow.
+        if butts_float_reading == "False":
+            #Pump to the butts.
+            logger.warning("Pumping water to the butts...")
+            print("Pumping water to the butts...")
+            butts_pump.enable()
+
+            logger.warning("Changing reading interval to 30 seconds so we can "
+                           +"keep a close eye on what's happening...")
+
+            print("Changing reading interval to 30 seconds so we can keep a "
+                  +"close eye on what's happening...")
+
+            reading_interval = 30
+
+        else:
+            #Butts are full. Do nothing, but warn user.
+            butts_pump.disable()
+
+            logger.warning("The water butts are full. Allowing the sump to overflow.")
+            print("The water butts are full.")
+            print("Allowing the sump to overflow.")
+
+            logger.warning("Setting reading interval to 1 minute...")
+            print("Setting reading interval to 1 minute...")
+            
+            reading_interval = 60
+
     elif sump_reading >= 400 and sump_reading <= 500:
-        #Level in the sump is good.
+        #Level is okay.
         #If the butts pump is on, turn it off.
         butts_pump.disable()
 
-        logger.info("Water level in the sump is between 400 and 500 mm. "
-                    + "Turned the butts pump off, if it was on.")
-
-        print("Water level in the sump is between 400 and 500 mm. "
-              + "Turned the butts pump off, if it was on.")
+        logger.info("Water level in the sump ("+str(sump_reading)+") between 400 mm and 500 mm."
+                    "Turned the butts pump off, if it was on.")
+        print("Water level in the sump ("+str(sump_reading)+") between 400 mm and 500 mm."
+              "Turned the butts pump off, if it was on.")
 
         #Make sure the main circulation pump is on.
         logger.info("Turning the main circulation pump on, if it was off...")
@@ -459,6 +499,63 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
         try:
             logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
+
+        except RuntimeError:
+            print("Error: Error trying to control valve V4!")
+            logger.error("Error: Error trying to control valve V4!")
+
+        main_pump.enable()
+
+        #Pump some water to the butts if they aren't full.
+        #If they are full, do nothing and let the sump overflow.
+        if butts_float_reading == "False":
+            #Pump to the butts.
+            logger.warning("Pumping water to the butts...")
+            print("Pumping water to the butts...")
+            butts_pump.enable()
+
+            logger.warning("Changing reading interval to 30 seconds so we can "
+                           +"keep a close eye on what's happening...")
+
+            print("Changing reading interval to 30 seconds so we can keep a "
+                  +"close eye on what's happening...")
+
+            reading_interval = 30
+
+        else:
+            #Butts are full. Do nothing, but warn user.
+            butts_pump.disable()
+
+            logger.warning("The water butts are full. Allowing the sump to overflow.")
+            print("The water butts are full.")
+            print("Allowing the sump to overflow.")
+
+            logger.warning("Setting reading interval to 1 minute...")
+            print("Setting reading interval to 1 minute...")
+            
+            reading_interval = 60
+
+    elif sump_reading >= 300 and sump_reading <= 400:
+        #Level in the sump is good.
+        #If the butts pump is on, turn it off.
+        butts_pump.disable()
+
+        logger.info("Water level in the sump ("+str(sump_reading)+") between 300 mm and 400 mm."
+                    + "Turned the butts pump off, if it was on.")
+
+        print("Water level in the sump ("+str(sump_reading)+") between 300 mm and 400 mm. "
+              + "Turned the butts pump off, if it was on.")
+
+        #Make sure the main circulation pump is on.
+        logger.info("Turning the main circulation pump on, if it was off...")
+        print("Turning the main circulation pump on, if it was off...")
+
+        #Close gate valve.
+        logger.info("Opening wendy butts gate valve to 25%.")
+        print("Opening wendy butts gate valve to 25%.")
+
+        try:
+            logiccoretools.attempt_to_control("VALVE4", "V4", "25%")
 
         except RuntimeError:
             print("Error: Error trying to control valve V4!")
@@ -468,55 +565,19 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
         logger.info("Setting reading interval to 1 minute...")
         print("Setting reading interval to 1 minute...")
-        reading_interval = 60
-
-    elif sump_reading >= 300 and sump_reading <= 400:
-        #Level in the sump is getting low.
-        #If the butts pump is on, turn it off.
-        butts_pump.disable()
-
-        logger.warning("Water level in the sump is between 300 and 400 mm!")
-        logger.warning("Opening wendy butts gate valve to 25%...")
-
-        print("Water level in the sump is between 300 and 400 mm!")
-
-        if butts_reading >= 300:
-            logger.info("Opening wendy butts gate valve to 25%...")
-            print("Opening wendy butts gate valve to 25%...")
-
-            try:
-                logiccoretools.attempt_to_control("VALVE4", "V4", "25%")
-
-            except RuntimeError:
-                print("Error: Error trying to control valve V4!")
-                logger.error("Error: Error trying to control valve V4!")
-
-        else:
-            logger.warning("Insufficient water in wendy butts...")
-            print("Insufficient water in wendy butts...")
-
-            try:
-                logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
-
-            except RuntimeError:
-                print("Error: Error trying to control valve V4!")
-                logger.error("Error: Error trying to control valve V4!")
-
-        #Make sure the main circulation pump is on.
-        logger.info("Turning the main cirulation pump on, if it was off...")
-        print("Turning the main circulation pump on, if it was off...")
-
-        main_pump.enable()
-
-        logger.warning("Setting reading interval to 1 minute so we can monitor more closely...")
-        print("Setting reading interval to 1 minute so we can monitor more closely...")
-
+        
         reading_interval = 60
 
     elif sump_reading >= 200 and sump_reading <= 300:
         #Level in the sump is very low!
         #If the butts pump is on, turn it off.
         butts_pump.disable()
+
+        logger.info("Water level in the sump ("+str(sump_reading)+") between 200 mm and 300 mm."
+                    + "Turned the butts pump off, if it was on.")
+
+        print("Water level in the sump ("+str(sump_reading)+") between 200 mm and 300 mm. "
+              + "Turned the butts pump off, if it was on.")
 
         if butts_reading >= 300:
             logger.info("Opening wendy butts gate valve to 50%...")
@@ -603,6 +664,219 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         print("Setting reading interval to 15 seconds for super close monitoring...")
 
         reading_interval = 15
+
+    #Set the reading interval in the monitors, and send it down the sockets to the peers.
+    for monitor in monitors:
+        monitor.set_reading_interval(reading_interval)
+
+    try:
+        logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+                                     "OK", "None")
+
+    except RuntimeError:
+        print("Error: Couldn't update site status!")
+        logger.error("Error: Couldn't update site status!")
+
+    return reading_interval
+
+#----- Sump Pi Water Backup Control Logic -----
+def sumppi_water_backup_control_logic(readings, devices, monitors, reading_interval):
+    """
+    This function is used to move water from the sump to the butts
+    overnight to minimise loss through leakage and evaproration.  It
+    is called at 1600 UTC from the sumppi_control_logic() function
+    and is called repeatedly from the main loop to allow readings and
+    other housekeeping actions to be performed.
+    
+    On entry, the wendy butts gate valve is also turned off to
+    prevent water running back into the sump. At this point the
+    main circulation pump remains in the state it was in before the
+    function was called.  
+    
+    Readings are monitored and water is moved from the sump to the
+    butts by turning on the butts pump when the sump level > 300 mm,
+    and turning it off when it goes below that level.
+    
+    When the sump level < 300 mm, the main circulation pump is turned
+    on.  This allows the majority of the water in the bog garden and
+    the river beds to run into the sump, filling it again.
+    
+    The above process is repeated until the butts are full or there is
+    no more water in the sump.
+    
+    At 0700 UTC the function is no longer called and normal operation,
+    under the control of sumppi_control_logic(), is resumed.
+
+    Args:
+        readings (list):             A list of the latest readings for
+                                     each probe/device.
+
+        devices  (list):             A list of all master pi device
+                                     objects.
+
+        monitors (list):                A list of all master pi monitor objects.
+
+        reading_interval (int):     The current reading interval, in
+                                    seconds.
+
+    Returns:
+        int: The reading interval, in seconds.
+
+    Usage:
+
+        >>>               water_backup_control_logic(<listofreadings>,
+        >>>                                         <listofprobes>,
+                                                    <areadinginterval>)
+
+    """
+
+    #Remove the 'mm' from the end of the reading value and convert to int.
+    sump_reading = int(readings["SUMP:M0"].get_value().replace("m", ""))
+
+    try:
+        butts_reading = int(logiccoretools.get_latest_reading("G4", "M0").get_value().replace("m", ""))
+
+    except (RuntimeError, AttributeError):
+        print("Error: Error trying to get latest G4:M0 reading!")
+        logger.error("Error: Error trying to get latest G4:M0 reading!")
+
+        #Default to empty instead.
+        butts_reading = 0
+
+    try:
+        butts_float_reading = logiccoretools.get_latest_reading("G4", "FS0").get_value()
+
+    except (RuntimeError, AttributeError):
+        print("Error: Error trying to get latest G4:FS0 reading!")
+        logger.error("Error: Error trying to get latest G4:FS0 reading!")
+
+        #Default to empty instead.
+        butts_float_reading = "False"
+
+    #Get a reference to both pumps.
+    main_pump = None
+    butts_pump = None
+
+    for device in devices:
+        if device.get_id() == "SUMP:P0":
+            butts_pump = device
+
+        elif device.get_id() == "SUMP:P1":
+            main_pump = device
+
+    #Check that we got references to both pumps.
+    assert main_pump is not None
+    assert butts_pump is not None
+
+    #Check that the devices list is not empty.
+    assert devices
+
+    #Check that the butts float switch reading is sane.
+    assert butts_float_reading in ("True", "False")
+
+    #Close the wendy butts gate valve.
+    logger.info("Closing the wendy butts gate valve...")
+    print("Closing the wendy butts gate valve...")
+
+    try:
+        logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
+
+    except RuntimeError:
+        print("Error: Error trying to control valve V4!")
+        logger.error("Error: Error trying to control valve V4!")
+
+    if sump_reading >= 600:
+        #Level in the sump is high.
+        logger.info("Night Mode: Water level in the sump ("+str(sump_reading)+") >= 600 mm!")
+        print("Night Mode: Water level in the sump ("+str(sump_reading)+") >= 600 mm!")
+
+        #Make sure the main circulation pump is on.
+        logger.info("Night Mode: Turning the main circulation pump on, if it was off...")
+        print("Night Mode: Turning the main circulation pump on, if it was off...")
+
+        main_pump.enable()
+
+        #Pump some water to the butts if they aren't full.
+        #If they are full, do nothing and let the sump overflow.
+        if butts_float_reading == "False":
+            #Pump to the butts.
+            logger.info("Night Mode: Pumping water to the butts...")
+            print("Night Mode: Pumping water to the butts...")
+
+            butts_pump.enable()
+
+            logger.info("Night Mode: Changing reading interval to 30 seconds so we can "
+                           +"keep a close eye on what's happening...")
+
+            print("Night Mode: Changing reading interval to 30 seconds so we can keep a "
+                  +"close eye on what's happening...")
+
+            reading_interval = 30
+
+        else:
+            #Butts are full. Do nothing, but warn user.
+            butts_pump.disable()
+
+            logger.info("Night Mode: The water butts are full. Allowing the sump to overflow.")
+            print("Night Mode: The water butts are full.")
+            print("Night Mode: Allowing the sump to overflow.")
+
+            logger.info("Night Mode: Setting reading interval to 1 minute...")
+            print("Night Mode: Setting reading interval to 1 minute...")
+
+            reading_interval = 60
+
+    elif sump_reading >= 300 and sump_reading <= 600:
+        #Level is okay.
+        logger.info("Night Mode: Water level in the sump ("+str(sump_reading)+") between 300 mm and 600 mm!")
+        print("Night Mode: Water level in the sump ("+str(sump_reading)+") between 300 mm and 600 mm!")
+
+        #Make sure the main circulation pump is on.
+        logger.info("Night Mode: Turning the main circulation pump on, if it was off...")
+        print("Night Mode: Turning the main circulation pump on, if it was off...")
+
+        main_pump.enable()
+
+        #Pump some water to the butts if they aren't full.
+        #If they are full, do nothing and let the sump overflow.
+        if butts_float_reading == "False":
+            #Pump to the butts.
+            logger.info("Night Mode: Pumping water to the butts...")
+            print("Night Mode: Pumping water to the butts...")
+
+            butts_pump.enable()
+
+        else:
+            #Butts are full. Do nothing, but warn user.
+            butts_pump.disable()
+
+            logger.info("Night Mode: The water butts are full. Allowing the sump to overflow.")
+            print("Night Mode: The water butts are full.")
+            print("Night Mode: Allowing the sump to overflow.")
+
+            logger.info("Night Mode: Setting reading interval to 1 minute...")
+            print("Night Mode: Setting reading interval to 1 minute...")
+
+        reading_interval = 60
+
+    else:
+        #Level in the sump is very low!
+        #If the butts pump is on, turn it off.
+        logger.info("Night Mode: Disabling the butts pump, if it was on...")
+        print("Night Mode: Disabling the butts pump, if it was on...")
+
+        butts_pump.disable()
+
+        #Make sure the main circulation pump is off.
+        logger.info("Night Mode: Disabling the main circulation pump, if it was on...")
+        print("Night Mode: Disabling the main circulation pump, if it was on...")
+
+        main_pump.disable()
+
+        logger.info("Night Mode: Setting reading interval to 30 seconds for close monitoring...")
+        print("Night Mode: Setting reading interval to 30 seconds for close monitoring...")
+
+        reading_interval = 30
 
     #Set the reading interval in the monitors, and send it down the sockets to the peers.
     for monitor in monitors:
@@ -818,4 +1092,3 @@ def temptopup_control_logic(readings, devices, monitors, sockets, reading_interv
                 raise
 
     return reading_interval
-
