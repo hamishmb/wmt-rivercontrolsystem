@@ -515,7 +515,7 @@ SITE_SETTINGS = {
                         "Class": Tools.deviceobjects.Motor,
                         "Pins":  (5)
                     }
-                }
+                },
 
             "ServerAddress": "192.168.0.25",
             "ServerPort": 30004,
