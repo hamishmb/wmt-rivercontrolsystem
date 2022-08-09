@@ -39,6 +39,7 @@ and type the following key, eg:
    * Float Switch                 -     FS0
 
 * Gate Valve                     - VALVE4:V4
+* Gate Valve                     - VALVE6:V6  (Water Backup Pump Bypass)
 
 Full List of Devices and their ID Data, IP Addresses, (i2C Addresses) Pi server Port and
 Socket Numbers where applicable:
@@ -51,15 +52,18 @@ Socket Numbers where applicable:
 
 * Lady Hanham Butts Pi                   - G3, 192.168.0.3, 30003, SOCK3
 
+ * First group of 5 butts:
    * Hall Effect (magnetic) Probe          -     G3:M0 (0x48)
    * Float Switch (High)                   -     G3:FS0
    * Float Switch (Low)                    -     G3:FS1
 
+ * Second group of 5 butts:
    * Hall Effect (magnetic) Probe          -     G3:M1 (0x49)
    * Float Switch (High)                   -     G3:FS2
    * Float Switch (Low)                    -     G3:FS3
 
-   * Hall Effect (magnetic) Probe          -     G3:M1 (0x4B)
+ * Third group of 5 butts:
+   * Hall Effect (magnetic) Probe          -     G3:M2 (0x4B)
    * Float Switch (High)                   -     G3:FS4
    * Float Switch (Low)                    -     G3:FS5
 
@@ -70,6 +74,7 @@ Socket Numbers where applicable:
    * Hall Effect (magnetic) Probe          -     G4:M0
    * Float Switch (High)                   -     G4:FS0
    * Float Switch (Low)                    -     G4:FS1
+   * Water Backup Pump                     -     G4:P0
 
 * Gazebo Butts Pi                           - G5, 192.168.0.5, 30005, SOCK5
 
@@ -82,18 +87,22 @@ Socket Numbers where applicable:
    * Float Switch (High)                   -     G6:FS0
    * Float Switch (Low)                    -     G6:FS1
 
-* Railway Room G1 Butts Group Gate Valve  - VALVE1:V1, 192.168.0.11, 30011, SOCK11
-* Railway Room G2 Butts Group Gate Valve  - VALVE1:V2, 192.168.0.12, 30012, SOCK12
-* Railway Room G3 Butts Group Gate Valve  - VALVE3:V3, 192.168.0.13, 30013, SOCK13
+* Lady Hanham G1 Butts Group Gate Valve  - VALVE1:V1, 192.168.0.11, 30011, SOCK11
+* Lady Hanham G2 Butts Group Gate Valve  - VALVE1:V2, 192.168.0.12, 30012, SOCK12
+* Lady Hanham G3 Butts Group Gate Valve  - VALVE3:V3, 192.168.0.13, 30013, SOCK13
 
 * Wendy Street G4 Butts Group Gate Valve  - VALVE4:V4, 192.168.0.14, 30014, SOCK14
 
+* Where matrix pump is not used:
+   * Wendy Street G4 Backup Pump Bypass Valve- VALVE6:V6, 192.168.0.16, 30016, SOCK16 
+
 * Gazebo G5 Butts Group Gate Valve        - VALVE5:V5, 192.168.0.15, 30015, SOCK15
 
-* Matrix Pump V6 Gate Valve               - VALVE6:V6, 192.168.0.16, 30016, SOCK16
-* Matrix Pump V7 Gate Valve               - VALVE7:V7, 192.168.0.17, 30017, SOCK17
-* Matrix Pump V8 Gate Valve               - VALVE8:V8, 192.168.0.18, 30018, SOCK18
-* Matrix Pump V9 Gate Valve               - VALVE9:V9, 192.168.0.19, 30019, SOCK19
+* Where Matrix Pump is used (not currently in use):
+    * Matrix Pump V6 Gate Valve               - VALVE6:V6, 192.168.0.16, 30016, SOCK16
+    * Matrix Pump V7 Gate Valve               - VALVE7:V7, 192.168.0.17, 30017, SOCK17
+    * Matrix Pump V8 Gate Valve               - VALVE8:V8, 192.168.0.18, 30018, SOCK18
+    * Matrix Pump V9 Gate Valve               - VALVE9:V9, 192.168.0.19, 30019, SOCK19
 
 * TBD Gate Valve                          - VALVE10:V10, 192.168.0.20, 30020, SOCK20
 * TBD Loctn Gardeners Supply Gate Valve   - VALVE11:V11, 192.168.0.21, 30021, SOCK21
@@ -141,10 +150,13 @@ import sys
 VERSION = "0.12.0"
 RELEASEDATE = "24/11/2020"
 
+WATERBACKUPSTART = 16                 # Start time (hours UTC)
+WATERBACKUPEND = 7                    # End time (hours UTC)
+
 #System ID of this Pi.
 SYSTEM_ID = None
 
-#CPU LOAD and MEMORY USAGE (MB).
+#CPU LOAD and MEMORY USAGE (MB) of this Pi.
 CPU = None
 MEM = None
 
@@ -447,7 +459,7 @@ SITE_SETTINGS = {
             "Default Interval": 15,
             "IPAddress": "192.168.0.4",
             "HostingSockets": False,
-            "ControlLogicFunction": "generic_control_logic",
+            "ControlLogicFunction": "generic_control_logic", #TODO temporarily disabled until tested. "wbuttspi_control_logic",
             "DBUser": "wbuttspi",
             "DBPasswd": "river20",
             "DBHost": "192.168.0.25",
@@ -492,7 +504,18 @@ SITE_SETTINGS = {
                 },
 
             #Devices to control.
-            "Devices": {},
+            "Devices":
+                {
+
+                    "G4:P0":
+                    {
+                        "Type":  "Motor",
+                        "ID":    "G4:P0",
+                        "Name":  "Water Backup Pump",
+                        "Class": Tools.deviceobjects.Motor,
+                        "Pins":  (5)
+                    }
+                },
 
             "ServerAddress": "192.168.0.25",
             "ServerPort": 30004,
@@ -699,6 +722,7 @@ SITE_SETTINGS = {
 
 #        },
 
+    #Wendy butts gate valve towards sump.
     "VALVE4":
         {
             "ID":   "VALVE4",
@@ -743,49 +767,50 @@ SITE_SETTINGS = {
 
         },
 
-#    "VALVE6":
-#        {
-#            "ID":   "VALVE6",
-#            "Name": "Gate Valve V6 Pi",
-#            "Default Interval": 15,
-#            "IPAddress": "192.168.0.16",
-#            "HostingSockets": False,
-#            "ControlLogicFunction": "valve_control_logic",
-#            "DBUser": "valve6",
-#            "DBPasswd": "river20",
-#            "DBHost": "192.168.0.25",
-#            "DBPort": 3306,
-#
-#            #Here for compatibility reasons.
-#            "Probes": {},
-#
-#            #Devices to control.
-#            "Devices":
-#                {
-#                    "VALVE6:V6":
-#                        {
-#                            "Type": "Gate Valve",
-#                            "ID": "VALVE6:V6",
-#                            "Name": "Gate Valve V6",
-#                            "Class": Tools.deviceobjects.GateValve,
-#                            "ADCAddress": 0x48,
-#
-#                            "Pins":  (17, 27, 19),
-#                            "posTolerance": 1,
-#                            "maxOpen": 90,
-#                            "minOpen": 1,
-#                            "refVoltage": 3.3,
-#                        },
-#                },
-#
-#            #Config for server connection.
-#            "ServerAddress": "192.168.0.25",
-#            "ServerPort": 30016,
-#            "ServerName": "NAS",
-#            "SocketName": "Matrix Pump Gate Valve V6 Socket",
-#            "SocketID": "SOCK16",
-#
-#        },
+    #Water Backup Pump Bypass Valve (or first Valve in Matrix Pump, not currently used)
+    "VALVE6":
+        {
+            "ID":   "VALVE6",
+            "Name": "Gate Valve V6 Pi",
+            "Default Interval": 15,
+            "IPAddress": "192.168.0.16",
+            "HostingSockets": False,
+            "ControlLogicFunction": "valve_control_logic",
+            "DBUser": "valve6",
+            "DBPasswd": "river20",
+            "DBHost": "192.168.0.25",
+            "DBPort": 3306,
+
+            #Here for compatibility reasons.
+            "Probes": {},
+
+            #Devices to control.
+            "Devices":
+                {
+                    "VALVE6:V6":
+                        {
+                            "Type": "Gate Valve",
+                            "ID": "VALVE6:V6",
+                            "Name": "Gate Valve V6",
+                            "Class": Tools.deviceobjects.GateValve,
+                            "ADCAddress": 0x48,
+
+                            "Pins":  (17, 27, 19),
+                            "posTolerance": 1,
+                            "maxOpen": 90,
+                            "minOpen": 1,
+                            "refVoltage": 3.3,
+                        },
+                },
+
+            #Config for server connection.
+            "ServerAddress": "192.168.0.25",
+            "ServerPort": 30016,
+            "ServerName": "NAS",
+            "SocketName": "Matrix Pump Gate Valve V6 Socket",
+            "SocketID": "SOCK16",
+
+        },
 
 #    "VALVE7":
 #        {
@@ -919,6 +944,7 @@ SITE_SETTINGS = {
 #
 #        },
 
+    #Stage butts gate valve towards wendy butts.
     "VALVE12":
         {
             "ID":   "VALVE8",
