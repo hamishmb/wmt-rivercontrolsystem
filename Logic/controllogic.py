@@ -1128,7 +1128,7 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             logger.info("Night Mode: Pumping water to the stage butts...")
             print("Night Mode: Pumping water to the stage butts...")
             
-            backup_pump.enable
+            backup_pump.enable()
               
         else:
             # Stage butts group G6 is full. Stop pumping and close V12 Gate Valve.
@@ -1145,7 +1145,7 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             logger.info("Night Mode: Stop pumping water to the stage butts...")
             print("Night Mode: Stop pumping water to the stage butts...")
             
-            backup_pump.disable
+            backup_pump.disable()
             
         if lhbutts1_float_reading == "False":
             # There is capacity in butts group G1 of the Lady Hanham butts.
@@ -1163,7 +1163,7 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             logger.info("Night Mode: Pumping water to butts group G1 of the lady hanham butts...")
             print("Night Mode: Pumping water to butts group G1 of the lady hanham butts...")
             
-            backup_pump.enable
+            backup_pump.enable()
             
         else:
             # Lady Hanham butts group G1 is full. Stop pumping and close V1 Gate Valve.
@@ -1180,7 +1180,7 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             logger.info("Night Mode: Stop pumping water to G1 butts...")
             print("Night Mode: Stop pumping water to G1 butts...")
             
-            backup_pump.disable
+            backup_pump.disable()
             
         if lhbutts2_float_reading == "False":
             # There is capacity in butts group G2 of the Lady Hanham butts.
@@ -1198,7 +1198,7 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             logger.info("Night Mode: Pumping water to butts group G2 of the lady hanham butts...")
             print("Night Mode: Pumping water to butts group G2 of the lady hanham butts...")
             
-            backup_pump.enable
+            backup_pump.enable()
             
         else:
             # Lady Hanham butts group G2 is full. Stop pumping and close V2 Gate Valve.
@@ -1215,7 +1215,7 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             logger.info("Night Mode: Stop pumping water to G2 butts...")
             print("Night Mode: Stop pumping water to G2 butts...")
             
-            backup_pump.disable
+            backup_pump.disable()
             
         if lhbutts3_float_reading == "False":
             # There is capacity in butts group G3 of the Lady Hanham butts.
@@ -1233,7 +1233,7 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             logger.info("Night Mode: Pumping water to butts group G3 of the lady hanham butts...")
             print("Night Mode: Pumping water to butts group G3 of the lady hanham butts...")
             
-            backup_pump.enable
+            backup_pump.enable()
             
         else:
             # Lady Hanham butts group G3 is full. Stop pumping and close V1 Gate Valve.
@@ -1250,7 +1250,7 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             logger.info("Night Mode: Stop pumping water to G3 butts...")
             print("Night Mode: Stop pumping water to G3 butts...")
             
-            backup_pump.disable
+            backup_pump.disable()
             
     elif wbutts_reading >= 300 and wbutts_reading <= 900:
         #Level in the Wendy butts is okay.
@@ -1276,7 +1276,7 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             logger.info("Night Mode: Pumping water to the stage butts...")
             print("Night Mode: Pumping water to the stage butts...")
             
-            backup_pump.enable
+            backup_pump.enable()
             
         else:
             # Stage butts group G6 is full. Stop pumping and close V12 Gate Valve.
@@ -1293,7 +1293,7 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             logger.info("Night Mode: Stop pumping water to the stage butts...")
             print("Night Mode: Stop pumping water to the stage butts...")
             
-            backup_pump.disable
+            backup_pump.disable()
             
         if lhbutts1_float_reading == "False":
             # There is capacity in butts group G1 of the Lady Hanham butts.
@@ -1311,7 +1311,7 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             logger.info("Night Mode: Pumping water to butts group G1 of the lady hanham butts...")
             print("Night Mode: Pumping water to butts group G1 of the lady hanham butts...")
             
-            backup_pump.enable
+            backup_pump.enable()
             
         else:
             # Lady Hanham butts group G1 is full. Stop pumping and close V1 Gate Valve.
@@ -1328,7 +1328,7 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             logger.info("Night Mode: Stop pumping water to G1 butts...")
             print("Night Mode: Stop pumping water to G1 butts...")
             
-            backup_pump.disable
+            backup_pump.disable()
             
         if lhbutts2_float_reading == "False":
             # There is capacity in butts group G2 of the Lady Hanham butts.
@@ -1346,7 +1346,7 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             logger.info("Night Mode: Pumping water to butts group G2 of the lady hanham butts...")
             print("Night Mode: Pumping water to butts group G2 of the lady hanham butts...")
             
-            backup_pump.enable
+            backup_pump.enable()
             
         else:
             # Lady Hanham butts group G2 is full. Stop pumping and close V2 Gate Valve.
@@ -1363,7 +1363,7 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             logger.info("Night Mode: Stop pumping water to G2 butts...")
             print("Night Mode: Stop pumping water to G2 butts...")
             
-            backup_pump.disable
+            backup_pump.disable()
             
         if lhbutts3_float_reading == "False":
             # There is capacity in butts group G3 of the Lady Hanham butts.
@@ -1381,7 +1381,7 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             logger.info("Night Mode: Pumping water to butts group G3 of the lady hanham butts...")
             print("Night Mode: Pumping water to butts group G3 of the lady hanham butts...")
             
-            backup_pump.enable
+            backup_pump.enable()
             
         else:
             # Lady Hanham butts group G3 is full. Stop pumping and close V1 Gate Valve.
@@ -1398,7 +1398,7 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             logger.info("Night Mode: Stop pumping water to G3 butts...")
             print("Night Mode: Stop pumping water to G3 butts...")
             
-            backup_pump.disable
+            backup_pump.disable()
             
     else:
         # Wendy butts group G4 is nearly empty. Stop pumping.
@@ -1408,7 +1408,7 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
         logger.info("Night Mode: Stop pumping water to the upstream butts...")
         print("Night Mode: Stop pumping water to the upstream butts...")
             
-        backup_pump.disable
+        backup_pump.disable()
             
     #Set the reading interval in the monitors, and send it down the sockets to the peers.
     for monitor in monitors:
