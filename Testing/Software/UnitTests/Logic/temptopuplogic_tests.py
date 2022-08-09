@@ -352,6 +352,62 @@ class TestG3S0OverrideState(unittest.TestCase):
         
         with patch('Logic.temptopuplogic.open', mock_open(read_data="\non")):
             self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+    
+    def testRemoteOff(self):
+        """Test solenoid override state 'remote/off' (set in override file)"""
+        with patch('Logic.temptopuplogic.open',
+                   mock_open(read_data="remote/off\n")):
+            with patch('Tools.logiccoretools.get_state',
+                       Mock(return_value=("Locked","None","NAS"))):
+                self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+            
+            with patch('Tools.logiccoretools.get_state',
+                       Mock(side_effect=RuntimeError)):
+                self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+            
+            with patch('Tools.logiccoretools.get_state',
+                       Mock(return_value=("Locked","ON","NAS"))):
+                self.assertEqual(temptopuplogic.G3S0OverrideState(), "on")
+            
+            with patch('Tools.logiccoretools.get_state',
+                       Mock(return_value=("Locked","OFF","NAS"))):
+                self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+            
+            with patch('Tools.logiccoretools.get_state',
+                       Mock(return_value=("Locked","AUTO","NAS"))):
+                self.assertEqual(temptopuplogic.G3S0OverrideState(), "auto")
+            
+            with patch('Tools.logiccoretools.get_state',
+                       Mock(return_value=("Locked","MAYBE","NAS"))):
+                self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+        
+    def testRemoteAuto(self):
+        """Test solenoid override state 'remote/auto' (set in override file)"""
+        with patch('Logic.temptopuplogic.open',
+                   mock_open(read_data="remote/auto\n")):
+            with patch('Tools.logiccoretools.get_state',
+                       Mock(return_value=("Locked","None","NAS"))):
+                self.assertEqual(temptopuplogic.G3S0OverrideState(), "auto")
+            
+            with patch('Tools.logiccoretools.get_state',
+                       Mock(side_effect=RuntimeError)):
+                self.assertEqual(temptopuplogic.G3S0OverrideState(), "auto")
+            
+            with patch('Tools.logiccoretools.get_state',
+                       Mock(return_value=("Locked","ON","NAS"))):
+                self.assertEqual(temptopuplogic.G3S0OverrideState(), "on")
+            
+            with patch('Tools.logiccoretools.get_state',
+                       Mock(return_value=("Locked","OFF","NAS"))):
+                self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+            
+            with patch('Tools.logiccoretools.get_state',
+                       Mock(return_value=("Locked","AUTO","NAS"))):
+                self.assertEqual(temptopuplogic.G3S0OverrideState(), "auto")
+            
+            with patch('Tools.logiccoretools.get_state',
+                       Mock(return_value=("Locked","MAYBE","NAS"))):
+                self.assertEqual(temptopuplogic.G3S0OverrideState(), "auto")
 
 def singleStateTestSetUp(testInstance, stateClassUnderTest, G1Level):
     """

@@ -111,3 +111,42 @@ def fake_update_status(pi_status, sw_status, current_action, retries=3):
 #Dummy logiccoretools.get_latest_reading method for sumppi contro logic.
 def fake_get_latest_reading(site_id, sensor_id):
     return readings[site_id+":"+sensor_id][-1]
+
+class FakeGetState:
+    """
+    Provides a fake "logiccoretools.get_state" method, with the ability
+    to control the return value by setting fake device control overrides.
+    
+    By default, there are no overrides applied. (Creating a simulation that
+    nothing is trying to control any devices.)
+    """
+    def __init__(self):
+        self.overrides = {}
+    
+    def _key(self, site_id, sensor_id):
+        """Make a key for the overrides dictionary"""
+        return str(site_id) + ":" + str(sensor_id)
+    
+    def set_override(self, site_id, sensor_id, value):
+        """
+        Sets a fake override on the given site_id:sensor_id, with the given
+        value.
+        
+        To clear the override, set a value of None.
+        """
+        key = self._key(site_id, sensor_id)
+        
+        if value is None:
+            del self.overrides[key]
+        else:
+            self.overrides[key] = str(value)
+    
+    def get_state(self, site_id, sensor_id, retries=3):
+        """A fake "logiccoretools.get_state" method."""
+        key = self._key(site_id, sensor_id)
+        try:
+            # Override; device control
+            return ("Locked", self.overrides[key], "NAS")
+        except KeyError:
+            # No override; no device control
+            return ("Unlocked", "None", "None")

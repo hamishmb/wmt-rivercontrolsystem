@@ -53,7 +53,7 @@ for keeping butts group G4 full of water whenever possible, using water from
 butts group G6.
 
 temptopuplogic.py
-===============
+=================
 
 This module contains interim measure "Temporary Top Up" control logic for
 Lady Hanham Pi. It provides a daily mains water top up at a fixed time of day,
