@@ -326,7 +326,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
     hour = int(timenow.hour)
     
     if (hour >= config.WATERBACKUPSTART or hour <= config.WATERBACKUPEND):
-        return sumppi_water_backup_control_logic(readings, devices, monitors, reading_interval)
+        #TODO Temporarily disabled, test and enable.
+        pass #return sumppi_water_backup_control_logic(readings, devices, monitors, reading_interval)
 
     #Remove the 'mm' from the end of the reading value and convert to int.
     sump_reading = int(readings["SUMP:M0"].get_value().replace("m", ""))
