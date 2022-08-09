@@ -254,6 +254,16 @@ class ControlStateMachineABC(metaclass=ABCMeta):
         """
         raise NotImplementedError
     
+    def getPreferredReadingInterval(self):
+        """
+        Returns the preferred reading interval for the state machine's
+        current state.
+        
+        Returns:
+            int     The preferred reading interval in seconds
+        """
+        return self.state.getPreferredReadingInterval()
+    
     def doLogic(self, reading_interval):
         """
         Executes the control logic of this control strategy.
@@ -398,8 +408,6 @@ class GenericControlState(ControlStateABC):
         self.controlDevices()
     
     def doLogic(self, reading_interval):
-        ri = self.getPreferredReadingInterval()
-        
         try:
             self.stateTransition()
             
@@ -413,4 +421,7 @@ class GenericControlState(ControlStateABC):
             #control for this state
             self.controlDevices()
         
-        return ri
+        #If there was a state transition, this should return the reading
+        #interval of the new state.
+        #(N.B.: calling method on self.csm, not self.)
+        return self.csm.getPreferredReadingInterval()
