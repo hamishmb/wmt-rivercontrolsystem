@@ -385,22 +385,25 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
     
     #Apply manual overrides if requested
     try:
-        main_pump_ovr = logiccoretools.get_state("SUMP", "P1")
-        if main_pump_ovr is not None:
-            # get device state from second (1th) element of tuple
-            if main_pump_ovr[1] == "None":
-                main_pump_ovr = None
-            else:
-                main_pump_ovr = main_pump_ovr[1]
-        
-        butts_pump_ovr = logiccoretools.get_state("SUMP", "P0")
-        if butts_pump_ovr is not None:
-            # get device state from second (1th) element of tuple
-            if butts_pump_ovr[1] == "None":
-                butts_pump_ovr = None
-            else:
-                butts_pump_ovr = butts_pump_ovr[1]
-
+        main_pump_ovr = None
+        butts_pump_ovr = None
+        #TODO Re-enable after testing. Incompatible with current database format with "Locked" and "Unlocked"
+#        main_pump_ovr = logiccoretools.get_state("SUMP", "P1")
+#        if main_pump_ovr is not None:
+#            # get device state from second (1th) element of tuple
+#            if main_pump_ovr[1] == "None":
+#                main_pump_ovr = None
+#            else:
+#                main_pump_ovr = main_pump_ovr[1]
+#        
+#        butts_pump_ovr = logiccoretools.get_state("SUMP", "P0")
+#        if butts_pump_ovr is not None:
+#            # get device state from second (1th) element of tuple
+#            if butts_pump_ovr[1] == "None":
+#                butts_pump_ovr = None
+#            else:
+#                butts_pump_ovr = butts_pump_ovr[1]
+#
     except RuntimeError:
         main_pump_ovr = None
         butts_pump_ovr = None
