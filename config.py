@@ -459,7 +459,7 @@ SITE_SETTINGS = {
             "Default Interval": 15,
             "IPAddress": "192.168.0.4",
             "HostingSockets": False,
-            "ControlLogicFunction": "wbuttspi_control_logic",
+            "ControlLogicFunction": "generic_control_logic", #TODO temporarily disabled until tested. "wbuttspi_control_logic",
             "DBUser": "wbuttspi",
             "DBPasswd": "river20",
             "DBHost": "192.168.0.25",
