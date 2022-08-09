@@ -510,7 +510,7 @@ SITE_SETTINGS = {
             "Default Interval": 15,
             "IPAddress": "192.168.0.6",
             "HostingSockets": False,
-            "ControlLogicFunction": "stagepi_control_logic",
+            "ControlLogicFunction": "generic_control_logic", #TODO temporarily disable "stagepi_control_logic",
             "ControlLogicSetupFunction": "stagepi_control_logic_setup",
             "DBUser": "sbuttspi",
             "DBPasswd": "river20",
