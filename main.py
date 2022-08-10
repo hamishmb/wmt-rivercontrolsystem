@@ -299,6 +299,10 @@ def run_standalone():
         logger.info("Waiting up to 180 seconds for the system tick...")
         print("Waiting up to 180 seconds for the system tick...")
 
+        if config.TESTING:
+            logger.info("Running in test mode, waiting up to 9 seconds instead...")
+            print("Running in test mode, waiting up to 9 seconds instead...")
+
         count = 0
 
         while config.TICK == 0 and count < 18:
@@ -316,7 +320,13 @@ def run_standalone():
 
                 socket.pop()
 
-            time.sleep(10)
+            #Timeout almost instantly if in testing mode.
+            if not config.TESTING:
+                time.sleep(10)
+
+            else:
+                time.sleep(0.5)
+
             count += 1
 
         if config.TICK != 0:
