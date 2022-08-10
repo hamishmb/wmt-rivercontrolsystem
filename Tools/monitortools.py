@@ -277,7 +277,7 @@ class BaseMonitorClass(threading.Thread):
 
         #Open in append mode, just in case the file is already here.
         self.current_file_name = self.file_name+"-"+the_time+".csv"
-        self.file_handle = open(self.current_file_name, "a")
+        self.file_handle = open(self.current_file_name, "a", encoding="utf-8")
 
         try:
             #Write the start time and the CSV header.
