@@ -74,7 +74,7 @@ Unit Tests
 A number of unit tests have been written for this software. To run them,
 change into the "Testing/Software" directory and run:
 
-    python3 ./unittets.py
+    python3 ./unittests.py
 
 There are a number of test suites that can be specified (use the -h flag for more details).
 The output format is as follows
@@ -116,4 +116,4 @@ To generate the report. To view the report, run:
 
     xdg-open ./htmlcov/index.html
 
-Coverage isn't at 100% as of the time of writing, but it will continue to improve as the software is developed. The total coverage is around 68% at the time of writing (06/11/2020).
+Coverage will improve over time, and is around 60% as of the time of writing (10th July 2022).
