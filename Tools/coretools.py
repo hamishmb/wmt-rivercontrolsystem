@@ -15,8 +15,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pylint: disable=logging-not-lazy
+#pylint: disable=wrong-import-position
 #
 #Reason (logging-not-lazy): Harder to understand the logging statements that way.
+#Reason (wrong-import-position): Pylint is confused by the need to modify sys.path.
 
 """
 This is the coretools module, which contains tools used in various other places
@@ -31,6 +33,7 @@ this is likely to move to some new files once we have the new algorithms.
 .. moduleauthor:: Patrick Wigmore <pwbugreports@gmx.com>
 """
 
+#Standard imports
 import sys
 import time
 import threading
@@ -39,14 +42,15 @@ import logging
 from collections import deque
 import datetime
 import os.path
+
+#Extra imports.
 import MySQLdb as mysql
 import psutil
 
+#Import modules.
 sys.path.insert(0, os.path.abspath('..'))
 
 import config
-
-from . import logiccoretools
 
 #Don't ask for a logger name, so this works with both main.py
 #and the universal monitor.
@@ -109,7 +113,7 @@ class Reading:
     """
 
     # ---------- CONSTRUCTORS ----------
-    def __init__(self, reading_time, reading_tick, reading_id, reading_value, reading_status):
+    def __init__(self, reading_time, reading_tick, reading_id, reading_value, reading_status): #pylint: disable=too-many-arguments
         """This is the constructor as defined above"""
         #Set some semi-private variables.
         #Check the time is a string.
@@ -265,7 +269,7 @@ class Reading:
                     and self._value == other.get_value()
                     and self._status == other.get_status())
 
-        except Exception:
+        except AttributeError:
             return False
 
     def __ne__(self, other):
@@ -357,14 +361,20 @@ class SyncTime(threading.Thread):
                 if self.system_id != "SUMP":
                     logger.error("Falling back to Sump Pi...")
 
-                    cmd = subprocess.run(["sudo", "rdate", config.SITE_SETTINGS["SUMP"]["IPAddress"]],
-                                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
+                    cmd = subprocess.run(["sudo", "rdate",
+                                          config.SITE_SETTINGS["SUMP"]["IPAddress"]],
+                                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                         check=False)
 
                     stdout = cmd.stdout.decode("UTF-8", errors="ignore")
 
                     if cmd.returncode != 0:
-                        logger.error("Unable to sync system time with Sump Pi. Error was: "+str(stdout))
-                        print("Unable to sync system time with Sump Pi. Error was: "+str(stdout))
+                        logger.error("Unable to sync system time with Sump Pi. Error was: "
+                                     + str(stdout))
+
+                        print("Unable to sync system time with Sump Pi. Error was: "
+                              + str(stdout))
+
                         logger.error("Retrying time sync in 10 seconds...")
                         sleep = 10
 
@@ -610,7 +620,9 @@ class DatabaseConnection(threading.Thread):
 
                     else:
                         #We need to return data now, so we must be careful.
-                        logger.debug("DatabaseConnection: Executing query: "+query+", and returning data...")
+                        logger.debug("DatabaseConnection: Executing query: "+query
+                                     + ", and returning data...")
+
                         self.client_thread_done = False
 
                         cursor.execute(query)
@@ -671,7 +683,8 @@ class DatabaseConnection(threading.Thread):
         """
         try:
             #Ping the peer one time.
-            subprocess.run(["ping", "-c", "1", "-W", "2", config.SITE_SETTINGS[self.site_id]["DBHost"]],
+            subprocess.run(["ping", "-c", "1", "-W", "2",
+                            config.SITE_SETTINGS[self.site_id]["DBHost"]],
                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
 
             #If there was no error, this was fine.
@@ -769,7 +782,7 @@ class DatabaseConnection(threading.Thread):
         if self.site_id == "NAS":
             self.do_query("""REPAIR TABLE `SystemStatus`;""", 0)
             self.do_query("""REPAIR TABLE `SystemTick`;""", 0)
-        
+
         #----- Remove and reset the status entry for this device, if it exists -----
         query = """DELETE FROM `SystemStatus` """ \
                 + """ WHERE `System ID` = '"""+self.site_id+"""';"""
@@ -937,7 +950,7 @@ class DatabaseConnection(threading.Thread):
         #NOTE: argument validation done in get_n_latest_readings.
         result = self.get_n_latest_readings(site_id, sensor_id, 1, retries)
 
-        if result != []:
+        if result:
             return result[0]
 
         return None
@@ -1298,8 +1311,9 @@ class DatabaseConnection(threading.Thread):
 
         self.last_event = event
 
-        query = """INSERT INTO `EventLog`(`Site ID`, `Severity`, `Event`, `Device Time`) VALUES('"""+self.site_id \
-                +"""', '"""+severity+"""', '"""+event+"""', '"""+str(datetime.datetime.now())+"""');"""
+        query = """INSERT INTO `EventLog`(`Site ID`, `Severity`, `Event`, `Device Time`)""" \
+                + """VALUES('"""+self.site_id+"""', '"""+severity+"""', '"""+event \
+                + """', '"""+str(datetime.datetime.now())+"""');"""
 
         self.do_query(query, retries)
 
@@ -1366,7 +1380,8 @@ class DatabaseConnection(threading.Thread):
         .. warning::
                 This is only meant to be run from the NAS box. The pis
                 get the ticks over the socket - this is a much less
-                efficient way to deliver system ticks.
+                efficient way to deliver system ticks, but is needed
+                on NAS box startup.
 
         Kwargs:
             retries[=3] (int).          The number of times to retry before giving up
@@ -1383,7 +1398,7 @@ class DatabaseConnection(threading.Thread):
         """
 
         if config.SYSTEM_ID != "NAS":
-            return
+            return None
 
         query = """SELECT * FROM `SystemTick` ORDER BY `ID` DESC """ \
                 + """LIMIT 0, 1;"""
@@ -1496,51 +1511,34 @@ def setup_devices(system_id, dictionary="Probes"):
         device = device(device_id, device_name)
 
         if _type == "Hall Effect Probe":
-            i2c_address = device_settings["ADCAddress"]
-            device.set_address(i2c_address)
+            device.set_address(device_settings["ADCAddress"])
+            device.set_limits(device_settings["HighLimits"], device_settings["LowLimits"])
+            device.set_depths([device_settings["Depths100s"], device_settings["Depths25s"],
+                               device_settings["Depths50s"], device_settings["Depths75s"]])
 
-            high_limits = device_settings["HighLimits"]
-            low_limits = device_settings["LowLimits"]
-
-            #Create the multdimensional list for the Depth values
-            depths = []
-            depths.append(device_settings["Depths100s"])
-            depths.append(device_settings["Depths25s"])
-            depths.append(device_settings["Depths50s"])
-            depths.append(device_settings["Depths75s"])
-
-            device.set_limits(high_limits, low_limits)
-            device.set_depths(depths)
             device.start_thread()
 
         elif _type == "Motor":
-            #The pins are outputs for these.
-            pins = device_settings["Pins"]
-            device.set_pins(pins, _input=False)
+            #The pins are outputs for Motors.
+            device.set_pins(device_settings["Pins"], _input=False)
 
-            #Immediately disable the motor, as it seems they can turn on during
-            #startup, if state is not initialised.
-            device.disable()
-
-            #If this is sump pi and the circulation pump, turn it back on.
+            #If this is sump pi and the circulation pump, turn it on.
             if system_id == "SUMP" and device_id == "SUMP:P1":
                 print("Enabling circulation pump to avoid overflow while waiting for NAS box...")
                 device.enable()
 
-        elif _type == "Gate Valve":
-            pins = device_settings["Pins"]
-            pos_tolerance = device_settings["posTolerance"]
-            max_open = device_settings["maxOpen"]
-            min_open = device_settings["minOpen"]
-            ref_voltage = device_settings["refVoltage"]
-            i2c_address = device_settings["ADCAddress"]
+            else:
+                #Immediately disable the motor, as they can turn on during
+                #startup, if state is not initialised.
+                device.disable()
 
-            device.set_pins(pins)
-            device.set_pos_tolerance(pos_tolerance)
-            device.set_max_open(max_open)
-            device.set_min_open(min_open)
-            device.set_ref_voltage(ref_voltage)
-            device.set_i2c_address(i2c_address)
+        elif _type == "Gate Valve":
+            device.set_pins(device_settings["Pins"])
+            device.set_pos_tolerance(device_settings["posTolerance"])
+            device.set_max_open(device_settings["maxOpen"])
+            device.set_min_open(device_settings["minOpen"])
+            device.set_ref_voltage(device_settings["refVoltage"])
+            device.set_i2c_address(device_settings["ADCAddress"])
 
             device.start_thread()
 
@@ -1578,7 +1576,7 @@ def get_and_handle_new_reading(monitor, _type):
         reading = monitor.get_reading()
 
         #Check if the reading is different to the last reading.
-        if reading == last_reading: #TODO What to do here if a fault is detected?
+        if reading == last_reading:
             #Write a . to each file.
             logger.info(".")
             print(".", end='') #Disable newline when printing this message.

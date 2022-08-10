@@ -727,10 +727,11 @@ class HallEffectProbe(BaseDeviceClass):
     def set_depths(self, depths):
         """
         This method is used to import the depth precision values this probe support. The
-        calling code must already have established these from config.py
+        calling code must already have established these from config.py. The depths should be
+        in the order: [100s, 25s, 50s, 75s].
 
         Args:
-            depths (list(list(int)):              The multidimensionl list of four rows of depths
+            depths (list(list(int)):        The multidimensionl list of four rows of depths
                                             to be used with this probe.
 
         Usage:
