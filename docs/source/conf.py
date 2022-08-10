@@ -59,7 +59,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Wimborne Model Town River Control System Software'
-copyright = '2017-2021, Hamish McIntyre-Bhatty, Terry J. Coles, Patrick Wigmore'
+copyright = '2017-2022, Hamish McIntyre-Bhatty, Terry J. Coles, Patrick Wigmore'
 author = 'Hamish McIntyre-Bhatty, Terry J. Coles, Patrick Wigmore'
 
 # The version info for the project you're documenting, acts as replacement for

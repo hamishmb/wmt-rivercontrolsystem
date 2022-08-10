@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # Sockets Class (client) relay test for the River System Control and Monitoring Software
 # This file is part of the River System Control and Monitoring Software.
-# Copyright (C) 2017-2020 Wimborne Model Town
+# Copyright (C) 2017-2022 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
 # at your option, any later version.
