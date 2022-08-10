@@ -18,8 +18,6 @@
 #
 #Reason (logging-not-lazy): Harder to understand the logging statements that way.
 
-#TODO: Throw errors if setup hasn't been completed properly.
-
 """
 This is the part of the software framework that contains classes to help manage the device objects.
 These take the form of management threads to separate coordination of each of these
@@ -51,7 +49,7 @@ for handler in logging.getLogger('River System Control Software').handlers:
 
 try:
     #Allow us to generate documentation on non-RPi systems.
-    import RPi.GPIO as GPIO
+    from RPi import GPIO
     GPIO.setmode(GPIO.BCM)
 
     #Setup for ADS1115 (A2D converter).
@@ -62,8 +60,7 @@ try:
     from adafruit_ads1x15.analog_in import AnalogIn
 
     # Create the I2C bus
-    i2c = busio.I2C(board.SCL, board.SDA)
-
+    I2C = busio.I2C(board.SCL, board.SDA)
 
 except (ImportError, NotImplementedError, ValueError) as error:
     if isinstance(error, ValueError):
@@ -85,10 +82,9 @@ except (ImportError, NotImplementedError, ValueError) as error:
         #Import dummy classes and methods.
         from Tools.testingtools import GPIO
         from Tools.testingtools import ADS
-        from Tools.testingtools import ads
         from Tools.testingtools import AnalogIn
 
-        i2c = None
+        I2C = None
 
 def reconfigure_logger():
     """
@@ -97,8 +93,8 @@ def reconfigure_logger():
 
     logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
 
-    for handler in logging.getLogger('River System Control Software').handlers:
-        logger.addHandler(handler)
+    for _handler in logging.getLogger('River System Control Software').handlers:
+        logger.addHandler(_handler)
 
 class ManageHallEffectProbe(threading.Thread):
     """
@@ -123,7 +119,7 @@ class ManageHallEffectProbe(threading.Thread):
         threading.Thread.__init__(self)
 
         # Create the ADC object using the I2C bus
-        self.ads = ADS.ADS1115(i2c, address=i2c_address)
+        self.ads = ADS.ADS1115(I2C, address=i2c_address)
 
         #Make the probe object available to the rest of the class.
         self.probe = probe
@@ -262,7 +258,6 @@ class ManageHallEffectProbe(threading.Thread):
                 level = self.probe.depths[min_column][count]
 
             else:
-                #FIXME: This fills up the log file pretty quickly - why?
                 logger.debug("Possible faulty probe - no limits passed")
 
             count += 1
@@ -285,7 +280,8 @@ class ManageGateValve(threading.Thread):
 
     Args:
         valve (GateValve-Object).         The valve to manage.
-        i2c_address (int).                The i2c_address of the ADC. Most easily expressed in hexadecimal.
+        i2c_address (int).                The i2c_address of the ADC. Most easily expressed
+                                          in hexadecimal.
 
     Usage:
         >>> mgmt_thread = ManageGateValve(<valve-object>, 0x48)
@@ -297,7 +293,7 @@ class ManageGateValve(threading.Thread):
         self.valve = valve
 
         # Create the ADC object using the I2C bus
-        self.ads = ADS.ADS1115(i2c, address=i2c_address)
+        self.ads = ADS.ADS1115(I2C, address=i2c_address)
 
         self._exit = False
 
@@ -458,7 +454,6 @@ class ManageGateValve(threading.Thread):
         actual_position = int((voltage_0/self.valve.ref_voltage*100))
 
         #If this position came through as a negative number, reject it.
-        #FIXME: We don't yet know why this happens, perhaps a bad reading from the ADS?
         if actual_position < 0:
             return -1
 
