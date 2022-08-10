@@ -18,8 +18,6 @@
 #
 #Reason (logging-not-lazy): Harder to understand the logging statements that way.
 
-#TODO: Throw errors if setup hasn't been completed properly.
-
 """
 This is the part of the software framework that contains the device, sensor and
 probe classes. These represent the devices and probes/sensors that we're
@@ -40,6 +38,11 @@ import time
 import sys
 import logging
 
+#Import modules.
+import config
+
+from . import devicemanagement as device_mgmt
+
 #Use logger here too.
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
@@ -47,14 +50,9 @@ logger.setLevel(logging.getLogger('River System Control Software').getEffectiveL
 for handler in logging.getLogger('River System Control Software').handlers:
     logger.addHandler(handler)
 
-#Import modules.
-import config
-
-from . import devicemanagement as device_mgmt
-
 try:
     #Allow us to generate documentation on non-RPi systems.
-    import RPi.GPIO as GPIO                             # GPIO imports and setups
+    from RPi import GPIO                             # GPIO imports and setups
     GPIO.setmode(GPIO.BCM)
 
 except (ImportError, NotImplementedError):
@@ -76,8 +74,8 @@ def reconfigure_logger():
 
     logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
 
-    for handler in logging.getLogger('River System Control Software').handlers:
-        logger.addHandler(handler)
+    for _handler in logging.getLogger('River System Control Software').handlers:
+        logger.addHandler(_handler)
 
 class BaseDeviceClass:
     """
@@ -197,9 +195,6 @@ class BaseDeviceClass:
 
     # ---------- INFO SETTER METHODS ----------
     def set_pins(self, pins, _input=True):
-        #FIXME: Check if these pins are already in use.
-        #FIXME: If so throw an error. Also check if these pins are valid input/output pins.
-        #TODO?: Currently cannot specify both input and output pins.
         """
         This method is used to specify the pins this probe will use. This can be a
         single pin, or multiple pins (eg in the case of a magnetic probe). Can also
@@ -308,8 +303,6 @@ class Motor(BaseDeviceClass):
 
     # ---------- INFO SETTER METHODS ----------
     def set_pwm_available(self, pwm_available, pwm_pin=-1):
-        #TODO Hardware check to determine if PWM is available.
-        #TODO If PWM available, check if PWM pin is valid and not in use.
         """
         This method enables/disables PWM support, and allows you to specify the
         PWM pin.
@@ -380,7 +373,6 @@ class Motor(BaseDeviceClass):
             >>> <Motor-Object>.get_reading()
             >>> (False, OK)
         """
-        #TODO: Fault checking?
 
         return self._state, "OK"
 
@@ -559,7 +551,7 @@ class FloatSwitch(BaseDeviceClass):
             >>> (False, OK)
         """
 
-        return bool(GPIO.input(self._pin) == self._active_state), "OK" #TODO Actual fault checking.
+        return bool(GPIO.input(self._pin) == self._active_state), "OK"
 
 class HallEffectDevice(BaseDeviceClass):
     """
@@ -640,7 +632,7 @@ class HallEffectDevice(BaseDeviceClass):
         #Multiply by 12 to get rpm.
         rpm = self._num_detections * 12
 
-        return rpm, "OK" #TODO Actual fault checking.
+        return rpm, "OK"
 
 class HallEffectProbe(BaseDeviceClass):
     """
@@ -842,7 +834,7 @@ class HallEffectProbe(BaseDeviceClass):
 
         """
 
-        return self._current_reading, "OK" #TODO Actual fault checking.
+        return self._current_reading, "OK"
 
 # ---------------------------------- HYBRID OBJECTS -----------------------------------------
 # (Objects that contain both controlled devices and sensors)
@@ -1073,11 +1065,9 @@ class GateValve(BaseDeviceClass):
 
             raise ValueError("Invalid value for percentage: "+str(percentage))
 
-        if percentage > 100:
-            percentage = 100
-
-        if percentage < 0:
-            percentage = 0
+        #Make sure percentage is between 100 and 0, and adjust it if not.
+        percentage = min(percentage, 100)
+        percentage = max(percentage, 0)
 
         self.control_thread.set_position(percentage)
 
