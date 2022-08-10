@@ -1,22 +1,24 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Control Logic integration and setup functions for the River System Control and Monitoring Software
-# Copyright (C) 2020-2022 Wimborne Model Town
-# This program is free software: you can redistribute it and/or modify it
-# under the terms of the GNU General Public License version 3 or,
-# at your option, any later version.
+#-*- coding: utf-8 -*-
+#Control Logic integration and setup functions for the River System Control Software
+#Copyright (C) 2020-2022 Wimborne Model Town
+#This program is free software: you can redistribute it and/or modify it
+#under the terms of the GNU General Public License version 3 or,
+#at your option, any later version.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+#This program is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#You should have received a copy of the GNU General Public License
+#along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pylint: disable=logging-not-lazy
+#pylint: disable=wrong-import-position
 #
 #Reason (logging-not-lazy): Harder to understand the logging statements that way.
+#Reason (wrong-import-position): Pylint is confused by the need to modify sys.path.
 
 """
 This is the controllogic module, which contains control logic integration and setup functions.
@@ -26,6 +28,8 @@ This is the controllogic module, which contains control logic integration and se
     :synopsis: Contains control logic integration and setup functions.
 
 .. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
+.. moduleauthor:: Patrick Wigmore <pwbugreports@gmx.com>
+.. moduleauthor:: Terry Coles <wmt@hadrian-way.co.uk>
 """
 
 import sys
@@ -55,8 +59,8 @@ def reconfigure_logger():
 
     logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
 
-    for handler in logging.getLogger('River System Control Software').handlers:
-        logger.addHandler(handler)
+    for _handler in logging.getLogger('River System Control Software').handlers:
+        logger.addHandler(_handler)
 
 #----- NAS Control Logic -----
 def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
@@ -64,7 +68,9 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
     This control logic runs on the NAS box, and is responsible for:
 
     - Setting and restoring the system tick.
-    - Freeing locks that have expired (locks can only be held for a maximum of TBD minutes). Not yet implemented.
+    - Freeing locks that have expired (locks can only be held for a maximum of TBD minutes).
+        - Not yet implemented.
+
     - Monitoring the temperature of the NAS box and its drives.
 
     """
@@ -123,9 +129,6 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
         print("Error: Couldn't store current tick!")
         logger.error("Error: Couldn't store current tick!")
 
-    #---------- Free locks that have expired ----------
-    #TODO Not yet implemented, do later if needed.
-
     #---------- Monitor the temperature of the NAS box and the drives ----------
     #System board temp.
     cmd = subprocess.run(["temperature_monitor", "-b"],
@@ -170,12 +173,13 @@ def nas_control_logic(readings, devices, monitors, sockets, reading_interval):
                        + ", hdd1: "+hdd1_temp)
 
         try:
-            logiccoretools.update_status("Up, HIGH temps: ("+sys_temp+"/"+hdd0_temp+"/"+hdd1_temp
-                                         + "), CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
-                                         "OK", "None")
+            logiccoretools.update_status("Up, HIGH temps: ("+sys_temp+"/"+hdd0_temp
+                                         + "/"+hdd1_temp+"), CPU: "+config.CPU
+                                         +"%, MEM: "+config.MEM+" MB", "OK", "None")
 
-            logiccoretools.log_event("NAS Box getting hot! Temps: sys: "+sys_temp+", hdd0: "+hdd0_temp
-                                     + ", hdd1: "+hdd1_temp, severity="WARNING")
+            logiccoretools.log_event("NAS Box getting hot! Temps: sys: "+sys_temp
+                                     +", hdd0: "+hdd0_temp+", hdd1: "+hdd1_temp,
+                                     severity="WARNING")
 
         except RuntimeError:
             print("Error: Couldn't update site status or log event!")
@@ -223,7 +227,8 @@ def valve_control_logic(readings, devices, monitors, sockets, reading_interval):
                     print("New valve position: "+str(position))
 
                     try:
-                        logiccoretools.log_event(config.SYSTEM_ID+": New valve position: "+str(position))
+                        logiccoretools.log_event(config.SYSTEM_ID+": New valve position: "
+                                                 + str(position))
 
                     except RuntimeError:
                         print("Error: Couldn't log event!")
@@ -247,7 +252,6 @@ def valve_control_logic(readings, devices, monitors, sockets, reading_interval):
             print("Error: Couldn't update site status!")
             logger.error("Error: Couldn't update site status!")
 
-    #Unsure how to decide the interval, so just setting to 15 seconds TODO.
     return 15
 
 #----- Generic control logic for pis that only do monitoring -----
@@ -267,7 +271,6 @@ def generic_control_logic(readings, devices, monitors, sockets, reading_interval
         print("Error: Couldn't update site status!")
         logger.error("Error: Couldn't update site status!")
 
-    #Unsure how to decide the interval, so just setting to 15 seconds TODO.
     return 15
 
 #----- Sump Pi Control Logic -----
@@ -293,21 +296,21 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
     Otherwise, nothing currently happens because there is nothing
     else we can take control of at the moment.
-    
+
     There is a remote manual override feature. If a device state
     has been requested for SUMP:P0 or SUMP:P1 using logiccoretools,
     it will be taken to be a request for a manual override.
-    
+
     In an override, only the requested pump will be taken out of
     automatic control. The remaining automatic operations will
     continue to occur.
-    
+
     Request a device state of:
-    
+
     - 'None' to remove the override (normal operation)
     - 'ON' to manually keep the pump turned on indefinitely
     - 'OFF' to manually keep the pump turned off indefinitely
-    
+
     If any other device state value is requested an error will be
     logged and the pumps will operate as though no override was
     requested. The outcome is the same if an error occurs when
@@ -341,18 +344,20 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
     #Call sump water backup function if not Opening Hours
     timenow = datetime.now()
-    
+
     hour = int(timenow.hour)
-    
+
     if (hour >= config.WATERBACKUPSTART or hour <= config.WATERBACKUPEND):
         #TODO Temporarily disabled, test and enable.
-        pass #return sumppi_water_backup_control_logic(readings, devices, monitors, reading_interval)
+        pass #return sumppi_water_backup_control_logic(readings, devices, monitors,
+                                                      #reading_interval)
 
     #Remove the 'mm' from the end of the reading value and convert to int.
     sump_reading = int(readings["SUMP:M0"].get_value().replace("m", ""))
 
     try:
-        butts_reading = int(logiccoretools.get_latest_reading("G4", "M0").get_value().replace("m", ""))
+        butts_reading = int(logiccoretools.get_latest_reading("G4", "M0") \
+                            .get_value().replace("m", ""))
 
     except (RuntimeError, AttributeError):
         print("Error: Error trying to get latest G4:M0 reading!")
@@ -394,28 +399,29 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
     #Check that the butts float switch reading is sane.
     assert butts_float_reading in ("True", "False")
-    
+
     #Apply manual overrides if requested
     try:
         main_pump_ovr = None
         butts_pump_ovr = None
-        #TODO Re-enable after testing. Incompatible with current database format with "Locked" and "Unlocked"
-#        main_pump_ovr = logiccoretools.get_state("SUMP", "P1")
-#        if main_pump_ovr is not None:
-#            # get device state from second (1th) element of tuple
-#            if main_pump_ovr[1] == "None":
-#                main_pump_ovr = None
-#            else:
-#                main_pump_ovr = main_pump_ovr[1]
-#        
-#        butts_pump_ovr = logiccoretools.get_state("SUMP", "P0")
-#        if butts_pump_ovr is not None:
-#            # get device state from second (1th) element of tuple
-#            if butts_pump_ovr[1] == "None":
-#                butts_pump_ovr = None
-#            else:
-#                butts_pump_ovr = butts_pump_ovr[1]
-#
+        #TODO Re-enable after testing.
+        #Incompatible with current database format with "Locked" and "Unlocked".
+        #main_pump_ovr = logiccoretools.get_state("SUMP", "P1")
+        #if main_pump_ovr is not None:
+            #get device state from second (1th) element of tuple
+            #if main_pump_ovr[1] == "None":
+                #main_pump_ovr = None
+            #else:
+                #main_pump_ovr = main_pump_ovr[1]
+
+        #butts_pump_ovr = logiccoretools.get_state("SUMP", "P0")
+        #if butts_pump_ovr is not None:
+            #get device state from second (1th) element of tuple
+            #if butts_pump_ovr[1] == "None":
+                #butts_pump_ovr = None
+            #else:
+                #butts_pump_ovr = butts_pump_ovr[1]
+
     except RuntimeError:
         main_pump_ovr = None
         butts_pump_ovr = None
@@ -423,7 +429,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
               "been requested. No override will be applied.")
         logger.error("Error: Couldn't check whether or not a manual override has "
                      "been requested. No override will be applied.")
-    
+
     if main_pump_ovr is not None:
         if main_pump_ovr in ("ON", "OFF"):
             logger.warning("*** MAIN CIRCULATION PUMP IS IN MANUAL OVERRIDE ***")
@@ -433,13 +439,13 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
                 logger.info(msg)
                 print(msg)
                 main_pump.enable()
-                
-            else: # must be "OFF"
+
+            else: #must be "OFF"
                 msg = "Holding main circulation pump off."
                 logger.info(msg)
                 print(msg)
                 main_pump.disable()
-                
+
         else:
             msg = ("Received a request to put the main circulation pump "
                 + "into manual override, but the requested state (\""
@@ -448,7 +454,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
             logger.warning(msg)
             print(msg)
             main_pump_ovr = None
-    
+
     if butts_pump_ovr is not None:
         if butts_pump_ovr in ("ON", "OFF"):
             logger.warning("*** BUTTS PUMP IS IN MANUAL OVERRIDE ***")
@@ -458,13 +464,13 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
                 logger.info(msg)
                 print(msg)
                 butts_pump.enable()
-            
-            else: # must be "OFF"
+
+            else: #must be "OFF"
                 msg = "Holding butts pump off."
                 logger.info(msg)
                 print(msg)
                 butts_pump.disable()
-            
+
         else:
             msg = ("Received a request to put the butts pump into manual "
                 + "override, but the requested state (\""
@@ -538,13 +544,13 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
             logger.warning("Setting reading interval to 1 minute...")
             print("Setting reading interval to 1 minute...")
-            
+
             reading_interval = 60
 
     elif sump_reading >= 500 and sump_reading <= 600:
         #Level is okay.
         #We might be pumping right now, or the level is increasing, but do nothing.
-        # Do NOT change the state of the butts pump.
+        #Do NOT change the state of the butts pump.
         logger.info("Water level in the sump ("+str(sump_reading)+") between 500 mm and 600 mm.")
         print("Water level in the sump ("+str(sump_reading)+") between 500 mm and 600 mm.")
 
@@ -601,7 +607,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
             logger.warning("Setting reading interval to 1 minute...")
             print("Setting reading interval to 1 minute...")
-            
+
             reading_interval = 60
 
     elif sump_reading >= 400 and sump_reading <= 500:
@@ -678,7 +684,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
             logger.warning("Setting reading interval to 1 minute...")
             print("Setting reading interval to 1 minute...")
-            
+
             reading_interval = 60
 
     elif sump_reading >= 300 and sump_reading <= 400:
@@ -727,7 +733,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
         logger.info("Setting reading interval to 1 minute...")
         print("Setting reading interval to 1 minute...")
-        
+
         reading_interval = 60
 
     elif sump_reading >= 200 and sump_reading <= 300:
@@ -825,26 +831,35 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
                 logger.error("Error: Error trying to control valve V4!")
 
             logger.critical("*** CRITICAL ***: Water level in the sump less than 200 mm!")
-            logger.critical("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to system.")
+            logger.critical("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add "
+                            + "water to system.")
 
             print("\n\n*** CRITICAL ***: Water level in the sump less than 200 mm!")
-            print("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
-            
+            print("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to the "
+                  + "system.")
+
             if main_pump_ovr != "ON":
-                logger.critical("*** INFO ***: The pump won't run dry; it has been temporarily disabled.")
+                logger.critical("*** INFO ***: The pump won't run dry; it has been temporarily "
+                                + "disabled.")
                 print("*** INFO ***: The pump won't run dry; it has been temporarily disabled.")
+
             else:
-                logger.critical("*** CRITICAL ***: RUNNING THE PUMP **DRY** DUE TO MANUAL OVERRIDE. Damage might occur.")
-                print("*** CRITICAL ***: RUNNING THE PUMP **DRY** DUE TO MANUAL OVERRIDE. Damage might occur.")
+                logger.critical("*** CRITICAL ***: RUNNING THE PUMP **DRY** DUE TO MANUAL "
+                                + "OVERRIDE. Damage might occur.")
+
+                print("*** CRITICAL ***: RUNNING THE PUMP **DRY** DUE TO MANUAL OVERRIDE. "
+                      + "Damage might occur.")
 
         #Make sure the main circulation pump is off.
         if main_pump_ovr is None:
             logger.warning("Disabling the main circulation pump, if it was on...")
             print("Disabling the main circulation pump, if it was on...")
             main_pump.disable()
+
         else:
             if main_pump_ovr == "ON":
-                logger.info("Not turning the main circulation pump off, due to manual override...")
+                logger.info("Not turning the main circulation pump off, due to manual "
+                            + "override...")
                 print("Not turning the main circulation pump off, due to manual override...")
 
             logger.warning("A manual override is controlling the main circulation pump.")
@@ -877,23 +892,23 @@ def sumppi_water_backup_control_logic(readings, devices, monitors, reading_inter
     is called at 1600 UTC from the sumppi_control_logic() function
     and is called repeatedly from the main loop to allow readings and
     other housekeeping actions to be performed.
-    
+
     On entry, the wendy butts gate valve is also turned off to
     prevent water running back into the sump. At this point the
     main circulation pump remains in the state it was in before the
-    function was called.  
-    
+    function was called.
+
     Readings are monitored and water is moved from the sump to the
     butts by turning on the butts pump when the sump level > 300 mm,
     and turning it off when it goes below that level.
-    
+
     When the sump level < 300 mm, the main circulation pump is turned
     on.  This allows the majority of the water in the bog garden and
     the river beds to run into the sump, filling it again.
-    
+
     The above process is repeated until the butts are full or there is
     no more water in the sump.
-    
+
     At 0700 UTC the function is no longer called and normal operation,
     under the control of sumppi_control_logic(), is resumed.
 
@@ -914,24 +929,14 @@ def sumppi_water_backup_control_logic(readings, devices, monitors, reading_inter
 
     Usage:
 
-        >>>               water_backup_control_logic(<listofreadings>,
-        >>>                                         <listofprobes>,
-                                                    <areadinginterval>)
+        >>> reading_interval = water_backup_control_logic(<listofreadings>,
+        >>>                                               <listofprobes>,
+        >>>                                               <areadinginterval>)
 
     """
 
     #Remove the 'mm' from the end of the reading value and convert to int.
     sump_reading = int(readings["SUMP:M0"].get_value().replace("m", ""))
-
-    try:
-        butts_reading = int(logiccoretools.get_latest_reading("G4", "M0").get_value().replace("m", ""))
-
-    except (RuntimeError, AttributeError):
-        print("Error: Error trying to get latest G4:M0 reading!")
-        logger.error("Error: Error trying to get latest G4:M0 reading!")
-
-        #Default to empty instead.
-        butts_reading = 0
 
     try:
         butts_float_reading = logiccoretools.get_latest_reading("G4", "FS0").get_value()
@@ -1018,8 +1023,11 @@ def sumppi_water_backup_control_logic(readings, devices, monitors, reading_inter
 
     elif sump_reading >= 300 and sump_reading <= 600:
         #Level is okay.
-        logger.info("Night Mode: Water level in the sump ("+str(sump_reading)+") between 300 mm and 600 mm!")
-        print("Night Mode: Water level in the sump ("+str(sump_reading)+") between 300 mm and 600 mm!")
+        logger.info("Night Mode: Water level in the sump ("+str(sump_reading)
+                    + ") between 300 mm and 600 mm!")
+
+        print("Night Mode: Water level in the sump ("+str(sump_reading)
+              + ") between 300 mm and 600 mm!")
 
         #Make sure the main circulation pump is on.
         logger.info("Night Mode: Turning the main circulation pump on, if it was off...")
@@ -1085,14 +1093,14 @@ def sumppi_water_backup_control_logic(readings, devices, monitors, reading_inter
 #----- Wendy Butts Pi Control Logic -----
 def wbuttspi_control_logic(readings, devices, monitors, sockets, reading_interval):
     """
-    This control logic is does very little but monitors levels and run the water backup
+    This control logic is does very little but monitors levels and runs the water backup
     function overnight. It does the following:
 
     - Updates the pi status in the database.
     - Calls wbuttspi_water_backup_control_logic() overnight.
     - In the daytime:
-        - Ensures that the Bypass Gate Valve is open because it will have been closed overnight.
-        - Ensures that the Backup Pump is off because it may still be running from overnight pumping.
+        - Ensures that the Bypass Gate Valve is open - it will have been closed overnight.
+        - Ensures that the Backup Pump is off - it may still be running from overnight pumping.
 
     """
 
@@ -1114,27 +1122,30 @@ def wbuttspi_control_logic(readings, devices, monitors, sockets, reading_interva
 
     #Call wendy butts water backup function if not Opening Hours
     timenow = datetime.now()
-    
+
     hour = int(timenow.hour)
-    
+
     if (hour >= config.WATERBACKUPSTART or hour <= config.WATERBACKUPEND):
-        return wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_interval)
-    
+        #TODO Disabled until it has been tested.
+        pass #return wbuttspi_water_backup_control_logic(readings, devices, monitors,
+                                                        #reading_interval)
+
     else:
-        # Opening time. Ensure that the Bypass Gate Valve is open and the Water Backup Pump is off.
+        #Opening time. Ensure that the Bypass Gate Valve is open and the Water Backup Pump
+        #is off.
         logger.info("Opening the bypass gate valve if it was closed...")
-        print("Opening the bypass gate valve if it was closed...")       
-        
+        print("Opening the bypass gate valve if it was closed...")
+
         try:
             logiccoretools.attempt_to_control("VALVE6", "V6", "100%")
 
         except RuntimeError:
-                print("Error: Error trying to control valve V6!")
-                logger.error("Error: Error trying to control valve V6!")
-                
+            print("Error: Error trying to control valve V6!")
+            logger.error("Error: Error trying to control valve V6!")
+
         logger.info("Turning off the backup pump if it was on...")
-        print("Turning off the backup pump if it was on...")       
-        
+        print("Turning off the backup pump if it was on...")
+
         backup_pump.disable()
 
     try:
@@ -1145,7 +1156,6 @@ def wbuttspi_control_logic(readings, devices, monitors, sockets, reading_interva
         print("Error: Couldn't update site status!")
         logger.error("Error: Couldn't update site status!")
 
-    #Unsure how to decide the interval, so just setting to 15 seconds TODO.
     return 15
 
 #----- Wendy Butts Pi Water Backup Control Logic -----
@@ -1156,33 +1166,33 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
     1600 UTC from the wbuttspi_water_backup_control_logic() function and is called
     repeatedly from the main loop to allow readings and other housekeeping actions
     to be performed.
-    
+
     On entry, the Bypass Gate Valve is closed to allow the Bypass Pump to pump water
     from the Wendy Butts to the Lady Hanham and Stage Butts.  This Valve remains
     closed until it re-opened at 0700 UTC.
-    
+
     The upstream Gate Valves are then opened in turn to allow the water to be pumped
     up to them.  Once any butts group is full, its associated Gate Valve is closed.
-    
+
     Readings are monitored and water is moved from the Wendy butts to the upstream
     butts by turning on the Water Backup Pump when the butts level > 300 mm.
-    
+
     When the Wendy butts level < 300 mm, the Backup Pump is turned off.
-    
+
     The above process is repeated until the upstream butts are all full or there is
     no more water in the Wendy Butts.
-    
+
     At 0700 UTC the function is no longer called and normal operation,
     under the control of wbuttspi_control_logic(), is resumed.
 
     Args:
-        readings (list):             A list of the latest readings for
-                                     each probe/device.
+        readings (list):            A list of the latest readings for
+                                    each probe/device.
 
-        devices  (list):             A list of all master pi device
-                                     objects.
+        devices  (list):            A list of all master pi device
+                                    objects.
 
-        monitors (list):             A list of all master pi monitor objects.
+        monitors (list):            A list of all master pi monitor objects.
 
         reading_interval (int):     The current reading interval, in
                                     seconds.
@@ -1192,42 +1202,53 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
 
     Usage:
 
-        >>>               wbuttspi_water_backup_control_logic(<listofreadings>,
-        >>>                                         <listofprobes>,
-                                                    <areadinginterval>)
+        >>> reading_interval = wbuttspi_water_backup_control_logic(<listofreadings>,
+        >>>                                                        <listofprobes>,
+        >>>                                                        <areadinginterval>)
 
     """
 
     #Remove the 'mm' from the end of the reading value and convert to int.
     wbutts_reading = int(readings["G4:M0"].get_value().replace("m", ""))
 
-    # Read the Lady Hanham and Stage high Float Switches to allow pumping to stop when all butts are full. 
-    try: 
+    #Read the Lady Hanham and Stage high Float Switches so we can stop pumping
+    #when all butts are full.
+    try:
+        sbutts_float_reading = logiccoretools.get_latest_reading("G6", "FS0").get_value()
+
+    except (RuntimeError, AttributeError):
+        print("Error: Error trying to get latest G6:FS0 reading!")
+        logger.error("Error: Error trying to get latest G6:FS0 reading!")
+
+        #Default to full instead.
+        sbutts_float_reading = "True"
+
+    try:
         lhbutts1_float_reading = logiccoretools.get_latest_reading("G3", "FS0").get_value()
+
+    except (RuntimeError, AttributeError):
+        print("Error: Error trying to get latest G3:FS0 reading!")
+        logger.error("Error: Error trying to get latest G3:FS0 reading!")
+
+        #Default to full instead.
+        lhbutts1_float_reading = "True"
+
+    try:
+        lhbutts2_float_reading = logiccoretools.get_latest_reading("G3", "FS1").get_value()
 
     except (RuntimeError, AttributeError):
         print("Error: Error trying to get latest G3:FS1 reading!")
         logger.error("Error: Error trying to get latest G3:FS1 reading!")
 
         #Default to full instead.
-        lhbutts1_float_reading = "True"
+        lhbutts2_float_reading = "True"
 
-    try: 
-        lhbutts2_float_reading = logiccoretools.get_latest_reading("G3", "FS2").get_value()
+    try:
+        lhbutts3_float_reading = logiccoretools.get_latest_reading("G3", "FS2").get_value()
 
     except (RuntimeError, AttributeError):
         print("Error: Error trying to get latest G3:FS2 reading!")
         logger.error("Error: Error trying to get latest G3:FS2 reading!")
-
-        #Default to full instead.
-        lhbutts2_float_reading = "True"
-
-    try: 
-        lhbutts3_float_reading = logiccoretools.get_latest_reading("G3", "FS4").get_value()
-
-    except (RuntimeError, AttributeError):
-        print("Error: Error trying to get latest G3:FS4 reading!")
-        logger.error("Error: Error trying to get latest G3:FS4 reading!")
 
         #Default to full instead.
         lhbutts3_float_reading = "True"
@@ -1261,49 +1282,52 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
     except RuntimeError:
         print("Error: Error trying to control valve V6!")
         logger.error("Error: Error trying to control valve V6!")
-        
-    # Setup the reading_interval based on the upstream capacity.
-    num_high_floats = [sbutts_float_reading, lhbutts1_float_reading, lhbutts2_float_reading, lhbutts3_float_reading]
-    
+
+    #Setup the reading_interval based on the upstream capacity.
+    num_high_floats = [sbutts_float_reading, lhbutts1_float_reading, lhbutts2_float_reading,
+                       lhbutts3_float_reading]
+
     if num_high_floats == 0:
-        # All the butts groups have capacity set the reading interval to a fairy slow rate
+        #All the butts groups have capacity - set the reading interval to a fairly slow rate
         logger.info("Night Mode: Setting reading interval to 2 minutes...")
         print("Night Mode: Setting reading interval to 2 minutes...")
 
         reading_interval = 120
-        
+
     elif num_high_floats == 1:
-        # Three of the butts groups have capacity set the reading interval to a faster rate
+        #Three of the butts groups have capacity - set the reading interval to a faster rate
         logger.info("Night Mode: Setting reading interval to 1.5 minutes...")
         print("Night Mode: Setting reading interval to 1.5 minutes...")
 
         reading_interval = 90
-        
+
     elif num_high_floats == 2:
-        # Only Two of the butts groups have capacity set the reading interval to a faster rate
+        #Only Two of the butts groups have capacity - set the reading interval to a faster rate
         logger.info("Night Mode: Setting reading interval to 1 minute...")
         print("Night Mode: Setting reading interval to 1 minute...")
 
         reading_interval = 60
-        
+
     else:
-        # Only One butts group has capacity set the reading interval to the fastest rate
+        #Only One butts group has capacity - set the reading interval to the fastest rate
         logger.info("Night Mode: Setting reading interval to 30 seconds...")
         print("Night Mode: Setting reading interval to 30 seconds...")
 
         reading_interval = 30
 
-    # Start moving water
+    #Start moving water
     if wbutts_reading >= 900:
-        # Level in the wendy butts is high.
-        logger.info("Night Mode: Water level in the wendy butts ("+str(wbutts_reading)+") >= 900 mm!")
+        #Level in the wendy butts is high.
+        logger.info("Night Mode: Water level in the wendy butts ("+str(wbutts_reading)
+                    + ") >= 900 mm!")
+
         print("Night Mode: Water level in the wendy butts ("+str(wbutts_reading)+") >= 900 mm!")
 
         #Pump some water to the upstream butts if they aren't full.
         #If they are full, do nothing and let the wendy butts overflow.
         if sbutts_float_reading == "False":
-            # There is capacity in the Stage Butts.
-            # Open the Stage Butts Gate Valve and start pumping.
+            #There is capacity in the Stage Butts.
+            #Open the Stage Butts Gate Valve and start pumping.
             logger.info("Opening the Stage Butts Gate Valve...")
             print("Opening the Stage Butts Gate Valve...")
 
@@ -1317,11 +1341,11 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             #Pump to the stage butts.
             logger.info("Night Mode: Pumping water to the stage butts...")
             print("Night Mode: Pumping water to the stage butts...")
-            
+
             backup_pump.enable()
-              
+
         else:
-            # Stage butts group G6 is full. Stop pumping and close V12 Gate Valve.
+            #Stage butts group G6 is full. Stop pumping and close V12 Gate Valve.
             logger.info("Night Mode: The G6 butts are full.  Close the Gate Valve")
             print("Night Mode: The G6 water butts are full.  Close the Gate Valve")
 
@@ -1331,15 +1355,15 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             except RuntimeError:
                 print("Error: Error trying to control valve V12!")
                 logger.error("Error: Error trying to control valve V12!")
-            
+
             logger.info("Night Mode: Stop pumping water to the stage butts...")
             print("Night Mode: Stop pumping water to the stage butts...")
-            
+
             backup_pump.disable()
-            
+
         if lhbutts1_float_reading == "False":
-            # There is capacity in butts group G1 of the Lady Hanham butts.
-            # Open the Lady Hanham Butts G1 Gate Valve and pump water.
+            #There is capacity in butts group G1 of the Lady Hanham butts.
+            #Open the Lady Hanham Butts G1 Gate Valve and pump water.
             logger.info("Opening the Lady Hanham Butts G1 Gate Valve...")
             print("Opening the Lady Hanham Butts G1 Gate Valve...")
 
@@ -1349,14 +1373,16 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             except RuntimeError:
                 print("Error: Error trying to control valve V1!")
                 logger.error("Error: Error trying to control valve V1!")
-            
-            logger.info("Night Mode: Pumping water to butts group G1 of the lady hanham butts...")
+
+            logger.info("Night Mode: Pumping water to butts group G1 of the lady "
+                        + "hanham butts...")
+
             print("Night Mode: Pumping water to butts group G1 of the lady hanham butts...")
-            
+
             backup_pump.enable()
-            
+
         else:
-            # Lady Hanham butts group G1 is full. Stop pumping and close V1 Gate Valve.
+            #Lady Hanham butts group G1 is full. Stop pumping and close V1 Gate Valve.
             logger.info("Night Mode: The G1 butts are full.  Close the Gate Valve")
             print("Night Mode: The G1 water butts are full.  Close the Gate Valve")
 
@@ -1366,15 +1392,15 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             except RuntimeError:
                 print("Error: Error trying to control valve V1!")
                 logger.error("Error: Error trying to control valve V1!")
-            
+
             logger.info("Night Mode: Stop pumping water to G1 butts...")
             print("Night Mode: Stop pumping water to G1 butts...")
-            
+
             backup_pump.disable()
-            
+
         if lhbutts2_float_reading == "False":
-            # There is capacity in butts group G2 of the Lady Hanham butts.
-            # Open the Lady Hanham Butts G2 Gate Valve and pump water.
+            #There is capacity in butts group G2 of the Lady Hanham butts.
+            #Open the Lady Hanham Butts G2 Gate Valve and pump water.
             logger.info("Opening the Lady Hanham Butts G2 Gate Valve...")
             print("Opening the Lady Hanham Butts G2 Gate Valve...")
 
@@ -1384,14 +1410,16 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             except RuntimeError:
                 print("Error: Error trying to control valve V2!")
                 logger.error("Error: Error trying to control valve V2!")
-            
-            logger.info("Night Mode: Pumping water to butts group G2 of the lady hanham butts...")
+
+            logger.info("Night Mode: Pumping water to butts group G2 of the lady "
+                        + "hanham butts...")
+
             print("Night Mode: Pumping water to butts group G2 of the lady hanham butts...")
-            
+
             backup_pump.enable()
-            
+
         else:
-            # Lady Hanham butts group G2 is full. Stop pumping and close V2 Gate Valve.
+            #Lady Hanham butts group G2 is full. Stop pumping and close V2 Gate Valve.
             logger.info("Night Mode: The G2 butts are full.  Close the Gate Valve")
             print("Night Mode: The G2 water butts are full.  Close the Gate Valve")
 
@@ -1401,15 +1429,15 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             except RuntimeError:
                 print("Error: Error trying to control valve V2!")
                 logger.error("Error: Error trying to control valve V2!")
-            
+
             logger.info("Night Mode: Stop pumping water to G2 butts...")
             print("Night Mode: Stop pumping water to G2 butts...")
-            
+
             backup_pump.disable()
-            
+
         if lhbutts3_float_reading == "False":
-            # There is capacity in butts group G3 of the Lady Hanham butts.
-            # Open the Lady Hanham Butts G3 Gate Valve and pump water.
+            #There is capacity in butts group G3 of the Lady Hanham butts.
+            #Open the Lady Hanham Butts G3 Gate Valve and pump water.
             logger.info("Opening the Lady Hanham Butts G3 Gate Valve...")
             print("Opening the Lady Hanham Butts G3 Gate Valve...")
 
@@ -1419,14 +1447,15 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             except RuntimeError:
                 print("Error: Error trying to control valve V3!")
                 logger.error("Error: Error trying to control valve V3!")
-            
-            logger.info("Night Mode: Pumping water to butts group G3 of the lady hanham butts...")
+
+            logger.info("Night Mode: Pumping water to butts group G3 of the lady "
+                        + "hanham butts...")
             print("Night Mode: Pumping water to butts group G3 of the lady hanham butts...")
-            
+
             backup_pump.enable()
-            
+
         else:
-            # Lady Hanham butts group G3 is full. Stop pumping and close V1 Gate Valve.
+            #Lady Hanham butts group G3 is full. Stop pumping and close V1 Gate Valve.
             logger.info("Night Mode: The G3 butts are full.  Close the Gate Valve")
             print("Night Mode: The G3 water butts are full.  Close the Gate Valve")
 
@@ -1436,22 +1465,24 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             except RuntimeError:
                 print("Error: Error trying to control valve V3!")
                 logger.error("Error: Error trying to control valve V3!")
-            
+
             logger.info("Night Mode: Stop pumping water to G3 butts...")
             print("Night Mode: Stop pumping water to G3 butts...")
-            
+
             backup_pump.disable()
-            
+
     elif wbutts_reading >= 300 and wbutts_reading <= 900:
         #Level in the Wendy butts is okay.
-        logger.info("Night Mode: Water level in the wendy butts ("+str(wbutts_reading)+") >= 900 mm!")
+        logger.info("Night Mode: Water level in the wendy butts ("+str(wbutts_reading)
+                    + ") >= 900 mm!")
+
         print("Night Mode: Water level in the wendy butts ("+str(wbutts_reading)+") >= 900 mm!")
 
         #Pump some water to the upstream butts if they aren't full.
         #If they are full, do nothing and let the wendy butts overflow.
         if sbutts_float_reading == "False":
-            # There is capacity in the Stage Butts.
-            # Open the Stage Butts Gate Valve and start pumping.
+            #There is capacity in the Stage Butts.
+            #Open the Stage Butts Gate Valve and start pumping.
             logger.info("Opening the Stage Butts Gate Valve...")
             print("Opening the Stage Butts Gate Valve...")
 
@@ -1465,11 +1496,11 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             #Pump to the stage butts.
             logger.info("Night Mode: Pumping water to the stage butts...")
             print("Night Mode: Pumping water to the stage butts...")
-            
+
             backup_pump.enable()
-            
+
         else:
-            # Stage butts group G6 is full. Stop pumping and close V12 Gate Valve.
+            #Stage butts group G6 is full. Stop pumping and close V12 Gate Valve.
             logger.info("Night Mode: The G6 butts are full.  Close the Gate Valve")
             print("Night Mode: The G6 water butts are full.  Close the Gate Valve")
 
@@ -1479,15 +1510,15 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             except RuntimeError:
                 print("Error: Error trying to control valve V12!")
                 logger.error("Error: Error trying to control valve V12!")
-            
+
             logger.info("Night Mode: Stop pumping water to the stage butts...")
             print("Night Mode: Stop pumping water to the stage butts...")
-            
+
             backup_pump.disable()
-            
+
         if lhbutts1_float_reading == "False":
-            # There is capacity in butts group G1 of the Lady Hanham butts.
-            # Open the Lady Hanham Butts G1 Gate Valve and pump water.
+            #There is capacity in butts group G1 of the Lady Hanham butts.
+            #Open the Lady Hanham Butts G1 Gate Valve and pump water.
             logger.info("Opening the Lady Hanham Butts G1 Gate Valve...")
             print("Opening the Lady Hanham Butts G1 Gate Valve...")
 
@@ -1497,14 +1528,16 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             except RuntimeError:
                 print("Error: Error trying to control valve V1!")
                 logger.error("Error: Error trying to control valve V1!")
-            
-            logger.info("Night Mode: Pumping water to butts group G1 of the lady hanham butts...")
+
+            logger.info("Night Mode: Pumping water to butts group G1 of the lady "
+                        + "hanham butts...")
+
             print("Night Mode: Pumping water to butts group G1 of the lady hanham butts...")
-            
+
             backup_pump.enable()
-            
+
         else:
-            # Lady Hanham butts group G1 is full. Stop pumping and close V1 Gate Valve.
+            #Lady Hanham butts group G1 is full. Stop pumping and close V1 Gate Valve.
             logger.info("Night Mode: The G1 butts are full.  Close the Gate Valve")
             print("Night Mode: The G1 water butts are full.  Close the Gate Valve")
 
@@ -1514,15 +1547,15 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             except RuntimeError:
                 print("Error: Error trying to control valve V1!")
                 logger.error("Error: Error trying to control valve V1!")
-            
+
             logger.info("Night Mode: Stop pumping water to G1 butts...")
             print("Night Mode: Stop pumping water to G1 butts...")
-            
+
             backup_pump.disable()
-            
+
         if lhbutts2_float_reading == "False":
-            # There is capacity in butts group G2 of the Lady Hanham butts.
-            # Open the Lady Hanham Butts G2 Gate Valve and pump water.
+            #There is capacity in butts group G2 of the Lady Hanham butts.
+            #Open the Lady Hanham Butts G2 Gate Valve and pump water.
             logger.info("Opening the Lady Hanham Butts G2 Gate Valve...")
             print("Opening the Lady Hanham Butts G2 Gate Valve...")
 
@@ -1532,14 +1565,16 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             except RuntimeError:
                 print("Error: Error trying to control valve V2!")
                 logger.error("Error: Error trying to control valve V2!")
-            
-            logger.info("Night Mode: Pumping water to butts group G2 of the lady hanham butts...")
+
+            logger.info("Night Mode: Pumping water to butts group G2 of the lady "
+                         + "hanham butts...")
+
             print("Night Mode: Pumping water to butts group G2 of the lady hanham butts...")
-            
+
             backup_pump.enable()
-            
+
         else:
-            # Lady Hanham butts group G2 is full. Stop pumping and close V2 Gate Valve.
+            #Lady Hanham butts group G2 is full. Stop pumping and close V2 Gate Valve.
             logger.info("Night Mode: The G2 butts are full.  Close the Gate Valve")
             print("Night Mode: The G2 water butts are full.  Close the Gate Valve")
 
@@ -1549,15 +1584,15 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             except RuntimeError:
                 print("Error: Error trying to control valve V2!")
                 logger.error("Error: Error trying to control valve V2!")
-            
+
             logger.info("Night Mode: Stop pumping water to G2 butts...")
             print("Night Mode: Stop pumping water to G2 butts...")
-            
+
             backup_pump.disable()
-            
+
         if lhbutts3_float_reading == "False":
-            # There is capacity in butts group G3 of the Lady Hanham butts.
-            # Open the Lady Hanham Butts G3 Gate Valve and pump water.
+            #There is capacity in butts group G3 of the Lady Hanham butts.
+            #Open the Lady Hanham Butts G3 Gate Valve and pump water.
             logger.info("Opening the Lady Hanham Butts G3 Gate Valve...")
             print("Opening the Lady Hanham Butts G3 Gate Valve...")
 
@@ -1567,14 +1602,16 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             except RuntimeError:
                 print("Error: Error trying to control valve V3!")
                 logger.error("Error: Error trying to control valve V3!")
-            
-            logger.info("Night Mode: Pumping water to butts group G3 of the lady hanham butts...")
+
+            logger.info("Night Mode: Pumping water to butts group G3 of the lady "
+                        + "hanham butts...")
+
             print("Night Mode: Pumping water to butts group G3 of the lady hanham butts...")
-            
+
             backup_pump.enable()
-            
+
         else:
-            # Lady Hanham butts group G3 is full. Stop pumping and close V1 Gate Valve.
+            #Lady Hanham butts group G3 is full. Stop pumping and close V1 Gate Valve.
             logger.info("Night Mode: The G3 butts are full.  Close the Gate Valve")
             print("Night Mode: The G3 water butts are full.  Close the Gate Valve")
 
@@ -1584,22 +1621,22 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
             except RuntimeError:
                 print("Error: Error trying to control valve V3!")
                 logger.error("Error: Error trying to control valve V3!")
-            
+
             logger.info("Night Mode: Stop pumping water to G3 butts...")
             print("Night Mode: Stop pumping water to G3 butts...")
-            
+
             backup_pump.disable()
-            
+
     else:
-        # Wendy butts group G4 is nearly empty. Stop pumping.
+        #Wendy butts group G4 is nearly empty. Stop pumping.
         logger.info("Night Mode: The G4 butts are nearly empty.  Stop pumping")
         print("Night Mode: The G4 butts are nearly empty.  Stop pumping")
 
         logger.info("Night Mode: Stop pumping water to the upstream butts...")
         print("Night Mode: Stop pumping water to the upstream butts...")
-            
+
         backup_pump.disable()
-            
+
     #Set the reading interval in the monitors, and send it down the sockets to the peers.
     for monitor in monitors:
         monitor.set_reading_interval(reading_interval)
@@ -1655,26 +1692,20 @@ def stagepi_control_logic(readings, devices, monitors, sockets, reading_interval
     assert reading_interval > 0
 
     try:
-        #TODO: write a test that checks that none of the control state
-        #      names is long enough to cause this string to exceed the
-        #      maximum accepted by the database
         software_status = "OK, in " + stagepilogic.csm.getCurrentStateName()
 
     except AttributeError:
         software_status = "OUT COLD. No CSM."
-    
+
     msg = ("Stage Pi Control Logic status: " + software_status)
     print(msg)
     logger.info(msg)
-    
+
     try:
         logiccoretools.update_status("Up, CPU: " + config.CPU
                                      +"%, MEM: " + config.MEM + " MB",
                                      software_status,
                                      "None")
-        #TODO: implement current_action status other than "None" by extending
-        #      ControlStateABC with a currentAction member to be overriden by
-        #      each state class.
 
     except RuntimeError:
         print("Error: Couldn't update site status!")
@@ -1689,7 +1720,7 @@ def stagepi_control_logic(readings, devices, monitors, sockets, reading_interval
                 "Check whether the setup function has been run.")
             print(msg)
             logger.critical(msg)
-            
+
         else:
             raise
 
@@ -1711,7 +1742,7 @@ def temptopup_control_logic(readings, devices, monitors, sockets, reading_interv
     Control logic function for the temporary top-up control logic, which
     tops up the G1 butts group with mains water at about 15:00 daily if
     the level is too low.
-    
+
     This mainly just wraps TempTopUpLogic.doLogic(), but it also contains
     some other integration glue.
 
@@ -1745,48 +1776,48 @@ def temptopup_control_logic(readings, devices, monitors, sockets, reading_interv
     """
     #Check that the reading interval is positive, and greater than 0.
     assert reading_interval > 0
-    
-    # Pass on readings dictionary to the logic
+
+    #Pass on readings dictionary to the logic
     temptopuplogic.readings = readings
-    
-    # Try to get a reference to the solenoid valve if we don't have one yet
-    # (Can't do this in the setup function because it doesn't have access to
-    # the devices dictionary.)
+
+    #Try to get a reference to the solenoid valve if we don't have one yet
+    #(Can't do this in the setup function because it doesn't have access to
+    #the devices dictionary.)
     if temptopuplogic.solenoid is None:
         for device in devices:
             if device.get_id() == "G3:S0":
                 temptopuplogic.solenoid = device
-        
+
         if temptopuplogic.solenoid is None:
             msg = "CRITICAL ERROR: Could not find solenoid valve device."
             print(msg)
             logger.critical(msg)
             software_status = "Error: No solenoid. In "
-        
+
         else:
             software_status = "OK, in "
-    
+
     else:
         software_status = "OK, in "
-    
-    # We have to create the CSM here, after the solenoid object has
-    # been assigned, rather than in a control logic setup function,
-    # otherwise there will be a spurious error message about not being
-    # able to control G3:S0.
+
+    #We have to create the CSM here, after the solenoid object has
+    #been assigned, rather than in a control logic setup function,
+    #otherwise there will be a spurious error message about not being
+    #able to control G3:S0.
     if temptopuplogic.csm is None:
         temptopuplogic.csm = temptopuplogic.TempTopUpControlLogic()
-    
+
     try:
         software_status = (software_status +
                            temptopuplogic.csm.getCurrentStateName())
 
     except AttributeError:
         software_status = "OUT COLD. No CSM."
-    
+
     msg = ("Temporary Top Up Control Logic status: " + software_status)
     print(msg)
     logger.info(msg)
-    
+
     try:
         logiccoretools.update_status("Up, CPU: " + config.CPU
                                      +"%, MEM: " + config.MEM + " MB",
@@ -1796,7 +1827,7 @@ def temptopup_control_logic(readings, devices, monitors, sockets, reading_interv
     except RuntimeError:
         print("Error: Couldn't update site status!")
         logger.error("Error: Couldn't update site status!")
-    
+
     if temptopuplogic.solenoid is not None:
         try:
             return temptopuplogic.csm.doLogic(reading_interval)
@@ -1809,7 +1840,7 @@ def temptopup_control_logic(readings, devices, monitors, sockets, reading_interv
                         "has been run.")
                 print(msg)
                 logger.critical(msg)
-                
+
             else:
                 raise
 
