@@ -29,7 +29,8 @@ from the rest of the program.
     :platform: Linux
     :synopsis: The part of the framework that contains the device/probe/sensor classes.
 
-.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk> and Terry Coles <WMT@hadrian-way.co.uk
+.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
+.. moduleauthor:: Terry Coles <wmt@hadrian-way.co.uk
 
 """
 

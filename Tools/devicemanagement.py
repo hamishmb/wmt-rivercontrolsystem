@@ -27,7 +27,8 @@ more complicated devices, from the classes that represent the devices themselves
     :platform: Linux
     :synopsis: The part of the framework that contains the management code for device classes.
 
-.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk> and Terry Coles <WMT@hadrian-way.co.uk
+.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk> 
+.. moduleauthor:: Terry Coles <wmt@hadrian-way.co.uk
 
 """
 
