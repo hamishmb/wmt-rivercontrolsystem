@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Configuration for the River System Control and Monitoring Software
-# Copyright (C) 2017-2020 Wimborne Model Town
+# Copyright (C) 2017-2022 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
 # at your option, any later version.
@@ -94,7 +94,7 @@ Socket Numbers where applicable:
 * Wendy Street G4 Butts Group Gate Valve  - VALVE4:V4, 192.168.0.14, 30014, SOCK14
 
 * Where matrix pump is not used:
-   * Wendy Street G4 Backup Pump Bypass Valve- VALVE6:V6, 192.168.0.16, 30016, SOCK16 
+   * Wendy Street G4 Backup Pump Bypass Valve- VALVE6:V6, 192.168.0.16, 30016, SOCK16
 
 * Gazebo G5 Butts Group Gate Valve        - VALVE5:V5, 192.168.0.15, 30015, SOCK15
 
@@ -147,8 +147,8 @@ import os
 import sys
 
 #Define global variables.
-VERSION = "0.12.0"
-RELEASEDATE = "24/11/2020"
+VERSION = "0.12.1"
+RELEASEDATE = "10/8/2022"
 
 WATERBACKUPSTART = 16                 # Start time (hours UTC)
 WATERBACKUPEND = 7                    # End time (hours UTC)
@@ -269,8 +269,12 @@ SITE_SETTINGS = {
                         "Name":             "Sump Probe",
                         "Class":            Tools.deviceobjects.HallEffectProbe,
                         "ADCAddress":       0x48,
-                        "HighLimits":       (0.11, 0.25, 0.44, 0.63, 0.805, 1.05, 1.36, 1.77, 2.25, 3.0),
-                        "LowLimits":        (0.05, 0.111, 0.251, 0.441, 0.631, 0.806, 1.051, 1.361, 1.771, 2.251),
+                        "HighLimits":       (0.11, 0.25, 0.44, 0.63, 0.805, 1.05, 1.36,
+                                             1.77, 2.25, 3.0),
+
+                        "LowLimits":        (0.05, 0.111, 0.251, 0.441, 0.631, 0.806, 1.051,
+                                             1.361, 1.771, 2.251),
+
                         "Depths100s":       (0, 100, 200, 300, 400, 500, 600, 700, 800, 900),
                         "Depths25s":        (25, 125, 225, 325, 425, 525, 625, 725, 825, 925),
                         "Depths50s":        (50, 150, 250, 350, 450, 550, 650, 750, 850, 950),
@@ -318,7 +322,8 @@ SITE_SETTINGS = {
             "Default Interval": 15,
             "IPAddress": "192.168.0.3",
             "HostingSockets": False,
-            "ControlLogicFunction": "generic_control_logic", #TODO enable later after testing: "temptopup_control_logic",
+            #TODO enable later after testing: "temptopup_control_logic",
+            "ControlLogicFunction": "generic_control_logic",
             "DBUser": "hanhampi",
             "DBPasswd": "river20",
             "DBHost": "192.168.0.25",
@@ -335,8 +340,12 @@ SITE_SETTINGS = {
                         "Name":             "Lady Hanaham Butts Probe (G1 Butts Group)",
                         "Class":            Tools.deviceobjects.HallEffectProbe,
                         "ADCAddress":       0x48,
-                        "HighLimits":       (0.11, 0.25, 0.44, 0.63, 0.805, 1.05, 1.36, 1.77, 2.25, 3.0),
-                        "LowLimits":        (0.05, 0.111, 0.251, 0.441, 0.631, 0.806, 1.051, 1.361, 1.771, 2.251),
+                        "HighLimits":       (0.11, 0.25, 0.44, 0.63, 0.805, 1.05, 1.36,
+                                             1.77, 2.25, 3.0),
+
+                        "LowLimits":        (0.05, 0.111, 0.251, 0.441, 0.631, 0.806, 1.051,
+                                             1.361, 1.771, 2.251),
+
                         "Depths100s":       (0, 100, 200, 300, 400, 500, 600, 700, 800, 900),
                         "Depths25s":        (25, 125, 225, 325, 425, 525, 625, 725, 825, 925),
                         "Depths50s":        (50, 150, 250, 350, 450, 550, 650, 750, 850, 950),
@@ -368,8 +377,12 @@ SITE_SETTINGS = {
                         "Name":             "Lady Hanaham Butts Probe (G2 Butts Group)",
                         "Class":            Tools.deviceobjects.HallEffectProbe,
                         "ADCAddress":       0x49,
-                        "HighLimits":       (0.11, 0.25, 0.44, 0.63, 0.805, 1.05, 1.36, 1.77, 2.25, 3.0),
-                        "LowLimits":        (0.05, 0.111, 0.251, 0.441, 0.631, 0.806, 1.051, 1.361, 1.771, 2.251),
+                        "HighLimits":       (0.11, 0.25, 0.44, 0.63, 0.805, 1.05, 1.36,
+                                             1.77, 2.25, 3.0),
+
+                        "LowLimits":        (0.05, 0.111, 0.251, 0.441, 0.631, 0.806, 1.051,
+                                             1.361, 1.771, 2.251),
+
                         "Depths100s":       (0, 100, 200, 300, 400, 500, 600, 700, 800, 900),
                         "Depths25s":        (25, 125, 225, 325, 425, 525, 625, 725, 825, 925),
                         "Depths50s":        (50, 150, 250, 350, 450, 550, 650, 750, 850, 950),
@@ -401,8 +414,12 @@ SITE_SETTINGS = {
                         "Name":             "Lady Hanaham Butts Probe (G3 Butts Group)",
                         "Class":            Tools.deviceobjects.HallEffectProbe,
                         "ADCAddress":       0x4B,
-                        "HighLimits":       (0.11, 0.25, 0.44, 0.63, 0.805, 1.05, 1.36, 1.77, 2.25, 3.0),
-                        "LowLimits":        (0.05, 0.111, 0.251, 0.441, 0.631, 0.806, 1.051, 1.361, 1.771, 2.251),
+                        "HighLimits":       (0.11, 0.25, 0.44, 0.63, 0.805, 1.05, 1.36,
+                                             1.77, 2.25, 3.0),
+
+                        "LowLimits":        (0.05, 0.111, 0.251, 0.441, 0.631, 0.806, 1.051,
+                                             1.361, 1.771, 2.251),
+
                         "Depths100s":       (0, 100, 200, 300, 400, 500, 600, 700, 800, 900),
                         "Depths25s":        (25, 125, 225, 325, 425, 525, 625, 725, 825, 925),
                         "Depths50s":        (50, 150, 250, 350, 450, 550, 650, 750, 850, 950),
@@ -459,7 +476,8 @@ SITE_SETTINGS = {
             "Default Interval": 15,
             "IPAddress": "192.168.0.4",
             "HostingSockets": False,
-            "ControlLogicFunction": "generic_control_logic", #TODO temporarily disabled until tested. "wbuttspi_control_logic",
+            #TODO temporarily disabled until tested. "wbuttspi_control_logic",
+            "ControlLogicFunction": "generic_control_logic",
             "DBUser": "wbuttspi",
             "DBPasswd": "river20",
             "DBHost": "192.168.0.25",
@@ -476,8 +494,12 @@ SITE_SETTINGS = {
                         "Name":             "Wendy Street Butts Probe",
                         "Class":            Tools.deviceobjects.HallEffectProbe,
                         "ADCAddress":       0x48,
-                        "HighLimits":       (0.11, 0.25, 0.44, 0.63, 0.805, 1.05, 1.36, 1.77, 2.25, 3.0),
-                        "LowLimits":        (0.05, 0.111, 0.251, 0.441, 0.631, 0.806, 1.051, 1.361, 1.771, 2.251),
+                        "HighLimits":       (0.11, 0.25, 0.44, 0.63, 0.805, 1.05, 1.36,
+                                             1.77, 2.25, 3.0),
+
+                        "LowLimits":        (0.05, 0.111, 0.251, 0.441, 0.631, 0.806, 1.051,
+                                             1.361, 1.771, 2.251),
+
                         "Depths100s":       (0, 100, 200, 300, 400, 500, 600, 700, 800, 900),
                         "Depths25s":        (25, 125, 225, 325, 425, 525, 625, 725, 825, 925),
                         "Depths50s":        (50, 150, 250, 350, 450, 550, 650, 750, 850, 950),
@@ -533,7 +555,8 @@ SITE_SETTINGS = {
             "Default Interval": 15,
             "IPAddress": "192.168.0.6",
             "HostingSockets": False,
-            "ControlLogicFunction": "generic_control_logic", #TODO temporarily disable "stagepi_control_logic",
+            #TODO temporarily disable until tested "stagepi_control_logic",
+            "ControlLogicFunction": "generic_control_logic",
             "ControlLogicSetupFunction": "stagepi_control_logic_setup",
             "DBUser": "sbuttspi",
             "DBPasswd": "river20",
@@ -551,8 +574,12 @@ SITE_SETTINGS = {
                         "Name":             "Stage Butts Probe",
                         "Class":            Tools.deviceobjects.HallEffectProbe,
                         "ADCAddress":       0x48,
-                        "HighLimits":       (0.11, 0.25, 0.44, 0.63, 0.805, 1.05, 1.36, 1.77, 2.25, 3.0),
-                        "LowLimits":        (0.05, 0.111, 0.251, 0.441, 0.631, 0.806, 1.051, 1.361, 1.771, 2.251),
+                        "HighLimits":       (0.11, 0.25, 0.44, 0.63, 0.805, 1.05, 1.36,
+                                             1.77, 2.25, 3.0),
+
+                        "LowLimits":        (0.05, 0.111, 0.251, 0.441, 0.631, 0.806, 1.051,
+                                             1.361, 1.771, 2.251),
+
                         "Depths100s":       (0, 100, 200, 300, 400, 500, 600, 700, 800, 900),
                         "Depths25s":        (25, 125, 225, 325, 425, 525, 625, 725, 825, 925),
                         "Depths50s":        (50, 150, 250, 350, 450, 550, 650, 750, 850, 950),
