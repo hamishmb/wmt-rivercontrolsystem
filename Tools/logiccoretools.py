@@ -47,8 +47,8 @@ def reconfigure_logger():
 
     logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
 
-    for handler in logging.getLogger('River System Control Software').handlers:
-        logger.addHandler(handler)
+    for _handler in logging.getLogger('River System Control Software').handlers:
+        logger.addHandler(_handler)
 
 def get_latest_reading(site_id, sensor_id, retries=3):
     """
@@ -236,7 +236,7 @@ def release_control(site_id, sensor_id, retries=3):
 def log_event(event, severity="INFO", retries=3):
     """
     This method logs the given event message in the database.
-    
+
     Use it sparingly, to log events that seem significant.
 
     Args:
@@ -262,16 +262,16 @@ def log_event(event, severity="INFO", retries=3):
 def update_status(pi_status, sw_status, current_action, retries=3):
     """
     This method logs the given statuses and action(s) in the database.
-    
+
     pi_status can be used to provide useful hardware and OS status.
-    
+
     sw_status can be used to provide useful information about the status of the
     river control system software, which could include a current state or mode
     of the control logic.
-    
+
     current_action can be used to describe current physical actions such as
     intended water movements.
-    
+
     All should be concise.
 
     Args:
