@@ -65,7 +65,7 @@ def usage():
     print("Options:\n")
     print("       -h, --help:                   Show this help message")
     print("       -i <string>, --id=<string>    Specifiies the system ID eg \"G4\". If")
-    print("                                     settings for this site aren't found in") 
+    print("                                     settings for this site aren't found in")
     print("                                     config.py an exception will be thrown.")
     print("                                     Mandatory.\n")
     print("       -t, --testing                 Enable testing mode. Disables certain")
@@ -85,17 +85,7 @@ def handle_cmdline_options():
     to main.py.
 
     Valid commandline options to main.py:
-        -h, --help                          Calls the usage() function to display help information
-                                            to the user.
-        -i <string>, --id=<string>          Specifies the system ID eg "G4". If settings for this
-                                            site aren't found in config.py an exception will be
-                                            thrown. Mandatory.
-        -t, --testing                       Enable testing mode. Disables certain checks on start-up,
-                                            and hardware access via GPIO pins.
-                                            Useful when running the software in test deployments
-                                            or in VMs.
-        -d, --debug                         Enable debug mode.
-        -q, --quiet                         Show only warnings, errors, and critical errors.
+        See usage function in source code, or run main.py with the -h flag.
 
     Returns:
         string system_id.
@@ -164,7 +154,7 @@ def handle_cmdline_options():
 
     return system_id
 
-def run_standalone(): #TODO Refactor me into lots of smaller functions.
+def run_standalone():
     """
     This is the main part of the program.
     It imports everything required from the Tools package,
@@ -199,7 +189,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
     #Reconfigure logging for modules imported before we set the logger up.
     config.reconfigure_logging()
 
-    #The NAS box needs more time to stabalise before we continue.
+    #The NAS box needs more time to stabilise before we continue.
     #Wait another minute.
     if system_id == "NAS":
         print("Waiting 1 minute for NAS box to finish booting up (CTRL-C to skip)...")
@@ -219,7 +209,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     #Import RPi.GPIO
     try:
-        import RPi.GPIO as GPIO
+        from RPi import GPIO
 
     except ImportError:
         #Only allow import errors if we are testing or on the NAS box.
@@ -275,7 +265,9 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
         #Connect to the server.
         logger.info("Initialising connection to server, please wait...")
         print("Initialising connection to server, please wait...")
-        socket = socket_tools.Sockets("Plug", system_id, config.SITE_SETTINGS[system_id]["ServerName"])
+        socket = socket_tools.Sockets("Plug", system_id,
+                                      config.SITE_SETTINGS[system_id]["ServerName"])
+
         socket.set_portnumber(config.SITE_SETTINGS[system_id]["ServerPort"])
         socket.set_server_address(config.SITE_SETTINGS[system_id]["ServerAddress"])
         socket.start_handler()
@@ -361,7 +353,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
             monitors.append(monitor_tools.Monitor(device, reading_interval, system_id))
 
     #Make a readings dictionary for temporary storage for the control logic function.
-    #TODO Set up with default readings - need discussion first for some of these.
     readings = {}
 
     readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "0mm",
@@ -379,7 +370,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
     for _siteid in config.SITE_SETTINGS:
         reading_intervals[_siteid] = 15
-    
+
     #Run logic set-up function
     if "ControlLogicSetupFunction" in config.SITE_SETTINGS[system_id]:
         function = getattr(controllogic,
@@ -403,8 +394,6 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                     logiccoretools.log_event("Monitor for "+monitor.get_system_id()+":"
                                              + monitor.get_probe_id()+" is not running!",
                                              severity="ERROR")
-
-                    #TODO add to pi status?
 
                     continue
 
@@ -431,15 +420,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
                 reading_interval = function(readings, devices, monitors, sockets, reading_interval)
 
-            #I know we could use a long time.sleep(),
-            #but we need to be able to respond to messages from the sockets.
-            #
-            #What would be really useful here is if the sockets library
-            #provided a function that just sleeps until either the socket
-            #has data or a specified timeout expires, and then returns
-            #true/false. Does such a function exist?
-            #
-            #TODO refactor into a separate function.
+            #Keep watching for new messages from the socket while we could down the
+            #reading interval.
             asked_for_tick = False
             count = 0
 
@@ -452,9 +434,7 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                     asked_for_tick = True
                     socket.write("Tick?")
 
-                for socket_id in sockets:
-                    _socket = sockets[socket_id]
-
+                for _socket in sockets.values():
                     if _socket.has_data():
                         data = _socket.read()
 
@@ -477,7 +457,8 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
                             #NAS box only: reply with the reading interval we have for that site.
                             requested_site = data.split(" ")[1]
 
-                            _socket.write("Interval: "+requested_site+" "+str(reading_intervals[requested_site]))
+                            _socket.write("Interval: "+requested_site+" "
+                                          + str(reading_intervals[requested_site]))
 
                             print("Received new interval request for "+requested_site)
                             logger.info("Received new interval request for "+requested_site)
@@ -534,18 +515,25 @@ def run_standalone(): #TODO Refactor me into lots of smaller functions.
 
             #Local files.
             config.SHUTDOWN = config.SHUTDOWN or os.path.exists("/tmp/.shutdown") or os.path.exists("/tmp/.shutdownall")
+
             config.SHUTDOWNALL = config.SHUTDOWNALL or os.path.exists("/tmp/.shutdownall")
+
             config.REBOOT = config.REBOOT or os.path.exists("/tmp/.reboot") or os.path.exists("/tmp/.rebootall")
+
             config.REBOOTALL = config.REBOOTALL or os.path.exists("/tmp/.rebootall")
+
             config.UPDATE = config.UPDATE or os.path.exists("/tmp/.update")
 
-            #If this is the NAS box, make the update available to pis and signal that they should
-            #update using the database.
+            #If this is the NAS box, make the update available to pis and signal that they
+            #should update using the database.
             if config.UPDATE and system_id == "NAS":
-                #Make the update available to the pis at http://192.168.0.25/rivercontrolsystem.tar.gz
+                #Make the update available to the pis at
+                #http://192.168.0.25/rivercontrolsystem.tar.gz
                 logger.info("Making new software available to all pis using webserver...")
-                cmd = subprocess.run(["ln", "-s", "/mnt/HD/HD_a2/rivercontrolsystem.tar.gz", "/var/www"],
-                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
+                cmd = subprocess.run(["ln", "-s", "/mnt/HD/HD_a2/rivercontrolsystem.tar.gz",
+                                      "/var/www"],
+                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                     check=False)
 
                 stdout = cmd.stdout.decode("UTF-8", errors="ignore")
 
