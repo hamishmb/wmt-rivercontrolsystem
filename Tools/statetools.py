@@ -44,69 +44,71 @@ for handler in logging.getLogger('River System Control Software').handlers:
 class ControlStateABC(metaclass=ABCMeta):
     """
     Abstract Base Class for control states.
-    
+
     Defines a template for classes that represent a state in a control logic
     state machine. Forms part of an implementation of the well-known Design
     Pattern named the "State Pattern".
-    
+
     Don't instantiate objects of this class; use a subclass instead.
     """
-    def __init__(self, controlStateMachine):
+    def __init__(self, control_state_machine):
         """
         Initialiser for control state objects
-        
+
         Args:
-            controlStateMachine (ControlStateMachineABC):   A reference to the control state machine that this state belongs to.
+            control_state_machine (ControlStateMachineABC):   A reference to the control
+                                                              state machine that this state
+                                                              belongs to.
         """
-        self.csm = controlStateMachine
-    
-    @abstractmethod
-    def setupState(self):
-        """
-        Performs actions required when entering this state. (e.g. set
-        valves and pumps.)
-        
-        Abstract method: should raise NotImplementedError in base
-        class. Implement in subclasses.
-        """
-        raise NotImplementedError
-    
+        self.csm = control_state_machine
+
     @staticmethod
-    def getPreferredReadingInterval():
+    def get_preferred_reading_interval():
         """
         Returns the preferred reading interval for this state.
-        
+
         Subclasses should override if they require a non-default
         reading interval.
-        
+
         Returns:
             int     The preferred reading interval in seconds
         """
         return 60
-    
+
     @abstractmethod
-    def doLogic(self, reading_interval):
+    def setup_state(self):
+        """
+        Performs actions required when entering this state. (e.g. set
+        valves and pumps.)
+
+        Abstract method: should raise NotImplementedError in base
+        class. Implement in subclasses.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def do_logic(self, reading_interval):
         """
         Performs control logic appropriate to this state, returns an
         updated reading_interval, and transitions to another state if
         appropriate.
-        
+
         Abstract method: should raise NotImplementedError in base
         class. Implement in subclasses.
-        
+
         Returns:
             int     The reading interval requested by the logic
         """
         raise NotImplementedError
-    
+
     @abstractmethod
-    def getStateName():
+    def get_state_name(self): #pylint: disable=no-method-argument
         """
         Returns the name of the state represented by this class.
-        
+
         Abstract method: raises NotImplementedError in base class.
         Implement as static method in subclasses.
-        
+
         Returns:
             string: state name
         """
@@ -116,15 +118,18 @@ class ControlStateMachineABC(metaclass=ABCMeta):
     """
     Abstract Base Class representing a state-machine-based control logic
     strategy for a Pi.
-    
-    Provides a doLogic static method which can be executed in the main loop of
+
+    Provides a do_logic static method which can be executed in the main loop of
     the river control system on a given Pi.
-    
+
     Don't instantiate objects of this class; use a subclass instead.
-    
+
     To create a new control logic strategy, create a new subclass that inherits
-    from this class. Child classes will need to instantiate their full range of possible states in their initialiser and then enter an initial state. States should be subclasses of ControlStateABC and should each implement doLogic for that state.
-    
+    from this class. Child classes will need to instantiate their full range of
+    possible states in their initialiser and then enter an initial state. States
+    should be subclasses of ControlStateABC and should each implement do_logic for
+    that state.
+
     This class endeavours to implement the well-known Object-Oriented Design
     Pattern named the "State Pattern".
     """
@@ -132,144 +137,143 @@ class ControlStateMachineABC(metaclass=ABCMeta):
         """
         Initialiser to peform initialisation that's common to all
         subclasses.
-        
+
         Subclass initialisers can call this using super().__init__().
         """
-        self.states = {} # initialise dictionary to hold list of states
-    
-    def _addState(self, stateClass):
+        self.state = None #Current state.
+        self.states = {} #Initialise dictionary to hold list of states
+
+    def _add_state(self, state_class):
         """
         Adds a new state to this machine's dictionary of possible
         states. This method is only for use in subclass initialisers.
-        
+
         Adding a state using this method facilitates the automatic
         functioning of getNamedState.
-        
+
         Args:
-            stateClass (ControlStateABC): state class to add
+            state_class (ControlStateABC): state class to add
         """
-        self.states[stateClass.getStateName()] = stateClass(self)
-    
-    def _getNamedState(self, stateName):
+        self.states[state_class.get_state_name()] = state_class(self)
+
+    def _get_named_state(self, state_name):
         """
         Returns a reference to a named state of this machine.
-        
+
         Args:
-            stateName (string): name of state to get
+            state_name (string): name of state to get
         """
-        return self.states[stateName]
-    
-    def setState(self, stateClass):
+        return self.states[state_name]
+
+    def set_state(self, state_class):
         """
         Sets the current state of the state machine to the state having
         the specificed class. State objects may use this method to
         execute a state transition.
-        
+
         Args:
-            stateClass (Class (ControlStateABC)): the state to make current
-        
+            state_class (Class (ControlStateABC)): the state to make current
+
         Returns:
             int     The preferred reading interval of the new state in seconds
         """
-        #TODO: throw a more meaningful exception if there is no
-        #      matching state in self.states. (Currently will throw an
-        #      index out of bounds exception.)
-        self.setNamedState(stateClass.getStateName())
-        return stateClass.getPreferredReadingInterval()
-    
-    def setStateBy(self, stateClass, requester):
+        self.set_named_state(state_class.get_state_name())
+        return state_class.get_preferred_reading_interval()
+
+    def set_state_by(self, state_class, requester):
         """
-        As setState, sets the current state of the state machine to the
+        As with set_state, sets the current state of the state machine to the
         state having the specified class, but prints and logs a message
         saying which class requested the state transition. State
         objects should use this method to execute a state transition.
-        
+
         Args:
-            stateClass (Class (ControlStateABC)): the state to make current
+            state_class (Class (ControlStateABC)): the state to make current
             requester (ControlStateABC): the state requesting the transition
-        
+
         Returns:
             int     The preferred reading interval of the new state in seconds
         """
-        msg = (requester.getStateName()
+        msg = (requester.get_state_name()
                + " requests transition into "
-               + stateClass.getStateName())
+               + state_class.get_state_name())
+
         logger.info(msg)
         print(msg)
-        
-        return self.setState(stateClass)
-    
-    def setNamedState(self, stateName):
+
+        return self.set_state(state_class)
+
+    def set_named_state(self, state_name):
         """
         Sets the current state of the state machine to the state
         corresponding to the specified name.
-        
+
         This method is primarily intended for restoring the state from
         persistent storage, where it is more convenient to deal with a
         text string than a state object.
-        
+
         Args:
-            stateName (string): the name of the state to make current
+            state_name (string): the name of the state to make current
         """
         try:
-            stateChangeMsg = (self.getStateMachineName() + ": Transitioning from "
-                            + self.getCurrentStateName() + " to "
-                            + stateName)
-            
+            state_change_msg = (self.get_state_machine_name() + ": Transitioning from "
+                                + self.get_current_state_name() + " to "
+                                + state_name)
+
         except (NameError, AttributeError):
             #This exception is expected when setting the initial state
             #(i.e. when self.state does not exist)
-            stateChangeMsg = (self.getStateMachineName()
-                            + ": Setting initial state "
-                            + stateName)
-        
-        logger.info(stateChangeMsg)
-        print(stateChangeMsg)
-        
-        self.state = self._getNamedState(stateName)
-        
-        self.state.setupState()
-    
-    def getCurrentStateName(self):
+            state_change_msg = (self.get_state_machine_name()
+                                + ": Setting initial state "
+                                + state_name)
+
+        logger.info(state_change_msg)
+        print(state_change_msg)
+
+        self.state = self._get_named_state(state_name)
+
+        self.state.setup_state()
+
+    def get_current_state_name(self):
         """
         Returns the name of the current state of the state machine.
-        
+
         This method is primarily intended for storing the current
         state in persistent storage, where it is more convenient to
         deal with a text string than a state object
-        
+
         Returns:
             string: the name of the current state
         """
-        return self.state.getStateName()
-    
+        return self.state.get_state_name()
+
     @abstractmethod
-    def getStateMachineName():
+    def get_state_machine_name(self): #pylint: disable=no-method-argument
         """
         Returns the human-readable identifier of this state machine,
         for use in logs and console output.
-        
+
         Abstract method: raises NotImplementedError in base class.
         Implement as static method in subclasses.
         """
         raise NotImplementedError
-    
-    def getPreferredReadingInterval(self):
+
+    def get_preferred_reading_interval(self):
         """
         Returns the preferred reading interval for the state machine's
         current state.
-        
+
         Returns:
             int     The preferred reading interval in seconds
         """
-        return self.state.getPreferredReadingInterval()
-    
-    def doLogic(self, reading_interval):
+        return self.state.get_preferred_reading_interval()
+
+    def do_logic(self, reading_interval):
         """
         Executes the control logic of this control strategy.
 
         Delegated to the object that represents the current state.
-        
+
         Args:
             readings (list):                A list of the latest readings for each probe/device.
 
@@ -290,138 +294,138 @@ class ControlStateMachineABC(metaclass=ABCMeta):
 
         Usage:
 
-            >>> reading_interval = sumppi_control_logic(<listofreadings>,
-            >>>                                     <listofprobes>, <listofmonitors>,
-            >>>                                     <listofsockets>, <areadinginterval)
+            >>> reading_interval = do_logic(<listofreadings>,
+            >>>                            <listofprobes>, <listofmonitors>,
+            >>>                            <listofsockets>, <areadinginterval)
 
         """
-        return self.state.doLogic(reading_interval)
+        return self.state.do_logic(reading_interval)
 
 class GenericControlState(ControlStateABC):
     """
     A generic control state implementation allowing for defined state
     transitions and control outputs and some built-in logging and event
     output.
-    
+
     This abstract class implements more specific functionality than the
     base ControlStateABC class. This functionality is useful for
     concrete control state classes.
-    
+
     Subclasses of GenericControlState should implement an initialiser
     that provides the required dependencies by calling
     GenericControlState.__init__().
     """
     class StateTransitionError(RuntimeError):
         """
-        Exception to be raised by stateTransition in the event that it
+        Exception to be raised by state_transition in the event that it
         was not possible to determine whether a state transition should
         occur, due to a problem parsing readings.
         """
-        pass
-    
+        pass #pylint: disable=unnecessary-pass
+
     class LogEventError(RuntimeError):
         """
-        Exception to be raised by logEvent in the event that it was not
+        Exception to be raised by log_event in the event that it was not
         possible to log an event.
         """
-        pass
-    
+        pass #pylint: disable=unnecessary-pass
+
     @abstractmethod
-    def stateTransition(self):
+    def state_transition(self):
         """
         Defines the state transition function for this control state.
-        
+
         It should raise StateTransitionError in the event that it was
         not possible to determine whether a state transition should
         occur, due to a problem parsing readings.
-        
+
         This is an abstract method in GenericControlState, and should
         be overridden by each subclass.
-        
+
         Raises:
             StateTransitionError
         """
         raise NotImplementedError
-    
-    def controlDevices(self, logEvent=False):
+
+    def control_devices(self, log_event=False):
         """
         Defines the device control function for this control state.
-        
+
         It should control some devices so that they end up in the state
-        required by this control state. If logEvent is True, then it
+        required by this control state. If log_event is True, then it
         should also log an event about the control of the devices by
-        calling self.logEventCE().
-        
+        calling self.log_event_catcherrors().
+
         If this state requires device control, then the subclass should
         override this method with one containing suitable logic.
-        
+
         If this state does not require device control, then this method
         should simply do nothing. (i.e. If device control is not
         required, don't override this version, which does nothing.)
         """
-        pass
-    
+        pass #pylint: disable=unnecessary-pass
+
     @abstractmethod
-    def logEvent(self, *args):
+    def log_event(self, *args):
         """
         Log an event.
-        
+
         This method should implement the function signature of
         Tools.logiccoretools.log_event() and should log an event.
-        
+
         This method should raise self.LogEventError in the event of
         failure to log an event.
-        
+
         For the purposes of error messages, this method will be
         assumed to log events over a network.
-        
+
         This is an abstract method, which subclasses must override in
         order to specify a means of logging errors.
         """
         raise NotImplementedError
-    
-    def logEventCE(self, *args):
+
+    def log_event_catcherrors(self, *args):
         """
         Log an event and catch errors.
-        
-        Accepts any arguments accepted by self.logEvent.
+
+        Accepts any arguments accepted by self.log_event.
         """
         try:
-            self.logEvent(*args)
-        
+            self.log_event(*args)
+
         except self.LogEventError:
             msg = "Error while trying to log event over network."
             print(msg)
             logger.error(msg)
-    
-    def setupState(self):
-        logger.info("Setting up state " + self.getStateName())
-        print("Setting up state " + self.getStateName())
-        self.logEventCE("Entering " + self.getStateName())
-        self.controlDevices(logEvent=True)
-    
-    def noTransition(self):
+
+    def setup_state(self):
+        logger.info("Setting up state " + self.get_state_name())
+        print("Setting up state " + self.get_state_name())
+        self.log_event_catcherrors("Entering " + self.get_state_name())
+        self.control_devices(log_event=True)
+
+    def no_transition(self):
         """
-        This should be called by stateTransition if no transition is
+        This should be called by state_transition if no transition is
         currently required.
         """
-        self.controlDevices()
-    
-    def doLogic(self, reading_interval):
+        self.control_devices()
+
+    def do_logic(self, reading_interval):
         try:
-            self.stateTransition()
-            
+            self.state_transition()
+
         except self.StateTransitionError:
             msg = ("Could not parse sensor readings. Control logic is "
                    "stalled.")
             print(msg)
             logger.error(msg)
-            
+
             #If state transition failed, we can still refresh device
             #control for this state
-            self.controlDevices()
-        
+            self.control_devices()
+
         #If there was a state transition, this should return the reading
         #interval of the new state.
         #(N.B.: calling method on self.csm, not self.)
-        return self.csm.getPreferredReadingInterval()
+        return self.csm.get_preferred_reading_interval()
