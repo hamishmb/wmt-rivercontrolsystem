@@ -161,7 +161,9 @@ class Sockets:
 
             raise ValueError("Invalid port number: "+str(port_number))
 
-        logger.debug("Sockets.set_portnumber(): Port number ("+self.name+"): "+str(port_number)+"...")
+        logger.debug("Sockets.set_portnumber(): Port number ("+self.name
+                     + "): "+str(port_number)+"...")
+
         self.port_number = port_number
 
     def set_server_address(self, server_address):
@@ -194,7 +196,9 @@ class Sockets:
 
                 raise ValueError("Invalid IPv4 address: "+str(server_address))
 
-        logger.debug("Sockets.set_server_address(): Server address ("+self.name+"): "+server_address+"...")
+        logger.debug("Sockets.set_server_address(): Server address ("+self.name
+                     + "): "+server_address+"...")
+
         self.server_address = socket.gethostbyname(server_address)
 
     def set_console_output(self, state):
@@ -215,7 +219,9 @@ class Sockets:
         if not isinstance(state, bool):
             raise ValueError("state must be of type bool")
 
-        logger.debug("Sockets.set_console_output(): ("+self.name+"): Setting self.verbose to "+str(state)+"...")
+        logger.debug("Sockets.set_console_output(): ("+self.name
+                     + "): Setting self.verbose to "+str(state)+"...")
+
         self.verbose = state
 
     def reset(self):
@@ -367,11 +373,15 @@ class Sockets:
         self.handler_exited = False
 
         if self.type in ("Plug", "Socket"):
-            logger.debug("Sockets.start_handler(): ("+self.name+"): Check passed, starting handler...")
+            logger.debug("Sockets.start_handler(): ("+self.name
+                         + "): Check passed, starting handler...")
+
             self.handler_thread = SocketHandlerThread(self)
 
         else:
-            logger.error("Sockets.start_handler(): ("+self.name+"): Type is wrong, throwing ValueError...")
+            logger.error("Sockets.start_handler(): ("+self.name
+            + "): Type is wrong, throwing ValueError...")
+
             raise ValueError("Type must be 'Plug' or 'Socket'")
 
     # ---------- Handler Thread & Functions ----------
@@ -423,12 +433,16 @@ class Sockets:
         #Handle any errors while connecting.
         try:
             if self.type == "Plug":
-                logger.info("Sockets._create_and_connect(): ("+self.name+"): Creating and connecting plug...")
+                logger.info("Sockets._create_and_connect(): ("+self.name
+                            + "): Creating and connecting plug...")
+
                 self._create_plug()
                 self._connect_plug()
 
             elif self.type == "Socket":
-                logger.info("Sockets._create_and_connect(): ("+self.name+"): Creating and connecting socket...")
+                logger.info("Sockets._create_and_connect(): ("+self.name
+                            + "): Creating and connecting socket...")
+
                 self._create_socket()
                 self._connect_socket()
 
@@ -445,14 +459,17 @@ class Sockets:
             logger.error("Sockets._create_and_connect(): ("+self.name+"): Error connecting:\n\n"
                          + str(traceback.format_exc()) + "\n\n")
 
-            logger.error("Sockets._create_and_connect(): ("+self.name+"): Retrying in 10 seconds...")
+            logger.error("Sockets._create_and_connect(): ("+self.name
+                         + "): Retrying in 10 seconds...")
 
             if self.verbose:
                 print("Connection Refused ("+self.name+"): "+str(err)
                       + ". Retrying in 10 seconds...")
 
             #Make the handler exit.
-            logger.debug("Sockets._create_and_connect(): ("+self.name+"): Asking handler to exit...")
+            logger.debug("Sockets._create_and_connect(): ("+self.name
+                         + "): Asking handler to exit...")
+
             self.internal_request_exit = True
 
         except (socket.timeout, TimeoutError, BlockingIOError) as err:
@@ -460,17 +477,21 @@ class Sockets:
             logger.error("Sockets._create_and_connect(): ("+self.name+"): Error connecting:\n\n"
                          + str(traceback.format_exc()) + "\n\n")
 
-            logger.error("Sockets._create_and_connect(): ("+self.name+"): Connection timed out! Poor network "
+            logger.error("Sockets._create_and_connect(): ("+self.name
+                         +"): Connection timed out! Poor network "
                          + "connectivity or bad socket configuration?")
 
-            logger.error("Sockets._create_and_connect(): ("+self.name+"): Retrying in 10 seconds...")
+            logger.error("Sockets._create_and_connect(): ("+self.name
+                         + "): Retrying in 10 seconds...")
 
             if self.verbose:
                 print("Connection Timed Out ("+self.name+"): "+str(err)
                       + ". Retrying in 10 seconds...")
 
             #Make the handler exit.
-            logger.debug("Sockets._create_and_connect(): ("+self.name+"): Asking handler to exit...")
+            logger.debug("Sockets._create_and_connect(): ("+self.name
+                         + "): Asking handler to exit...")
+
             self.internal_request_exit = True
 
         except OSError as err:
@@ -479,17 +500,21 @@ class Sockets:
             logger.error("Sockets._create_and_connect(): ("+self.name+"): Error connecting:\n\n"
                          + str(traceback.format_exc()) + "\n\n")
 
-            logger.error("Sockets._create_and_connect(): ("+self.name+"): Unknown error, possibly "
+            logger.error("Sockets._create_and_connect(): ("+self.name
+                         + "): Unknown error, possibly "
                          + "address already in use?")
 
-            logger.error("Sockets._create_and_connect(): ("+self.name+"): Retrying in 10 seconds...")
+            logger.error("Sockets._create_and_connect(): ("+self.name
+                         + "): Retrying in 10 seconds...")
 
             if self.verbose:
                 print("Connection Timed Out ("+self.name+"): "+str(err)
                       + ". Retrying in 10 seconds...")
 
             #Make the handler exit.
-            logger.debug("Sockets._create_and_connect(): ("+self.name+"): Asking handler to exit...")
+            logger.debug("Sockets._create_and_connect(): ("+self.name
+                         + "): Asking handler to exit...")
+
             self.internal_request_exit = True
 
     # ---------- Connection Functions (Plugs) ----------
@@ -524,7 +549,8 @@ class Sockets:
             >>> <Sockets-Obj>._connect_plug()
         """
 
-        logger.info("Sockets._connect_plug(): ("+self.name+"): Attempting to connect to the requested socket...")
+        logger.info("Sockets._connect_plug(): ("+self.name
+                    + "): Attempting to connect to the requested socket...")
 
         self.underlying_socket.connect((self.server_address, self.port_number))
 
@@ -567,7 +593,8 @@ class Sockets:
             >>> <Sockets-Obj>._connect_socket()
         """
 
-        logger.info("Sockets._connect_socket(): ("+self.name+"): Attempting to connect to the requested socket...")
+        logger.info("Sockets._connect_socket(): ("+self.name
+                    + "): Attempting to connect to the requested socket...")
 
         self.underlying_socket = self.server_socket.accept()[0]
 
@@ -593,10 +620,14 @@ class Sockets:
 
         #Don't fill up with queue with duplicate tick requests - causes extra load.
         if isinstance(data, str) and data == "Tick?" and data in self.out_queue:
-            logger.debug("Sockets.write(): ("+self.name+"): Dropping redundant request for system tick...")
+            logger.debug("Sockets.write(): ("+self.name
+                         + "): Dropping redundant request for system tick...")
+
             return
 
-        logger.debug("Sockets.write(): ("+self.name+"): Appending "+str(data)+" to OutgoingQueue...")
+        logger.debug("Sockets.write(): ("+self.name
+                     + "): Appending "+str(data)+" to OutgoingQueue...")
+
         self.out_queue.append(data)
 
     def has_data(self):
@@ -650,7 +681,9 @@ class Sockets:
 
         #Clear the oldest element of the queue if there's anything in it.
         if self.in_queue:
-            logger.debug("Sockets.pop(): ("+self.name+"): Clearing oldest element of IncomingQueue...")
+            logger.debug("Sockets.pop(): ("+self.name
+                         + "): Clearing oldest element of IncomingQueue...")
+
             self.in_queue.popleft()
 
     # ---------- Other Functions ----------
@@ -668,13 +701,15 @@ class Sockets:
             >>> True
         """
 
-        logger.debug("Sockets._send_pending_messages(): ("+self.name+"): Sending any pending messages...")
+        logger.debug("Sockets._send_pending_messages(): ("+self.name
+                     + "): Sending any pending messages...")
 
         try:
             #Write all pending messages, if there are any.
             while self.out_queue:
                 #Write the oldest message first.
-                logger.info("Sockets._send_pending_messages(): ("+self.name+"): Sending data...")
+                logger.info("Sockets._send_pending_messages(): ("+self.name
+                            + "): Sending data...")
 
                 #Use pickle to serialize everything.
                 #We can easily delimit things with ENDMSG.
@@ -683,12 +718,15 @@ class Sockets:
                 self.underlying_socket.sendall(data+b"ENDMSG")
 
                 #Remove the oldest message from message queue.
-                logger.debug("Sockets._send_pending_messages(): ("+self.name+"): Clearing front of out_queue...")
+                logger.debug("Sockets._send_pending_messages(): ("+self.name
+                             + "): Clearing front of out_queue...")
+
                 self.out_queue.popleft()
 
         except _pickle.PicklingError:
             #Unable to pickle the object!
-            logger.error("Sockets._send_pending_messages(): ("+self.name+"): Unable to pickle data to send to peer! "
+            logger.error("Sockets._send_pending_messages(): ("+self.name
+                         + "): Unable to pickle data to send to peer! "
                          + "Error was:\n\n"+str(traceback.format_exc())
                          + "\n\nContinuing...")
 
@@ -696,7 +734,8 @@ class Sockets:
 
         except OSError:
             #Assume that network is down or client gone. Recreate the socket.
-            logger.error("Sockets._send_pending_messages(): ("+self.name+"): Connection closed or client gone. "
+            logger.error("Sockets._send_pending_messages(): ("+self.name
+                         + "): Connection closed or client gone. "
                          + "Error was:\n\n"+str(traceback.format_exc())
                          + "\n\nAttempting to reconnect...")
 
@@ -719,7 +758,8 @@ class Sockets:
             >>> True
         """
 
-        logger.debug("Sockets._forward_messages(): ("+self.name+"): Forwarding any pending messages...")
+        logger.debug("Sockets._forward_messages(): ("+self.name
+                     +"): Forwarding any pending messages...")
 
         #Forward all pending messages, if there are any.
         while self.forward_queue:
@@ -740,13 +780,16 @@ class Sockets:
 
             if dest_socket is None:
                 #Couldn't find the socket to forward this message to!
-                logger.error("Sockets._forward_messages(): ("+self.name+"): Cannot forward message for "+dest_sysid+"! Dropping message.")
+                logger.error("Sockets._forward_messages(): ("+self.name
+                             +"): Cannot forward message for "+dest_sysid+"! Dropping message.")
 
             else:
                 dest_socket.write(msg)
 
             #Remove the oldest message from message queue.
-            logger.debug("Sockets._forward_messages(): ("+self.name+"): Clearing front of forward_queue...")
+            logger.debug("Sockets._forward_messages(): ("+self.name
+                         + "): Clearing front of forward_queue...")
+
             self.forward_queue.popleft()
 
         logger.debug("Sockets._forward_messages(): ("+self.name+"): Done.")
@@ -766,11 +809,13 @@ class Sockets:
             >>> 0
         """
 
-        logger.debug("Sockets._read_pending_messages(): ("+self.name+"): Attempting to read from socket...")
+        logger.debug("Sockets._read_pending_messages(): ("+self.name
+                     + "): Attempting to read from socket...")
 
         try:
             #This is vaguely derived from the C++ solution I found on Stack Overflow.
-            logger.debug("Sockets._read_pending_messages(): ("+self.name+"): Waiting for data...")
+            logger.debug("Sockets._read_pending_messages(): ("+self.name
+                         + "): Waiting for data...")
 
             data = b""
 
@@ -786,7 +831,9 @@ class Sockets:
                     new_data = self.underlying_socket.recv(2048)
 
                     if new_data == b"":
-                        logger.error("Sockets._read_pending_messages(): ("+self.name+"): Connection closed cleanly")
+                        logger.error("Sockets._read_pending_messages(): ("+self.name
+                                     + "): Connection closed cleanly")
+
                         return -1 #Connection closed cleanly by peer.
 
                     #Set this now, seeing as we have received at least part of an object.
@@ -803,7 +850,9 @@ class Sockets:
                     data = objs[-1]
 
                     for obj in objs[:-1]:
-                        logger.info("Sockets._read_pending_messages(): ("+self.name+"): Received data.")
+                        logger.info("Sockets._read_pending_messages(): ("+self.name
+                                    + "): Received data.")
+
                         self._process_obj(obj)
 
                 #Keep reading until there's nothing left to read.
@@ -814,9 +863,11 @@ class Sockets:
             return 0
 
         except Exception:
-            logger.error("Sockets._read_pending_messages(): ("+self.name+"): Caught unhandled exception!")
-            logger.error("Socket._read_pending_messages(): ("+self.name+"): Error was\n\n"
-                         + str(traceback.format_exc())+"...")
+            logger.error("Sockets._read_pending_messages(): ("+self.name
+                         + "): Caught unhandled exception!")
+
+            logger.error("Socket._read_pending_messages(): ("+self.name
+                         + "): Error was\n\n"+str(traceback.format_exc())+"...")
 
             print("Error reading messages ("+self.name+"): ", traceback.format_exc())
             return -1
@@ -838,7 +889,9 @@ class Sockets:
             msg = pickle.loads(obj)
 
         except (_pickle.UnpicklingError, TypeError, EOFError):
-            logger.error("Sockets._process_obj(): ("+self.name+"): Error unpickling data from socket: "+str(obj))
+            logger.error("Sockets._process_obj(): ("+self.name
+                         + "): Error unpickling data from socket: "+str(obj))
+
             print("Unpickling error ("+self.name+"): "+str(obj))
             return
 
@@ -851,12 +904,15 @@ class Sockets:
         #Append to the appropriate queue.
         if potential_sysid != self.system_id and potential_sysid in config.SITE_SETTINGS:
             #Needs to be sent to another device.
-            logger.debug("Sockets._process_obj(): ("+self.name+"): Pushing message to forward queue...")
+            logger.debug("Sockets._process_obj(): ("+self.name
+                         + "): Pushing message to forward queue...")
+
             self.forward_queue.append(msg)
 
         else:
             #This message is intended for us.
-            logger.debug("Sockets._process_obj(): ("+self.name+"): Pushing message to incoming queue...")
+            logger.debug("Sockets._process_obj(): ("+self.name
+                         + "): Pushing message to incoming queue...")
 
             if isinstance(msg, str) and "*" in msg:
                 self.in_queue.append(' '.join(msg.split(" ")[1:]))
@@ -889,7 +945,7 @@ class SocketHandlerThread(threading.Thread):
         threading.Thread.__init__(self)
         self.start()
 
-    def run(self): #TODO Refactoring.
+    def run(self):
         """
         This is the body of the thread.
 
@@ -912,7 +968,8 @@ class SocketHandlerThread(threading.Thread):
 
         #-------------------- Setup the socket --------------------
         #Setup the socket.
-        logger.debug("Sockets.Handler(): ("+self.socket.name+"): Calling self.socket._create_and_connect to set the socket up...")
+        logger.debug("Sockets.Handler(): ("+self.socket.name
+                     + "): Calling self.socket._create_and_connect to set the socket up...")
 
         while not config.EXITING:
             self.socket.internal_request_exit = True
@@ -937,7 +994,7 @@ class SocketHandlerThread(threading.Thread):
             logger.debug("Sockets.Handler(): ("+self.socket.name+"): Done! Entering main loop.")
             print("Connected to peer ("+self.socket.name+").")
 
-        #-------------------- Manage the connection, sending and receiving data --------------------
+        #---------------- Manage the connection, sending and receiving data ---------------
         #Keep sending and receiving messages until we're asked to exit.
         iters_count = 0
         last_ping_good = True
@@ -962,7 +1019,8 @@ class SocketHandlerThread(threading.Thread):
                 last_ping_good = self.socket.peer_alive()
 
             if read_result == -1 or write_result is False or not last_ping_good:
-                logger.error("Sockets.Handler(): ("+self.socket.name+"): Lost connection. Attempting to reconnect...")
+                logger.error("Sockets.Handler(): ("+self.socket.name
+                             + "): Lost connection. Attempting to reconnect...")
 
                 if self.socket.verbose:
                     print("Lost connection to peer ("+self.socket.name
@@ -970,9 +1028,11 @@ class SocketHandlerThread(threading.Thread):
 
                 #Wait for the socket to reconnect, unless the user ends the program
                 #(this allows us to exit cleanly if the peer is gone).
-                while not config.EXITING: #FIXME code duplication
+                while not config.EXITING:
                     #Reset the socket. Also resets the status trackers.
-                    logger.error("Sockets.Handler(): ("+self.socket.name+"): Resetting socket...")
+                    logger.error("Sockets.Handler(): ("+self.socket.name
+                                 + "): Resetting socket...")
+
                     self.socket.reset()
 
                     #Wait for 10 seconds in between attempts.
@@ -980,13 +1040,17 @@ class SocketHandlerThread(threading.Thread):
 
                     self.socket.internal_request_exit = True
 
-                    logger.debug("Sockets.Handler(): ("+self.socket.name+"): Recreating and reconnecting the socket...")
+                    logger.debug("Sockets.Handler(): ("+self.socket.name
+                                 + "): Recreating and reconnecting the socket...")
+
                     if self.socket.peer_alive():
                         self.socket._create_and_connect()
 
                     #If reconnection was successful, set flag and return to normal operation.
                     if not self.socket.internal_request_exit:
-                        logger.debug("Sockets.Handler(): ("+self.socket.name+"): Success! Re-entering main loop...")
+                        logger.debug("Sockets.Handler(): ("+self.socket.name
+                                     + "): Success! Re-entering main loop...")
+
                         self.socket.reconnected = True
                         last_ping_good = True
 
