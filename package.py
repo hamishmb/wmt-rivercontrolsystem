@@ -26,7 +26,7 @@ available in the Installation Specification and/or User Guide.
     :platform: Linux
     :synopsis: Packaging script for site-wide updater.
 
-.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
+.. moduleauthor:: Hamish McIntyre-Bhatty <contact@hamishmb.com>
 
 """
 

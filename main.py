@@ -31,7 +31,7 @@ device.
     :platform: Linux
     :synopsis: The main part of the control software.
 
-.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
+.. moduleauthor:: Hamish McIntyre-Bhatty <contact@hamishmb.com>
 
 """
 

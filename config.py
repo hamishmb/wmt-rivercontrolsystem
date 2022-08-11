@@ -137,9 +137,9 @@ There are no classes or functions defined in this file.
     :platform: Linux
     :synopsis: The configuration for the control software.
 
-.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
-.. and Terry Coles <wmt@hadrian-way.co.uk>
-
+.. moduleauthor:: Hamish McIntyre-Bhatty <contact@hamishmb.com>
+.. moduleauthor:: Terry Coles <wmt@hadrian-way.co.uk>
+.. moduleauthor:: Patrick Wigmore <pwbugreports@gmx.com>
 
 """
 

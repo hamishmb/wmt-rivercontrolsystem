@@ -27,7 +27,7 @@ coretools.DatabaseConnection class.
     :platform: Linux
     :synopsis: Code to interface between control logic and DatabaseConnection class.
 
-.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
+.. moduleauthor:: Hamish McIntyre-Bhatty <contact@hamishmb.com>
 """
 
 import logging

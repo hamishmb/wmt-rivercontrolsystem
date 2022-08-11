@@ -27,7 +27,7 @@ This is the controllogic module, which contains control logic integration and se
     :platform: Linux
     :synopsis: Contains control logic integration and setup functions.
 
-.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
+.. moduleauthor:: Hamish McIntyre-Bhatty <contact@hamishmb.com>
 .. moduleauthor:: Patrick Wigmore <pwbugreports@gmx.com>
 .. moduleauthor:: Terry Coles <wmt@hadrian-way.co.uk>
 """

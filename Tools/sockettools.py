@@ -39,7 +39,7 @@ This now also includes the ability to forward messages, as documented above.
     :platform: Linux
     :synopsis: The part of the framework that contains the sockets classes.
 
-.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
+.. moduleauthor:: Hamish McIntyre-Bhatty <contact@hamishmb.com>
 
 """
 

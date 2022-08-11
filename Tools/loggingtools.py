@@ -27,7 +27,7 @@ the log file every day, and re-create it if it disappears.
     :platform: Linux
     :synopsis: Contains logging tools used by all parts of the software.
 
-.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
+.. moduleauthor:: Hamish McIntyre-Bhatty <contact@hamishmb.com>
 """
 
 import os

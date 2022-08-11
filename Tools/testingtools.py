@@ -20,6 +20,13 @@ control software to be run more easily in test deployments without real hardware
 in virtual machines.
 
 The classes in this module override RPi.GPIO and parts of the adafruit_ads1x15.ads1115 module.
+
+.. module:: testingtools.py
+    :platform: Linux
+    :synopsis: Allows the river control system to be run more easily in virtual machines.
+
+.. moduleauthor:: Hamish McIntyre-Bhatty <contact@hamishmb.com>
+
 """
 
 ads = 0

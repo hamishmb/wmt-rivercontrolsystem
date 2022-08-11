@@ -28,7 +28,7 @@ a bit more of the complexity away.
     :platform: Linux
     :synopsis: The part of the framework that contains the monitor tools.
 
-.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
+.. moduleauthor:: Hamish McIntyre-Bhatty <contact@hamishmb.com>
 
 """
 

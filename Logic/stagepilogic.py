@@ -28,7 +28,7 @@ This is the stagepilogic module, which contains control logic for Stage Pi.
     :synopsis: Contains control logic for Stage Pi.
 
 .. moduleauthor:: Patrick Wigmore <pwbugreports@gmx.com>
-.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
+.. moduleauthor:: Hamish McIntyre-Bhatty <contact@hamishmb.com>
 """
 
 import logging

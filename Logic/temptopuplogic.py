@@ -71,6 +71,7 @@ redundant.
     :synopsis: Contains interim control logic for Lady Hanham Pi.
 
 .. moduleauthor:: Patrick Wigmore <pwbugreports@gmx.com>
+.. moduleauthor:: Hamish McIntyre-Bhatty <contact@hamishmb.com>
 """
 
 import logging

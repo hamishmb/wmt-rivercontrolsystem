@@ -29,7 +29,7 @@ this is likely to move to some new files once we have the new algorithms.
     :platform: Linux
     :synopsis: Contains tools used by all parts of the software.
 
-.. moduleauthor:: Hamish McIntyre-Bhatty <hamishmb@live.co.uk>
+.. moduleauthor:: Hamish McIntyre-Bhatty <contact@hamishmb.com>
 .. moduleauthor:: Patrick Wigmore <pwbugreports@gmx.com>
 """
 

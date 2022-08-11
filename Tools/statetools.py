@@ -29,6 +29,7 @@ for other control logic too.
     :synopsis: Tools for implementing The State Pattern in control logic.
 
 .. moduleauthor:: Patrick Wigmore <pwbugreports@gmx.com>
+.. moduleauthor:: Hamish McIntyre-Bhatty <contact@hamishmb.com>
 """
 import logging
 from abc import ABCMeta, abstractmethod
