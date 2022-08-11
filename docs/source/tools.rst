@@ -1,5 +1,19 @@
-Documentation for the Tools package (/Tools) (basic detail)
-***********************************************************
+Documentation for the Tools package (/Tools)
+============================================
 
-.. automodule:: rivercontrolsystem.Tools
-    :members:
+Contents:
+
+.. toctree::
+    :maxdepth: 2
+
+
+    coretools
+    deviceobjects
+    devicemanagement
+    loggingtools
+    logiccoretools
+    monitortools
+    sockettools
+    statetools
+    testingtools
+

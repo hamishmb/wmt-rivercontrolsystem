@@ -1,5 +1,12 @@
-Documentation for the Logic package (/Logic) (basic detail)
-***********************************************************
+Documentation for the Logic package (/Logic)
+============================================
 
-.. automodule:: rivercontrolsystem.Logic
-    :members:
+Contents:
+
+.. toctree::
+    :maxdepth: 2
+
+
+    genericlogic
+    stagepilogic
+    temptopuplogic

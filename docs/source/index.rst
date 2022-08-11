@@ -14,20 +14,10 @@ Contents:
     overview
     main_control_software
     config
+    tools-basic
     tools
-    coretools
-    loggingtools
-    logiccoretools
+    logic-basic
     logic
-    genericlogic
-    stagepilogic
-    temptopuplogic
-    monitortools
-    deviceobjects
-    devicemanagement
-    sockettools
-    testingtools
-    statetools
 
 
 Indices and tables
