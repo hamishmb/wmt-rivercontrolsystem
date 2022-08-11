@@ -244,7 +244,7 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #The test sets the interval as 15 seconds. This should not have been changed.
         self.assertEqual(self.gate_valve_socket.get_queue(), [])
         self.assertEqual(data.states["VALVE4:V4"][0], "0%")
-        self.assertEqual(reading_interval, 15)
+        self.assertEqual(reading_interval, 30)
         self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
 
     def test_sumppi_control_logic_7(self):
@@ -278,7 +278,7 @@ class TestSumpPiControlLogic(unittest.TestCase):
         #The test sets the interval as 15 seconds. This should not have been changed.
         self.assertEqual(self.gate_valve_socket.get_queue(), [])
         self.assertEqual(data.states["VALVE4:V4"][0], "0%")
-        self.assertEqual(reading_interval, 15)
+        self.assertEqual(reading_interval, 30)
         self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
 
     def test_sumppi_control_logic_8(self):
