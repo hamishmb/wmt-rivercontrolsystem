@@ -357,7 +357,7 @@ class TestSumpPiControlLogic(unittest.TestCase):
         self.assertFalse(self.butts_pump.is_enabled())
         self.assertTrue(self.sump_pump.is_enabled())
         self.assertEqual(self.gate_valve_socket.get_queue(), [])
-        self.assertEqual(data.states["VALVE4:V4"][0], "0%")
+        self.assertEqual(data.states["VALVE4:V4"][0], "25%")
         self.assertEqual(reading_interval, 60)
         self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
 

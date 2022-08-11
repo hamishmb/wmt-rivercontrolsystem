@@ -693,7 +693,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
             logger.warning("A manual override is controlling the main circulation pump.")
             print("A manual override is controlling the main circulation pump.")
 
-        #Close gate valve.
+        #Always open the gate valve, regardless of buttspi level.
         logger.info("Opening wendy butts gate valve to 25%.")
         print("Opening wendy butts gate valve to 25%.")
 
