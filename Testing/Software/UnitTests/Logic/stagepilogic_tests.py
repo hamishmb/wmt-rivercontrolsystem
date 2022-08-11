@@ -122,27 +122,27 @@ class TestStagePiReadingsParser(unittest.TestCase):
             # Check that all of its methods raise ValueError.
             with self.subTest("g6Full"):
                 with self.assertRaises(ValueError):
-                    sprp.g6Full()
+                    sprp.g6_full()
                     
             with self.subTest("g6Empty"):
                 with self.assertRaises(ValueError):
-                    sprp.g6Empty()
+                    sprp.g6_empty()
             
-            with self.subTest("g4Overfull"):
+            with self.subTest("g4_overfull"):
                 with self.assertRaises(ValueError):
-                    sprp.g4Overfull()
+                    sprp.g4_overfull()
             
-            with self.subTest("g4FullOrMore"):
+            with self.subTest("g4_full_or_more"):
                 with self.assertRaises(ValueError):
-                    sprp.g4FullOrMore()
+                    sprp.g4_full_or_more()
             
             with self.subTest("g4VeryNearlyFullOrMore"):
                 with self.assertRaises(ValueError):
-                    sprp.g4VeryNearlyFullOrMore()
+                    sprp.g4_very_nearly_full_or_more()
             
-            with self.subTest("g4NearlyFullOrMore"):
+            with self.subTest("g4_nearly_full_or_more"):
                 with self.assertRaises(ValueError):
-                    sprp.g4NearlyFullOrMore()
+                    sprp.g4_nearly_full_or_more()
     
     
     def testNoReadings(self):
@@ -160,30 +160,30 @@ class TestStagePiReadingsParser(unittest.TestCase):
             # Check that all the parser's methods raise ValueError
             with self.subTest("g6Full"):
                 with self.assertRaises(ValueError):
-                    sprp.g6Full()
+                    sprp.g6_full()
                     
             with self.subTest("g6Empty"):
                 with self.assertRaises(ValueError):
-                    sprp.g6Empty()
+                    sprp.g6_empty()
             
-            with self.subTest("g4Overfull"):
+            with self.subTest("g4_overfull"):
                 with self.assertRaises(ValueError):
-                    sprp.g4Overfull()
+                    sprp.g4_overfull()
             
-            with self.subTest("g4FullOrMore"):
+            with self.subTest("g4_full_or_more"):
                 with self.assertRaises(ValueError):
-                    sprp.g4FullOrMore()
+                    sprp.g4_full_or_more()
             
             with self.subTest("g4VeryNearlyFullOrMore"):
                 with self.assertRaises(ValueError):
-                    sprp.g4VeryNearlyFullOrMore()
+                    sprp.g4_very_nearly_full_or_more()
             
-            with self.subTest("g4NearlyFullOrMore"):
+            with self.subTest("g4_nearly_full_or_more"):
                 with self.assertRaises(ValueError):
-                    sprp.g4NearlyFullOrMore()
+                    sprp.g4_nearly_full_or_more()
         
     def testG6Full(self):
-        """Test that StagePiReadingsParser.g6Full() behaves as expected under various conditions."""
+        """Test that StagePiReadingsParser.g6_full() behaves as expected under various conditions."""
         # Expected fault-free g6Full return values for selected G6 level values
         expected = {
             stagepilogic.levels["G6Full"] + 100: True, # well within range
@@ -219,14 +219,14 @@ class TestStagePiReadingsParser(unittest.TestCase):
                                         
                         if expected[l] and cf["G6:FS1"] in [1,3]:
                             # if full with low limit float switch stuck on
-                            self.assertRaises(ValueError, sprp.g6Full(),
+                            self.assertRaises(ValueError, sprp.g6_full(),
                                             "The readings parser should "
                                             "have raised an error due to "
                                             "the contradictory sensor "
                                             "readings.")
                         
                         else:
-                            self.assertEqual(sprp.g6Full(), expected[l],
+                            self.assertEqual(sprp.g6_full(), expected[l],
                                             "The readings were not parsed "
                                             "as expected. Make sure any "
                                             "simulated sensor faults were "
@@ -237,7 +237,7 @@ class TestStagePiReadingsParser(unittest.TestCase):
                         self.assertNoLoggedStatus()
     
     def testG6Empty(self):
-        """Test that StagePiReadingsParser.g6Empty() behaves as expected under various conditions."""
+        """Test that StagePiReadingsParser.g6_empty() behaves as expected under various conditions."""
         # Expected fault-free g6Empty return values for selected G6 levels
         expected = {
             # N.B. G6 Empty is defined by the lower bound for "not empty"
@@ -277,22 +277,22 @@ class TestStagePiReadingsParser(unittest.TestCase):
                         
                         if expected[l] and cf["G6:FS0"] in [1,3]:
                             # if empty with high limit float switch stuck on
-                            self.assertRaises(ValueError, sprp.g6Empty(),
+                            self.assertRaises(ValueError, sprp.g6_empty(),
                                             "The readings parser should "
                                             "have raised an error due to "
                                             "the contradictory sensor "
                                             "readings.")
                         
                         else:
-                            self.assertEqual(sprp.g6Empty(), expected[l],
+                            self.assertEqual(sprp.g6_empty(), expected[l],
                                             "The readings were not parsed "
                                             "as expected. Make sure any "
                                             "simulated sensor faults were "
                                             "correctly handled.")
     
     def testG4Overfull(self):
-        """Test that StagePiReadingsParser.g4Overfull() behaves as expected under various conditions."""
-        # Expected fault-free g4Overfull return values for selected G4 levels
+        """Test that StagePiReadingsParser.g4_overfull() behaves as expected under various conditions."""
+        # Expected fault-free g4_overfull return values for selected G4 levels
         expected = {
             stagepilogic.levels["G4Overfull"] + 100: True, # within range
             stagepilogic.levels["G4Overfull"]: True,      # on lower bound
@@ -325,15 +325,15 @@ class TestStagePiReadingsParser(unittest.TestCase):
                                     g4_level = l,
                                     faults = cf):
                         
-                        self.assertEqual(sprp.g4Overfull(), expected[l],
+                        self.assertEqual(sprp.g4_overfull(), expected[l],
                                             "The readings were not parsed "
                                             "as expected. Make sure any "
                                             "simulated sensor faults were "
                                             "correctly handled.")
     
     def testG4FullOrMore(self):
-        """Test that StagePiReadingsParser.g4FullOrMore() behaves as expected under various conditions."""
-        # Expected fault-free g4FullOrMore return values for selected G4 levels
+        """Test that StagePiReadingsParser.g4_full_or_more() behaves as expected under various conditions."""
+        # Expected fault-free g4_full_or_more return values for selected G4 levels
         expected = {
             # N.B. "full or more"; there is no upper bound
             3000: True,    # guaranteed very full
@@ -368,15 +368,15 @@ class TestStagePiReadingsParser(unittest.TestCase):
                                     g4_level = l,
                                     faults = cf):
                         
-                        self.assertEqual(sprp.g4FullOrMore(), expected[l],
+                        self.assertEqual(sprp.g4_full_or_more(), expected[l],
                                             "The readings were not parsed "
                                             "as expected. Make sure any "
                                             "simulated sensor faults were "
                                             "correctly handled.")
     
     def testG4VeryNearlyFullOrMore(self):
-        """Test that StagePiReadingsParser.g4VeryNearlyFullOrMore() behaves as expected under various conditions."""
-        # Expected fault-free g4Overfull return values for selected G4 levels
+        """Test that StagePiReadingsParser.g4_very_nearly_full_or_more() behaves as expected under various conditions."""
+        # Expected fault-free g4_overfull return values for selected G4 levels
         expected = {
             # N.B. "very nearly full or more"; there is no upper bound
             3000: True,    # guaranteed very full
@@ -411,15 +411,15 @@ class TestStagePiReadingsParser(unittest.TestCase):
                                     g4_level = l,
                                     faults = cf):
                         
-                        self.assertEqual(sprp.g4VeryNearlyFullOrMore(), expected[l],
+                        self.assertEqual(sprp.g4_very_nearly_full_or_more(), expected[l],
                                             "The readings were not parsed "
                                             "as expected. Make sure any "
                                             "simulated sensor faults were "
                                             "correctly handled.")
     
     def testG4NearlyFullOrMore(self):
-        """Test that StagePiReadingsParser.g4NearlyFullOrMore() behaves as expected under various conditions."""
-        # Expected fault-free g4Overfull return values for selected G4 levels
+        """Test that StagePiReadingsParser.g4_nearly_full_or_more() behaves as expected under various conditions."""
+        # Expected fault-free g4_overfull return values for selected G4 levels
         expected = {
             # N.B. "nearly full or more"; there is no upper bound
             3000: True,    # guaranteed very full
@@ -454,7 +454,7 @@ class TestStagePiReadingsParser(unittest.TestCase):
                                     g4_level = l,
                                     faults = cf):
                         
-                        self.assertEqual(sprp.g4NearlyFullOrMore(), expected[l],
+                        self.assertEqual(sprp.g4_nearly_full_or_more(), expected[l],
                                             "The readings were not parsed "
                                             "as expected. Make sure any "
                                             "simulated sensor faults were "
@@ -480,7 +480,7 @@ class TestStagePiControlLogic(unittest.TestCase):
     # states.
     # 
     # This makes sure none of the states has been missed out of the
-    # class initialiser, and also tests that getCurrentStateName is
+    # class initialiser, and also tests that get_current_state_name is
     # working.
     #
     # As a side effect, we end up testing StagePiInitState's ability to
@@ -494,7 +494,7 @@ class TestStagePiControlLogic(unittest.TestCase):
         """Tests that the logic can get into StagePiInitState"""
         # Logic should go into StagePiInitState by default
         sm = stagepilogic.StagePiControlLogic()
-        self.assertEqual(sm.getCurrentStateName(), "StagePiInitState")
+        self.assertEqual(sm.get_current_state_name(), "StagePiInitState")
     
     def testG6Empty(self):
         """Tests that the logic can get into G6Empty state"""
@@ -502,8 +502,8 @@ class TestStagePiControlLogic(unittest.TestCase):
         self.wm.setVesselLevel("G6", 0)
         
         sm = stagepilogic.StagePiControlLogic()
-        sm.doLogic(30)
-        self.assertEqual(sm.getCurrentStateName(),
+        sm.do_logic(30)
+        self.assertEqual(sm.get_current_state_name(),
                          "StagePiG6EmptyState")
     
     def testG4Overfilled(self):
@@ -512,8 +512,8 @@ class TestStagePiControlLogic(unittest.TestCase):
         self.wm.setVesselLevel("G4", stagepilogic.levels["G4Overfull"])
         
         sm = stagepilogic.StagePiControlLogic()
-        sm.doLogic(30)
-        self.assertEqual(sm.getCurrentStateName(),
+        sm.do_logic(30)
+        self.assertEqual(sm.get_current_state_name(),
                          "StagePiG4OverfilledState")
     
     def testG4Filled(self):
@@ -523,8 +523,8 @@ class TestStagePiControlLogic(unittest.TestCase):
         self.wm.setVesselLevel("G4", stagepilogic.levels["G4Full"])
         
         sm = stagepilogic.StagePiControlLogic()
-        sm.doLogic(30)
-        self.assertEqual(sm.getCurrentStateName(),
+        sm.do_logic(30)
+        self.assertEqual(sm.get_current_state_name(),
                          "StagePiG4FilledState")
     
     def testG4VeryNearlyFilled(self):
@@ -535,8 +535,8 @@ class TestStagePiControlLogic(unittest.TestCase):
                                stagepilogic.levels["G4VeryNearlyFull"])
         
         sm = stagepilogic.StagePiControlLogic()
-        sm.doLogic(30)
-        self.assertEqual(sm.getCurrentStateName(),
+        sm.do_logic(30)
+        self.assertEqual(sm.get_current_state_name(),
                          "StagePiG4VeryNearlyFilledState")
     
     def testG4NearlyFilled(self):
@@ -546,8 +546,8 @@ class TestStagePiControlLogic(unittest.TestCase):
         self.wm.setVesselLevel("G4", stagepilogic.levels["G4NearlyFull"])
         
         sm = stagepilogic.StagePiControlLogic()
-        sm.doLogic(30)
-        self.assertEqual(sm.getCurrentStateName(),
+        sm.do_logic(30)
+        self.assertEqual(sm.get_current_state_name(),
                          "StagePiG4NearlyFilledState")
     
     def testG4Filling(self):
@@ -558,8 +558,8 @@ class TestStagePiControlLogic(unittest.TestCase):
                                stagepilogic.levels["G4NearlyFull"] - 1)
         
         sm = stagepilogic.StagePiControlLogic()
-        sm.doLogic(30)
-        self.assertEqual(sm.getCurrentStateName(),
+        sm.do_logic(30)
+        self.assertEqual(sm.get_current_state_name(),
                          "StagePiG4FillingState")
 
 def singleStateTestSetUp(testInstance, stateClassUnderTest, G6Level, G4Level):
@@ -607,12 +607,12 @@ class TestStagePiInitState(unittest.TestCase):
         singleStateTestTearDown(self)
     
     def testGetStateName(self):
-        """Tests whether getStateName returns the correct state name"""
-        self.assertEqual(self.s.getStateName(), "StagePiInitState")
+        """Tests whether get_state_name returns the correct state name"""
+        self.assertEqual(self.s.get_state_name(), "StagePiInitState")
     
     def testGetPreferredReadingInterval(self):
         """Tests whether the state has the correct preferred reading interval"""
-        self.assertEqual(self.s.getPreferredReadingInterval(), 15)
+        self.assertEqual(self.s.get_preferred_reading_interval(), 15)
     
     def assertStateNoControlOutputs(self):
         """
@@ -626,14 +626,14 @@ class TestStagePiInitState(unittest.TestCase):
     def testSetupState(self):
         """Tests whether StagePiInitState has the correct control outputs when first set up."""
         # Check that StagePiInitState does not try to control any devices
-        self.s.setupState()
+        self.s.setup_state()
         self.assertStateNoControlOutputs()
     
     def testTransitionToG6Empty(self):
         """Tests whether StagePiInitState will transition into StagePiG6EmptyState under the expected conditions."""
         self.wm.setVesselLevel("G6", 0)
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG6EmptyState,
             self.s)
         
@@ -644,8 +644,8 @@ class TestStagePiInitState(unittest.TestCase):
         """Tests whether StagePiInitState will transition into StagePiG4OverfilledState under the expected conditions."""
         self.wm.setVesselLevel("G4",
                                stagepilogic.levels["G4Overfull"])
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4OverfilledState,
             self.s)
         
@@ -656,8 +656,8 @@ class TestStagePiInitState(unittest.TestCase):
         """Tests whether StagePiInitState will transition into StagePiG4FilledState under the expected conditions."""
         self.wm.setVesselLevel("G4",
                                stagepilogic.levels["G4Full"])
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4FilledState,
             self.s)
         
@@ -668,8 +668,8 @@ class TestStagePiInitState(unittest.TestCase):
         """Tests whether StagePiInitState will transition into StagePiG4VeryNearlyFilledState under the expected conditions."""
         self.wm.setVesselLevel("G4",
                                stagepilogic.levels["G4VeryNearlyFull"])
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4VeryNearlyFilledState,
             self.s)
         
@@ -680,8 +680,8 @@ class TestStagePiInitState(unittest.TestCase):
         """Tests whether StagePiInitState will transition into StagePiG4NearlyFilledState under the expected conditions."""
         self.wm.setVesselLevel("G4",
                                stagepilogic.levels["G4NearlyFull"])
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4NearlyFilledState,
             self.s)
         
@@ -692,8 +692,8 @@ class TestStagePiInitState(unittest.TestCase):
         """Tests whether StagePiInitState will transition into StagePiG4FillingState under the expected conditions."""
         self.wm.setVesselLevel("G4",
                                stagepilogic.levels["G4NearlyFull"] - 1)
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4FillingState,
             self.s)
         
@@ -716,12 +716,12 @@ class TestStagePiG6EmptyState(unittest.TestCase):
         singleStateTestTearDown(self)
     
     def testGetStateName(self):
-        """Tests whether getStateName returns the correct state name"""
-        self.assertEqual(self.s.getStateName(), "StagePiG6EmptyState")
+        """Tests whether get_state_name returns the correct state name"""
+        self.assertEqual(self.s.get_state_name(), "StagePiG6EmptyState")
     
     def testGetPreferredReadingInterval(self):
         """Tests whether the state has the correct preferred reading interval"""
-        self.assertEqual(self.s.getPreferredReadingInterval(), 60)
+        self.assertEqual(self.s.get_preferred_reading_interval(), 60)
     
     def assertStateControlOutputsCorrect(self):
         """
@@ -748,7 +748,7 @@ class TestStagePiG6EmptyState(unittest.TestCase):
     
     def testSetupState(self):
         """Tests whether StagePiG6EmptyState has the correct control outputs when first set up."""
-        self.s.setupState()
+        self.s.setup_state()
         self.assertStateControlOutputsCorrect()
     
     def testNoTransition(self):
@@ -759,8 +759,8 @@ class TestStagePiG6EmptyState(unittest.TestCase):
         that no transition would have occurred if they did not alter
         the conditions.
         """
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_not_called()
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_not_called()
         self.assertStateControlOutputsCorrect()
     
     def testTransitionToG4Overfilled(self):
@@ -768,17 +768,17 @@ class TestStagePiG6EmptyState(unittest.TestCase):
         # Check that transition occurs when G4 is overfull and G6 is
         # still empty
         self.wm.setVesselLevel("G4", stagepilogic.levels["G4Overfull"])
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4OverfilledState,
             self.s)
         
         # Check that transition occurs when G4 is overfull and G6 is no
         # longer empty
-        self.csm.setStateBy.reset_mock()
+        self.csm.set_state_by.reset_mock()
         self.wm.setVesselLevel("G6", stagepilogic.levels["G6NotEmpty"])
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4OverfilledState,
             self.s)
         
@@ -789,8 +789,8 @@ class TestStagePiG6EmptyState(unittest.TestCase):
         """Tests whether StagePiG6EmptyState will transition into StagePiG4FilledState under the expected conditions"""
         # Check that there is no transition when G6 remains empty
         self.wm.setVesselLevel("G4", stagepilogic.levels["G4Full"])
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_not_called()
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_not_called()
         
         # This first part of the test should cause control output from
         # the current state, as there should be no transition
@@ -798,8 +798,8 @@ class TestStagePiG6EmptyState(unittest.TestCase):
         
         # Check that there is a transition when G6 is no longer empty
         self.wm.setVesselLevel("G6", stagepilogic.levels["G6NotEmpty"])
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4FilledState,
             self.s)
         
@@ -812,8 +812,8 @@ class TestStagePiG6EmptyState(unittest.TestCase):
         """Tests whether StagePiG6EmptyState will transition into StagePiG4VeryNearlyFilledState under the expected conditions"""
         # Check that there is no transition when G6 remains empty
         self.wm.setVesselLevel("G4", stagepilogic.levels["G4VeryNearlyFull"])
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_not_called()
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_not_called()
         
         # This first part of the test should cause control output from
         # the current state, as there should be no transition
@@ -821,8 +821,8 @@ class TestStagePiG6EmptyState(unittest.TestCase):
         
         # Check that there is a transition when G6 is no longer empty
         self.wm.setVesselLevel("G6", stagepilogic.levels["G6NotEmpty"])
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4VeryNearlyFilledState,
             self.s)
         
@@ -835,8 +835,8 @@ class TestStagePiG6EmptyState(unittest.TestCase):
         """Tests whether StagePiG6EmptyState will transition into StagePiG4NearlyFilledState under the expected conditions"""
         # Check that there is no transition when G6 remains empty
         self.wm.setVesselLevel("G4", stagepilogic.levels["G4NearlyFull"])
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_not_called()
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_not_called()
         
         # This first part of the test should cause control output from
         # the current state, as there should be no transition
@@ -844,8 +844,8 @@ class TestStagePiG6EmptyState(unittest.TestCase):
         
         # Check that there is a transition when G6 is no longer empty
         self.wm.setVesselLevel("G6", stagepilogic.levels["G6NotEmpty"])
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4NearlyFilledState,
             self.s)
         
@@ -858,8 +858,8 @@ class TestStagePiG6EmptyState(unittest.TestCase):
         """Tests whether StagePiG6EmptyState will transition into StagePiG4FillingState under the expected conditions"""
         # Check that there is no transition when G6 remains empty
         self.wm.setVesselLevel("G4", stagepilogic.levels["G4NearlyFull"] - 1)
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_not_called()
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_not_called()
         
         # This first part of the test should cause control output from
         # the current state, as there should be no transition
@@ -867,8 +867,8 @@ class TestStagePiG6EmptyState(unittest.TestCase):
         
         # Check that there is a transition when G6 is no longer empty
         self.wm.setVesselLevel("G6", stagepilogic.levels["G6NotEmpty"])
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4FillingState,
             self.s)
         
@@ -893,12 +893,12 @@ class TestStagePiG4OverfilledState(unittest.TestCase):
         singleStateTestTearDown(self)
     
     def testGetStateName(self):
-        """Tests whether getStateName returns the correct state name"""
-        self.assertEqual(self.s.getStateName(), "StagePiG4OverfilledState")
+        """Tests whether get_state_name returns the correct state name"""
+        self.assertEqual(self.s.get_state_name(), "StagePiG4OverfilledState")
     
     def testGetPreferredReadingInterval(self):
         """Tests whether the state has the correct preferred reading interval"""
-        self.assertEqual(self.s.getPreferredReadingInterval(), 60)
+        self.assertEqual(self.s.get_preferred_reading_interval(), 60)
     
     def assertStateControlOutputsCorrect(self):
         """
@@ -925,7 +925,7 @@ class TestStagePiG4OverfilledState(unittest.TestCase):
     
     def testSetupState(self):
         """Tests whether StagePiG4OverfilledState has the correct control outputs when first set up."""
-        self.s.setupState()
+        self.s.setup_state()
         self.assertStateControlOutputsCorrect()
     
     def testNoTransition(self):
@@ -936,16 +936,16 @@ class TestStagePiG4OverfilledState(unittest.TestCase):
         that no transition would have occurred if they did not alter
         the conditions.
         """
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_not_called()
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_not_called()
         self.assertStateControlOutputsCorrect()
     
     def testTransitionToG6Empty(self):
         """Tests whether StagePiG4OverfilledState will transition into StagePiG6EmptyState under the expected conditions."""
         # Should NOT transition if G6 becomes empty but G4 remains overfull
         self.wm.setVesselLevel("G6", stagepilogic.levels["G6NotEmpty"] - 1)
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_not_called()
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_not_called()
         
         # This first part of the test should cause control output from
         # the current state, as there should be no transition
@@ -953,8 +953,8 @@ class TestStagePiG4OverfilledState(unittest.TestCase):
         
         # But should transition if G4 then becomes less than overfull
         self.wm.setVesselLevel("G4", stagepilogic.levels["G4Full"])
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG6EmptyState,
             self.s)
         
@@ -967,24 +967,24 @@ class TestStagePiG4OverfilledState(unittest.TestCase):
         """Tests whether StagePiG4OverfilledState will transition into StagePiG4FilledState under the expected conditions."""
         # Should transition if G4 becomes less than overfull
         self.wm.setVesselLevel("G4", stagepilogic.levels["G4Full"])
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4FilledState,
             self.s)
         
         # Should transition if G4 becomes much less than overfull
-        self.csm.setStateBy.reset_mock()
+        self.csm.set_state_by.reset_mock()
         self.wm.setVesselLevel("G4", 0)
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4FilledState,
             self.s)
         
         # If G6 is empty, should transition there instead
-        self.csm.setStateBy.reset_mock()
+        self.csm.set_state_by.reset_mock()
         self.wm.setVesselLevel("G6", 0)
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG6EmptyState,
             self.s)
         
@@ -1007,12 +1007,12 @@ class TestStagePiG4FilledState(unittest.TestCase):
         singleStateTestTearDown(self)
     
     def testGetStateName(self):
-        """Tests whether getStateName returns the correct state name"""
-        self.assertEqual(self.s.getStateName(), "StagePiG4FilledState")
+        """Tests whether get_state_name returns the correct state name"""
+        self.assertEqual(self.s.get_state_name(), "StagePiG4FilledState")
     
     def testGetPreferredReadingInterval(self):
         """Tests whether the state has the correct preferred reading interval"""
-        self.assertEqual(self.s.getPreferredReadingInterval(), 60)
+        self.assertEqual(self.s.get_preferred_reading_interval(), 60)
     
     def assertStateControlOutputsCorrect(self):
         """
@@ -1039,7 +1039,7 @@ class TestStagePiG4FilledState(unittest.TestCase):
     
     def testSetupState(self):
         """Tests whether StagePiG4FilledState has the correct control outputs when first set up."""
-        self.s.setupState()
+        self.s.setup_state()
         self.assertStateControlOutputsCorrect()
     
     def testNoTransition(self):
@@ -1050,16 +1050,16 @@ class TestStagePiG4FilledState(unittest.TestCase):
         that no transition would have occurred if they did not alter
         the conditions.
         """
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_not_called()
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_not_called()
         self.assertStateControlOutputsCorrect()
     
     def testTransitionToG6Empty(self):
         """Tests whether StagePiG4FilledState will transition into StagePiG6EmptyState under the expected conditions."""
         # Should transition if G6 becomes empty
         self.wm.setVesselLevel("G6", stagepilogic.levels["G6NotEmpty"] - 1)
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG6EmptyState,
             self.s)
         
@@ -1069,24 +1069,24 @@ class TestStagePiG4FilledState(unittest.TestCase):
         """Tests whether StagePiG4FilledState will transition into StagePiG4VeryNearlyFilledState under the expected conditions."""
         # Should transition if G4 becomes less than full
         self.wm.setVesselLevel("G4", stagepilogic.levels["G4VeryNearlyFull"])
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4VeryNearlyFilledState,
             self.s)
         
         # Should transition if G4 becomes much less than full
-        self.csm.setStateBy.reset_mock()
+        self.csm.set_state_by.reset_mock()
         self.wm.setVesselLevel("G4", 0)
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4VeryNearlyFilledState,
             self.s)
         
         # If G6 is empty, should transition there instead
-        self.csm.setStateBy.reset_mock()
+        self.csm.set_state_by.reset_mock()
         self.wm.setVesselLevel("G6", 0)
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG6EmptyState,
             self.s)
         
@@ -1097,16 +1097,16 @@ class TestStagePiG4FilledState(unittest.TestCase):
         """Tests whether StagePiG4FilledState will transition into StagePiG6OverfilledState under the expected conditions."""
         # Should transition if G4 becomes overfull
         self.wm.setVesselLevel("G4", stagepilogic.levels["G4Overfull"])
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4OverfilledState,
             self.s)
         
         # Should still transition there even if G6 is empty
-        self.csm.setStateBy.reset_mock()
+        self.csm.set_state_by.reset_mock()
         self.wm.setVesselLevel("G6", 0)
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4OverfilledState,
             self.s)
         
@@ -1129,13 +1129,13 @@ class TestStagePiG4VeryNearlyFilledState(unittest.TestCase):
         singleStateTestTearDown(self)
     
     def testGetStateName(self):
-        """Tests whether getStateName returns the correct state name"""
-        self.assertEqual(self.s.getStateName(),
+        """Tests whether get_state_name returns the correct state name"""
+        self.assertEqual(self.s.get_state_name(),
                          "StagePiG4VeryNearlyFilledState")
     
     def testGetPreferredReadingInterval(self):
         """Tests whether the state has the correct preferred reading interval"""
-        self.assertEqual(self.s.getPreferredReadingInterval(), 15)
+        self.assertEqual(self.s.get_preferred_reading_interval(), 15)
     
     def assertStateControlOutputsCorrect(self):
         """
@@ -1163,7 +1163,7 @@ class TestStagePiG4VeryNearlyFilledState(unittest.TestCase):
     
     def testSetupState(self):
         """Tests whether StagePiG4VeryNearlyFilledState has the correct control outputs when first set up."""
-        self.s.setupState()
+        self.s.setup_state()
         self.assertStateControlOutputsCorrect()
     
     def testNoTransition(self):
@@ -1174,16 +1174,16 @@ class TestStagePiG4VeryNearlyFilledState(unittest.TestCase):
         that no transition would have occurred if they did not alter
         the conditions.
         """
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_not_called()
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_not_called()
         self.assertStateControlOutputsCorrect()
     
     def testTransitionToG6Empty(self):
         """Tests whether StagePiG4VeryNearlyFilledState will transition into StagePiG6EmptyState under the expected conditions."""
         # Should transition if G6 becomes empty
         self.wm.setVesselLevel("G6", stagepilogic.levels["G6NotEmpty"] - 1)
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG6EmptyState,
             self.s)
         self.assertStateNoControlOutputs()
@@ -1192,24 +1192,24 @@ class TestStagePiG4VeryNearlyFilledState(unittest.TestCase):
         """Tests whether StagePiG4VeryNearlyFilledState will transition into StagePiG4NearlyFilledState under the expected conditions."""
         # Should transition if G4 becomes less than very nearly full
         self.wm.setVesselLevel("G4", stagepilogic.levels["G4NearlyFull"])
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4NearlyFilledState,
             self.s)
         
         # Should transition if G4 becomes much less than very nearly full
-        self.csm.setStateBy.reset_mock()
+        self.csm.set_state_by.reset_mock()
         self.wm.setVesselLevel("G4", 0)
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4NearlyFilledState,
             self.s)
         
         # If G6 is empty, should transition to G6Empty instead
-        self.csm.setStateBy.reset_mock()
+        self.csm.set_state_by.reset_mock()
         self.wm.setVesselLevel("G6", 0)
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG6EmptyState,
             self.s)
         
@@ -1220,16 +1220,16 @@ class TestStagePiG4VeryNearlyFilledState(unittest.TestCase):
         """Tests whether StagePiG4VeryNearlyFilledState will transition into StagePiG6FilledState under the expected conditions."""
         # Should transition if G4 becomes full
         self.wm.setVesselLevel("G4", stagepilogic.levels["G4Full"])
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4FilledState,
             self.s)
         
         # If G6 is empty, should transition to G6Empty instead
-        self.csm.setStateBy.reset_mock()
+        self.csm.set_state_by.reset_mock()
         self.wm.setVesselLevel("G6", 0)
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG6EmptyState,
             self.s)
         
@@ -1252,13 +1252,13 @@ class TestStagePiG4NearlyFilledState(unittest.TestCase):
         singleStateTestTearDown(self)
     
     def testGetStateName(self):
-        """Tests whether getStateName returns the correct state name"""
-        self.assertEqual(self.s.getStateName(),
+        """Tests whether get_state_name returns the correct state name"""
+        self.assertEqual(self.s.get_state_name(),
                          "StagePiG4NearlyFilledState")
     
     def testGetPreferredReadingInterval(self):
         """Tests whether the state has the correct preferred reading interval"""
-        self.assertEqual(self.s.getPreferredReadingInterval(), 30)
+        self.assertEqual(self.s.get_preferred_reading_interval(), 30)
     
     def assertStateControlOutputsCorrect(self):
         """
@@ -1285,7 +1285,7 @@ class TestStagePiG4NearlyFilledState(unittest.TestCase):
     
     def testSetupState(self):
         """Tests whether StagePiG4NearlyFilledState has the correct control outputs when first set up."""
-        self.s.setupState()
+        self.s.setup_state()
         self.assertStateControlOutputsCorrect()
     
     def testNoTransition(self):
@@ -1296,16 +1296,16 @@ class TestStagePiG4NearlyFilledState(unittest.TestCase):
         that no transition would have occurred if they did not alter
         the conditions.
         """
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_not_called()
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_not_called()
         self.assertStateControlOutputsCorrect()
     
     def testTransitionToG6Empty(self):
         """Tests whether StagePiG4NearlyFilledState will transition into StagePiG6EmptyState under the expected conditions."""
         # Should transition if G6 becomes empty
         self.wm.setVesselLevel("G6", stagepilogic.levels["G6NotEmpty"] - 1)
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG6EmptyState,
             self.s)
         
@@ -1315,24 +1315,24 @@ class TestStagePiG4NearlyFilledState(unittest.TestCase):
         """Tests whether StagePiG4NearlyFilledState will transition into StagePiG4FillingState under the expected conditions."""
         # Should transition if G4 becomes less than nearly full
         self.wm.setVesselLevel("G4", stagepilogic.levels["G4NearlyFull"] - 1)
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4FillingState,
             self.s)
         
         # Should transition if G4 becomes much less than nearly full
-        self.csm.setStateBy.reset_mock()
+        self.csm.set_state_by.reset_mock()
         self.wm.setVesselLevel("G4", 0)
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4FillingState,
             self.s)
         
         # If G6 is empty, should transition to G6Empty instead
-        self.csm.setStateBy.reset_mock()
+        self.csm.set_state_by.reset_mock()
         self.wm.setVesselLevel("G6", 0)
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG6EmptyState,
             self.s)
         
@@ -1343,16 +1343,16 @@ class TestStagePiG4NearlyFilledState(unittest.TestCase):
         """Tests whether StagePiG4NearlyFilledState will transition into StagePiG6VeryNearlyFilledState under the expected conditions."""
         # Should transition if G4 becomes very nearly filled
         self.wm.setVesselLevel("G4", stagepilogic.levels["G4VeryNearlyFull"])
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4VeryNearlyFilledState,
             self.s)
         
         # If G6 is empty, should transition to G6Empty instead
-        self.csm.setStateBy.reset_mock()
+        self.csm.set_state_by.reset_mock()
         self.wm.setVesselLevel("G6", 0)
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG6EmptyState,
             self.s)
         
@@ -1375,12 +1375,12 @@ class TestStagePiG4FillingState(unittest.TestCase):
         singleStateTestTearDown(self)
     
     def testGetStateName(self):
-        """Tests whether getStateName returns the correct state name"""
-        self.assertEqual(self.s.getStateName(), "StagePiG4FillingState")
+        """Tests whether get_state_name returns the correct state name"""
+        self.assertEqual(self.s.get_state_name(), "StagePiG4FillingState")
     
     def testGetPreferredReadingInterval(self):
         """Tests whether the state has the correct preferred reading interval"""
-        self.assertEqual(self.s.getPreferredReadingInterval(), 60)
+        self.assertEqual(self.s.get_preferred_reading_interval(), 60)
     
     def assertStateControlOutputsCorrect(self):
         """
@@ -1407,7 +1407,7 @@ class TestStagePiG4FillingState(unittest.TestCase):
     
     def testSetupState(self):
         """Tests whether StagePiG4FillingState has the correct control outputs when first set up."""
-        self.s.setupState()
+        self.s.setup_state()
         self.assertStateControlOutputsCorrect()
     
     def testNoTransition(self):
@@ -1418,16 +1418,16 @@ class TestStagePiG4FillingState(unittest.TestCase):
         that no transition would have occurred if they did not alter
         the conditions.
         """
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_not_called()
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_not_called()
         self.assertStateControlOutputsCorrect()
     
     def testTransitionToG6Empty(self):
         """Tests whether StagePiG4FillingState will transition into StagePiG6EmptyState under the expected conditions."""
         # Should transition if G6 becomes empty
         self.wm.setVesselLevel("G6", stagepilogic.levels["G6NotEmpty"] - 1)
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG6EmptyState,
             self.s)
         
@@ -1437,16 +1437,16 @@ class TestStagePiG4FillingState(unittest.TestCase):
         """Tests whether StagePiG4FillingState will transition into StagePiG6NearlyFilledState under the expected conditions."""
         # Should transition if G4 becomes nearly filled
         self.wm.setVesselLevel("G4", stagepilogic.levels["G4NearlyFull"])
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG4NearlyFilledState,
             self.s)
         
         # If G6 is empty, should transition to G6Empty instead
-        self.csm.setStateBy.reset_mock()
+        self.csm.set_state_by.reset_mock()
         self.wm.setVesselLevel("G6", 0)
-        self.s.doLogic(30)
-        self.csm.setStateBy.assert_called_once_with(
+        self.s.do_logic(30)
+        self.csm.set_state_by.assert_called_once_with(
             stagepilogic.StagePiG6EmptyState,
             self.s)
         

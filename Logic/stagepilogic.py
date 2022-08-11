@@ -400,23 +400,23 @@ class StagePiInitState(GenericControlState):
         try:
             #Prepare to transition to new state
             if parser.g4_overfull():
-                self.csm.setStateBy(StagePiG4OverfilledState, self)
+                self.csm.set_state_by(StagePiG4OverfilledState, self)
 
             else:
                 if parser.g6_empty():
-                    self.csm.setStateBy(StagePiG6EmptyState, self)
+                    self.csm.set_state_by(StagePiG6EmptyState, self)
 
                 elif parser.g4_full_or_more():
-                    self.csm.setStateBy(StagePiG4FilledState, self)
+                    self.csm.set_state_by(StagePiG4FilledState, self)
 
                 elif parser.g4_very_nearly_full_or_more():
-                    self.csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
+                    self.csm.set_state_by(StagePiG4VeryNearlyFilledState, self)
 
                 elif parser.g4_nearly_full_or_more():
-                    self.csm.setStateBy(StagePiG4NearlyFilledState, self)
+                    self.csm.set_state_by(StagePiG4NearlyFilledState, self)
 
                 else:
-                    self.csm.setStateBy(StagePiG4FillingState, self)
+                    self.csm.set_state_by(StagePiG4FillingState, self)
 
         except ValueError as err:
             raise GenericControlState.StateTransitionError from err
@@ -449,10 +449,10 @@ class StagePiG4OverfilledState(GenericControlState):
             #Evaluate possible transitions to new states
             if not parser.g4_overfull():
                 if not parser.g6_empty():
-                    self.csm.setStateBy(StagePiG4FilledState, self)
+                    self.csm.set_state_by(StagePiG4FilledState, self)
 
                 else:
-                    self.csm.setStateBy(StagePiG6EmptyState, self)
+                    self.csm.set_state_by(StagePiG6EmptyState, self)
 
             #G4 being overfull overrides G6 being empty. If G6 is empty
             #and G4 is still overfilled, then we want to stay in
@@ -460,7 +460,7 @@ class StagePiG4OverfilledState(GenericControlState):
             #G6.
 
             else:
-                self.noTransition()
+                self.no_transition()
 
         except ValueError as err:
             raise GenericControlState.StateTransitionError from err
@@ -493,19 +493,19 @@ class StagePiG4FilledState(GenericControlState):
             #Evaluate possible transitions to new states
             if parser.g4_overfull():
                 #If "overfull", unconditionally go into G4OverfilledState
-                self.csm.setStateBy(StagePiG4OverfilledState, self)
+                self.csm.set_state_by(StagePiG4OverfilledState, self)
 
             elif parser.g6_empty():
                 #If G6 empty and G4 not overfull go into G6EmptyState
-                self.csm.setStateBy(StagePiG6EmptyState, self)
+                self.csm.set_state_by(StagePiG6EmptyState, self)
 
             elif not parser.g4_full_or_more():
                 #If G4 is no longer "full" and G6 is not empty and G4
                 #is not overfilled, then go into G4VeryNearlyFilledState
-                self.csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
+                self.csm.set_state_by(StagePiG4VeryNearlyFilledState, self)
 
             else:
-                self.noTransition()
+                self.no_transition()
 
         except ValueError as err:
             raise GenericControlState.StateTransitionError from err
@@ -543,16 +543,16 @@ class StagePiG4VeryNearlyFilledState(GenericControlState):
             #Evaluate possible transitions to new states
             if not parser.g6_empty():
                 if parser.g4_full_or_more():
-                    self.csm.setStateBy(StagePiG4FilledState, self)
+                    self.csm.set_state_by(StagePiG4FilledState, self)
 
                 elif not parser.g4_very_nearly_full_or_more():
-                    self.csm.setStateBy(StagePiG4NearlyFilledState, self)
+                    self.csm.set_state_by(StagePiG4NearlyFilledState, self)
 
                 else:
-                    self.noTransition()
+                    self.no_transition()
 
             else:
-                self.csm.setStateBy(StagePiG6EmptyState, self)
+                self.csm.set_state_by(StagePiG6EmptyState, self)
 
         except ValueError as err:
             raise GenericControlState.StateTransitionError from err
@@ -590,16 +590,16 @@ class StagePiG4NearlyFilledState(GenericControlState):
             #Evaluate possible transitions to new states
             if not parser.g6_empty():
                 if parser.g4_very_nearly_full_or_more():
-                    self.csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
+                    self.csm.set_state_by(StagePiG4VeryNearlyFilledState, self)
 
                 elif not parser.g4_nearly_full_or_more():
-                    self.csm.setStateBy(StagePiG4FillingState, self)
+                    self.csm.set_state_by(StagePiG4FillingState, self)
 
                 else:
-                    self.noTransition()
+                    self.no_transition()
 
             else:
-                self.csm.setStateBy(StagePiG6EmptyState, self)
+                self.csm.set_state_by(StagePiG6EmptyState, self)
 
         except ValueError as err:
             raise GenericControlState.StateTransitionError from err
@@ -632,13 +632,13 @@ class StagePiG4FillingState(GenericControlState):
             #Evaluate possible transitions to new states
             if not parser.g6_empty():
                 if parser.g4_nearly_full_or_more():
-                    self.csm.setStateBy(StagePiG4NearlyFilledState, self)
+                    self.csm.set_state_by(StagePiG4NearlyFilledState, self)
 
                 else:
-                    self.noTransition()
+                    self.no_transition()
 
             else:
-                self.csm.setStateBy(StagePiG6EmptyState, self)
+                self.csm.set_state_by(StagePiG6EmptyState, self)
 
         except ValueError as err:
             raise GenericControlState.StateTransitionError from err
@@ -674,25 +674,25 @@ class StagePiG6EmptyState(GenericControlState):
             #Unlike the other four states, we can enter G4OverfilledState
             #even if G6 remains empty
             if parser.g4_overfull():
-                self.csm.setStateBy(StagePiG4OverfilledState, self)
+                self.csm.set_state_by(StagePiG4OverfilledState, self)
 
             #If G6 is no longer empty, enter the appropriate filling state for
             #the current G4 fill level
             elif not parser.g6_empty():
                 if parser.g4_full_or_more():
-                    self.csm.setStateBy(StagePiG4FilledState, self)
+                    self.csm.set_state_by(StagePiG4FilledState, self)
 
                 elif parser.g4_very_nearly_full_or_more():
-                    self.csm.setStateBy(StagePiG4VeryNearlyFilledState, self)
+                    self.csm.set_state_by(StagePiG4VeryNearlyFilledState, self)
 
                 elif parser.g4_nearly_full_or_more():
-                    self.csm.setStateBy(StagePiG4NearlyFilledState, self)
+                    self.csm.set_state_by(StagePiG4NearlyFilledState, self)
 
                 else:
-                    self.csm.setStateBy(StagePiG4FillingState, self)
+                    self.csm.set_state_by(StagePiG4FillingState, self)
 
             else:
-                self.noTransition()
+                self.no_transition()
 
         except ValueError as err:
             raise GenericControlState.StateTransitionError from err
@@ -739,16 +739,16 @@ class StagePiControlLogic(ControlStateMachineABC):
         super().__init__()
 
         #Initialise dictionary of allowable states
-        self._addState(StagePiInitState)
-        self._addState(StagePiG4OverfilledState)
-        self._addState(StagePiG4FilledState)
-        self._addState(StagePiG4VeryNearlyFilledState)
-        self._addState(StagePiG4NearlyFilledState)
-        self._addState(StagePiG4FillingState)
-        self._addState(StagePiG6EmptyState)
+        self._add_state(StagePiInitState)
+        self._add_state(StagePiG4OverfilledState)
+        self._add_state(StagePiG4FilledState)
+        self._add_state(StagePiG4VeryNearlyFilledState)
+        self._add_state(StagePiG4NearlyFilledState)
+        self._add_state(StagePiG4FillingState)
+        self._add_state(StagePiG6EmptyState)
 
         #Set initial state
-        self.setState(StagePiInitState)
+        self.set_state(StagePiInitState)
 
     @staticmethod
     def get_state_machine_name():

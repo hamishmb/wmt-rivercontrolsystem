@@ -280,7 +280,7 @@ class TestTempTopUpControlLogic(unittest.TestCase):
         temptopuplogic.readings = self.wm.getReadingsDict("G1","G2","G3")
         
         sm = temptopuplogic.TempTopUpControlLogic()
-        sm.doLogic(30)
+        sm.do_logic(30)
         self.assertEqual(sm.getCurrentStateName(),
                          "TTUIdleState")
     
@@ -299,7 +299,7 @@ class TestTempTopUpControlLogic(unittest.TestCase):
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
             sm = temptopuplogic.TempTopUpControlLogic()
-            sm.doLogic(30)
+            sm.do_logic(30)
             self.assertEqual(sm.getCurrentStateName(),
                          "TTUToppingUpState")
 
@@ -463,12 +463,12 @@ class TestTTUIdleState(unittest.TestCase):
         singleStateTestTearDown(self)
     
     def testGetStateName(self):
-        """Tests whether getStateName returns the correct state name"""
-        self.assertEqual(self.s.getStateName(), "TTUIdleState")
+        """Tests whether get_state_name returns the correct state name"""
+        self.assertEqual(self.s.get_state_name(), "TTUIdleState")
     
     def testGetPreferredReadingInterval(self):
         """Tests whether the state has the correct preferred reading interval"""
-        self.assertEqual(self.s.getPreferredReadingInterval(), 60)
+        self.assertEqual(self.s.get_preferred_reading_interval(), 60)
     
     def assertStateControlOutputsCorrect(self):
         """
@@ -505,7 +505,7 @@ class TestTTUIdleState(unittest.TestCase):
             with patch('Logic.temptopuplogic.G3S0OverrideState',
                        return_value="auto"):
                 # Check that TTUIdle tries to turn off the solenoid valve
-                self.s.setupState()
+                self.s.setup_state()
                 self.assertStateControlOutputsCorrect()
     
     def testNoTransition(self):
@@ -534,7 +534,7 @@ class TestTTUIdleState(unittest.TestCase):
             # Disable solenoid valve override for this test
             with patch('Logic.temptopuplogic.G3S0OverrideState',
                        return_value="auto"):
-                self.s.doLogic(30)
+                self.s.do_logic(30)
                 self.csm.setStateBy.assert_not_called()
                 self.assertStateControlOutputsCorrect()
         
@@ -551,7 +551,7 @@ class TestTTUIdleState(unittest.TestCase):
             
             with patch('Logic.temptopuplogic.G3S0OverrideState',
                        return_value="auto"):
-                self.s.doLogic(30)
+                self.s.do_logic(30)
                 self.csm.setStateBy.assert_not_called()
                 self.assertStateControlOutputsCorrect()
         
@@ -571,7 +571,7 @@ class TestTTUIdleState(unittest.TestCase):
             
             with patch('Logic.temptopuplogic.G3S0OverrideState',
                        return_value="auto"):
-                self.s.doLogic(30)
+                self.s.do_logic(30)
                 self.csm.setStateBy.assert_not_called()
                 self.assertStateControlOutputsCorrect()
         
@@ -588,7 +588,7 @@ class TestTTUIdleState(unittest.TestCase):
             
             with patch('Logic.temptopuplogic.G3S0OverrideState',
                        return_value="off"):
-                self.s.doLogic(30)
+                self.s.do_logic(30)
                 self.csm.setStateBy.assert_not_called()
                 self.assertStateControlOutputsCorrect()
     
@@ -610,7 +610,7 @@ class TestTTUIdleState(unittest.TestCase):
             
             with patch('Logic.temptopuplogic.G3S0OverrideState',
                        return_value="auto"):
-                self.s.doLogic(30)
+                self.s.do_logic(30)
                 self.csm.setStateBy.assert_called_once_with(
                     temptopuplogic.TTUToppingUpState,
                     self.s)
@@ -635,7 +635,7 @@ class TestTTUIdleState(unittest.TestCase):
             
             with patch('Logic.temptopuplogic.G3S0OverrideState',
                        return_value="auto"):
-                self.s.doLogic(30)
+                self.s.do_logic(30)
                 self.csm.setStateBy.assert_called_once_with(
                     temptopuplogic.TTUToppingUpState,
                     self.s)
@@ -653,7 +653,7 @@ class TestTTUIdleState(unittest.TestCase):
             
             with patch('Logic.temptopuplogic.G3S0OverrideState',
                        return_value="auto"):
-                self.s.doLogic(30)
+                self.s.do_logic(30)
                 self.csm.setStateBy.assert_called_once_with(
                     temptopuplogic.TTUToppingUpState,
                     self.s)
@@ -674,7 +674,7 @@ class TestTTUIdleState(unittest.TestCase):
             
             with patch('Logic.temptopuplogic.G3S0OverrideState',
                        return_value="on"):
-                self.s.doLogic(30)
+                self.s.do_logic(30)
                 self.csm.setStateBy.assert_called_once_with(
                     temptopuplogic.TTUToppingUpState,
                     self.s)
@@ -696,12 +696,12 @@ class TestTTUToppingUpState(unittest.TestCase):
         singleStateTestTearDown(self)
     
     def testGetStateName(self):
-        """Tests whether getStateName returns the correct state name"""
-        self.assertEqual(self.s.getStateName(), "TTUToppingUpState")
+        """Tests whether get_state_name returns the correct state name"""
+        self.assertEqual(self.s.get_state_name(), "TTUToppingUpState")
     
     def testGetPreferredReadingInterval(self):
         """Tests whether the state has the correct preferred reading interval"""
-        self.assertEqual(self.s.getPreferredReadingInterval(), 60)
+        self.assertEqual(self.s.get_preferred_reading_interval(), 60)
     
     def assertStateControlOutputsCorrect(self):
         """
@@ -733,7 +733,7 @@ class TestTTUToppingUpState(unittest.TestCase):
             mock_dt.now.return_value = time
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
-            self.s.setupState()
+            self.s.setup_state()
             self.assertStateControlOutputsCorrect()
     
     def testNoTransition(self):
@@ -760,7 +760,7 @@ class TestTTUToppingUpState(unittest.TestCase):
             
             with patch('Logic.temptopuplogic.G3S0OverrideState',
                        return_value="auto"):
-                self.s.doLogic(30)
+                self.s.do_logic(30)
                 self.csm.setStateBy.assert_not_called()
                 self.assertStateControlOutputsCorrect()
         
@@ -778,7 +778,7 @@ class TestTTUToppingUpState(unittest.TestCase):
             
             with patch('Logic.temptopuplogic.G3S0OverrideState',
                        return_value="on"):
-                self.s.doLogic(30)
+                self.s.do_logic(30)
                 self.csm.setStateBy.assert_not_called()
                 self.assertStateControlOutputsCorrect()
         
@@ -799,7 +799,7 @@ class TestTTUToppingUpState(unittest.TestCase):
             
             with patch('Logic.temptopuplogic.G3S0OverrideState',
                        return_value="on"):
-                self.s.doLogic(30)
+                self.s.do_logic(30)
                 self.csm.setStateBy.assert_not_called()
                 self.assertStateControlOutputsCorrect()
     
@@ -819,7 +819,7 @@ class TestTTUToppingUpState(unittest.TestCase):
             
             with patch('Logic.temptopuplogic.G3S0OverrideState',
                        return_value="auto"):
-                self.s.doLogic(30)
+                self.s.do_logic(30)
                 self.csm.setStateBy.assert_called_once_with(
                     temptopuplogic.TTUIdleState,
                     self.s)
@@ -836,7 +836,7 @@ class TestTTUToppingUpState(unittest.TestCase):
             
             with patch('Logic.temptopuplogic.G3S0OverrideState',
                        return_value="auto"):
-                self.s.doLogic(30)
+                self.s.do_logic(30)
                 self.csm.setStateBy.assert_called_once_with(
                     temptopuplogic.TTUIdleState,
                     self.s)
@@ -857,7 +857,7 @@ class TestTTUToppingUpState(unittest.TestCase):
             
             with patch('Logic.temptopuplogic.G3S0OverrideState',
                        return_value="off"):
-                self.s.doLogic(30)
+                self.s.do_logic(30)
                 self.csm.setStateBy.assert_called_once_with(
                     temptopuplogic.TTUIdleState,
                     self.s)
