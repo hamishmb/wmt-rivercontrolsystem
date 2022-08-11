@@ -252,7 +252,7 @@ SITE_SETTINGS = {
             "Default Interval": 15,
             "IPAddress": "192.168.0.2",
             "HostingSockets": False,
-            "ControlLogicFunction": "sumppi_control_logic",
+            "ControlLogicFunction": "sumppi_logic",
             "DBUser": "sumppi",
             "DBPasswd": "river20",
             "DBHost": "192.168.0.25",

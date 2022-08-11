@@ -81,18 +81,6 @@ class Monitor:
     def set_reading_interval(self, reading_interval):
         self.reading_interval = reading_interval
 
-class Sockets:
-    """A fake do-nothing Sockets class, just used for testing"""
-    def __init__(self):
-        self.out_queue = []
-
-    #---------- GETTERS ----------
-    def get_queue(self):
-        return self.out_queue
-
-    def write(self, data):
-        self.out_queue.append(data)
-
 #Readings dictionary to hold fake readings for each sensor for sumppi control logic tests.
 readings = {}
 

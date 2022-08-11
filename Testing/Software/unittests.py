@@ -59,6 +59,8 @@ def usage():
     print("       -l, --logic:                  Run only the tests for the")
     print("                                     controllogic (integration)")
     print("                                     module.")
+    print("       --sumppilogic:                Run only the tests for the")
+    print("                                     sumppilogic module.")
     print("       --stagepilogic:               Run only the tests for the")
     print("                                     stagepilogic module.")
     print("       --temptopuplogic:             Run only the tests for the")
@@ -73,14 +75,14 @@ def usage():
     print("                                     sockettools module.")
     print("unittests.py is released under the GNU GPL Version 3")
     print("Version: "+config.VERSION+" ("+config.RELEASEDATE+")")
-    print("Copyright (C) Wimborne Model Town 2017-2019")
+    print("Copyright (C) Wimborne Model Town 2017-2022")
 
 if __name__ == "__main__":
     #Check all cmdline options are valid.
     try:
         OPTIONS, ARGUMENTS = getopt.getopt(sys.argv[1:], "hDcldemsa",
                                            ["help", "debug", "coretools",
-                                            "logic", "stagepilogic",
+                                            "logic", "sumppilogic", "stagepilogic",
                                             "temptopuplogic", "deviceobjects",
                                             "devicemanagement", "monitortools",
                                             "sockettools", "all"])
@@ -103,6 +105,7 @@ if __name__ == "__main__":
     #Import test modules here so the logging level is right - debug mode will work.
     from UnitTests.Tools import coretools_tests
     from UnitTests.Logic import controllogic_tests
+    from UnitTests.Logic import sumppilogic_tests
     from UnitTests.Logic import stagepilogic_tests
     from UnitTests.Logic import temptopuplogic_tests
     from UnitTests.Tools import deviceobjects_tests
@@ -111,13 +114,15 @@ if __name__ == "__main__":
     from UnitTests.Tools import sockettools_tests
 
     #Set up which tests to run based on options given.
-    TEST_SUITES = [coretools_tests, controllogic_tests, stagepilogic_tests,
+    TEST_SUITES = [coretools_tests, controllogic_tests, 
+                   sumppilogic_tests, stagepilogic_tests,
                    temptopuplogic_tests, deviceobjects_tests,
                    devicemanagement_tests, monitortools_tests, sockettools_tests]
 
     for o, a in OPTIONS:
         if o in ["-a", "--all"]:
-            TEST_SUITES = [coretools_tests, controllogic_tests, stagepilogic_tests,
+            TEST_SUITES = [coretools_tests, controllogic_tests,
+                           sumppilogic_tests, stagepilogic_tests,
                            temptopuplogic_tests, deviceobjects_tests,
                            devicemanagement_tests, monitortools_tests,
                            sockettools_tests]
@@ -128,29 +133,32 @@ if __name__ == "__main__":
         elif o in ("-l", "--logic"):
             TEST_SUITES = [controllogic_tests]
 
+        elif o in ("--sumppilogic"):
+            TEST_SUITES = [sumppilogic_tests]
+
         elif o in ("--stagepilogic"):
             TEST_SUITES = [stagepilogic_tests]
 
         elif o in ("--temptopuplogic"):
             TEST_SUITES = [temptopuplogic_tests]
 
-        elif o in ["-d", "--deviceobjects"]:
+        elif o in ("-d", "--deviceobjects"):
             TEST_SUITES = [deviceobjects_tests]
 
         elif o in ("-e", "--devicemanagement"):
             TEST_SUITES = [devicemanagement_tests]
 
-        elif o in ["-m", "--monitortools"]:
+        elif o in ("-m", "--monitortools"):
             TEST_SUITES = [monitortools_tests]
 
-        elif o in ["-s", "--sockettools"]:
+        elif o in ("-s", "--sockettools"):
             TEST_SUITES = [sockettools_tests]
 
-        elif o in ["-h", "--help"]:
+        elif o in ("-h", "--help"):
             usage()
             sys.exit()
 
-        elif o in ["-D", "--debug"]:
+        elif o in ("-D", "--debug"):
             pass
 
         else:
