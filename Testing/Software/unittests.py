@@ -65,13 +65,17 @@ def usage():
     print("                                     stagepilogic module.")
     print("       --temptopuplogic:             Run only the tests for the")
     print("                                     temptopuplogic module.")
-    print("       -d, --deviceobjects:          Run only the tests for the")
+    print("       --deviceobjects:              Run only the tests for the")
     print("                                     deviceobjects module.")
-    print("       -e, --devicemanagement:       Run only the tests for the")
+    print("       --devicemanagement:           Run only the tests for the")
     print("                                     devicemanagement module.")
-    print("       -m, --monitortools:           Run only the tests for the")
+    print("       --loggingtools:               Run only the tests for the")
+    print("                                     loggingtools module.")
+    print("       --testingtools:               Run only the tests for the")
+    print("                                     testingtools module.")
+    print("       --monitortools:               Run only the tests for the")
     print("                                     monitortools module.")
-    print("       -s, --sockettools:            Run only the tests for the")
+    print("       --sockettools:                Run only the tests for the")
     print("                                     sockettools module.")
     print("unittests.py is released under the GNU GPL Version 3")
     print("Version: "+config.VERSION+" ("+config.RELEASEDATE+")")
@@ -80,12 +84,13 @@ def usage():
 if __name__ == "__main__":
     #Check all cmdline options are valid.
     try:
-        OPTIONS, ARGUMENTS = getopt.getopt(sys.argv[1:], "hDcldemsa",
-                                           ["help", "debug", "coretools",
+        OPTIONS, ARGUMENTS = getopt.getopt(sys.argv[1:], "hDacl",
+                                           ["help", "debug", "all", "coretools",
                                             "logic", "sumppilogic", "stagepilogic",
                                             "temptopuplogic", "deviceobjects",
-                                            "devicemanagement", "monitortools",
-                                            "sockettools", "all"])
+                                            "devicemanagement", "loggingtools",
+                                            "testingtools", "monitortools",
+                                            "sockettools"])
 
     except getopt.GetoptError as err:
         #Invalid option. Show the help message and then exit.
@@ -110,6 +115,8 @@ if __name__ == "__main__":
     from UnitTests.Logic import temptopuplogic_tests
     from UnitTests.Tools import deviceobjects_tests
     from UnitTests.Tools import devicemanagement_tests
+    from UnitTests.Tools import loggingtools_tests
+    from UnitTests.Tools import testingtools_tests
     from UnitTests.Tools import monitortools_tests
     from UnitTests.Tools import sockettools_tests
 
@@ -117,14 +124,16 @@ if __name__ == "__main__":
     TEST_SUITES = [coretools_tests, controllogic_tests, 
                    sumppilogic_tests, stagepilogic_tests,
                    temptopuplogic_tests, deviceobjects_tests,
-                   devicemanagement_tests, monitortools_tests, sockettools_tests]
+                   devicemanagement_tests, loggingtools_tests,
+                   testingtools_tests, monitortools_tests, sockettools_tests]
 
     for o, a in OPTIONS:
         if o in ["-a", "--all"]:
             TEST_SUITES = [coretools_tests, controllogic_tests,
                            sumppilogic_tests, stagepilogic_tests,
                            temptopuplogic_tests, deviceobjects_tests,
-                           devicemanagement_tests, monitortools_tests,
+                           devicemanagement_tests, loggingtools_tests,
+                           testingtools_tests, monitortools_tests,
                            sockettools_tests]
 
         elif o in ["-c", "--coretools"]:
@@ -142,16 +151,22 @@ if __name__ == "__main__":
         elif o in ("--temptopuplogic"):
             TEST_SUITES = [temptopuplogic_tests]
 
-        elif o in ("-d", "--deviceobjects"):
+        elif o in ("--deviceobjects"):
             TEST_SUITES = [deviceobjects_tests]
 
-        elif o in ("-e", "--devicemanagement"):
+        elif o in ("--devicemanagement"):
             TEST_SUITES = [devicemanagement_tests]
 
-        elif o in ("-m", "--monitortools"):
+        elif o in ("--loggingtools"):
+            TEST_SUITES = [loggingtools_tests]
+
+        elif o in ("--testingtools"):
+            TEST_SUITES = [testingtools_tests]
+
+        elif o in ("--monitortools"):
             TEST_SUITES = [monitortools_tests]
 
-        elif o in ("-s", "--sockettools"):
+        elif o in ("--sockettools"):
             TEST_SUITES = [sockettools_tests]
 
         elif o in ("-h", "--help"):

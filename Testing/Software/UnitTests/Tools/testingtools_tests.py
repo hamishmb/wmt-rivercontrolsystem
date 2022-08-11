@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Control Logic integration Unit Tests for the River System Control and Monitoring Software
+# Testing Tools Unit Tests for the River System Control and Monitoring Software
 # Copyright (C) 2017-2022 Wimborne Model Town
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3 or,
@@ -26,5 +26,5 @@ import os
 #Import other modules.
 sys.path.insert(0, os.path.abspath('../../../')) #Need to be able to import the Tools module from here.
 
-import Logic
-import Logic.controllogic as controllogic
+import Tools
+import Tools.testingtools as testingtools
