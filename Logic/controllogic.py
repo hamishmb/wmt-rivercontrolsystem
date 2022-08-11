@@ -359,6 +359,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         butts_reading = int(logiccoretools.get_latest_reading("G4", "M0") \
                             .get_value().replace("m", ""))
 
+        print(butts_reading)
+
     except (RuntimeError, AttributeError):
         print("Error: Error trying to get latest G4:M0 reading!")
         logger.error("Error: Error trying to get latest G4:M0 reading!")
@@ -368,6 +370,8 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
     try:
         butts_float_reading = logiccoretools.get_latest_reading("G4", "FS0").get_value()
+
+        print(butts_float_reading)
 
     except (RuntimeError, AttributeError):
         print("Error: Error trying to get latest G4:FS0 reading!")
@@ -547,7 +551,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
             reading_interval = 60
 
-    elif sump_reading >= 500 and sump_reading <= 600:
+    elif sump_reading >= 500 and sump_reading < 600:
         #Level is okay.
         #We might be pumping right now, or the level is increasing, but do nothing.
         #Do NOT change the state of the butts pump.
@@ -610,7 +614,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
             reading_interval = 60
 
-    elif sump_reading >= 400 and sump_reading <= 500:
+    elif sump_reading >= 400 and sump_reading < 500:
         #Level is okay.
         #If the butts pump is on, turn it off.
         if butts_pump_ovr is None:
@@ -687,7 +691,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
             reading_interval = 60
 
-    elif sump_reading >= 300 and sump_reading <= 400:
+    elif sump_reading >= 300 and sump_reading < 400:
         #Level in the sump is getting low.
         #If the butts pump is on, turn it off.
         if butts_pump_ovr is None:
@@ -736,7 +740,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
         reading_interval = 60
 
-    elif sump_reading >= 200 and sump_reading <= 300:
+    elif sump_reading >= 200 and sump_reading < 300:
         #Level in the sump is very low!
         #If the butts pump is on, turn it off.
         if butts_pump_ovr is None:
