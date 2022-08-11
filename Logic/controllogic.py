@@ -493,6 +493,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         if main_pump_ovr is None:
             logger.info("Turning the main circulation pump on, if it was off...")
             print("Turning the main circulation pump on, if it was off...")
+
         elif main_pump_ovr == "OFF":
             logger.info("Not turning the main circulation pump on, due to manual override...")
             print("Not turning the main circulation pump on, due to manual override...")
@@ -510,6 +511,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
         if main_pump_ovr is None:
             main_pump.enable()
+
         else:
             logger.warning("A manual override is controlling the main circulation pump.")
             print("A manual override is controlling the main circulation pump.")
@@ -553,7 +555,7 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
 
     elif sump_reading >= 500 and sump_reading < 600:
         #Level is okay.
-        #We might be pumping right now, or the level is increasing, but do nothing.
+        #We might be pumping right now, or the level might be increasing, but do nothing.
         #Do NOT change the state of the butts pump.
         logger.info("Water level in the sump ("+str(sump_reading)+") between 500 mm and 600 mm.")
         print("Water level in the sump ("+str(sump_reading)+") between 500 mm and 600 mm.")
@@ -585,14 +587,9 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
             logger.warning("A manual override is controlling the main circulation pump.")
             print("A manual override is controlling the main circulation pump.")
 
-        #Pump some water to the butts if they aren't full.
+        #Stop pumping to the butts if they are full, but don't start pumping at this level.
         #If they are full, do nothing and let the sump overflow.
         if butts_float_reading == "False":
-            #Pump to the butts.
-            logger.warning("Pumping water to the butts...")
-            print("Pumping water to the butts...")
-            butts_pump.enable()
-
             logger.warning("Changing reading interval to 30 seconds so we can "
                            +"keep a close eye on what's happening...")
 
@@ -655,41 +652,6 @@ def sumppi_control_logic(readings, devices, monitors, sockets, reading_interval)
         else:
             logger.warning("A manual override is controlling the main circulation pump.")
             print("A manual override is controlling the main circulation pump.")
-
-        #Pump some water to the butts if they aren't full.
-        #If they are full, do nothing and let the sump overflow.
-        if butts_float_reading == "False":
-            #Pump to the butts.
-            logger.warning("Pumping water to the butts...")
-            print("Pumping water to the butts...")
-
-            if butts_pump_ovr is None:
-                butts_pump.enable()
-
-                logger.warning("Changing reading interval to 30 seconds so we can "
-                               +"keep a close eye on what's happening...")
-
-                print("Changing reading interval to 30 seconds so we can keep a "
-                      +"close eye on what's happening...")
-
-                reading_interval = 30
-
-            else:
-                logger.warning("A manual override is controlling the butts pump.")
-                print("A manual override is controlling the butts pump.")
-
-        else:
-            #Butts are full. Do nothing, but warn user.
-            butts_pump.disable()
-
-            logger.warning("The water butts are full. Allowing the sump to overflow.")
-            print("The water butts are full.")
-            print("Allowing the sump to overflow.")
-
-            logger.warning("Setting reading interval to 1 minute...")
-            print("Setting reading interval to 1 minute...")
-
-            reading_interval = 60
 
     elif sump_reading >= 300 and sump_reading < 400:
         #Level in the sump is getting low.
