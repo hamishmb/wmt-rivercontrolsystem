@@ -128,23 +128,23 @@ class TestTempTopUpReadingsParser(unittest.TestCase):
         tturp = temptopuplogic.TempTopUpReadingsParser()
         
         # Check that all the parser's methods raise ValueError
-        with self.subTest("g1NeedsTopUp"):
+        with self.subTest("g1_needs_top_up"):
             with self.assertRaises(ValueError):
-                tturp.g1NeedsTopUp()
+                tturp.g1_needs_top_up()
                 
-        with self.subTest("g1ToppedUp"):
+        with self.subTest("g1_topped_up"):
             with self.assertRaises(ValueError):
-                tturp.g1ToppedUp()
+                tturp.g1_topped_up()
         
     def testG1NeedsTopUp(self):
-        """Test that TempTopUpReadingsParser.g1NeedsTopUp() behaves as expected under various conditions."""
+        """Test that TempTopUpReadingsParser.g1_needs_top_up() behaves as expected under various conditions."""
         
-        # Expected fault-free g1NeedsTopUp return values for selected G1
+        # Expected fault-free g1_needs_top_up return values for selected G1
         # level values
         expected = {
-            temptopuplogic.start_level + 100: False,
-            temptopuplogic.start_level: False,
-            temptopuplogic.start_level - 1: True
+            temptopuplogic.START_LEVEL + 100: False,
+            temptopuplogic.START_LEVEL: False,
+            temptopuplogic.START_LEVEL - 1: True
             }
         
         for l in expected:
@@ -175,7 +175,7 @@ class TestTempTopUpReadingsParser(unittest.TestCase):
                                     + "\n",
                                     g1_level = l,
                                     faults = cf):
-                        self.assertEqual(tturp.g1NeedsTopUp(), expected[l],
+                        self.assertEqual(tturp.g1_needs_top_up(), expected[l],
                                         "The readings were not parsed "
                                         "as expected. Make sure any "
                                         "simulated sensor faults were "
@@ -186,13 +186,13 @@ class TestTempTopUpReadingsParser(unittest.TestCase):
                         self.assertNoLoggedStatus()
     
     def testG1ToppedUp(self):
-        """Test that TempTopUpReadingsParser.g1ToppedUp() behaves as expected under various conditions."""
-        # Expected fault-free g1ToppedUp return values for selected G1 levels
+        """Test that TempTopUpReadingsParser.g1_topped_up() behaves as expected under various conditions."""
+        # Expected fault-free g1_topped_up return values for selected G1 levels
         expected = {
-            temptopuplogic.stop_level - 15: False,
-            temptopuplogic.stop_level: True,
-            temptopuplogic.stop_level - 1: False,
-            temptopuplogic.stop_level + 1: True
+            temptopuplogic.STOP_LEVEL - 15: False,
+            temptopuplogic.STOP_LEVEL: True,
+            temptopuplogic.STOP_LEVEL - 1: False,
+            temptopuplogic.STOP_LEVEL + 1: True
             }
         
         for l in expected:
@@ -223,7 +223,7 @@ class TestTempTopUpReadingsParser(unittest.TestCase):
                                     + "\n",
                                     g1_level = l,
                                     faults = cf):
-                        self.assertEqual(tturp.g1ToppedUp(), expected[l],
+                        self.assertEqual(tturp.g1_topped_up(), expected[l],
                                          "The readings were not parsed "
                                          "as expected. Make sure any "
                                          "simulated sensor faults were "
@@ -250,14 +250,14 @@ class TestTempTopUpControlLogic(unittest.TestCase):
         temptopuplogic.solenoid = TempTopUpFakeSolenoid(self.wm)
         
         # Disable the manual override feature for the solenoid valve
-        self.real_G3S0OverrideState = temptopuplogic.G3S0OverrideState
-        temptopuplogic.G3S0OverrideState = Mock(return_value="auto")
+        self.real_g3s0_override_state = temptopuplogic.g3s0_override_state
+        temptopuplogic.g3s0_override_state = Mock(return_value="auto")
     
     def tearDown(self):
         temptopuplogic.readings = {}
         self.wm.unOverrideFunctions()
         temptopuplogic.solenoid = None
-        temptopuplogic.G3S0OverrideState = self.real_G3S0OverrideState
+        temptopuplogic.g3s0_override_state = self.real_g3s0_override_state
         self.wm = None
     
     # The control state machine doesn't need much testing, except to
@@ -265,7 +265,7 @@ class TestTempTopUpControlLogic(unittest.TestCase):
     # states.
     # 
     # This makes sure none of the states has been missed out of the
-    # class initialiser, and also tests that getCurrentStateName is
+    # class initialiser, and also tests that get_current_state_name is
     # working.
     #
     # Behaviour of individual states should not be tested here.
@@ -275,23 +275,23 @@ class TestTempTopUpControlLogic(unittest.TestCase):
     def testIdle(self):
         """Tests that the logic can get into Idle state"""
         # Idle should be the default state, so we just need to make
-        # sure the water level is not below start_level
-        self.wm.setVesselLevel("G1", temptopuplogic.start_level + 10)
+        # sure the water level is not below START_LEVEL
+        self.wm.setVesselLevel("G1", temptopuplogic.START_LEVEL + 10)
         temptopuplogic.readings = self.wm.getReadingsDict("G1","G2","G3")
         
         sm = temptopuplogic.TempTopUpControlLogic()
         sm.do_logic(30)
-        self.assertEqual(sm.getCurrentStateName(),
+        self.assertEqual(sm.get_current_state_name(),
                          "TTUIdleState")
     
     def testToppingUp(self):
         """Tests that the logic can get into Topping Up state"""
         # Set conditions that should put us into Topping Up state
-        self.wm.setVesselLevel("G1", temptopuplogic.start_level - 10)
+        self.wm.setVesselLevel("G1", temptopuplogic.START_LEVEL - 10)
         temptopuplogic.readings = self.wm.getReadingsDict("G1","G2","G3")
         
         time = datetime.datetime.combine(datetime.date.today(),
-                                         temptopuplogic.start_time[0])
+                                         temptopuplogic.START_TIME[0])
         
         with patch('datetime.datetime') as mock_dt:
             # Override the 'now' method, keep the others available
@@ -300,58 +300,58 @@ class TestTempTopUpControlLogic(unittest.TestCase):
             
             sm = temptopuplogic.TempTopUpControlLogic()
             sm.do_logic(30)
-            self.assertEqual(sm.getCurrentStateName(),
+            self.assertEqual(sm.get_current_state_name(),
                          "TTUToppingUpState")
 
 class TestG3S0OverrideState(unittest.TestCase):
     """
-    Full tests of function G3S0OverrideState
+    Full tests of function g3s0_override_state
     """
     def testFileNotFound(self):
         """Test solenoid override state when override file not present"""
         with patch('Logic.temptopuplogic.open',
                    side_effect=FileNotFoundError):
-            self.assertEqual(temptopuplogic.G3S0OverrideState(), "auto")
+            self.assertEqual(temptopuplogic.g3s0_override_state(), "auto")
     
     def testOn(self):
         """Test solenoid override state 'on' (set in override file)"""
         with patch('Logic.temptopuplogic.open', mock_open(read_data="on\n")):
-            self.assertEqual(temptopuplogic.G3S0OverrideState(), "on")
+            self.assertEqual(temptopuplogic.g3s0_override_state(), "on")
     
     def testOff(self):
         """Test solenoid override state 'off' (set in override file)"""
         with patch('Logic.temptopuplogic.open', mock_open(read_data="off\n")):
-            self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+            self.assertEqual(temptopuplogic.g3s0_override_state(), "off")
     
     def testAuto(self):
         """Test solenoid override state 'auto' (set in override file)"""
         with patch('Logic.temptopuplogic.open', mock_open(read_data="auto\n")):
-            self.assertEqual(temptopuplogic.G3S0OverrideState(), "auto")
+            self.assertEqual(temptopuplogic.g3s0_override_state(), "auto")
     
     def testFileInaccessible(self):
         """Test solenoid override state when override file inaccessible"""
         with patch('Logic.temptopuplogic.open',
                    side_effect=PermissionError):
-            self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+            self.assertEqual(temptopuplogic.g3s0_override_state(), "off")
         
         with patch('Logic.temptopuplogic.open',
                    side_effect=IsADirectoryError):
-            self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+            self.assertEqual(temptopuplogic.g3s0_override_state(), "off")
         
         with patch('Logic.temptopuplogic.open',
                    side_effect=TimeoutError):
-            self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+            self.assertEqual(temptopuplogic.g3s0_override_state(), "off")
     
     def testUnrecognisedValue(self):
         """Test solenoid override state when override file contains unrecognised value"""
         with patch('Logic.temptopuplogic.open', mock_open(read_data="foo\n")):
-            self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+            self.assertEqual(temptopuplogic.g3s0_override_state(), "off")
         
         with patch('Logic.temptopuplogic.open', mock_open(read_data="\nbar")):
-            self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+            self.assertEqual(temptopuplogic.g3s0_override_state(), "off")
         
         with patch('Logic.temptopuplogic.open', mock_open(read_data="\non")):
-            self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+            self.assertEqual(temptopuplogic.g3s0_override_state(), "off")
     
     def testRemoteOff(self):
         """Test solenoid override state 'remote/off' (set in override file)"""
@@ -359,27 +359,27 @@ class TestG3S0OverrideState(unittest.TestCase):
                    mock_open(read_data="remote/off\n")):
             with patch('Tools.logiccoretools.get_state',
                        Mock(return_value=("Locked","None","NAS"))):
-                self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+                self.assertEqual(temptopuplogic.g3s0_override_state(), "off")
             
             with patch('Tools.logiccoretools.get_state',
                        Mock(side_effect=RuntimeError)):
-                self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+                self.assertEqual(temptopuplogic.g3s0_override_state(), "off")
             
             with patch('Tools.logiccoretools.get_state',
                        Mock(return_value=("Locked","ON","NAS"))):
-                self.assertEqual(temptopuplogic.G3S0OverrideState(), "on")
+                self.assertEqual(temptopuplogic.g3s0_override_state(), "on")
             
             with patch('Tools.logiccoretools.get_state',
                        Mock(return_value=("Locked","OFF","NAS"))):
-                self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+                self.assertEqual(temptopuplogic.g3s0_override_state(), "off")
             
             with patch('Tools.logiccoretools.get_state',
                        Mock(return_value=("Locked","AUTO","NAS"))):
-                self.assertEqual(temptopuplogic.G3S0OverrideState(), "auto")
+                self.assertEqual(temptopuplogic.g3s0_override_state(), "auto")
             
             with patch('Tools.logiccoretools.get_state',
                        Mock(return_value=("Locked","MAYBE","NAS"))):
-                self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+                self.assertEqual(temptopuplogic.g3s0_override_state(), "off")
         
     def testRemoteAuto(self):
         """Test solenoid override state 'remote/auto' (set in override file)"""
@@ -387,27 +387,27 @@ class TestG3S0OverrideState(unittest.TestCase):
                    mock_open(read_data="remote/auto\n")):
             with patch('Tools.logiccoretools.get_state',
                        Mock(return_value=("Locked","None","NAS"))):
-                self.assertEqual(temptopuplogic.G3S0OverrideState(), "auto")
+                self.assertEqual(temptopuplogic.g3s0_override_state(), "auto")
             
             with patch('Tools.logiccoretools.get_state',
                        Mock(side_effect=RuntimeError)):
-                self.assertEqual(temptopuplogic.G3S0OverrideState(), "auto")
+                self.assertEqual(temptopuplogic.g3s0_override_state(), "auto")
             
             with patch('Tools.logiccoretools.get_state',
                        Mock(return_value=("Locked","ON","NAS"))):
-                self.assertEqual(temptopuplogic.G3S0OverrideState(), "on")
+                self.assertEqual(temptopuplogic.g3s0_override_state(), "on")
             
             with patch('Tools.logiccoretools.get_state',
                        Mock(return_value=("Locked","OFF","NAS"))):
-                self.assertEqual(temptopuplogic.G3S0OverrideState(), "off")
+                self.assertEqual(temptopuplogic.g3s0_override_state(), "off")
             
             with patch('Tools.logiccoretools.get_state',
                        Mock(return_value=("Locked","AUTO","NAS"))):
-                self.assertEqual(temptopuplogic.G3S0OverrideState(), "auto")
+                self.assertEqual(temptopuplogic.g3s0_override_state(), "auto")
             
             with patch('Tools.logiccoretools.get_state',
                        Mock(return_value=("Locked","MAYBE","NAS"))):
-                self.assertEqual(temptopuplogic.G3S0OverrideState(), "auto")
+                self.assertEqual(temptopuplogic.g3s0_override_state(), "auto")
 
 def singleStateTestSetUp(testInstance, stateClassUnderTest, G1Level):
     """
@@ -454,10 +454,10 @@ class TestTTUIdleState(unittest.TestCase):
     Full tests of class TTUIdleState
     """
     def setUp(self):
-        # Initial water level should be above start_level for these tests
+        # Initial water level should be above START_LEVEL for these tests
         singleStateTestSetUp(self,
                              temptopuplogic.TTUIdleState,
-                             temptopuplogic.start_level + 10)
+                             temptopuplogic.START_LEVEL + 10)
     
     def tearDown(self):
         singleStateTestTearDown(self)
@@ -493,7 +493,7 @@ class TestTTUIdleState(unittest.TestCase):
     def testSetupState(self):
         """Tests whether TTUIdleState has the correct control outputs when first set up."""
         time = datetime.datetime.combine(datetime.date.today(),
-                                         temptopuplogic.start_time[1])
+                                         temptopuplogic.START_TIME[1])
         time = time - datetime.timedelta(hours=1)
         
         with patch('datetime.datetime') as mock_dt:
@@ -502,7 +502,7 @@ class TestTTUIdleState(unittest.TestCase):
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
             # Disable solenoid valve override for this test
-            with patch('Logic.temptopuplogic.G3S0OverrideState',
+            with patch('Logic.temptopuplogic.g3s0_override_state',
                        return_value="auto"):
                 # Check that TTUIdle tries to turn off the solenoid valve
                 self.s.setup_state()
@@ -521,9 +521,9 @@ class TestTTUIdleState(unittest.TestCase):
         """
         
         # Check that transition does not occur with water above threshold,
-        # time before start_time range
+        # time before START_TIME range
         time = datetime.datetime.combine(datetime.date.today(),
-                                         temptopuplogic.start_time[0])
+                                         temptopuplogic.START_TIME[0])
         time = time - datetime.timedelta(hours=1)
         
         with patch('datetime.datetime') as mock_dt:
@@ -532,36 +532,36 @@ class TestTTUIdleState(unittest.TestCase):
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
             # Disable solenoid valve override for this test
-            with patch('Logic.temptopuplogic.G3S0OverrideState',
+            with patch('Logic.temptopuplogic.g3s0_override_state',
                        return_value="auto"):
                 self.s.do_logic(30)
-                self.csm.setStateBy.assert_not_called()
+                self.csm.set_state_by.assert_not_called()
                 self.assertStateControlOutputsCorrect()
         
         # Check that transition does not occur with water above threshold,
-        # time at start of start_time range
+        # time at start of START_TIME range
         self.wm.controlled_devices = []
         time = datetime.datetime.combine(datetime.date.today(),
-                                         temptopuplogic.start_time[0])
+                                         temptopuplogic.START_TIME[0])
         
         with patch('datetime.datetime') as mock_dt:
             # Override the 'now' method, keep the others available
             mock_dt.now.return_value = time
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
-            with patch('Logic.temptopuplogic.G3S0OverrideState',
+            with patch('Logic.temptopuplogic.g3s0_override_state',
                        return_value="auto"):
                 self.s.do_logic(30)
-                self.csm.setStateBy.assert_not_called()
+                self.csm.set_state_by.assert_not_called()
                 self.assertStateControlOutputsCorrect()
         
         # Check that transition does not occur with water below threshold and
-        # time outside start_time range
+        # time outside START_TIME range
         self.wm.controlled_devices = []
-        self.wm.setVesselLevel("G1", temptopuplogic.start_level - 10)
+        self.wm.setVesselLevel("G1", temptopuplogic.START_LEVEL - 10)
         temptopuplogic.readings = self.wm.getReadingsDict("G1","G2","G3")
         time = datetime.datetime.combine(datetime.date.today(),
-                                         temptopuplogic.start_time[0])
+                                         temptopuplogic.START_TIME[0])
         time = time - datetime.timedelta(hours=1)
         
         with patch('datetime.datetime') as mock_dt:
@@ -569,38 +569,38 @@ class TestTTUIdleState(unittest.TestCase):
             mock_dt.now.return_value = time
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
-            with patch('Logic.temptopuplogic.G3S0OverrideState',
+            with patch('Logic.temptopuplogic.g3s0_override_state',
                        return_value="auto"):
                 self.s.do_logic(30)
-                self.csm.setStateBy.assert_not_called()
+                self.csm.set_state_by.assert_not_called()
                 self.assertStateControlOutputsCorrect()
         
         # Check that transition does not occur with water below threshold,
-        # time at start of start_time range and solenoid overridden to 'off'
+        # time at start of START_TIME range and solenoid overridden to 'off'
         self.wm.controlled_devices = []
         time = datetime.datetime.combine(datetime.date.today(),
-                                         temptopuplogic.start_time[0])
+                                         temptopuplogic.START_TIME[0])
         
         with patch('datetime.datetime') as mock_dt:
             # Override the 'now' method, keep the others available
             mock_dt.now.return_value = time
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
-            with patch('Logic.temptopuplogic.G3S0OverrideState',
+            with patch('Logic.temptopuplogic.g3s0_override_state',
                        return_value="off"):
                 self.s.do_logic(30)
-                self.csm.setStateBy.assert_not_called()
+                self.csm.set_state_by.assert_not_called()
                 self.assertStateControlOutputsCorrect()
     
     def testTransitionToToppingUp(self):
         """Tests whether TTUIdleState will transition into TTUToppingUpState under the expected conditions."""
         
         # Check that transition occurs with water below threshold and time
-        # at start of start_time range
+        # at start of START_TIME range
         time = datetime.datetime.combine(datetime.date.today(),
-                                         temptopuplogic.start_time[0])
+                                         temptopuplogic.START_TIME[0])
         
-        self.wm.setVesselLevel("G1", temptopuplogic.start_level - 10)
+        self.wm.setVesselLevel("G1", temptopuplogic.START_LEVEL - 10)
         temptopuplogic.readings = self.wm.getReadingsDict("G1","G2","G3")
         
         with patch('datetime.datetime') as mock_dt:
@@ -608,24 +608,24 @@ class TestTTUIdleState(unittest.TestCase):
             mock_dt.now.return_value = time
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
-            with patch('Logic.temptopuplogic.G3S0OverrideState',
+            with patch('Logic.temptopuplogic.g3s0_override_state',
                        return_value="auto"):
                 self.s.do_logic(30)
-                self.csm.setStateBy.assert_called_once_with(
+                self.csm.set_state_by.assert_called_once_with(
                     temptopuplogic.TTUToppingUpState,
                     self.s)
         
         # Check that transition occurs with water below threshold and time
-        # in middle of start_time range
-        self.csm.setStateBy.reset_mock()
+        # in middle of START_TIME range
+        self.csm.set_state_by.reset_mock()
         time = (datetime.datetime.combine(datetime.date.today(),
-                                          temptopuplogic.start_time[0])
+                                          temptopuplogic.START_TIME[0])
                 +
                 ( (datetime.datetime.combine(datetime.date.today(),
-                                             temptopuplogic.start_time[1])
+                                             temptopuplogic.START_TIME[1])
                    -
                    datetime.datetime.combine(datetime.date.today(),
-                                             temptopuplogic.start_time[0]))
+                                             temptopuplogic.START_TIME[0]))
                    / 2))
         
         with patch('datetime.datetime') as mock_dt:
@@ -633,38 +633,38 @@ class TestTTUIdleState(unittest.TestCase):
             mock_dt.now.return_value = time
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
-            with patch('Logic.temptopuplogic.G3S0OverrideState',
+            with patch('Logic.temptopuplogic.g3s0_override_state',
                        return_value="auto"):
                 self.s.do_logic(30)
-                self.csm.setStateBy.assert_called_once_with(
+                self.csm.set_state_by.assert_called_once_with(
                     temptopuplogic.TTUToppingUpState,
                     self.s)
         
         # Check that transition occurs with water below threshold and time
-        # at end of start_time range
-        self.csm.setStateBy.reset_mock()
+        # at end of START_TIME range
+        self.csm.set_state_by.reset_mock()
         time = datetime.datetime.combine(datetime.date.today(),
-                                         temptopuplogic.start_time[1])
+                                         temptopuplogic.START_TIME[1])
         
         with patch('datetime.datetime') as mock_dt:
             # Override the 'now' method, keep the others available
             mock_dt.now.return_value = time
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
-            with patch('Logic.temptopuplogic.G3S0OverrideState',
+            with patch('Logic.temptopuplogic.g3s0_override_state',
                        return_value="auto"):
                 self.s.do_logic(30)
-                self.csm.setStateBy.assert_called_once_with(
+                self.csm.set_state_by.assert_called_once_with(
                     temptopuplogic.TTUToppingUpState,
                     self.s)
         
         # Check that transition occurs with water above threshold, time
-        # before start_time and solenoid overridden to 'on'
-        self.csm.setStateBy.reset_mock()
-        self.wm.setVesselLevel("G1", temptopuplogic.start_level + 10)
+        # before START_TIME and solenoid overridden to 'on'
+        self.csm.set_state_by.reset_mock()
+        self.wm.setVesselLevel("G1", temptopuplogic.START_LEVEL + 10)
         temptopuplogic.readings = self.wm.getReadingsDict("G1","G2","G3")
         time = datetime.datetime.combine(datetime.date.today(),
-                                         temptopuplogic.start_time[0])
+                                         temptopuplogic.START_TIME[0])
         time = time - datetime.timedelta(hours=1)
         
         with patch('datetime.datetime') as mock_dt:
@@ -672,10 +672,10 @@ class TestTTUIdleState(unittest.TestCase):
             mock_dt.now.return_value = time
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
-            with patch('Logic.temptopuplogic.G3S0OverrideState',
+            with patch('Logic.temptopuplogic.g3s0_override_state',
                        return_value="on"):
                 self.s.do_logic(30)
-                self.csm.setStateBy.assert_called_once_with(
+                self.csm.set_state_by.assert_called_once_with(
                     temptopuplogic.TTUToppingUpState,
                     self.s)
         
@@ -687,10 +687,10 @@ class TestTTUToppingUpState(unittest.TestCase):
     Full tests of class TTUToppingUpState
     """
     def setUp(self):
-        # Initial water level should be less than stop_level for these tests
+        # Initial water level should be less than STOP_LEVEL for these tests
         singleStateTestSetUp(self,
                              temptopuplogic.TTUToppingUpState,
-                             temptopuplogic.stop_level - 10)
+                             temptopuplogic.STOP_LEVEL - 10)
     
     def tearDown(self):
         singleStateTestTearDown(self)
@@ -726,7 +726,7 @@ class TestTTUToppingUpState(unittest.TestCase):
     def testSetupState(self):
         """Tests whether TTUToppingUpState has the correct control outputs when first set up."""
         time = datetime.datetime.combine(datetime.date.today(),
-                                         temptopuplogic.start_time[1])
+                                         temptopuplogic.START_TIME[1])
         
         with patch('datetime.datetime') as mock_dt:
             # Override the 'now' method, keep the others available
@@ -748,48 +748,48 @@ class TestTTUToppingUpState(unittest.TestCase):
         solenoid override state in the initial conditions.)
         """
         
-        # Check that transition does not occur with water below stop_level
-        # and time at end of start_time
+        # Check that transition does not occur with water below STOP_LEVEL
+        # and time at end of START_TIME
         time = datetime.datetime.combine(datetime.date.today(),
-                                         temptopuplogic.start_time[1])
+                                         temptopuplogic.START_TIME[1])
         
         with patch('datetime.datetime') as mock_dt:
             # Override the 'now' method, keep the others available
             mock_dt.now.return_value = time
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
-            with patch('Logic.temptopuplogic.G3S0OverrideState',
+            with patch('Logic.temptopuplogic.g3s0_override_state',
                        return_value="auto"):
                 self.s.do_logic(30)
-                self.csm.setStateBy.assert_not_called()
+                self.csm.set_state_by.assert_not_called()
                 self.assertStateControlOutputsCorrect()
         
         # Check that transition does not occur with time at
-        # failsafe_end_time and solenoid override set to 'on'
+        # FAILSAFE_END_TIME and solenoid override set to 'on'
         self.wm.controlled_devices = []
         
         time = datetime.datetime.combine(datetime.date.today(),
-                                         temptopuplogic.failsafe_end_time)
+                                         temptopuplogic.FAILSAFE_END_TIME)
         
         with patch('datetime.datetime') as mock_dt:
             # Override the 'now' method, keep the others available
             mock_dt.now.return_value = time
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
-            with patch('Logic.temptopuplogic.G3S0OverrideState',
+            with patch('Logic.temptopuplogic.g3s0_override_state',
                        return_value="on"):
                 self.s.do_logic(30)
-                self.csm.setStateBy.assert_not_called()
+                self.csm.set_state_by.assert_not_called()
                 self.assertStateControlOutputsCorrect()
         
-        # Check that transition does not occur with water above stop_level
+        # Check that transition does not occur with water above STOP_LEVEL
         # and solenoid override set to 'on'
         self.wm.controlled_devices = []
         
         time = datetime.datetime.combine(datetime.date.today(),
-                                         temptopuplogic.start_time[1])
+                                         temptopuplogic.START_TIME[1])
         
-        self.wm.setVesselLevel("G1", temptopuplogic.stop_level + 10)
+        self.wm.setVesselLevel("G1", temptopuplogic.STOP_LEVEL + 10)
         temptopuplogic.readings = self.wm.getReadingsDict("G1","G2","G3")
         
         with patch('datetime.datetime') as mock_dt:
@@ -797,19 +797,19 @@ class TestTTUToppingUpState(unittest.TestCase):
             mock_dt.now.return_value = time
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
-            with patch('Logic.temptopuplogic.G3S0OverrideState',
+            with patch('Logic.temptopuplogic.g3s0_override_state',
                        return_value="on"):
                 self.s.do_logic(30)
-                self.csm.setStateBy.assert_not_called()
+                self.csm.set_state_by.assert_not_called()
                 self.assertStateControlOutputsCorrect()
     
     def testTransitionToTTUIdle(self):
         """Tests whether TTUToppingUpState will transition into TTUIdleState under the expected conditions"""
         
-        # Check that transition occurs when G1 reaches stop_level
+        # Check that transition occurs when G1 reaches STOP_LEVEL
         time = datetime.datetime.combine(datetime.date.today(),
-                                         temptopuplogic.start_time[1])
-        self.wm.setVesselLevel("G1", temptopuplogic.stop_level)
+                                         temptopuplogic.START_TIME[1])
+        self.wm.setVesselLevel("G1", temptopuplogic.STOP_LEVEL)
         temptopuplogic.readings = self.wm.getReadingsDict("G1","G2","G3")
         
         with patch('datetime.datetime') as mock_dt:
@@ -817,37 +817,37 @@ class TestTTUToppingUpState(unittest.TestCase):
             mock_dt.now.return_value = time
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
-            with patch('Logic.temptopuplogic.G3S0OverrideState',
+            with patch('Logic.temptopuplogic.g3s0_override_state',
                        return_value="auto"):
                 self.s.do_logic(30)
-                self.csm.setStateBy.assert_called_once_with(
+                self.csm.set_state_by.assert_called_once_with(
                     temptopuplogic.TTUIdleState,
                     self.s)
         
-        # Check that transition occurs when time passes failsafe_end_time
-        self.csm.setStateBy.reset_mock()
+        # Check that transition occurs when time passes FAILSAFE_END_TIME
+        self.csm.set_state_by.reset_mock()
         time = datetime.datetime.combine(datetime.date.today(),
-                                         temptopuplogic.failsafe_end_time)
+                                         temptopuplogic.FAILSAFE_END_TIME)
         
         with patch('datetime.datetime') as mock_dt:
             # Override the 'now' method, keep the others available
             mock_dt.now.return_value = time
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
-            with patch('Logic.temptopuplogic.G3S0OverrideState',
+            with patch('Logic.temptopuplogic.g3s0_override_state',
                        return_value="auto"):
                 self.s.do_logic(30)
-                self.csm.setStateBy.assert_called_once_with(
+                self.csm.set_state_by.assert_called_once_with(
                     temptopuplogic.TTUIdleState,
                     self.s)
         
         # Check that transition occurs when solenoid override is 'off' but
         # when water level and time are such that no transition would occur
         # without an override
-        self.csm.setStateBy.reset_mock()
+        self.csm.set_state_by.reset_mock()
         time = datetime.datetime.combine(datetime.date.today(),
-                                         temptopuplogic.start_time[1])
-        self.wm.setVesselLevel("G1", temptopuplogic.stop_level - 10)
+                                         temptopuplogic.START_TIME[1])
+        self.wm.setVesselLevel("G1", temptopuplogic.STOP_LEVEL - 10)
         temptopuplogic.readings = self.wm.getReadingsDict("G1","G2","G3")
         
         with patch('datetime.datetime') as mock_dt:
@@ -855,10 +855,10 @@ class TestTTUToppingUpState(unittest.TestCase):
             mock_dt.now.return_value = time
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
             
-            with patch('Logic.temptopuplogic.G3S0OverrideState',
+            with patch('Logic.temptopuplogic.g3s0_override_state',
                        return_value="off"):
                 self.s.do_logic(30)
-                self.csm.setStateBy.assert_called_once_with(
+                self.csm.set_state_by.assert_called_once_with(
                     temptopuplogic.TTUIdleState,
                     self.s)
         

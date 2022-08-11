@@ -472,20 +472,20 @@ class TTUIdleState(GenericControlState):
             #Evaluate possible transitions to new states
             if s0_override == 'off':
                 # Stay in idle state to keep solenoid off
-                self.noTransition()
+                self.no_transition()
 
             elif s0_override == 'on':
                 # Enter topping up state to switch solenoid on
-                self.csm.setStateBy(TTUToppingUpState, self)
+                self.csm.set_state_by(TTUToppingUpState, self)
 
             elif (parser.g1_needs_top_up()
                   and datetime.datetime.now().time() >= START_TIME[0]
                   and datetime.datetime.now().time() <= START_TIME[1]):
                 # Start daily top-up
-                self.csm.setStateBy(TTUToppingUpState, self)
+                self.csm.set_state_by(TTUToppingUpState, self)
 
             else:
-                self.noTransition()
+                self.no_transition()
 
         except ValueError as err:
             raise GenericControlState.StateTransitionError from err
@@ -520,20 +520,20 @@ class TTUToppingUpState(GenericControlState):
             #Evaluate possible transitions to new states
             if s0_override == 'on':
                 # Stay in topping up state to keep solenoid on
-                self.noTransition()
+                self.no_transition()
 
             elif s0_override == 'off':
                 # Enter idle state to switch solenoid off
-                self.csm.setStateBy(TTUIdleState, self)
+                self.csm.set_state_by(TTUIdleState, self)
 
             elif (parser.g1_topped_up()
                   or datetime.datetime.now().time() >= FAILSAFE_END_TIME
                   or datetime.datetime.now().time() < START_TIME[0]):
                 # Terminate daily top-up
-                self.csm.setStateBy(TTUIdleState, self)
+                self.csm.set_state_by(TTUIdleState, self)
 
             else:
-                self.noTransition()
+                self.no_transition()
 
         except ValueError:
             msg = ("Could not parse sensor readings. "
@@ -541,7 +541,7 @@ class TTUToppingUpState(GenericControlState):
 
             print(msg)
             logger.error(msg)
-            self.csm.setStateBy(TTUIdleState, self)
+            self.csm.set_state_by(TTUIdleState, self)
 
 # ---------------- Temporary Top Up control state machine ------------------
 # The control state machine class (TempTopUpControlLogic) defines the
@@ -596,11 +596,11 @@ class TempTopUpControlLogic(ControlStateMachineABC):
         super().__init__()
 
         #Initialise dictionary of allowable states
-        self._addState(TTUIdleState)
-        self._addState(TTUToppingUpState)
+        self._add_state(TTUIdleState)
+        self._add_state(TTUToppingUpState)
 
         #Set initial state
-        self.setState(TTUIdleState)
+        self.set_state(TTUIdleState)
 
     @staticmethod
     def get_state_machine_name():
