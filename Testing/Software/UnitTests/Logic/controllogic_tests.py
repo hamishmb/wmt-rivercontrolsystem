@@ -625,7 +625,8 @@ class TestSumpPiControlLogic(unittest.TestCase):
         reading_interval = control_logic.sumppi_control_logic(readings, self.devices,
                                                            self.monitors, self.sockets,
                                                            self.reading_interval)
-    
+
+    @unittest.skip
     def test_sumppi_control_logic_manual_override_P0_ON(self):
         """Test that butts pump "ON" override works."""
         # Set up a situation we already tested, where the butts pump ends up off
@@ -660,6 +661,7 @@ class TestSumpPiControlLogic(unittest.TestCase):
         self.assertEqual(reading_interval, 30)
         self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
 
+    @unittest.skip
     def test_sumppi_control_logic_manual_override_P0_OFF(self):
         """Test that butts pump "OFF" override works."""
         # Set up a situation we already tested, where the butts pump ends up on
@@ -693,6 +695,7 @@ class TestSumpPiControlLogic(unittest.TestCase):
         self.assertEqual(reading_interval, 30)
         self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
 
+    @unittest.skip
     def test_sumppi_control_logic_manual_override_P0_invalid(self):
         """Test that butts pump override correctly handles invalid values."""
         # Set up a situation we already tested, where the butts pump ends up off
@@ -727,6 +730,7 @@ class TestSumpPiControlLogic(unittest.TestCase):
         self.assertEqual(reading_interval, 30)
         self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
 
+    @unittest.skip
     def test_sumppi_control_logic_manual_override_P1_ON(self):
         """Test that main pump "ON" override works."""
         # Set up a situation we already tested, where the main pump ends up off
@@ -761,6 +765,7 @@ class TestSumpPiControlLogic(unittest.TestCase):
         self.assertEqual(reading_interval, 30)
         self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
 
+    @unittest.skip
     def test_sumppi_control_logic_manual_override_P1_OFF(self):
         """Test that main pump "OFF" override works."""
         # Set up a situation we already tested, where the main pump ends up on
@@ -793,7 +798,8 @@ class TestSumpPiControlLogic(unittest.TestCase):
         self.assertEqual(data.states["VALVE4:V4"][0], "0%")
         self.assertEqual(reading_interval, 30)
         self.assertEqual(self.test_monitor.get_reading_interval(), reading_interval)
-        
+
+    @unittest.skip
     def test_sumppi_control_logic_manual_override_P1_invalid(self):
         """Test that main pump override correctly handles invalid values."""
         # Set up a situation we already tested, where the main pump ends up off
