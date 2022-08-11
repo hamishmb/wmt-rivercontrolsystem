@@ -40,11 +40,6 @@ for maintaining a suitable water level in the river sump, pumping water out of
 the sump and into butts group G4 when the sump level is too high and pumping
 water out of butts group G4 and into the sump when the sump level is too low.
 
-.. note::
-    The sump pi control logic is actually still in contrologic.py as the existing
-    code would not suit being split. When it is re-written, it is likely it will
-    go in its own file as described here.
-
 stagepilogic.py
 ===============
 

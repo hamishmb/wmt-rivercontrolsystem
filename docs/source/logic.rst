@@ -8,5 +8,6 @@ Contents:
 
 
     genericlogic
+    sumppilogic
     stagepilogic
     temptopuplogic
