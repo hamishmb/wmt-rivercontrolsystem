@@ -15,11 +15,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pylint: disable=logging-not-lazy
+#pylint: disable=wrong-import-position
 #
 #Reason (logging-not-lazy): Harder to understand the logging statements that way.
+#Reason (wrong-import-position): Pylint is confused by the need to modify sys.path.
 
 """
-This is the temptopuplogic module, which contains interim control logic for Lady Hanham Pi to provide a daily mains water top-up.
+This is the temptopuplogic module, which contains interim control logic for Lady
+Hanham Pi to provide a daily mains water top-up.
 
 This logic features a manual override function for the G3:S0 mains water inlet
 solenoid valve. The manual override can be activated by creating the file::
@@ -50,9 +53,10 @@ device state of:
 - 'AUTO' to request automatic operation.
 
 The fallback state for 'remote/off' and 'remote/auto' occurs when the
-requested state is 'None', but also when there is a failure to determine the requested state (for example, due to a network failure or a database failure).
+requested state is 'None', but also when there is a failure to determine the
+requested state (for example, due to a network failure or a database failure).
 
-N.B. The solenoid override will override failsafe_end_time. Do not leave an 'on'
+N.B. The solenoid override will override FAILSAFE_END_TIME. Do not leave an 'on'
 override unattended!
 
 This logic is intended as an interim measure to reduce the burden of manually
@@ -72,6 +76,7 @@ redundant.
 import logging
 import sys
 import os.path
+import datetime
 
 # Add root of rivercontrolsystem to path
 # this was done using sys.path.insert(0, os.path.abspath('..'))
@@ -81,7 +86,6 @@ sys.path.insert(0, os.path.abspath(os.path.split(os.path.dirname(__file__))[0]))
 
 from Tools import logiccoretools
 from Tools.statetools import ControlStateMachineABC, GenericControlState
-import datetime
 
 #Don't ask for a logger name, so this works with both main.py
 #and the universal monitor.
@@ -98,10 +102,10 @@ def reconfigure_logger():
 
     logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
 
-    for handler in logging.getLogger('River System Control Software').handlers:
-        logger.addHandler(handler)
+    for _handler in logging.getLogger('River System Control Software').handlers:
+        logger.addHandler(_handler)
 
-csm = None
+csm = None #pylint: disable=invalid-name
 """
 The csm variable holds an instance of the TempTopUpLogic control state
 machine, to enable state persistence.
@@ -110,7 +114,7 @@ Used by the temptopup_control_logic function.
 Initialised by the temptopup_control_logic_setup function.
 """
 
-solenoid = None
+solenoid = None #pylint: disable=invalid-name
 """
 The solenoid variable holds a reference to the solenoid valve device object.
 It should be initialised by the temptopup_control_logic function.
@@ -122,7 +126,7 @@ The readings variable holds a reference to the local readings dictionary.
 It should be set by the temptopup_control_logic function.
 """
 
-start_time = (datetime.time(14), datetime.time(14,2))
+START_TIME = (datetime.time(14), datetime.time(14,2))
 """
 Defines a window in time during which the daily mains-water top-up can begin.
 A tuple. First element is the beginning of the window, second is the end.
@@ -131,244 +135,262 @@ reading interval.
 This does not constrain the end time of the top-up.
 """
 
-failsafe_end_time = datetime.time(15,00)
+FAILSAFE_END_TIME = datetime.time(15,00)
 """
 Defines a cut-off time for the top-up as a last resort failsafe to limit water
 wastage in the event of a sensor failure. This should not normally come into
 play.
 """
 
-start_level = 500
+START_LEVEL = 500
 """
-Mains water top-up will begin when the water is below start_level
+Mains water top-up will begin when the water is below START_LEVEL
 """
 
-stop_level = 500
+STOP_LEVEL = 500
 """
-Mains water top-up will end when the water rises above stop_level
+Mains water top-up will end when the water rises above STOP_LEVEL
 """
 
 class TempTopUpReadingsParser():
     """
     This class extracts data from sensor readings and presents it
     in a format that's convenient for the Temporary Top Up control logic.
-    
+
     This is probably over the top for temporary logic, but since we
     already have the basic outline for doing a readings parser, lets write
     one anyway, because it gives us error handling we might not otherwise
     think of doing.
     """
+
     def __init__(self):
         """
         Initialiser. Puts relevant readings data into instance variables.
-        """      
+        """
+
         #Get readings, check they are sane and load into self
         failed_to_get_some_readings = False
-        
+
         # When there is no reading available yet in the readings
         # dictionary, we should get a KeyError. If we get a "None"
         # reading, then we'll get an AttributeError when we try to call
         # get_value() on it.
-        
+
         # The Temporary Top Up logic is only interested in the latest
         # reading, so if there is an error getting the reading, we
         # ultimately parse it by throwing a ValueError. The logic will
         # keep doing what it was already doing, until a reading is
         # obtained, so there is no need to feed it the previous reading.
-        
+
         # G1 butts group sensors are at G3:M0, G3:FS0, G3:FS1
         # (The G3 site handles the G1, G2 and G3 butts groups.)
         try:
-            G3M0r =  readings["G3:M0"]
-            G3M0  =  G3M0r.get_value()
-            self.G1_level = int(G3M0.replace("m", ""))
-        except (RuntimeError, AttributeError, KeyError) as e:
-            self.G1_level = None
+            g3m0_reading =  readings["G3:M0"]
+            g3m0  =  g3m0_reading.get_value()
+            self.g1_level = int(g3m0.replace("m", ""))
+
+        except (RuntimeError, AttributeError, KeyError) as err:
+            self.g1_level = None
             failed_to_get_some_readings = True
-            if isinstance(e, AttributeError) and not G3M0r is None:
-                raise e
-        
+
+            if isinstance(err, AttributeError) and not g3m0_reading is None:
+                raise err
+
         try:
-            G3FS0r = readings["G3:FS0"]
-            G3FS0  = G3FS0r.get_value()
-            if not G3FS0 in ("True", "False"): raise AssertionError
-            self.G1_full = G3FS0 == "True"
-        except (RuntimeError, AssertionError, AttributeError, KeyError) as e:
-            self.G1_full = None
+            g3fs0_reading = readings["G3:FS0"]
+            g3fs0  = g3fs0_reading.get_value()
+
+            if not g3fs0 in ("True", "False"):
+                raise AssertionError
+
+            self.g1_is_full = g3fs0 == "True"
+
+        except (RuntimeError, AssertionError, AttributeError, KeyError) as err:
+            self.g1_is_full = None
             failed_to_get_some_readings = True
-            if isinstance(e, AttributeError) and not G3FS0r is None:
-                raise e
-        
+
+            if isinstance(err, AttributeError) and not g3fs0_reading is None:
+                raise err
+
         try:
-            G3FS1r = readings["G3:FS1"]
-            G3FS1  = G3FS1r.get_value()
-            if not G3FS1 in ("True", "False"): raise AssertionError
-            self.G1_empty = G3FS1 == "True"
-        except (RuntimeError, AssertionError, AttributeError, KeyError) as e:
-            self.G1_empty = None
+            g3fs1_reading = readings["G3:FS1"]
+            g3fs1  = g3fs1_reading.get_value()
+
+            if not g3fs1 in ("True", "False"):
+                raise AssertionError
+
+            self.g1_is_empty = g3fs1 == "True"
+
+        except (RuntimeError, AssertionError, AttributeError, KeyError) as err:
+            self.g1_is_empty = None
             failed_to_get_some_readings = True
-            if isinstance(e, AttributeError) and not G3FS1r is None:
-                raise e
-        
+
+            if isinstance(err, AttributeError) and not g3fs1_reading is None:
+                raise err
+
         if failed_to_get_some_readings:
             msg = "Error: Could not get readings for one or more devices on "\
                   "butts group G1 (which is within site G3)."
+
             print(msg)
             logger.error(msg)
-        
-    
-    def _g1sensorContradictionError(self):
+
+    def _g1sensor_contradiction_error(self):
         """
         Private method to to print and log an error about G1 appearing
         to be simultaneously full and empty.
         """
         msg = ("\nERROR! G1 Lady Hanham Butts Group reads as full and empty "
                "simultaneously, with sensor readings:\n"
-               "G3:FS0 (high) = " + str(self.G1_full) + "\n"
-               "G3:FS1 (low) = " + str(self.G1_empty) + "\n"
-               "G3:M0 (depth) = " + str(self.G1_level) + "mm\n"
+               "G3:FS0 (high) = " + str(self.g1_is_full) + "\n"
+               "G3:FS1 (low) = " + str(self.g1_is_empty) + "\n"
+               "G3:M0 (depth) = " + str(self.g1_level) + "mm\n"
                "Check for sensor faults in G1.")
+
         print(msg)
         logger.error(msg)
-        
+
         try:
             logiccoretools.log_event("G1 sensors contradict", "ERROR")
+
         except RuntimeError:
             msg = "Error while trying to log error event over network."
             print(msg)
             logger.error(msg)
-    
-    def g1NeedsTopUp(self):
+
+    def g1_needs_top_up(self):
         """
         Returns true if G1 needs a top-up
         """
-        if (self.G1_full is None
-            or self.G1_level is None
-            or self.G1_empty is None):
+        if self.g1_is_full is None or self.g1_level is None or self.g1_is_empty is None:
             raise ValueError("Sensor readings unavailable.")
-        
-        if (self.G1_empty or self.G1_level < start_level):
-            if(self.G1_full == False):
+
+        if self.g1_is_empty or self.g1_level < START_LEVEL:
+            if self.g1_is_full is False:
                 return True
-            else:
-                self._g1sensorContradictionError()
-                
-                #The following error could be raised in __init__(), but
-                #raising it here avoids stalling the logic if it doesn't
-                #actually need to know whether G1 needs a top up.
-                raise ValueError("G1 sensor values contradict")
-        else:
-            return False
-    
-    def g1ToppedUp(self):
+
+            self._g1sensor_contradiction_error()
+
+            #The following error could be raised in __init__(), but
+            #raising it here avoids stalling the logic if it doesn't
+            #actually need to know whether G1 needs a top up.
+            raise ValueError("G1 sensor values contradict")
+
+        return False
+
+    def g1_topped_up(self):
         """
         Returns true if G1 has been fully topped-up.
         """
-        if (self.G1_full is None
-            or self.G1_level is None
-            or self.G1_empty is None):
+        if self.g1_is_full is None or self.g1_level is None or self.g1_is_empty is None:
             raise ValueError("Sensor readings unavailable.")
-        
-        if (self.G1_full or self.G1_level >= stop_level):
-            if(self.G1_empty == False):
-                return True
-            else:
-                self._g1sensorContradictionError()
-                
-                #The following error could be raised in __init__(), but
-                #raising it here avoids stalling the logic if it doesn't
-                #actually need to know whether G1 is topped up.
-                raise ValueError("G1 sensor values contradict")
-        else:
-            return False
 
-def G3S0OverrideState():
+        if self.g1_is_full or self.g1_level >= STOP_LEVEL:
+            if self.g1_is_empty is False:
+                return True
+
+            self._g1sensor_contradiction_error()
+
+            #The following error could be raised in __init__(), but
+            #raising it here avoids stalling the logic if it doesn't
+            #actually need to know whether G1 is topped up.
+            raise ValueError("G1 sensor values contradict")
+
+        return False
+
+def g3s0_override_state():
     """
     This function returns the current state of the mains water inlet
     solenoid manual override; one of 'on', 'off' or 'auto'.
     """
-    
+
     file_root = os.path.abspath(os.path.split(os.path.dirname(__file__))[0])
-    
+
     file_path = file_root + "/overrides/device/S0"
-    
+
     try:
-        with open(file_path, "r") as f:
+        with open(file_path, "r", encoding="utf-8") as file:
             # read first line only and discard whitespace (e.g. newline)
-            ovr_state = f.readline().strip()
+            ovr_state = file.readline().strip()
             msg = "Found manual override file: " + file_path
-            logger.warn(msg)
-    
+            logger.warning(msg)
+
     except FileNotFoundError:
         # This is the 'normal' case (no manual override requested).
         # So, no need to output messages about it.
         ovr_state = "auto"
-    
+
     except (PermissionError, IsADirectoryError, TimeoutError):
         msg = ("Found manual override file: " + file_path +
                "...but could not read its value.\n" +
                "Defaulting to 'off'.")
         logger.error(msg)
         ovr_state = "off"
-    
+
     # Values allowed in the FILE
     allowable_values = ("on", "off", "auto", "remote/off", "remote/auto")
-    
+
     if ovr_state not in allowable_values:
         msg = ("The override file did not contain a recognised text value.\n"
                "Defaulting to 'off'.")
+
         logger.error(msg)
-        
+
         ovr_state = "off"
-    
+
     if ovr_state in ("remote/off", "remote/auto"):
-        logger.warn("Solenoid is under remote manual override.")
+        logger.warning("Solenoid is under remote manual override.")
+
         try:
             # Device state should be in second (1th) element of tuple
             # Convert to lowercase for case-insensitivity
             remote_ovr = str(logiccoretools.get_state("G3","S0")[1]).lower()
+
         except RuntimeError:
             remote_ovr = None
-        
+
         if remote_ovr in ("on", "off", "auto"):
             ovr_state = remote_ovr
-        
+
         else:
             # There's no override.
-            
+
             # Output an explanation for why there's no override
             # (Test for "none" not "None", because converted to lowercase)
             if remote_ovr == "none":
                 logger.info("Remote control requests no solenoid override "
                             "(requested state: 'None').")
+
             elif remote_ovr is None:
                 logger.error("Error while trying to check whether an override "
                              "state has been requested remotely.")
+
             else:
                 logger.error("Unrecognised remote solenoid override state "
                              "request: '" + remote_ovr + "'.")
-            
+
             # Apply the "no override", defaulting to "off" or "auto"
             # as applicable
             if ovr_state == "remote/off":
                 ovr_state = "off"
                 msg = ("Defaulting solenoid to 'off' while in "
                       "'remote/off' mode.")
-                
+
             else: # ovr_state == "remote_auto"
                 ovr_state = "auto"
                 msg = ("Defaulting solenoid to 'auto' while in "
                        "'remote/auto' mode.")
-                
+
             logger.info(msg)
-    
+
     notifiable_values = ("on", "off")
-    
+
     if ovr_state in notifiable_values:
         msg = ("Solenoid is in manual override and will be held '" +
                ovr_state + "'.")
-        logger.warn(msg)
-            
+
+        logger.warning(msg)
+
     return ovr_state
 
 class TempTopUpDeviceController():
@@ -376,43 +398,45 @@ class TempTopUpDeviceController():
     This class wraps logiccoretools.attempt_to_control with logging and
     error handling that is common to most Temp Top Up control states.
     """
-    def __init__(self, solenoidState):
+
+    def __init__(self, solenoid_state):
         """
         Initialiser.
-        
+
         Args:
-            solenoidState (string) state to request of G3:S0
+            solenoid_state (string) state to request of G3:S0
         """
-        self.solenoidState=solenoidState
-        
-    
-    def controlDevices(self, logEvent=False):
+        self.solenoid_state = solenoid_state
+
+    def control_devices(self, log_event=False):
         """
         Sets the valves and pumps to the states configured for this
         device controller.
         """
+
         try:
-            if(self.solenoidState == "enable"):
+            if self.solenoid_state == "enable":
                 solenoid.enable()
+
             else:
                 solenoid.disable()
-        
+
         except (AttributeError, RuntimeError):
             msg = "Error: Error trying to control G3:S0!"
             print(msg)
             logger.error(msg)
-        
-        if logEvent:
+
+        if log_event:
             try:
                 logiccoretools.log_event("New device state required: "
                                          "G3:S0: "
-                                         + self.solenoidState,
+                                         + self.solenoid_state,
                                          "INFO")
+
             except RuntimeError:
                 msg = "Error while trying to log event over network."
                 print(msg)
                 logger.error(msg)
-
 
 # -------------------- Temp Top Up control states ---------------------
 # Each state class defines the behaviour of the control logic in that state,
@@ -423,97 +447,101 @@ class TTUIdleState(GenericControlState):
     Idle state for the Temporary Top Up control logic; when no top-up is
     underway.
     """
+
     @staticmethod
-    def getStateName():
+    def get_state_name():
         return "TTUIdleState"
-    
-    def logEvent(self, *args):
+
+    def log_event(self, *args):
         try:
             logiccoretools.log_event(*args)
-        except RuntimeError as e:
-            raise GenericControlState.LogEventError from e
-    
-    def controlDevices(self, logEvent=False):
+
+        except RuntimeError as err:
+            raise GenericControlState.LogEventError from err
+
+    def control_devices(self, log_event=False):
         #This state requires the solenoid closed
-        dc = TempTopUpDeviceController("disable")
-        dc.controlDevices(logEvent)
-    
-    def stateTransition(self):
+        device_controller = TempTopUpDeviceController("disable")
+        device_controller.control_devices(log_event)
+
+    def state_transition(self):
         parser = TempTopUpReadingsParser()
-        s0_override = G3S0OverrideState() # solenoid override state
-        
+        s0_override = g3s0_override_state() # solenoid override state
+
         try:
             #Evaluate possible transitions to new states
             if s0_override == 'off':
                 # Stay in idle state to keep solenoid off
                 self.noTransition()
-                
+
             elif s0_override == 'on':
                 # Enter topping up state to switch solenoid on
                 self.csm.setStateBy(TTUToppingUpState, self)
-                
-            elif (parser.g1NeedsTopUp()
-                  and datetime.datetime.now().time() >= start_time[0]
-                  and datetime.datetime.now().time() <= start_time[1]):
+
+            elif (parser.g1_needs_top_up()
+                  and datetime.datetime.now().time() >= START_TIME[0]
+                  and datetime.datetime.now().time() <= START_TIME[1]):
                 # Start daily top-up
                 self.csm.setStateBy(TTUToppingUpState, self)
-            
+
             else:
                 self.noTransition()
-                    
-        except ValueError as e:
-            raise GenericControlState.StateTransitionError from e
+
+        except ValueError as err:
+            raise GenericControlState.StateTransitionError from err
 
 class TTUToppingUpState(GenericControlState):
     """
     Topping up state for the Temporary Top Up control logic; when a top-up is
     underway.
     """
+
     @staticmethod
-    def getStateName():
+    def get_state_name():
         return "TTUToppingUpState"
-    
-    def logEvent(self, *args):
+
+    def log_event(self, *args):
         try:
             logiccoretools.log_event(*args)
-        except RuntimeError as e:
-            raise GenericControlState.LogEventError from e
-    
-    def controlDevices(self, logEvent=False):
+
+        except RuntimeError as err:
+            raise GenericControlState.LogEventError from err
+
+    def control_devices(self, log_event=False):
         #This state requires the solenoid open
-        dc = TempTopUpDeviceController("enable")
-        dc.controlDevices(logEvent)
-    
-    def stateTransition(self):
+        device_controller = TempTopUpDeviceController("enable")
+        device_controller.control_devices(log_event)
+
+    def state_transition(self):
         parser = TempTopUpReadingsParser()
-        s0_override = G3S0OverrideState() # solenoid override state
-        
+        s0_override = g3s0_override_state() # solenoid override state
+
         try:
             #Evaluate possible transitions to new states
             if s0_override == 'on':
                 # Stay in topping up state to keep solenoid on
                 self.noTransition()
-                
+
             elif s0_override == 'off':
                 # Enter idle state to switch solenoid off
                 self.csm.setStateBy(TTUIdleState, self)
-                
-            elif (parser.g1ToppedUp()
-                  or datetime.datetime.now().time() >= failsafe_end_time
-                  or datetime.datetime.now().time() < start_time[0]):
+
+            elif (parser.g1_topped_up()
+                  or datetime.datetime.now().time() >= FAILSAFE_END_TIME
+                  or datetime.datetime.now().time() < START_TIME[0]):
                 # Terminate daily top-up
                 self.csm.setStateBy(TTUIdleState, self)
-            
+
             else:
                 self.noTransition()
-            
-        except ValueError as e:
+
+        except ValueError:
             msg = ("Could not parse sensor readings. "
                    "Falling back to TTUIdleState as failsafe.")
+
             print(msg)
             logger.error(msg)
             self.csm.setStateBy(TTUIdleState, self)
-
 
 # ---------------- Temporary Top Up control state machine ------------------
 # The control state machine class (TempTopUpControlLogic) defines the
@@ -522,25 +550,25 @@ class TTUToppingUpState(GenericControlState):
 class TempTopUpControlLogic(ControlStateMachineABC):
     """
     This class represents the temporary top up control logic.
-    
+
     It inherits its main public method "doLogic" from
     ControlStateMachineABC, which, in turn, delegates entirely to the
     object representing the current state.
-    
+
     .. figure:: temptopupstatediagram.png
        :alt:
-             The diagram describes the following operation:   
+             The diagram describes the following operation:
              At the start, the state machine enters the Idle state.
              In the idle state, the G1:S0 mains water inlet solenoid
              valve is closed.
-             In Idle state, if the time of day is within the start_time
-             range, and the G1 water level is below start_level, then
+             In Idle state, if the time of day is within the START_TIME
+             range, and the G1 water level is below START_LEVEL, then
              the state machine transitions to the Topping Up state.
              In the topping up state, the solenoid valve is open, allowing
              mains water to enter G1 and increase its level.
              In Topping Up state, if the water level reaches or exceeds
-             stop_level, or if the time of day is after failsafe_end_time
-             or before the start_time range, then the state machine
+             STOP_LEVEL, or if the time of day is after FAILSAFE_END_TIME
+             or before the START_TIME range, then the state machine
              transitions into Idle state.
              In addition to this normal operation, a manual override can
              be enabled with a value of 'off', 'on' or 'auto'.
@@ -554,25 +582,26 @@ class TempTopUpControlLogic(ControlStateMachineABC):
              water level or time of day.
              (A manual override value of 'auto' has no effect on the
             normal operation.)
-    
+
        This diagram describes the state model for the Temporary Top Up
        control logic. In the diagram, "do/" denotes the action during the
        state.
-    
+
     .. The state diagram was created using Dia (https://live.gnome.org/Dia).
        Source file at ../docs/source/temptopupstatediagram.dia.
     """
+
     def __init__(self):
         #Run superclass initialiser
         super().__init__()
-        
+
         #Initialise dictionary of allowable states
         self._addState(TTUIdleState)
         self._addState(TTUToppingUpState)
-        
+
         #Set initial state
         self.setState(TTUIdleState)
-    
+
     @staticmethod
-    def getStateMachineName():
+    def get_state_machine_name():
         return "TempTopUpControlLogic"
