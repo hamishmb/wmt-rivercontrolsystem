@@ -57,7 +57,7 @@ def reconfigure_logger():
     for _handler in logging.getLogger('River System Control Software').handlers:
         logger.addHandler(_handler)
 
-def nas_logic(readings, devices, monitors, sockets, reading_interval):
+def nas_logic():
     """
     This control logic runs on the NAS box, and is responsible for:
 

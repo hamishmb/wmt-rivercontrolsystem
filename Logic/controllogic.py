@@ -830,8 +830,8 @@ def nas_logic(readings, devices, monitors, sockets, reading_interval):
         >>>                              <listofsockets>, <areadinginterval)
     """
 
-    return naslogic.nas_logic(readings, devices, monitors, sockets, reading_interval)
- 
+    return naslogic.nas_logic()
+
 #----- Sump Pi Control Logic Integration Function -----
 def sumppi_logic(readings, devices, monitors, sockets, reading_interval):
     """
