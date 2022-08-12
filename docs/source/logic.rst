@@ -11,5 +11,6 @@ Contents:
     Logic/valvelogic
     Logic/naslogic
     Logic/sumppilogic
+    Logic/wbuttspilogic
     Logic/stagepilogic
     Logic/temptopuplogic

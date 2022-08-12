@@ -56,6 +56,13 @@ for maintaining a suitable water level in the river sump, pumping water out of
 the sump and into butts group G4 when the sump level is too high and pumping
 water out of butts group G4 and into the sump when the sump level is too low.
 
+wbuttspilogic.py
+================
+
+This module contains control logic for Wendy Butts Pi. This is incomplete and
+untested at the time of writing. A more complete description will be provided
+later.
+
 stagepilogic.py
 ===============
 
