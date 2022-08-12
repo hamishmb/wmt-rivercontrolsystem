@@ -217,7 +217,10 @@ def reconfigure_logging():
     Tools.deviceobjects.reconfigure_logger()
     Tools.logiccoretools.reconfigure_logger()
     Logic.controllogic.reconfigure_logger()
+    Logic.sumppilogic.reconfigure_logger()
+    Logic.naslogic.reconfigure_logger()
     Logic.stagepilogic.reconfigure_logger()
+    Logic.temptopuplogic.reconfigure_logger()
 
 SITE_SETTINGS = {
 
@@ -229,7 +232,7 @@ SITE_SETTINGS = {
             "Default Interval": 15,
             "IPAddress": "192.168.0.25",
             "HostingSockets": True,
-            "ControlLogicFunction": "nas_control_logic",
+            "ControlLogicFunction": "nas_logic",
             "DBUser": "nasbox",
             "DBPasswd": "river20",
             "DBHost": "127.0.0.1",

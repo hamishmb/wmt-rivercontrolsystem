@@ -84,7 +84,6 @@ import datetime
 # but that doesn't work when running unit tests. This does:
 sys.path.insert(0, os.path.abspath(os.path.split(os.path.dirname(__file__))[0]))
 
-
 from Tools import logiccoretools
 from Tools.statetools import ControlStateMachineABC, GenericControlState
 

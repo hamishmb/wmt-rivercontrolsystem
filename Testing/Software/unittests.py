@@ -55,28 +55,30 @@ def usage():
     print("       -D, --debug                   Enable debug mode")
     print("       -a, --all:                    Run all the tests. The default.")
     print("       -c, --coretools:              Run only the tests for the")
-    print("                                     coretools module.")
+    print("                                     coretools module.\n")
     print("       -l, --logic:                  Run only the tests for the")
     print("                                     controllogic (integration)")
-    print("                                     module.")
+    print("                                     module.\n")
+    print("       --naslogic:                   Run only the tests for the")
+    print("                                     naslogic module.\n")
     print("       --sumppilogic:                Run only the tests for the")
-    print("                                     sumppilogic module.")
+    print("                                     sumppilogic module.\n")
     print("       --stagepilogic:               Run only the tests for the")
-    print("                                     stagepilogic module.")
+    print("                                     stagepilogic module.\n")
     print("       --temptopuplogic:             Run only the tests for the")
-    print("                                     temptopuplogic module.")
+    print("                                     temptopuplogic module.\n")
     print("       --deviceobjects:              Run only the tests for the")
-    print("                                     deviceobjects module.")
+    print("                                     deviceobjects module.\n")
     print("       --devicemanagement:           Run only the tests for the")
-    print("                                     devicemanagement module.")
+    print("                                     devicemanagement module.\n")
     print("       --loggingtools:               Run only the tests for the")
-    print("                                     loggingtools module.")
+    print("                                     loggingtools module.\n")
     print("       --testingtools:               Run only the tests for the")
-    print("                                     testingtools module.")
+    print("                                     testingtools module.\n")
     print("       --monitortools:               Run only the tests for the")
-    print("                                     monitortools module.")
+    print("                                     monitortools module.\n")
     print("       --sockettools:                Run only the tests for the")
-    print("                                     sockettools module.")
+    print("                                     sockettools module.\n")
     print("unittests.py is released under the GNU GPL Version 3")
     print("Version: "+config.VERSION+" ("+config.RELEASEDATE+")")
     print("Copyright (C) Wimborne Model Town 2017-2022")
@@ -86,7 +88,8 @@ if __name__ == "__main__":
     try:
         OPTIONS, ARGUMENTS = getopt.getopt(sys.argv[1:], "hDacl",
                                            ["help", "debug", "all", "coretools",
-                                            "logic", "sumppilogic", "stagepilogic",
+                                            "logic", "naslogic", "sumppilogic",
+                                            "stagepilogic",
                                             "temptopuplogic", "deviceobjects",
                                             "devicemanagement", "loggingtools",
                                             "testingtools", "monitortools",
@@ -110,6 +113,7 @@ if __name__ == "__main__":
     #Import test modules here so the logging level is right - debug mode will work.
     from UnitTests.Tools import coretools_tests
     from UnitTests.Logic import controllogic_tests
+    from UnitTests.Logic import naslogic_tests
     from UnitTests.Logic import sumppilogic_tests
     from UnitTests.Logic import stagepilogic_tests
     from UnitTests.Logic import temptopuplogic_tests
@@ -121,7 +125,8 @@ if __name__ == "__main__":
     from UnitTests.Tools import sockettools_tests
 
     #Set up which tests to run based on options given.
-    TEST_SUITES = [coretools_tests, controllogic_tests, 
+    TEST_SUITES = [coretools_tests, controllogic_tests,
+                   naslogic_tests,
                    sumppilogic_tests, stagepilogic_tests,
                    temptopuplogic_tests, deviceobjects_tests,
                    devicemanagement_tests, loggingtools_tests,
@@ -141,6 +146,9 @@ if __name__ == "__main__":
 
         elif o in ("-l", "--logic"):
             TEST_SUITES = [controllogic_tests]
+
+        elif o in ("--naslogic"):
+            TEST_SUITES = [naslogic_tests]
 
         elif o in ("--sumppilogic"):
             TEST_SUITES = [sumppilogic_tests]
