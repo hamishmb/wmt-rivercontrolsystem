@@ -7,13 +7,13 @@ Contents:
     :maxdepth: 2
 
 
-    coretools
-    deviceobjects
-    devicemanagement
-    loggingtools
-    logiccoretools
-    monitortools
-    sockettools
-    statetools
-    testingtools
+    Tools/coretools
+    Tools/deviceobjects
+    Tools/devicemanagement
+    Tools/loggingtools
+    Tools/logiccoretools
+    Tools/monitortools
+    Tools/sockettools
+    Tools/statetools
+    Tools/testingtools
 

@@ -7,8 +7,8 @@ Contents:
     :maxdepth: 2
 
 
-    genericlogic
-    naslogic
-    sumppilogic
-    stagepilogic
-    temptopuplogic
+    Logic/genericlogic
+    Logic/naslogic
+    Logic/sumppilogic
+    Logic/stagepilogic
+    Logic/temptopuplogic
