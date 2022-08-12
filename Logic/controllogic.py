@@ -35,7 +35,6 @@ This is the controllogic module, which contains control logic integration and se
 import sys
 import os
 import logging
-import subprocess
 from datetime import datetime
 
 sys.path.insert(0, os.path.abspath('..'))
@@ -44,6 +43,7 @@ import config
 from Tools import logiccoretools
 
 #Import logic modules.
+from . import valvelogic
 from . import naslogic
 from . import sumppilogic
 from . import stagepilogic
@@ -65,72 +65,6 @@ def reconfigure_logger():
 
     for _handler in logging.getLogger('River System Control Software').handlers:
         logger.addHandler(_handler)
-
-#----- Generic Valve Control Logic (not for Matrix pump) -----
-def valve_control_logic(readings, devices, monitors, sockets, reading_interval):
-    """
-    This control logic is generic and runs on all the gate valves. It does the following:
-
-    - Polls the database and sets valve positions upon request.
-
-    """
-
-    #Get the sensor name for this valve.
-    for valve in config.SITE_SETTINGS[config.SYSTEM_ID]["Devices"]:
-        valve_id = valve.split(":")[1]
-
-    position = None
-
-    #Check if there's a request for a new valve position.
-    try:
-        state = logiccoretools.get_state(config.SYSTEM_ID, valve_id)
-
-    except RuntimeError:
-        print("Error: Couldn't get site status!")
-        logger.error("Error: Couldn't get site status!")
-
-    else:
-        if state is not None:
-            request = state[1]
-
-            if request != "None":
-                position = int(request.replace("%", ""))
-
-                #There's only one device for gate valve pis, the gate valve, so take a shortcut.
-                #Only do anything if the position has changed.
-                if position != devices[0].get_requested_position():
-                    devices[0].set_position(position)
-
-                    logger.info("New valve position: "+str(position))
-                    print("New valve position: "+str(position))
-
-                    try:
-                        logiccoretools.log_event(config.SYSTEM_ID+": New valve position: "
-                                                 + str(position))
-
-                    except RuntimeError:
-                        print("Error: Couldn't log event!")
-                        logger.error("Error: Couldn't log event!")
-
-    if position is not None:
-        try:
-            logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
-                                         "OK", "Position requested: "+str(position))
-
-        except RuntimeError:
-            print("Error: Couldn't update site status!")
-            logger.error("Error: Couldn't update site status!")
-
-    else:
-        try:
-            logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
-                                         "OK", "None")
-
-        except RuntimeError:
-            print("Error: Couldn't update site status!")
-            logger.error("Error: Couldn't update site status!")
-
-    return 15
 
 #----- Wendy Butts Pi Control Logic -----
 def wbuttspi_control_logic(readings, devices, monitors, sockets, reading_interval):
@@ -693,6 +627,136 @@ def wbuttspi_water_backup_control_logic(readings, devices, monitors, reading_int
 
     return reading_interval
 
+#----- Generic control logic for pis that only do monitoring -----
+def generic_control_logic(readings, devices, monitors, sockets, reading_interval):
+    """
+    This control logic is generic and runs on all the monitoring-only pis. It does the following:
+
+    - Updates the pi status in the database.
+
+    """
+
+    try:
+        logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+                                     "OK", "None")
+
+    except RuntimeError:
+        print("Error: Couldn't update site status!")
+        logger.error("Error: Couldn't update site status!")
+
+    return 15
+
+#---------- Control Logic Setup Functions ----------
+#----- Stage Pi Control Logic Setup Function -----
+def stagepi_control_logic_setup():
+    """
+    Set-up function for stagepi's control logic.
+
+    Initialises a StagePiControlLogic object for state persistence.
+    """
+    #Initialise the control state machine
+    stagepilogic.csm = stagepilogic.StagePiControlLogic()
+
+#---------- Control Logic Integration Functions ----------
+#----- Valve Control Logic Integration Function -----
+def valve_logic(readings, devices, monitors, sockets, reading_interval):
+    """
+    Control logic integration for the gate valves. Just runs the identically-named logic at
+    Tools/valvelogic.py.
+
+    Args:
+        readings (list):                A list of the latest readings for each probe/device.
+
+        devices  (list):                A list of all master pi device objects.
+
+        monitors (list):                A list of all master pi monitor objects.
+
+        sockets (list of Socket):       A list of Socket objects that represent
+                                        the data connections between pis. Passed
+                                        here so we can control the reading
+                                        interval at that end.
+
+        reading_interval (int):     The current reading interval, in
+                                    seconds.
+
+    Returns:
+        int: The reading interval, in seconds.
+
+    Usage:
+
+        >>> reading_interval = valve_logic(<listofreadings>,
+        >>>                                <listofprobes>, <listofmonitors>,
+        >>>                                <listofsockets>, <areadinginterval)
+    """
+
+    return valvelogic.valve_logic(devices)
+
+#----- NAS Box Control Logic Integration Function
+def nas_logic(readings, devices, monitors, sockets, reading_interval):
+    """
+    Control logic integration for NAS box. Just runs the identically-named logic at
+    Tools/naslogic.py.
+
+    Args:
+        readings (list):                A list of the latest readings for each probe/device.
+
+        devices  (list):                A list of all master pi device objects.
+
+        monitors (list):                A list of all master pi monitor objects.
+
+        sockets (list of Socket):       A list of Socket objects that represent
+                                        the data connections between pis. Passed
+                                        here so we can control the reading
+                                        interval at that end.
+
+        reading_interval (int):     The current reading interval, in
+                                    seconds.
+
+    Returns:
+        int: The reading interval, in seconds.
+
+    Usage:
+
+        >>> reading_interval = nas_logic(<listofreadings>,
+        >>>                              <listofprobes>, <listofmonitors>,
+        >>>                              <listofsockets>, <areadinginterval)
+    """
+
+    return naslogic.nas_logic()
+
+#----- Sump Pi Control Logic Integration Function -----
+def sumppi_logic(readings, devices, monitors, sockets, reading_interval):
+    """
+    Control logic integration for sumppi. Just runs the identically-named logic at
+    Tools/sumppilogic.py.
+
+    Args:
+        readings (list):                A list of the latest readings for each probe/device.
+
+        devices  (list):                A list of all master pi device objects.
+
+        monitors (list):                A list of all master pi monitor objects.
+
+        sockets (list of Socket):       A list of Socket objects that represent
+                                        the data connections between pis. Passed
+                                        here so we can control the reading
+                                        interval at that end.
+
+        reading_interval (int):     The current reading interval, in
+                                    seconds.
+
+    Returns:
+        int: The reading interval, in seconds.
+
+    Usage:
+
+        >>> reading_interval = sumppi_logic(<listofreadings>,
+        >>>                                 <listofprobes>, <listofmonitors>,
+        >>>                                 <listofsockets>,<areadinginterval)
+    """
+
+    return sumppilogic.sumppi_logic(readings, devices, monitors, reading_interval)
+
 #----- Stage Pi Control Logic Integration Function -----
 def stagepi_control_logic(readings, devices, monitors, sockets, reading_interval):
     """
@@ -768,103 +832,7 @@ def stagepi_control_logic(readings, devices, monitors, sockets, reading_interval
 
         return reading_interval
 
-#---------- Control Logic Setup Functions ----------
-#----- Stage Pi Control Logic Setup Function -----
-def stagepi_control_logic_setup():
-    """
-    Set-up function for stagepi's control logic.
-
-    Initialises a StagePiControlLogic object for state persistence.
-    """
-    #Initialise the control state machine
-    stagepilogic.csm = stagepilogic.StagePiControlLogic()
-
-#---------- Control Logic Integration Functions ----------
-#----- Generic control logic for pis that only do monitoring -----
-def generic_control_logic(readings, devices, monitors, sockets, reading_interval):
-    """
-    This control logic is generic and runs on all the monitoring-only pis. It does the following:
-
-    - Updates the pi status in the database.
-
-    """
-
-    try:
-        logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
-                                     "OK", "None")
-
-    except RuntimeError:
-        print("Error: Couldn't update site status!")
-        logger.error("Error: Couldn't update site status!")
-
-    return 15
-
-#----- NAS Box Control Logic Integration Function
-def nas_logic(readings, devices, monitors, sockets, reading_interval):
-    """
-    Control logic integration for NAS box. Just runs the identically-named logic at
-    Tools/naslogic.py.
-
-    Args:
-        readings (list):                A list of the latest readings for each probe/device.
-
-        devices  (list):                A list of all master pi device objects.
-
-        monitors (list):                A list of all master pi monitor objects.
-
-        sockets (list of Socket):       A list of Socket objects that represent
-                                        the data connections between pis. Passed
-                                        here so we can control the reading
-                                        interval at that end.
-
-        reading_interval (int):     The current reading interval, in
-                                    seconds.
-
-    Returns:
-        int: The reading interval, in seconds.
-
-    Usage:
-
-        >>> reading_interval = nas_logic(<listofreadings>,
-        >>>                              <listofprobes>, <listofmonitors>,
-        >>>                              <listofsockets>, <areadinginterval)
-    """
-
-    return naslogic.nas_logic()
-
-#----- Sump Pi Control Logic Integration Function -----
-def sumppi_logic(readings, devices, monitors, sockets, reading_interval):
-    """
-    Control logic integration for sumppi. Just runs the identically-named logic at
-    Tools/sumppilogic.py.
-
-    Args:
-        readings (list):                A list of the latest readings for each probe/device.
-
-        devices  (list):                A list of all master pi device objects.
-
-        monitors (list):                A list of all master pi monitor objects.
-
-        sockets (list of Socket):       A list of Socket objects that represent
-                                        the data connections between pis. Passed
-                                        here so we can control the reading
-                                        interval at that end.
-
-        reading_interval (int):     The current reading interval, in
-                                    seconds.
-
-    Returns:
-        int: The reading interval, in seconds.
-
-    Usage:
-
-        >>> reading_interval = sumppi_logic(<listofreadings>,
-        >>>                                 <listofprobes>, <listofmonitors>,
-        >>>                                 <listofsockets>,<areadinginterval)
-    """
-
-    return sumppilogic.sumppi_logic(readings, devices, monitors, reading_interval)
-
+#----- Hanham Pi Temporary Top Up Control Logic Integration Function -----
 def temptopup_control_logic(readings, devices, monitors, sockets, reading_interval):
     """
     Control logic function for the temporary top-up control logic, which

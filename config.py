@@ -217,6 +217,7 @@ def reconfigure_logging():
     Tools.deviceobjects.reconfigure_logger()
     Tools.logiccoretools.reconfigure_logger()
     Logic.controllogic.reconfigure_logger()
+    Logic.valvelogic.reconfigure_logger()
     Logic.sumppilogic.reconfigure_logger()
     Logic.naslogic.reconfigure_logger()
     Logic.stagepilogic.reconfigure_logger()
@@ -627,7 +628,7 @@ SITE_SETTINGS = {
 #            "Default Interval": 15,
 #            "IPAddress": "192.168.0.11",
 #            "HostingSockets": False,
-#            "ControlLogicFunction": "valve_control_logic",
+#            "ControlLogicFunction": "valve_logic",
 #            "DBUser": "valve1",
 #            "DBPasswd": "river20",
 #            "DBHost": "192.168.0.25",
@@ -671,7 +672,7 @@ SITE_SETTINGS = {
 #            "Default Interval": 15,
 #            "IPAddress": "192.168.0.12",
 #            "HostingSockets": False,
-#            "ControlLogicFunction": "valve_control_logic",
+#            "ControlLogicFunction": "valve_logic",
 #            "DBUser": "valve2",
 #            "DBPasswd": "river20",
 #            "DBHost": "192.168.0.25",
@@ -715,7 +716,7 @@ SITE_SETTINGS = {
 #            "Default Interval": 15,
 #            "IPAddress": "192.168.0.13",
 #            "HostingSockets": False,
-#            "ControlLogicFunction": "valve_control_logic",
+#            "ControlLogicFunction": "valve_logic",
 #            "DBUser": "valve3",
 #            "DBPasswd": "river20",
 #            "DBHost": "192.168.0.25",
@@ -760,7 +761,7 @@ SITE_SETTINGS = {
             "Default Interval": 15,
             "IPAddress": "192.168.0.14",
             "HostingSockets": False,
-            "ControlLogicFunction": "valve_control_logic",
+            "ControlLogicFunction": "valve_logic",
             "DBUser": "valve4",
             "DBPasswd": "river20",
             "DBHost": "192.168.0.25",
@@ -805,7 +806,7 @@ SITE_SETTINGS = {
             "Default Interval": 15,
             "IPAddress": "192.168.0.16",
             "HostingSockets": False,
-            "ControlLogicFunction": "valve_control_logic",
+            "ControlLogicFunction": "valve_logic",
             "DBUser": "valve6",
             "DBPasswd": "river20",
             "DBHost": "192.168.0.25",
@@ -849,7 +850,7 @@ SITE_SETTINGS = {
 #            "Default Interval": 15,
 #            "IPAddress": "192.168.0.17",
 #            "HostingSockets": False,
-#            "ControlLogicFunction": "valve_control_logic",
+#            "ControlLogicFunction": "valve_logic",
 #            "DBUser": "valve7",
 #            "DBPasswd": "river20",
 #            "DBHost": "192.168.0.25",
@@ -893,7 +894,7 @@ SITE_SETTINGS = {
 #            "Default Interval": 15,
 #            "IPAddress": "192.168.0.18",
 #            "HostingSockets": False,
-#            "ControlLogicFunction": "valve_control_logic",
+#            "ControlLogicFunction": "valve_logic",
 #            "DBUser": "valve8",
 #            "DBPasswd": "river20",
 #            "DBHost": "192.168.0.25",
@@ -937,7 +938,7 @@ SITE_SETTINGS = {
 #            "Default Interval": 15,
 #            "IPAddress": "192.168.0.19",
 #            "HostingSockets": False,
-#            "ControlLogicFunction": "valve_control_logic",
+#            "ControlLogicFunction": "valve_logic",
 #            "DBUser": "valve9",
 #            "DBPasswd": "river20",
 #            "DBHost": "192.168.0.25",
@@ -982,7 +983,7 @@ SITE_SETTINGS = {
             "Default Interval": 15,
             "IPAddress": "192.168.0.22",
             "HostingSockets": False,
-            "ControlLogicFunction": "valve_control_logic",
+            "ControlLogicFunction": "valve_logic",
             "DBUser": "valve12",
             "DBPasswd": "river20",
             "DBHost": "192.168.0.25",

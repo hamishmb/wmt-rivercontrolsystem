@@ -381,7 +381,7 @@ def run_standalone():
     for _siteid in config.SITE_SETTINGS:
         reading_intervals[_siteid] = 15
 
-    #Run logic set-up function
+    #Run logic set-up function, if it exists.
     if "ControlLogicSetupFunction" in config.SITE_SETTINGS[system_id]:
         function = getattr(controllogic,
                            config.SITE_SETTINGS[system_id]["ControlLogicSetupFunction"])
