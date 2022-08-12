@@ -28,9 +28,25 @@ specific control logic only.
 controllogic.py
 ===============
 
-This module contains control logic functions and set-up functions that can be
-referenced in the configuration. The functions in controllogic.py should be
-kept as short as possible, importing lengthier code from the other modules.
+This module contains control logic integration functions and set-up functions
+that can be referenced in the configuration. The functions in controllogic.py
+should be kept as short as possible, importing lengthier code from the other
+modules.
+
+valvelogic.py
+==============
+
+This module contains general control logic for the gate valves. This logic runs
+on each individual gate valve, and keeps track of the state of the valve, as well
+as the desired position, opening and closing the valve as needed, as well as other
+management functions.
+
+naslogic.py
+==============
+
+This module contains control logic for the NAS box, which is primarily responsible
+for maintaining database consistency, keeping track of the system tick, and
+monitoring the status of the NAS box hardware.
 
 sumppilogic.py
 ==============

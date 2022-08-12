@@ -8,6 +8,7 @@ Contents:
 
 
     Logic/genericlogic
+    Logic/valvelogic
     Logic/naslogic
     Logic/sumppilogic
     Logic/stagepilogic
