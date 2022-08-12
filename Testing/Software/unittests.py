@@ -59,6 +59,8 @@ def usage():
     print("       -l, --logic:                  Run only the tests for the")
     print("                                     controllogic (integration)")
     print("                                     module.\n")
+    print("       --valvelogic:                   Run only the tests for the")
+    print("                                     valvelogic module.\n")
     print("       --naslogic:                   Run only the tests for the")
     print("                                     naslogic module.\n")
     print("       --sumppilogic:                Run only the tests for the")
@@ -88,8 +90,8 @@ if __name__ == "__main__":
     try:
         OPTIONS, ARGUMENTS = getopt.getopt(sys.argv[1:], "hDacl",
                                            ["help", "debug", "all", "coretools",
-                                            "logic", "naslogic", "sumppilogic",
-                                            "stagepilogic",
+                                            "logic", "valvelogic", "naslogic",
+                                            "sumppilogic", "stagepilogic",
                                             "temptopuplogic", "deviceobjects",
                                             "devicemanagement", "loggingtools",
                                             "testingtools", "monitortools",
@@ -113,6 +115,7 @@ if __name__ == "__main__":
     #Import test modules here so the logging level is right - debug mode will work.
     from UnitTests.Tools import coretools_tests
     from UnitTests.Logic import controllogic_tests
+    from UnitTests.Logic import valvelogic_tests
     from UnitTests.Logic import naslogic_tests
     from UnitTests.Logic import sumppilogic_tests
     from UnitTests.Logic import stagepilogic_tests
@@ -126,7 +129,7 @@ if __name__ == "__main__":
 
     #Set up which tests to run based on options given.
     TEST_SUITES = [coretools_tests, controllogic_tests,
-                   naslogic_tests,
+                   valvelogic_tests, naslogic_tests,
                    sumppilogic_tests, stagepilogic_tests,
                    temptopuplogic_tests, deviceobjects_tests,
                    devicemanagement_tests, loggingtools_tests,
@@ -135,6 +138,7 @@ if __name__ == "__main__":
     for o, a in OPTIONS:
         if o in ["-a", "--all"]:
             TEST_SUITES = [coretools_tests, controllogic_tests,
+                           valvelogic_tests, naslogic_tests,
                            sumppilogic_tests, stagepilogic_tests,
                            temptopuplogic_tests, deviceobjects_tests,
                            devicemanagement_tests, loggingtools_tests,
@@ -146,6 +150,9 @@ if __name__ == "__main__":
 
         elif o in ("-l", "--logic"):
             TEST_SUITES = [controllogic_tests]
+
+        elif o in ("--valvelogic"):
+            TEST_SUITES = [valvelogic_tests]
 
         elif o in ("--naslogic"):
             TEST_SUITES = [naslogic_tests]
