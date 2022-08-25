@@ -277,13 +277,6 @@ def run_standalone():
     #Make a readings dictionary for temporary storage for the control logic function.
     readings = {}
 
-    #Make a reading intervals dictionary for temporary storage of the reading intervals.
-    #Assume 15 seconds by default.
-    reading_intervals = {}
-
-    for _siteid in config.SITE_SETTINGS:
-        reading_intervals[_siteid] = 15
-
     #Run logic set-up function, if it exists.
     if "ControlLogicSetupFunction" in config.SITE_SETTINGS[system_id]:
         function = getattr(controllogic,
@@ -355,30 +348,8 @@ def run_standalone():
                         if not isinstance(data, str):
                             continue
 
-                        #-------------------- READING INTERVAL HANDLING --------------------
-                        if "Interval:" in data:
-                            #Save the reading interval to our list.
-                            #Get the site id that this interval corresponds to.
-                            _site = data.split(" ")[1]
-
-                            #Save the interval to our list.
-                            reading_intervals[_site] = int(data.split(" ")[2])
-
-                            print("Received new interval from "+_site+": "+data.split(" ")[2])
-                            logger.info("Received new interval from "+_site+": "+data.split(" ")[2])
-
-                        elif "Interval?:" in data and system_id == "NAS":
-                            #NAS box only: reply with the reading interval we have for that site.
-                            requested_site = data.split(" ")[1]
-
-                            _socket.write("Interval: "+requested_site+" "
-                                          + str(reading_intervals[requested_site]))
-
-                            print("Received new interval request for "+requested_site)
-                            logger.info("Received new interval request for "+requested_site)
-
                         #-------------------- SYSTEM TICK HANDLING --------------------
-                        elif data == "Tick?" and system_id == "NAS":
+                        if data == "Tick?" and system_id == "NAS":
                             #NAS box only: reply with the current system tick when asked.
                             _socket.write("Tick: "+str(config.TICK))
 
