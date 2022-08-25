@@ -27,7 +27,7 @@ more complicated devices, from the classes that represent the devices themselves
     :platform: Linux
     :synopsis: The part of the framework that contains the management code for device classes.
 
-.. moduleauthor:: Hamish McIntyre-Bhatty <contact@hamishmb.com> 
+.. moduleauthor:: Hamish McIntyre-Bhatty <contact@hamishmb.com>
 .. moduleauthor:: Terry Coles <wmt@hadrian-way.co.uk
 
 """
@@ -149,7 +149,7 @@ class ManageHallEffectProbe(threading.Thread):
 
             if new_reading == -1:
                 #No Sensors Triggered - leave the reading as it was.
-                logger.debug("Between levels - no sensors triggered")
+                logger.debug("Between levels (no sensors triggered) or unable to get voltage")
 
             else:
                 #Only update this if we got a meaningful reading from the ADS.
@@ -182,12 +182,25 @@ class ManageHallEffectProbe(threading.Thread):
         v_comp = [0, 0, 0, 0]
 
         #Measure the voltage in each chain
-        self.ads_lock.acquire()
-        v_meas.append(self.chan0.voltage)
-        v_meas.append(self.chan1.voltage)
-        v_meas.append(self.chan2.voltage)
-        v_meas.append(self.chan3.voltage)
-        self.ads_lock.release()
+        try:
+            self.ads_lock.acquire()
+            v_meas.append(self.chan0.voltage)
+            v_meas.append(self.chan1.voltage)
+            v_meas.append(self.chan2.voltage)
+            v_meas.append(self.chan3.voltage)
+
+        except OSError:
+            #An I/O error occured when trying to read from the A/D.
+            logger.error("OSError \n\n"+str(traceback.format_exc())
+                         + "\n\nwhile running. Continuing...")
+
+            print("OSError \n\n"+str(traceback.format_exc())+"\n\nwhile running. Continuing...")
+
+            #The current reading is invalid so flag an error.
+            return False, False
+
+        finally:
+            self.ads_lock.release()
 
         #Do 10 minutes of probe voltage dumping if we're in debug mode.
         if config.DEBUG:
@@ -249,6 +262,10 @@ class ManageHallEffectProbe(threading.Thread):
 
         v_comp, min_column = self.get_compensated_probe_voltages()
 
+        #Return -1 if an error occurred getting the voltages.
+        if v_comp is False:
+            return -1
+
         while count < self.probe.length:
             #Now test the channel with the dip to see if any of the
             #sensors are triggered
@@ -264,6 +281,7 @@ class ManageHallEffectProbe(threading.Thread):
             count += 1
 
         #Print level that corresponds to the voltage if we're in debug mode.
+        #Do this only for the first 1200 readings to avoid spamming the log too much.
         if config.DEBUG:
             if self.count < 1200:
                 logger.info("Level ("+self.probe.get_id()+"): "+str(level))
@@ -438,7 +456,6 @@ class ManageGateValve(threading.Thread):
             logger.debug("ManageGateValve: About to read voltage")
             self.ads_lock.acquire()
             voltage_0 = chan.voltage
-            self.ads_lock.release()
             logger.debug("ManageGateValve: Read voltage")
 
         except OSError:
@@ -450,6 +467,9 @@ class ManageGateValve(threading.Thread):
 
             #The current reading is invalid so flag an error.
             return -1
+
+        finally:
+            self.ads_lock.release()
 
         #Actual position as a percentage at the time of reading.
         actual_position = int((voltage_0/self.valve.ref_voltage*100))
