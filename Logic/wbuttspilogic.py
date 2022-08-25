@@ -117,7 +117,7 @@ def wbuttspi_logic(readings, devices, monitors, reading_interval):
         backup_pump.disable()
 
     try:
-        logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+        logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+"%",
                                      "OK", "None")
 
     except RuntimeError:
@@ -607,7 +607,7 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
         monitor.set_reading_interval(reading_interval)
 
     try:
-        logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+        logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+"%",
                                      "OK", "None")
 
     except RuntimeError:

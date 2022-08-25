@@ -418,23 +418,23 @@ class MonitorLoad(threading.Thread):
         while not config.EXITING:
             try:
                 cpu_percent = str(round(psutil.cpu_percent(), 2))
-                used_memory_mb = str((psutil.virtual_memory().used // 1024 // 1024))
+                used_memory_pct = str(psutil.virtual_memory().percent)
 
             except Exception:
                 pass
 
             else:
                 logger.info("\n\nCPU Usage: "+cpu_percent
-                            + "\nMemory Used (MB): "+used_memory_mb
+                            + "\nMemory Usage: "+used_memory_pct
                             +"\n\n")
 
-                print("\nCPU Usage: "+cpu_percent
-                      + " Memory Used (MB): "+used_memory_mb
+                print("\nCPU Usage: "+cpu_percent+"%"
+                      + " Memory Usage: "+used_memory_pct+"%"
                       + "\n")
 
                 #Save to global variables.
                 config.CPU = cpu_percent
-                config.MEM = used_memory_mb
+                config.MEM = used_memory_pct
 
             #Respond to system shutdown quickly.
             sleep = 30

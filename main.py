@@ -558,7 +558,7 @@ def run_standalone():
                 try:
                     logiccoretools.log_event("Updating...")
                     logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "
-                                                 +config.MEM+" MB", "OK", "Updating")
+                                                 +config.MEM+"%", "OK", "Updating")
 
                 except RuntimeError:
                     print("Error: Couldn't update site status or event log!")
@@ -592,7 +592,7 @@ def run_standalone():
                 try:
                     logiccoretools.log_event("Updating...")
                     logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "
-                                                 +config.MEM+" MB", "OK", "Updating")
+                                                 +config.MEM+"%", "OK", "Updating")
 
                 except RuntimeError:
                     print("Error: Couldn't update site status or event log!")

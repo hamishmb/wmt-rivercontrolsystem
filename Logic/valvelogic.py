@@ -106,7 +106,7 @@ def valve_logic(devices):
 
     if position is not None:
         try:
-            logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+            logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+"%",
                                          "OK", "Position requested: "+str(position))
 
         except RuntimeError:
@@ -115,7 +115,7 @@ def valve_logic(devices):
 
     else:
         try:
-            logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+            logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+"%",
                                          "OK", "None")
 
         except RuntimeError:

@@ -155,7 +155,7 @@ def nas_logic():
 
         try:
             logiccoretools.update_status("Up, temps: ("+sys_temp+"/"+hdd0_temp+"/"+hdd1_temp
-                                         + "), CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+                                         + "), CPU: "+config.CPU+"%, MEM: "+s+"%",
                                          "OK", "None")
 
         except RuntimeError:
@@ -169,7 +169,7 @@ def nas_logic():
         try:
             logiccoretools.update_status("Up, HIGH temps: ("+sys_temp+"/"+hdd0_temp
                                          + "/"+hdd1_temp+"), CPU: "+config.CPU
-                                         +"%, MEM: "+config.MEM+" MB", "OK", "None")
+                                         +"%, MEM: "+config.MEM+"%", "OK", "None")
 
             logiccoretools.log_event("NAS Box getting hot! Temps: sys: "+sys_temp
                                      +", hdd0: "+hdd0_temp+", hdd1: "+hdd1_temp,

@@ -156,7 +156,7 @@ WATERBACKUPEND = 7                    # End time (hours UTC)
 #System ID of this Pi.
 SYSTEM_ID = None
 
-#CPU LOAD and MEMORY USAGE (MB) of this Pi.
+#CPU LOAD and MEMORY USAGE of this system.
 CPU = None
 MEM = None
 

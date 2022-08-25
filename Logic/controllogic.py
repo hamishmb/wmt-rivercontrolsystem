@@ -100,7 +100,7 @@ def generic_control_logic(readings, devices, monitors, reading_interval):
     """
 
     try:
-        logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+" MB",
+        logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "+config.MEM+"%",
                                      "OK", "None")
 
     except RuntimeError:
@@ -280,7 +280,7 @@ def stagepi_control_logic(readings, devices, monitors, reading_interval):
 
     try:
         logiccoretools.update_status("Up, CPU: " + config.CPU
-                                     +"%, MEM: " + config.MEM + " MB",
+                                     +"%, MEM: " + config.MEM + "%",
                                      software_status,
                                      "None")
 
@@ -382,7 +382,7 @@ def temptopup_control_logic(readings, devices, monitors, reading_interval):
 
     try:
         logiccoretools.update_status("Up, CPU: " + config.CPU
-                                     +"%, MEM: " + config.MEM + " MB",
+                                     +"%, MEM: " + config.MEM + "%",
                                      software_status,
                                      "None")
 
