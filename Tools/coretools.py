@@ -1813,3 +1813,284 @@ def wait_for_next_reading_interval(reading_interval, system_id, local_socket, so
 
         time.sleep(1)
         count += 1
+
+
+# -------------------- SITEWIDE UPDATER PREPARATION FUNCTIONS --------------------
+#FIXME: These are currently broken. Do not use them.
+def prepare_sitewide_actions(system_id): #FIXME
+    """
+    This function handles the following features:
+
+    - Shutting down just this system via database command or the presence of a file.
+    - Shutting down all systems via database command or the presence of a file.
+    - Rebooting just this system via database command or the presence of a file.
+    - Rebooting all systems via database command or the presence of a file.
+    - Updating all systems via database command or the presence of a file.
+
+    .. warning::
+            This is currently broken and sometimes doesn't behave deterministically.
+            Do not use.
+
+    Args:
+        system_id:                  The system (site) id.
+
+    Usage:
+
+        >>> handle_sitewide_actions("G4")
+    """
+    #Check the database and for the presence of local files.
+    try:
+        state = logiccoretools.get_state(config.SYSTEM_ID, config.SYSTEM_ID)
+
+    except RuntimeError:
+        state = None
+        request = None
+
+        print("Error: Couldn't check for requested site actions!")
+        logger.error("Error: Couldn't check for requested site actions!")
+
+    else:
+        if state is not None:
+            request = state[1].upper()
+
+    #Figure out, from both the database and the files, if any sitewide actions have been
+    #requested.
+    #FIXME: Assert that only one of the three overarching actions here has been requested.
+
+    config.SHUTDOWN = request in ("SHUTDOWN", "SHUTDOWNALL") \
+                      or os.path.exists("/tmp/.shutdown") \
+                      or os.path.exists("/tmp/.shutdownall")
+
+    config.SHUTDOWNALL = request == "SHUTDOWNALL" or os.path.exists("/tmp/.shutdownall")
+
+    config.REBOOT = request in ("REBOOT", "REBOOTALL") or os.path.exists("/tmp/.reboot") \
+                    or os.path.exists("/tmp/.rebootall")
+
+    config.REBOOTALL = request == "REBOOTALL" or os.path.exists("/tmp/.rebootall")
+
+    config.UPDATE = request == "UPDATE" or os.path.exists("/tmp/.update")
+
+    at_least_one_action = config.SHUTDOWN or config.REBOOT or config.UPDATE
+
+    #Prepare for any sitewide actions.
+    if config.SHUTDOWN:
+        prepare_shutdown(system_id)
+
+    elif config.REBOOT:
+        prepare_reboot(system_id)
+
+    elif config.UPDATE and system_id == "NAS":
+        nas_prepare_update()
+
+    elif config.UPDATE:
+        pi_prepare_update()
+
+    if config.SHUTDOWN:
+        try:
+            os.remove("/tmp/.shutdown")
+
+        except (OSError, IOError):
+            pass
+
+        try:
+            os.remove("/tmp/.shutdownall")
+
+        except (OSError, IOError):
+            pass
+
+    elif config.REBOOT:
+        try:
+            os.remove("/tmp/.reboot")
+
+        except (OSError, IOError):
+            pass
+
+        try:
+            os.remove("/tmp/.rebootall")
+
+        except (OSError, IOError):
+            pass
+
+    elif config.UPDATE:
+        try:
+            os.remove("/tmp/.update")
+
+        except (OSError, IOError):
+            pass
+
+    #Signal the software to shut down if we are performing at least one site-wide action.
+    #NOTE: Actually shutting down/rebooting/applying the update is done later after most of
+    #      the framework has shut down.
+    if at_least_one_action:
+        config.EXITING = True
+
+def prepare_reboot(system_id): #FIXME
+    """
+    This function prepares the system to reboot, and makes it known in the database
+    that this is going to happen.
+
+    If this is the NAS box, and all sites are to reboot, all sites are requested to
+    reboot individually through the database.
+
+    .. warning::
+            This is currently broken and sometimes doesn't behave deterministically.
+            Do not use.
+
+    Usage:
+
+        >>> prepare_reboot("G4")
+    """
+    try:
+        logiccoretools.log_event("Preparing to reboot...")
+        logiccoretools.update_status("Preparing to reboot", "N/A", "Reboot_prep")
+
+    except RuntimeError:
+        #FIXME: Take appropriate action here.
+        print("Error: Couldn't update site status or event log!")
+        logger.error("Error: Couldn't update site status or event log!")
+
+    if system_id == "NAS" and config.REBOOTALL:
+        for site_id in config.SITE_SETTINGS:
+            try:
+                logiccoretools.attempt_to_control(site_id, site_id, "Reboot")
+
+            except RuntimeError:
+                #FIXME: Take appropriate action here.
+                print("Error: Couldn't request reboot for "+site_id+"!")
+                logger.error("Error: Couldn't request reboot for "+site_id+"!")
+
+def prepare_shutdown(system_id): #FIXME
+    """
+    This function prepares the system to shut down, and makes it known in the database
+    that this is going to happen.
+
+    If this is the NAS box, and all sites are to shut down, all sites are requested to
+    shut down individually through the database.
+
+    .. warning::
+            This is currently broken and sometimes doesn't behave deterministically.
+            Do not use.
+
+    Usage:
+
+        >>> prepare_shutdown("G4")
+    """
+    try:
+        logiccoretools.log_event("Preparing to shut down...")
+        logiccoretools.update_status("Preparing to shut down", "N/A", "Shutdown_prep")
+
+    except RuntimeError:
+        #FIXME: Take appropriate action here.
+        print("Error: Couldn't update site status or event log!")
+        logger.error("Error: Couldn't update site status or event log!")
+
+    if system_id == "NAS" and config.SHUTDOWNALL:
+        for site_id in config.SITE_SETTINGS:
+            try:
+                logiccoretools.attempt_to_control(site_id, site_id, "Shutdown")
+
+            except RuntimeError:
+                #FIXME: Take appropriate action here.
+                print("Error: Couldn't request poweroff for "+site_id+"!")
+                logger.error("Error: Couldn't request poweroff for "+site_id+"!")
+
+def nas_prepare_update(): #FIXME
+    """
+    This function makes the update available to all pis and signals that they should
+    update using the database. The update is made available at
+    http://192.168.0.25/rivercontrolsystem.tar.gz. After this, the update is ready
+    to be applied.
+
+    .. note::
+            This function is intended to be run only on the NAS box. Running it on
+            any other systems may cause undesirable behaviour and is untested.
+
+    .. warning::
+            This is currently broken and sometimes doesn't behave deterministically.
+            Do not use.
+
+    Usage:
+
+        >>> nas_prepare_update("G4")
+    """
+    logger.info("Making new software available to all pis using webserver...")
+    cmd = subprocess.run(["ln", "-s", "/mnt/HD/HD_a2/rivercontrolsystem.tar.gz",
+                          "/var/www"],
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                         check=False)
+
+    stdout = cmd.stdout.decode("UTF-8", errors="ignore")
+
+    if cmd.returncode != 0:
+        #FIXME: Take appropriate action here.
+        print("Error! Unable to host software update on webserver. "
+              + "Error was:\n"+stdout+"\n")
+
+        logger.critical("Error! Unable to host software update on webserver. "
+                        + "Error was:\n"+stdout+"\n")
+
+    #Signal that we are updating.
+    try:
+        logiccoretools.log_event("Preparing to update...")
+        logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "
+                                     +config.MEM+"%", "OK", "Update_prep")
+
+    except RuntimeError:
+        #FIXME: Take appropriate action here.
+        print("Error: Couldn't update site status or event log!")
+        logger.error("Error: Couldn't update site status or event log!")
+
+    for site_id in config.SITE_SETTINGS:
+        try:
+            logiccoretools.attempt_to_control(site_id, site_id, "Update")
+
+        except RuntimeError:
+            #FIXME: Take appropriate action here.
+            print("Error: Couldn't request update for "+site_id+"!")
+            logger.error("Error: Couldn't request update for "+site_id+"!")
+
+def pi_prepare_update(): #FIXME
+    """
+    This function downloads the update from the NAS box at
+    http://192.168.0.25/rivercontrolsystem.tar.gz. After this, the update is ready
+    to be applied.
+
+    .. note::
+            This function is intended to be run only on the pis. Running it on
+            the NAS box may cause undesirable behaviour and is untested.
+
+    .. warning::
+            This is currently broken and sometimes doesn't behave deterministically.
+            Do not use.
+
+    Usage:
+
+        >>> pi_prepare_update("G4")
+    """
+
+    #Download the update from the NAS box.
+    logger.info("Downloading software update from NAS box...")
+    cmd = subprocess.run(["wget", "-O", "/tmp/rivercontrolsystem.tar.gz",
+                          "http://192.168.0.25/rivercontrolsystem.tar.gz"],
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
+
+    stdout = cmd.stdout.decode("UTF-8", errors="ignore")
+
+    if cmd.returncode != 0:
+        #FIXME: Take appropriate action here.
+        print("Error! Unable to download software update. "
+              + "Error was:\n"+stdout+"\n")
+
+        logger.critical("Error! Unable to download software update. "
+                        + "Error was:\n"+stdout+"\n")
+
+    #Signal that we got it.
+    try:
+        logiccoretools.log_event("Preparing to update...")
+        logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "
+                                     +config.MEM+"%", "OK", "Update_prep")
+
+    except RuntimeError:
+        #FIXME: Take appropriate action here.
+        print("Error: Couldn't update site status or event log!")
+        logger.error("Error: Couldn't update site status or event log!")
