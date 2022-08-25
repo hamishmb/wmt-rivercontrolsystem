@@ -213,6 +213,7 @@ def reconfigure_logging():
     Causes logging to be reconfigured for any modules imported before the logger was set up.
     """
 
+    Tools.coretools.reconfigure_logger()
     Tools.devicemanagement.reconfigure_logger()
     Tools.deviceobjects.reconfigure_logger()
     Tools.logiccoretools.reconfigure_logger()
