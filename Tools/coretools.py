@@ -1500,7 +1500,11 @@ def setup_sockets(system_id):
         system_id (str):              The system that we're setting up for.
 
     Returns:
-        tuple(A list of the sockets that were set up, the local socket for this site).
+        If this is not the NAS box:
+            tuple(A list of the sockets that were set up, the local socket for this site).
+
+        If this is the NAS box:
+            tuple(A list of the sockets that were set up, None).
 
     Usage:
         >>> sockets, local_socket = setup_sockets("G4")
@@ -1508,6 +1512,8 @@ def setup_sockets(system_id):
     """
     #Create all sockets.
     logger.info("Creating sockets...")
+
+    local_socket = None
     sockets = {}
 
     if config.SITE_SETTINGS[system_id]["HostingSockets"]:
