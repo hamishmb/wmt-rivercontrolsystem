@@ -46,8 +46,8 @@ import logging
 import traceback
 
 import config
-from Tools import coretools as core_tools
-from Tools import monitortools as monitor_tools
+from Tools import coretools
+from Tools import monitortools
 from Tools import loggingtools
 from Tools import logiccoretools
 
@@ -228,22 +228,22 @@ def run_standalone():
 
     #If this isn't the NAS box, start synchronising time with the NAS box.
     if system_id != "NAS":
-        core_tools.SyncTime(system_id)
+        coretools.SyncTime(system_id)
 
     #Start monitoring system load.
-    core_tools.MonitorLoad()
+    coretools.MonitorLoad()
 
     #Create the socket(s).
-    sockets, local_socket = core_tools.setup_sockets(system_id)
+    sockets, local_socket = coretools.setup_sockets(system_id)
 
     if "SocketName" in config.SITE_SETTINGS[system_id]:
         print("Will connect to NAS box as soon as connection is available.")
 
     #Create the probe(s).
-    probes = core_tools.setup_devices(system_id)
+    probes = coretools.setup_devices(system_id)
 
     #Create the device(s).
-    devices = core_tools.setup_devices(system_id, dictionary="Devices")
+    devices = coretools.setup_devices(system_id, dictionary="Devices")
 
     #Default reading interval for all probes.
     reading_interval = config.SITE_SETTINGS[system_id]["Default Interval"]
@@ -251,12 +251,12 @@ def run_standalone():
     logger.info("Connecting to database...")
     print("Connecting to database...")
 
-    core_tools.DatabaseConnection(system_id)
+    coretools.DatabaseConnection(system_id)
     config.DBCONNECTION.start_thread()
 
     if system_id != "NAS":
         #Wait a little while for the system tick on boot on everything except the NAS box.
-        core_tools.wait_for_tick(local_socket)
+        coretools.wait_for_tick(local_socket)
 
     time.sleep(5)
 
@@ -276,24 +276,24 @@ def run_standalone():
 
     #Start monitor threads for our local probes.
     for probe in probes:
-        monitors.append(monitor_tools.Monitor(probe, reading_interval, system_id))
+        monitors.append(monitortools.Monitor(probe, reading_interval, system_id))
 
     #Add monitor for the gate valve if needed.
     if system_id[0] == "V":
         for device in devices:
-            monitors.append(monitor_tools.Monitor(device, reading_interval, system_id))
+            monitors.append(monitortools.Monitor(device, reading_interval, system_id))
 
     #Make a readings dictionary for temporary storage for the control logic function.
     readings = {}
 
-    readings["SUMP:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "0mm",
-                                             "OK")
-
-    readings["G4:M0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "0mm",
-                                           "OK")
-
-    readings["G4:FS0"] = core_tools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "True",
+    readings["SUMP:M0"] = coretools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "0mm",
                                             "OK")
+
+    readings["G4:M0"] = coretools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "0mm",
+                                          "OK")
+
+    readings["G4:FS0"] = coretools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "True",
+                                           "OK")
 
     #Make a reading intervals dictionary for temporary storage of the reading intervals.
     #Assume 15 seconds by default.
@@ -331,7 +331,7 @@ def run_standalone():
                 #Check for new readings.
                 #NOTE: Later on, use the readings returned from this
                 #for state history generation etc.
-                reading = core_tools.get_and_handle_new_reading(monitor, "test")
+                reading = coretools.get_and_handle_new_reading(monitor, "test")
 
                 #Ignore empty readings.
                 if reading is None:
@@ -634,7 +634,7 @@ def run_standalone():
             #Wait until all the pis have started to shut down.
             #Restart database thread to check.
             config.EXITING = False
-            core_tools.DatabaseConnection(system_id)
+            coretools.DatabaseConnection(system_id)
             config.DBCONNECTION.start_thread()
 
             print("Waiting for pis to begin shutting down...")
@@ -685,7 +685,7 @@ def run_standalone():
             #Wait until all the pis have started to reboot.
             #Restart database thread to check.
             config.EXITING = False
-            core_tools.DatabaseConnection(system_id)
+            coretools.DatabaseConnection(system_id)
             config.DBCONNECTION.start_thread()
 
             print("Waiting for pis to begin rebooting...")
@@ -733,7 +733,7 @@ def run_standalone():
             #Wait until all the pis have downloaded the update.
             #Restart database thread to check.
             config.EXITING = False
-            core_tools.DatabaseConnection(system_id)
+            coretools.DatabaseConnection(system_id)
             config.DBCONNECTION.start_thread()
 
             print("Waiting for pis to download the update...")
