@@ -16,9 +16,12 @@
 
 #pylint: disable=logging-not-lazy
 #pylint: disable=wrong-import-position
+#pylint: disable=unused-argument
 #
 #Reason (logging-not-lazy): Harder to understand the logging statements that way.
 #Reason (wrong-import-position): Pylint is confused by the need to modify sys.path.
+#Reason (unused-argument): All arguments have to fit the lowest common denominator here,
+#                          so this warning isn't helpful - no more optimisation to be done.
 
 """
 This is the controllogic module, which contains control logic integration and setup functions.
