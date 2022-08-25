@@ -46,10 +46,27 @@ import logging
 import traceback
 
 import config
+from Tools import coretools as core_tools
+from Tools import sockettools as socket_tools
+from Tools import monitortools as monitor_tools
 from Tools import loggingtools
 from Tools import logiccoretools
 
 from Logic import controllogic
+
+#Import RPi.GPIO
+try:
+    from RPi import GPIO
+
+except ImportError:
+    #Only allow import errors if we are testing or on the NAS box.
+    if "NAS" not in sys.argv and ("-t" not in sys.argv and "--testing" not in sys.argv):
+        sys.exit("Unable to import RPi.GPIO! Did you mean to use testing mode? Exiting...")
+
+    else:
+        #Import dummy GPIO class to fake hardware access.
+        print("WARNING: Running in test mode - hardware access simulated/disabled")
+        from Tools.testingtools import GPIO
 
 def usage():
     """
@@ -201,28 +218,6 @@ def run_standalone():
         except KeyboardInterrupt:
             print("Skipping as requested by user...")
             logger.info("Skipping as requested by user...")
-
-    #Do framework imports.
-    from Tools import coretools as core_tools
-    from Tools import sockettools as socket_tools
-    from Tools import monitortools as monitor_tools
-
-    #Import RPi.GPIO
-    try:
-        from RPi import GPIO
-
-    except ImportError:
-        #Only allow import errors if we are testing or on the NAS box.
-        if not config.TESTING and "NAS" not in sys.argv:
-            logger.critical("Unable to import RPi.GPIO! Did you mean to use testing mode?")
-            logger.critical("Exiting...")
-            logging.shutdown()
-
-            sys.exit("Unable to import RPi.GPIO! Did you mean to use testing mode? Exiting...")
-
-        else:
-            #Import dummy GPIO class to fake hardware access.
-            from Tools.testingtools import GPIO
 
     #Welcome message.
     logger.info("River Control System Version "+config.VERSION+" ("+config.RELEASEDATE+")")
