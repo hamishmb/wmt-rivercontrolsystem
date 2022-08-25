@@ -428,7 +428,7 @@ def run_standalone():
                 function = getattr(controllogic,
                                    config.SITE_SETTINGS[system_id]["ControlLogicFunction"])
 
-                reading_interval = function(readings, devices, monitors, sockets, reading_interval)
+                reading_interval = function(readings, devices, monitors, reading_interval)
 
             #Keep watching for new messages from the socket while we could down the
             #reading interval.

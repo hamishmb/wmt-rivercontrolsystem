@@ -67,7 +67,7 @@ def reconfigure_logger():
         logger.addHandler(_handler)
 
 #----- Generic control logic for pis that only do monitoring -----
-def generic_control_logic(readings, devices, monitors, sockets, reading_interval):
+def generic_control_logic(readings, devices, monitors, reading_interval):
     """
     This control logic is generic and runs on all the monitoring-only pis. It does the following:
 
@@ -83,7 +83,7 @@ def generic_control_logic(readings, devices, monitors, sockets, reading_interval
         print("Error: Couldn't update site status!")
         logger.error("Error: Couldn't update site status!")
 
-    return 15
+    return 30
 
 #---------- Control Logic Setup Functions ----------
 #----- Stage Pi Control Logic Setup Function -----
@@ -98,7 +98,7 @@ def stagepi_control_logic_setup():
 
 #---------- Control Logic Integration Functions ----------
 #----- Valve Control Logic Integration Function -----
-def valve_logic(readings, devices, monitors, sockets, reading_interval):
+def valve_logic(readings, devices, monitors, reading_interval):
     """
     Control logic integration for the gate valves. Just runs the identically-named logic at
     Tools/valvelogic.py.
@@ -110,11 +110,6 @@ def valve_logic(readings, devices, monitors, sockets, reading_interval):
 
         monitors (list):                A list of all master pi monitor objects.
 
-        sockets (list of Socket):       A list of Socket objects that represent
-                                        the data connections between pis. Passed
-                                        here so we can control the reading
-                                        interval at that end.
-
         reading_interval (int):     The current reading interval, in
                                     seconds.
 
@@ -125,13 +120,13 @@ def valve_logic(readings, devices, monitors, sockets, reading_interval):
 
         >>> reading_interval = valve_logic(<listofreadings>,
         >>>                                <listofprobes>, <listofmonitors>,
-        >>>                                <listofsockets>, <areadinginterval)
+        >>>                                <areadinginterval)
     """
 
     return valvelogic.valve_logic(devices)
 
 #----- NAS Box Control Logic Integration Function
-def nas_logic(readings, devices, monitors, sockets, reading_interval):
+def nas_logic(readings, devices, monitors, reading_interval):
     """
     Control logic integration for NAS box. Just runs the identically-named logic at
     Tools/naslogic.py.
@@ -143,11 +138,6 @@ def nas_logic(readings, devices, monitors, sockets, reading_interval):
 
         monitors (list):                A list of all master pi monitor objects.
 
-        sockets (list of Socket):       A list of Socket objects that represent
-                                        the data connections between pis. Passed
-                                        here so we can control the reading
-                                        interval at that end.
-
         reading_interval (int):     The current reading interval, in
                                     seconds.
 
@@ -158,13 +148,13 @@ def nas_logic(readings, devices, monitors, sockets, reading_interval):
 
         >>> reading_interval = nas_logic(<listofreadings>,
         >>>                              <listofprobes>, <listofmonitors>,
-        >>>                              <listofsockets>, <areadinginterval)
+        >>>                              <areadinginterval)
     """
 
     return naslogic.nas_logic()
 
 #----- Sump Pi Control Logic Integration Function -----
-def sumppi_logic(readings, devices, monitors, sockets, reading_interval):
+def sumppi_logic(readings, devices, monitors, reading_interval):
     """
     Control logic integration for sumppi. Just runs the identically-named logic at
     Tools/sumppilogic.py.
@@ -176,11 +166,6 @@ def sumppi_logic(readings, devices, monitors, sockets, reading_interval):
 
         monitors (list):                A list of all master pi monitor objects.
 
-        sockets (list of Socket):       A list of Socket objects that represent
-                                        the data connections between pis. Passed
-                                        here so we can control the reading
-                                        interval at that end.
-
         reading_interval (int):     The current reading interval, in
                                     seconds.
 
@@ -191,13 +176,13 @@ def sumppi_logic(readings, devices, monitors, sockets, reading_interval):
 
         >>> reading_interval = sumppi_logic(<listofreadings>,
         >>>                                 <listofprobes>, <listofmonitors>,
-        >>>                                 <listofsockets>,<areadinginterval)
+        >>>                                 <areadinginterval)
     """
 
     return sumppilogic.sumppi_logic(readings, devices, monitors, reading_interval)
 
 #----- Wendy Butts Pi Control Logic Integration Function -----
-def wbuttspi_logic(readings, devices, monitors, sockets, reading_interval):
+def wbuttspi_logic(readings, devices, monitors, reading_interval):
     """
     Control logic integration for wendy butts pi. Just runs the identically-named
     logic at Tools/wbuttspilogic.py.
@@ -209,11 +194,6 @@ def wbuttspi_logic(readings, devices, monitors, sockets, reading_interval):
 
         monitors (list):                A list of all master pi monitor objects.
 
-        sockets (list of Socket):       A list of Socket objects that represent
-                                        the data connections between pis. Passed
-                                        here so we can control the reading
-                                        interval at that end.
-
         reading_interval (int):     The current reading interval, in
                                     seconds.
 
@@ -224,13 +204,13 @@ def wbuttspi_logic(readings, devices, monitors, sockets, reading_interval):
 
         >>> reading_interval = wbuttspi_logic(<listofreadings>,
         >>>                                   <listofprobes>, <listofmonitors>,
-        >>>                                   <listofsockets>,<areadinginterval)
+        >>>                                   <areadinginterval)
     """
 
     return wbuttspilogic.wbuttspi_logic(readings, devices, monitors, reading_interval)
 
 #----- Stage Pi Control Logic Integration Function -----
-def stagepi_control_logic(readings, devices, monitors, sockets, reading_interval):
+def stagepi_control_logic(readings, devices, monitors, reading_interval):
     """
     Control logic for stagepi's zone of responsibility.
 
@@ -248,11 +228,6 @@ def stagepi_control_logic(readings, devices, monitors, sockets, reading_interval
 
         monitors (list):                A list of all master pi monitor objects.
 
-        sockets (list of Socket):       A list of Socket objects that represent
-                                        the data connections between pis. Passed
-                                        here so we can control the reading
-                                        interval at that end.
-
         reading_interval (int):     The current reading interval, in
                                     seconds.
 
@@ -263,7 +238,7 @@ def stagepi_control_logic(readings, devices, monitors, sockets, reading_interval
 
         >>> reading_interval = stagepi_control_logic(<listofreadings>,
         >>>                                     <listofprobes>, <listofmonitors>,
-        >>>                                     <listofsockets>, <areadinginterval)
+        >>>                                     <areadinginterval)
 
     """
     #Check that the reading interval is positive, and greater than 0.
@@ -305,7 +280,7 @@ def stagepi_control_logic(readings, devices, monitors, sockets, reading_interval
         return reading_interval
 
 #----- Hanham Pi Temporary Top Up Control Logic Integration Function -----
-def temptopup_control_logic(readings, devices, monitors, sockets, reading_interval):
+def temptopup_control_logic(readings, devices, monitors, reading_interval):
     """
     Control logic function for the temporary top-up control logic, which
     tops up the G1 butts group with mains water at about 15:00 daily if
@@ -325,11 +300,6 @@ def temptopup_control_logic(readings, devices, monitors, sockets, reading_interv
 
         monitors (list):                A list of all master pi monitor objects.
 
-        sockets (list of Socket):       A list of Socket objects that represent
-                                        the data connections between pis. Passed
-                                        here so we can control the reading
-                                        interval at that end.
-
         reading_interval (int):     The current reading interval, in
                                     seconds.
 
@@ -340,7 +310,7 @@ def temptopup_control_logic(readings, devices, monitors, sockets, reading_interv
 
         >>> reading_interval = stagepi_control_logic(<listofreadings>,
         >>>                                     <listofprobes>, <listofmonitors>,
-        >>>                                     <listofsockets>, <areadinginterval)
+        >>>                                     <areadinginterval)
     """
     #Check that the reading interval is positive, and greater than 0.
     assert reading_interval > 0
