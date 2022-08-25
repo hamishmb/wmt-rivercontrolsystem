@@ -838,7 +838,7 @@ SITE_SETTINGS = {
             "ServerAddress": "192.168.0.25",
             "ServerPort": 30016,
             "ServerName": "NAS",
-            "SocketName": "Matrix Pump Gate Valve V6 Socket",
+            "SocketName": "Water Backup Pump Bypass Gate Valve V6 Socket",
             "SocketID": "SOCK16",
 
         },
