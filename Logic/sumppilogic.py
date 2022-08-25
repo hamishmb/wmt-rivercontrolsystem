@@ -132,7 +132,15 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
                                                       #reading_interval)
 
     #Remove the 'mm' from the end of the reading value and convert to int.
-    sump_reading = int(readings["SUMP:M0"].get_value().replace("m", ""))
+    try:
+        sump_reading = int(readings["SUMP:M0"].get_value().replace("m", ""))
+
+    except (AttributeError, KeyError):
+        print("Error: Error trying to get latest SUMP:M0 reading!")
+        logger.error("Error: Error trying to get latest SUMP:M0 reading!")
+
+        #Default to empty instead.
+        sump_reading = 0
 
     try:
         butts_reading = int(logiccoretools.get_latest_reading("G4", "M0") \
@@ -684,7 +692,15 @@ def sumppi_water_backup_control_logic(readings, devices, monitors, reading_inter
     """
 
     #Remove the 'mm' from the end of the reading value and convert to int.
-    sump_reading = int(readings["SUMP:M0"].get_value().replace("m", ""))
+    try:
+        sump_reading = int(readings["SUMP:M0"].get_value().replace("m", ""))
+
+    except (AttributeError, KeyError):
+        print("Error: Error trying to get latest SUMP:M0 reading!")
+        logger.error("Error: Error trying to get latest SUMP:M0 reading!")
+
+        #Default to empty instead.
+        sump_reading = 0
 
     try:
         butts_float_reading = logiccoretools.get_latest_reading("G4", "FS0").get_value()

@@ -277,15 +277,6 @@ def run_standalone():
     #Make a readings dictionary for temporary storage for the control logic function.
     readings = {}
 
-    readings["SUMP:M0"] = coretools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "0mm",
-                                            "OK")
-
-    readings["G4:M0"] = coretools.Reading(str(datetime.datetime.now()), 0, "G4:M0", "0mm",
-                                          "OK")
-
-    readings["G4:FS0"] = coretools.Reading(str(datetime.datetime.now()), 0, "G4:FS0", "True",
-                                           "OK")
-
     #Make a reading intervals dictionary for temporary storage of the reading intervals.
     #Assume 15 seconds by default.
     reading_intervals = {}
@@ -328,7 +319,8 @@ def run_standalone():
                 if reading is None:
                     continue
 
-                #Keep all the readings we get, for the control logic.
+                #Keep all the readings we get, for the control logic functions.
+                #Only some of the control logic functions use these.
                 readings[reading.get_id()] = reading
 
             #Initialise the database if needed.
