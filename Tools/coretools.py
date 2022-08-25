@@ -52,6 +52,7 @@ sys.path.insert(0, os.path.abspath('..'))
 
 import config
 from Tools import sockettools
+from Tools import logiccoretools
 
 #Don't ask for a logger name, so this works with both main.py
 #and the universal monitor.
@@ -1675,6 +1676,46 @@ def wait_for_tick(local_socket):
         print("Could not get tick within 180 seconds!")
 
 # -------------------- MISCELLANEOUS FUNCTIONS --------------------
+def get_local_readings(monitors, readings):
+    """
+    This function gets all the readings from the local monitors and adds them
+    to the local readings list.
+
+    Args:
+        monitors (list of BaseMonitorClass):     The monitors.
+        readings (list of Reading):              The local readings list.
+
+    Usage:
+
+        >>> get_local_readings(list<BaseMonitorClass>, list<Reading>)
+    """
+
+    for monitor in monitors:
+        #Skip over any monitors that have stopped.
+        if not monitor.is_running():
+            logger.error("Monitor for "+monitor.get_system_id()+":"+monitor.get_probe_id()
+                         + " is not running!")
+
+            print("Monitor for "+monitor.get_system_id()+":"+monitor.get_probe_id()
+                  + " is not running!")
+
+            logiccoretools.log_event("Monitor for "+monitor.get_system_id()+":"
+                                     + monitor.get_probe_id()+" is not running!",
+                                     severity="ERROR")
+
+            continue
+
+        #Check for new readings.
+        reading = get_and_handle_new_reading(monitor, "test")
+
+        #Ignore empty readings.
+        if reading is None:
+            continue
+
+        #Keep all the readings we get, for the control logic functions.
+        #Only some of the control logic functions use these.
+        readings[reading.get_id()] = reading
+
 def get_and_handle_new_reading(monitor, _type):
     """
     This function is used to get, handle, and return new readings from the

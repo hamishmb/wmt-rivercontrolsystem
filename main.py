@@ -46,6 +46,7 @@ import logging
 import traceback
 
 import config
+
 from Tools import coretools
 from Tools import monitortools
 from Tools import loggingtools
@@ -284,50 +285,24 @@ def run_standalone():
 
         function()
 
-    #Keep tabs on its progress so we can write new readings to the file.
+    #Enter main loop.
     try:
         while not config.EXITING:
             #Check for new readings from all monitors and the database.
-            for monitor in monitors:
-                #Skip over any monitors that have stopped.
-                if not monitor.is_running():
-                    logger.error("Monitor for "+monitor.get_system_id()+":"+monitor.get_probe_id()
-                                 + " is not running!")
-
-                    print("Monitor for "+monitor.get_system_id()+":"+monitor.get_probe_id()
-                          + " is not running!")
-
-                    logiccoretools.log_event("Monitor for "+monitor.get_system_id()+":"
-                                             + monitor.get_probe_id()+" is not running!",
-                                             severity="ERROR")
-
-                    continue
-
-                #Check for new readings.
-                #NOTE: Later on, use the readings returned from this
-                #for state history generation etc.
-                reading = coretools.get_and_handle_new_reading(monitor, "test")
-
-                #Ignore empty readings.
-                if reading is None:
-                    continue
-
-                #Keep all the readings we get, for the control logic functions.
-                #Only some of the control logic functions use these.
-                readings[reading.get_id()] = reading
+            coretools.get_local_readings(monitors, readings)
 
             #Initialise the database if needed.
             if not config.DBCONNECTION.initialised() and config.DBCONNECTION.is_ready():
                 config.DBCONNECTION.initialise_db()
 
-            #Logic.
+            #Run the control logic for this site.
             if "ControlLogicFunction" in config.SITE_SETTINGS[system_id]:
                 function = getattr(controllogic,
                                    config.SITE_SETTINGS[system_id]["ControlLogicFunction"])
 
                 reading_interval = function(readings, devices, monitors, reading_interval)
 
-            #Keep watching for new messages from the socket while we could down the
+            #Keep watching for new messages from the socket while we count down the
             #reading interval.
             asked_for_tick = False
             count = 0
