@@ -300,8 +300,8 @@ def run_standalone():
         print("Waiting up to 180 seconds for the system tick...")
 
         if config.TESTING:
-            logger.info("Running in test mode, waiting up to 9 seconds instead...")
-            print("Running in test mode, waiting up to 9 seconds instead...")
+            logger.info("Running in test mode, waiting up to 27 seconds instead...")
+            print("Running in test mode, waiting up to 27 seconds instead...")
 
         count = 0
 
@@ -325,7 +325,7 @@ def run_standalone():
                 time.sleep(10)
 
             else:
-                time.sleep(0.5)
+                time.sleep(1.5)
 
             count += 1
 
