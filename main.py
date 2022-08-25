@@ -288,12 +288,12 @@ def run_standalone():
     #Enter main loop.
     try:
         while not config.EXITING:
-            #Check for new readings from all monitors and the database.
-            coretools.get_local_readings(monitors, readings)
-
             #Initialise the database if needed.
             if not config.DBCONNECTION.initialised() and config.DBCONNECTION.is_ready():
                 config.DBCONNECTION.initialise_db()
+
+            #Check for new readings from all monitors and the database.
+            coretools.get_local_readings(monitors, readings)
 
             #Run the control logic for this site.
             if "ControlLogicFunction" in config.SITE_SETTINGS[system_id]:
@@ -302,46 +302,9 @@ def run_standalone():
 
                 reading_interval = function(readings, devices, monitors, reading_interval)
 
-            #Keep watching for new messages from the socket while we count down the
-            #reading interval.
-            asked_for_tick = False
-            count = 0
-
-            while count < reading_interval:
-                #This way, if our reading interval changes,
-                #the code will respond to the change immediately.
-                #Check if we have a new reading interval.
-                if not asked_for_tick and (reading_interval - count) < 10 and system_id != "NAS":
-                    #Get the latest system tick if we're in the last 10 seconds of the interval.
-                    asked_for_tick = True
-                    local_socket.write("Tick?")
-
-                for _socket in sockets.values():
-                    if _socket.has_data():
-                        data = _socket.read()
-
-                        if not isinstance(data, str):
-                            continue
-
-                        #-------------------- SYSTEM TICK HANDLING --------------------
-                        if data == "Tick?" and system_id == "NAS":
-                            #NAS box only: reply with the current system tick when asked.
-                            _socket.write("Tick: "+str(config.TICK))
-
-                            print("Received request for current system tick")
-                            logger.info("Received request for current system tick")
-
-                        elif "Tick:" in data and system_id != "NAS":
-                            #Everything except NAS box: store tick sent from the NAS box.
-                            config.TICK = int(data.split(" ")[1])
-
-                            print("New tick: "+data.split(" ")[1])
-                            logger.info("New tick: "+data.split(" ")[1])
-
-                        _socket.pop()
-
-                time.sleep(1)
-                count += 1
+            #Count down the reading interval.
+            coretools.wait_for_next_reading_interval(reading_interval, system_id,
+                                                     local_socket, sockets)
 
             #Check if shutdown, reboot, or update have been requested.
             #Database.

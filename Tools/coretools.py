@@ -1675,7 +1675,7 @@ def wait_for_tick(local_socket):
         logger.error("Could not get tick within 180 seconds!")
         print("Could not get tick within 180 seconds!")
 
-# -------------------- MISCELLANEOUS FUNCTIONS --------------------
+# -------------------- MAIN LOOP FUNCTIONS --------------------
 def get_local_readings(monitors, readings):
     """
     This function gets all the readings from the local monitors and adds them
@@ -1757,3 +1757,59 @@ def get_and_handle_new_reading(monitor, _type):
         sys.stdout.flush()
 
     return reading
+
+def wait_for_next_reading_interval(reading_interval, system_id, local_socket, sockets):
+    """
+    This function keeps watching for new messages coming from other sites while
+    we count down the reading interval.
+
+    Args:
+        reading_interval:           The reading interval.
+        system_id:                  The system (site) id.
+        local_socket:               The local socket. Special None value if on NAS box.
+        sockets:                    The list of all sockets connected to this site.
+
+    Usage:
+
+        >>> wait_for_next_reading_interval(30, "SUMP", <Socket>, list<Socket>)
+    """
+    #Keep watching for new messages from the socket while we count down the
+    #reading interval.
+    asked_for_tick = False
+    count = 0
+
+    while count < reading_interval:
+        #This way, if our reading interval changes,
+        #the code will respond to the change immediately.
+        #Check if we have a new reading interval.
+        if not asked_for_tick and (reading_interval - count) < 10 and system_id != "NAS":
+            #Get the latest system tick if we're in the last 10 seconds of the interval.
+            asked_for_tick = True
+            local_socket.write("Tick?")
+
+        for _socket in sockets.values():
+            if _socket.has_data():
+                data = _socket.read()
+
+                if not isinstance(data, str):
+                    continue
+
+                #-------------------- SYSTEM TICK HANDLING --------------------
+                if data == "Tick?" and system_id == "NAS":
+                    #NAS box only: reply with the current system tick when asked.
+                    _socket.write("Tick: "+str(config.TICK))
+
+                    print("Received request for current system tick")
+                    logger.info("Received request for current system tick")
+
+                elif "Tick:" in data and system_id != "NAS":
+                    #Everything except NAS box: store tick sent from the NAS box.
+                    config.TICK = int(data.split(" ")[1])
+
+                    print("New tick: "+data.split(" ")[1])
+                    logger.info("New tick: "+data.split(" ")[1])
+
+                _socket.pop()
+
+        time.sleep(1)
+        count += 1
