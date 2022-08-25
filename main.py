@@ -47,7 +47,6 @@ import traceback
 
 import config
 from Tools import coretools as core_tools
-from Tools import sockettools as socket_tools
 from Tools import monitortools as monitor_tools
 from Tools import loggingtools
 from Tools import logiccoretools
@@ -234,45 +233,11 @@ def run_standalone():
     #Start monitoring system load.
     core_tools.MonitorLoad()
 
-    #Create all sockets.
-    logger.info("Creating sockets...")
-    sockets = {}
+    #Create the socket(s).
+    sockets, local_socket = core_tools.setup_sockets(system_id)
 
-    if config.SITE_SETTINGS[system_id]["HostingSockets"]:
-        #We are a server, and we are hosting sockets.
-        #Use info ation from the other sites to figure out what sockets to create.
-        for site in config.SITE_SETTINGS:
-            site_settings = config.SITE_SETTINGS[site]
-
-            #If no server is defined for this site, skip it.
-            if "SocketName" not in site_settings:
-                continue
-
-            socket = socket_tools.Sockets("Socket", system_id, site_settings["SocketName"])
-            socket.set_portnumber(site_settings["ServerPort"])
-            socket.set_server_address(site_settings["IPAddress"])
-            sockets[site_settings["SocketID"]] = socket
-
-            socket.start_handler()
-
-    #If a server is defined for this pi, connect to it.
     if "SocketName" in config.SITE_SETTINGS[system_id]:
-        #Connect to the server.
-        logger.info("Initialising connection to server, please wait...")
-        print("Initialising connection to server, please wait...")
-        socket = socket_tools.Sockets("Plug", system_id,
-                                      config.SITE_SETTINGS[system_id]["ServerName"])
-
-        socket.set_portnumber(config.SITE_SETTINGS[system_id]["ServerPort"])
-        socket.set_server_address(config.SITE_SETTINGS[system_id]["ServerAddress"])
-        socket.start_handler()
-
-        sockets[config.SITE_SETTINGS[system_id]["SocketID"]] = socket
-
-        logger.info("Will connect to server as soon as it becomes available.")
-        print("Will connect to server as soon as it becomes available.")
-
-    logger.debug("Done!")
+        print("Will connect to NAS box as soon as connection is available.")
 
     #Create the probe(s).
     probes = core_tools.setup_devices(system_id)
@@ -301,10 +266,10 @@ def run_standalone():
         count = 0
 
         while config.TICK == 0 and count < 18:
-            socket.write("Tick?")
+            local_socket.write("Tick?")
 
-            if socket.has_data():
-                data = socket.read()
+            if local_socket.has_data():
+                data = local_socket.read()
 
                 if "Tick:" in data:
                     #Store tick sent from the NAS box.
@@ -313,7 +278,7 @@ def run_standalone():
                     print("New tick: "+data.split(" ")[1])
                     logger.info("New tick: "+data.split(" ")[1])
 
-                socket.pop()
+                local_socket.pop()
 
             #Timeout almost instantly if in testing mode.
             if not config.TESTING:
@@ -437,7 +402,7 @@ def run_standalone():
                 if not asked_for_tick and (reading_interval - count) < 10 and system_id != "NAS":
                     #Get the latest system tick if we're in the last 10 seconds of the interval.
                     asked_for_tick = True
-                    socket.write("Tick?")
+                    local_socket.write("Tick?")
 
                 for _socket in sockets.values():
                     if _socket.has_data():

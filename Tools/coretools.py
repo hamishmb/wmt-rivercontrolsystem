@@ -51,6 +51,7 @@ import psutil
 sys.path.insert(0, os.path.abspath('..'))
 
 import config
+from Tools import sockettools
 
 #Don't ask for a logger name, so this works with both main.py
 #and the universal monitor.
@@ -1481,12 +1482,65 @@ class DatabaseConnection(threading.Thread):
 #NB: Moved to /Logic/controllogic.py
 
 # -------------------- MISCELLANEOUS FUNCTIONS --------------------
+def setup_sockets(system_id):
+    """
+    This function is used to set up the sockets for each site.
+
+    Args:
+        system_id (str):              The system that we're setting up for.
+
+    Returns:
+        tuple(A list of the sockets that were set up, the local socket for this site).
+
+    Usage:
+        >>> sockets, local_socket = setup_sockets("G4")
+
+    """
+    #Create all sockets.
+    logger.info("Creating sockets...")
+    sockets = {}
+
+    if config.SITE_SETTINGS[system_id]["HostingSockets"]:
+        #We are a server, and we are hosting sockets.
+        #Use info ation from the other sites to figure out what sockets to create.
+        for site in config.SITE_SETTINGS:
+            site_settings = config.SITE_SETTINGS[site]
+
+            #If no server is defined for this site, skip it.
+            if "SocketName" not in site_settings:
+                continue
+
+            socket = sockettools.Sockets("Socket", system_id, site_settings["SocketName"])
+            socket.set_portnumber(site_settings["ServerPort"])
+            socket.set_server_address(site_settings["IPAddress"])
+            sockets[site_settings["SocketID"]] = socket
+
+            socket.start_handler()
+
+    #If a server is defined for this pi, connect to it.
+    if "SocketName" in config.SITE_SETTINGS[system_id]:
+        #Connect to the server.
+        socket = sockettools.Sockets("Plug", system_id,
+                                      config.SITE_SETTINGS[system_id]["ServerName"])
+
+        socket.set_portnumber(config.SITE_SETTINGS[system_id]["ServerPort"])
+        socket.set_server_address(config.SITE_SETTINGS[system_id]["ServerAddress"])
+        socket.start_handler()
+
+        sockets[config.SITE_SETTINGS[system_id]["SocketID"]] = socket
+
+        local_socket = socket
+
+    logger.debug("Done!")
+
+    return sockets, local_socket
+
 def setup_devices(system_id, dictionary="Probes"):
     """
     This function is used to set up the device objects for each site.
 
     Args:
-        system_id (str):              The system (pi) that we're setting up for.
+        system_id (str):              The system that we're setting up for.
 
     KWargs:
         dictionary (str):             The dictionary in config.py to set up for.
