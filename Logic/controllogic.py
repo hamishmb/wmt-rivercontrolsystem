@@ -69,9 +69,30 @@ def reconfigure_logger():
 #----- Generic control logic for pis that only do monitoring -----
 def generic_control_logic(readings, devices, monitors, reading_interval):
     """
-    This control logic is generic and runs on all the monitoring-only pis. It does the following:
+    This control logic is generic and runs on all the monitoring-only pis.
+    It does the following:
 
     - Updates the pi status in the database.
+    - Always returns a reading interval of 15 seconds - always faster than other intervals.
+
+    Args:
+        readings (list):            A list of the latest readings for each local probe/device.
+
+        devices  (list):            A list of all local device objects.
+
+        monitors (list):            A list of all local monitor objects.
+
+        reading_interval (int):     The current reading interval, in
+                                    seconds.
+
+    Returns:
+        int: The reading interval, in seconds.
+
+    Usage:
+
+        >>> reading_interval = generic_control_logic(<listofreadings>,
+        >>>                                          <listofprobes>, <listofmonitors>,
+        >>>                                          <areadinginterval)
 
     """
 
@@ -83,7 +104,7 @@ def generic_control_logic(readings, devices, monitors, reading_interval):
         print("Error: Couldn't update site status!")
         logger.error("Error: Couldn't update site status!")
 
-    return 30
+    return 15
 
 #---------- Control Logic Setup Functions ----------
 #----- Stage Pi Control Logic Setup Function -----
@@ -100,15 +121,15 @@ def stagepi_control_logic_setup():
 #----- Valve Control Logic Integration Function -----
 def valve_logic(readings, devices, monitors, reading_interval):
     """
-    Control logic integration for the gate valves. Just runs the identically-named logic at
+    Control logic integration for the gate valves. Just runs the identically-namedlogic at
     Tools/valvelogic.py.
 
     Args:
-        readings (list):                A list of the latest readings for each probe/device.
+        readings (list):            A list of the latest readings for each local probe/device.
 
-        devices  (list):                A list of all master pi device objects.
+        devices  (list):            A list of all local device objects.
 
-        monitors (list):                A list of all master pi monitor objects.
+        monitors (list):            A list of all local monitor objects.
 
         reading_interval (int):     The current reading interval, in
                                     seconds.
@@ -132,11 +153,11 @@ def nas_logic(readings, devices, monitors, reading_interval):
     Tools/naslogic.py.
 
     Args:
-        readings (list):                A list of the latest readings for each probe/device.
+        readings (list):            A list of the latest readings for each probe/device.
 
-        devices  (list):                A list of all master pi device objects.
+        devices  (list):            A list of all local device objects.
 
-        monitors (list):                A list of all master pi monitor objects.
+        monitors (list):            A list of all local monitor objects.
 
         reading_interval (int):     The current reading interval, in
                                     seconds.
@@ -160,11 +181,11 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
     Tools/sumppilogic.py.
 
     Args:
-        readings (list):                A list of the latest readings for each probe/device.
+        readings (list):            A list of the latest readings for each local probe/device.
 
-        devices  (list):                A list of all master pi device objects.
+        devices  (list):            A list of all local device objects.
 
-        monitors (list):                A list of all master pi monitor objects.
+        monitors (list):            A list of all local monitor objects.
 
         reading_interval (int):     The current reading interval, in
                                     seconds.
@@ -188,11 +209,11 @@ def wbuttspi_logic(readings, devices, monitors, reading_interval):
     logic at Tools/wbuttspilogic.py.
 
     Args:
-        readings (list):                A list of the latest readings for each probe/device.
+        readings (list):            A list of the latest readings for each local probe/device.
 
-        devices  (list):                A list of all master pi device objects.
+        devices  (list):            A list of all local device objects.
 
-        monitors (list):                A list of all master pi monitor objects.
+        monitors (list):            A list of all local monitor objects.
 
         reading_interval (int):     The current reading interval, in
                                     seconds.
@@ -222,11 +243,11 @@ def stagepi_control_logic(readings, devices, monitors, reading_interval):
     See StagePiControlLogic for documentation.
 
     Args:
-        readings (list):                A list of the latest readings for each probe/device.
+        readings (list):            A list of the latest readings for each local probe/device.
 
-        devices  (list):                A list of all master pi device objects.
+        devices  (list):            A list of all local device objects.
 
-        monitors (list):                A list of all master pi monitor objects.
+        monitors (list):            A list of all local monitor objects.
 
         reading_interval (int):     The current reading interval, in
                                     seconds.
@@ -294,11 +315,11 @@ def temptopup_control_logic(readings, devices, monitors, reading_interval):
     See TempTopUpLogic for documentation.
 
     Args:
-        readings (list):                A list of the latest readings for each probe/device.
+        readings (list):            A list of the latest readings for each local probe/device.
 
-        devices  (list):                A list of all master pi device objects.
+        devices  (list):            A list of all local device objects.
 
-        monitors (list):                A list of all master pi monitor objects.
+        monitors (list):            A list of all local monitor objects.
 
         reading_interval (int):     The current reading interval, in
                                     seconds.
