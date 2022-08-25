@@ -1479,9 +1479,9 @@ class DatabaseConnection(threading.Thread):
         self.do_query(query, retries)
 
 # -------------------- CONTROL LOGIC FUNCTIONS AND CLASSES --------------------
-#NB: Moved to /Logic/controllogic.py
+#NB: Moved to /Logic/
 
-# -------------------- MISCELLANEOUS FUNCTIONS --------------------
+# -------------------- STARTUP FUNCTIONS --------------------
 def setup_sockets(system_id):
     """
     This function is used to set up the sockets for each site.
@@ -1604,6 +1604,61 @@ def setup_devices(system_id, dictionary="Probes"):
 
     return devices
 
+def wait_for_tick(local_socket):
+    """
+    This function is used to wait for the system tick on boot. This is used on all systems
+    except the NAS box (which supplies the tick).
+
+    Args:
+        local_socket (Socket):          The socket that connects to the NAS box.
+
+    Usage:
+        >>> wait_for_tick(<Socket>)
+
+    """
+    #Request the latest system tick value and wait 180 seconds for it to come in.
+    logger.info("Waiting up to 180 seconds for the system tick...")
+    print("Waiting up to 180 seconds for the system tick...")
+
+    if config.TESTING:
+        logger.info("Running in test mode, waiting up to 27 seconds instead...")
+        print("Running in test mode, waiting up to 27 seconds instead...")
+
+    count = 0
+
+    while config.TICK == 0 and count < 18:
+        local_socket.write("Tick?")
+
+        if local_socket.has_data():
+            data = local_socket.read()
+
+            if "Tick:" in data:
+                #Store tick sent from the NAS box.
+                config.TICK = int(data.split(" ")[1])
+
+                print("New tick: "+data.split(" ")[1])
+                logger.info("New tick: "+data.split(" ")[1])
+
+            local_socket.pop()
+
+        #Timeout almost instantly if in testing mode.
+        if not config.TESTING:
+            time.sleep(10)
+
+        else:
+            time.sleep(1.5)
+
+        count += 1
+
+    if config.TICK != 0:
+        logger.info("Received tick")
+        print("Received tick")
+
+    else:
+        logger.error("Could not get tick within 180 seconds!")
+        print("Could not get tick within 180 seconds!")
+
+# -------------------- MISCELLANEOUS FUNCTIONS --------------------
 def get_and_handle_new_reading(monitor, _type):
     """
     This function is used to get, handle, and return new readings from the

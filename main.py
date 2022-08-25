@@ -255,47 +255,8 @@ def run_standalone():
     config.DBCONNECTION.start_thread()
 
     if system_id != "NAS":
-        #Request the latest system tick value and wait 180 seconds for it to come in.
-        logger.info("Waiting up to 180 seconds for the system tick...")
-        print("Waiting up to 180 seconds for the system tick...")
-
-        if config.TESTING:
-            logger.info("Running in test mode, waiting up to 27 seconds instead...")
-            print("Running in test mode, waiting up to 27 seconds instead...")
-
-        count = 0
-
-        while config.TICK == 0 and count < 18:
-            local_socket.write("Tick?")
-
-            if local_socket.has_data():
-                data = local_socket.read()
-
-                if "Tick:" in data:
-                    #Store tick sent from the NAS box.
-                    config.TICK = int(data.split(" ")[1])
-
-                    print("New tick: "+data.split(" ")[1])
-                    logger.info("New tick: "+data.split(" ")[1])
-
-                local_socket.pop()
-
-            #Timeout almost instantly if in testing mode.
-            if not config.TESTING:
-                time.sleep(10)
-
-            else:
-                time.sleep(1.5)
-
-            count += 1
-
-        if config.TICK != 0:
-            logger.info("Received tick")
-            print("Received tick")
-
-        else:
-            logger.error("Could not get tick within 180 seconds!")
-            print("Could not get tick within 180 seconds!")
+        #Wait a little while for the system tick on boot on everything except the NAS box.
+        core_tools.wait_for_tick(local_socket)
 
     time.sleep(5)
 
