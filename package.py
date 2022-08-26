@@ -36,24 +36,14 @@ import os
 import shutil
 
 #Fetch the code from the online repository.
-cmd = subprocess.run(["git", "clone", "https://gitlab.com/wmtprojectsteam/rivercontrolsystem.git",
-                      "master"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
+cmd = subprocess.run(["git", "clone",
+                      "https://gitlab.com/wmtprojectsteam/rivercontrolsystem.git"],
+                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
 
 stdout = cmd.stdout.decode("UTF-8", errors="ignore")
 
 if cmd.returncode != 0:
     print("Error! Unable to download river system software. "
-          + "Error was:\n"+stdout+"\n")
-    sys.exit()
-
-#Rename directory to "rivercontrolsystem".
-cmd = subprocess.run(["mv", "-v", "master", "rivercontrolsystem"], stdout=subprocess.PIPE,
-                     stderr=subprocess.STDOUT, check=False)
-
-stdout = cmd.stdout.decode("UTF-8", errors="ignore")
-
-if cmd.returncode != 0:
-    print("Error! Unable to prepare river control system software. "
           + "Error was:\n"+stdout+"\n")
     sys.exit()
 
