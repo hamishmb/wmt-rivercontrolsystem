@@ -223,14 +223,14 @@ def run():
     #The NAS box needs more time to stabilise before we continue.
     #Wait another minute.
     if system_id == "NAS":
-        print("Waiting 1 minute for NAS box to finish booting up (CTRL-C to skip)...")
-        logger.info("Waiting 1 minute for NAS box to finish booting up (CTRL-C to skip)...")
+        print("Waiting 1 minute for NAS box to finish booting up (Press CTRL-C to skip)...")
+        logger.info("Waiting 1 minute for NAS box to finish booting up (Press CTRL-C to skip)...")
 
         try:
             time.sleep(60)
 
         except KeyboardInterrupt:
-            print("NAS box wait skipped as requested by user.")
+            print("\nNAS box wait skipped as requested by user.")
             logger.info("NAS box wait skipped as requested by user.")
 
     #Run setup code.
