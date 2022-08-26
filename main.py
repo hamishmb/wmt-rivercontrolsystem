@@ -54,8 +54,10 @@ try:
     from RPi import GPIO
 
 except ImportError:
-    #Only allow import errors if we are testing or on the NAS box.
-    if "NAS" not in sys.argv and ("-t" not in sys.argv and "--testing" not in sys.argv):
+    #Only allow import errors if we are generating docs, testing, or on the NAS box.
+    if __name__ == "__main__" and "NAS" not in sys.argv \
+        and ("-t" not in sys.argv and "--testing" not in sys.argv):
+
         sys.exit("Unable to import RPi.GPIO! Did you mean to use testing mode? Exiting...")
 
     else:
