@@ -35,6 +35,7 @@ this is likely to move to some new files once we have the new algorithms.
 
 #Standard imports
 import sys
+import shutil
 import time
 import threading
 import subprocess
@@ -1393,7 +1394,8 @@ class DatabaseConnection(threading.Thread):
                 This is only meant to be run from the NAS box. The pis
                 get the ticks over the socket - this is a much less
                 efficient way to deliver system ticks, but is needed
-                on NAS box startup.
+                on NAS box startup. This is a do-nothing method on all
+                devices except the NAS box.
 
         Kwargs:
             retries[=3] (int).          The number of times to retry before giving up
@@ -1817,15 +1819,17 @@ def wait_for_next_reading_interval(reading_interval, system_id, local_socket, so
 
 # -------------------- SITEWIDE UPDATER PREPARATION FUNCTIONS --------------------
 #FIXME: These are currently broken. Do not use them.
+#TODO: Could also do with some deduplication of code that checks the db, if I continue
+#      with that approach.
 def prepare_sitewide_actions(system_id): #FIXME
     """
-    This function handles the following features:
+    This function coordinates the following features:
 
-    - Shutting down just this system via database command or the presence of a file.
-    - Shutting down all systems via database command or the presence of a file.
-    - Rebooting just this system via database command or the presence of a file.
-    - Rebooting all systems via database command or the presence of a file.
-    - Updating all systems via database command or the presence of a file.
+    - Preparing to shut down just this system via database command or the presence of a file.
+    - Preparing to shut down all systems via database command or the presence of a file.
+    - Preparing to reboot just this system via database command or the presence of a file.
+    - Preparing to reboot all systems via database command or the presence of a file.
+    - Preparing to update all systems via database command or the presence of a file.
 
     .. warning::
             This is currently broken and sometimes doesn't behave deterministically.
@@ -1924,41 +1928,6 @@ def prepare_sitewide_actions(system_id): #FIXME
     if at_least_one_action:
         config.EXITING = True
 
-def prepare_reboot(system_id): #FIXME
-    """
-    This function prepares the system to reboot, and makes it known in the database
-    that this is going to happen.
-
-    If this is the NAS box, and all sites are to reboot, all sites are requested to
-    reboot individually through the database.
-
-    .. warning::
-            This is currently broken and sometimes doesn't behave deterministically.
-            Do not use.
-
-    Usage:
-
-        >>> prepare_reboot("G4")
-    """
-    try:
-        logiccoretools.log_event("Preparing to reboot...")
-        logiccoretools.update_status("Preparing to reboot", "N/A", "Reboot_prep")
-
-    except RuntimeError:
-        #FIXME: Take appropriate action here.
-        print("Error: Couldn't update site status or event log!")
-        logger.error("Error: Couldn't update site status or event log!")
-
-    if system_id == "NAS" and config.REBOOTALL:
-        for site_id in config.SITE_SETTINGS:
-            try:
-                logiccoretools.attempt_to_control(site_id, site_id, "Reboot")
-
-            except RuntimeError:
-                #FIXME: Take appropriate action here.
-                print("Error: Couldn't request reboot for "+site_id+"!")
-                logger.error("Error: Couldn't request reboot for "+site_id+"!")
-
 def prepare_shutdown(system_id): #FIXME
     """
     This function prepares the system to shut down, and makes it known in the database
@@ -1971,13 +1940,16 @@ def prepare_shutdown(system_id): #FIXME
             This is currently broken and sometimes doesn't behave deterministically.
             Do not use.
 
+    Args:
+        system_id:                  The system (site) id.
+
     Usage:
 
         >>> prepare_shutdown("G4")
     """
     try:
         logiccoretools.log_event("Preparing to shut down...")
-        logiccoretools.update_status("Preparing to shut down", "N/A", "Shutdown_prep")
+        logiccoretools.update_status("Preparing to shut down", "N/A", "Shutdown")
 
     except RuntimeError:
         #FIXME: Take appropriate action here.
@@ -1994,6 +1966,44 @@ def prepare_shutdown(system_id): #FIXME
                 print("Error: Couldn't request poweroff for "+site_id+"!")
                 logger.error("Error: Couldn't request poweroff for "+site_id+"!")
 
+def prepare_reboot(system_id): #FIXME
+    """
+    This function prepares the system to reboot, and makes it known in the database
+    that this is going to happen.
+
+    If this is the NAS box, and all sites are to reboot, all sites are requested to
+    reboot individually through the database.
+
+    .. warning::
+            This is currently broken and sometimes doesn't behave deterministically.
+            Do not use.
+
+    Args:
+        system_id:                  The system (site) id.
+
+    Usage:
+
+        >>> prepare_reboot("G4")
+    """
+    try:
+        logiccoretools.log_event("Preparing to reboot...")
+        logiccoretools.update_status("Preparing to reboot", "N/A", "Rebooting")
+
+    except RuntimeError:
+        #FIXME: Take appropriate action here.
+        print("Error: Couldn't update site status or event log!")
+        logger.error("Error: Couldn't update site status or event log!")
+
+    if system_id == "NAS" and config.REBOOTALL:
+        for site_id in config.SITE_SETTINGS:
+            try:
+                logiccoretools.attempt_to_control(site_id, site_id, "Reboot")
+
+            except RuntimeError:
+                #FIXME: Take appropriate action here.
+                print("Error: Couldn't request reboot for "+site_id+"!")
+                logger.error("Error: Couldn't request reboot for "+site_id+"!")
+
 def nas_prepare_update(): #FIXME
     """
     This function makes the update available to all pis and signals that they should
@@ -2001,18 +2011,25 @@ def nas_prepare_update(): #FIXME
     http://192.168.0.25/rivercontrolsystem.tar.gz. After this, the update is ready
     to be applied.
 
-    .. note::
-            This function is intended to be run only on the NAS box. Running it on
-            any other systems may cause undesirable behaviour and is untested.
+    .. warning::
+            This function is intended to be run only on the NAS box. This is a
+            do-nothing function on all devices except the NAS box.
 
     .. warning::
             This is currently broken and sometimes doesn't behave deterministically.
             Do not use.
 
+    Args:
+        system_id:                  The system (site) id.
+
     Usage:
 
         >>> nas_prepare_update("G4")
     """
+
+    if config.SYSTEM_ID != "NAS":
+        return
+
     logger.info("Making new software available to all pis using webserver...")
     cmd = subprocess.run(["ln", "-s", "/mnt/HD/HD_a2/rivercontrolsystem.tar.gz",
                           "/var/www"],
@@ -2033,7 +2050,7 @@ def nas_prepare_update(): #FIXME
     try:
         logiccoretools.log_event("Preparing to update...")
         logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "
-                                     +config.MEM+"%", "OK", "Update_prep")
+                                     +config.MEM+"%", "OK", "Updating")
 
     except RuntimeError:
         #FIXME: Take appropriate action here.
@@ -2055,18 +2072,23 @@ def pi_prepare_update(): #FIXME
     http://192.168.0.25/rivercontrolsystem.tar.gz. After this, the update is ready
     to be applied.
 
-    .. note::
-            This function is intended to be run only on the pis. Running it on
-            the NAS box may cause undesirable behaviour and is untested.
+    .. warning::
+            This function is intended to be run only on the pis. This is a do-nothing
+            function when run on the NAS box.
 
     .. warning::
             This is currently broken and sometimes doesn't behave deterministically.
             Do not use.
 
+    Args:
+        system_id:                  The system (site) id.
+
     Usage:
 
         >>> pi_prepare_update("G4")
     """
+    if config.SYSTEM_ID == "NAS":
+        return
 
     #Download the update from the NAS box.
     logger.info("Downloading software update from NAS box...")
@@ -2088,9 +2110,346 @@ def pi_prepare_update(): #FIXME
     try:
         logiccoretools.log_event("Preparing to update...")
         logiccoretools.update_status("Up, CPU: "+config.CPU+"%, MEM: "
-                                     +config.MEM+"%", "OK", "Update_prep")
+                                     +config.MEM+"%", "OK", "Updating")
 
     except RuntimeError:
         #FIXME: Take appropriate action here.
         print("Error: Couldn't update site status or event log!")
         logger.error("Error: Couldn't update site status or event log!")
+
+# -------------------- SITEWIDE UPDATER REALISATION FUNCTIONS --------------------
+def do_sitewide_actions(system_id): #FIXME
+    """
+    This function coordinates the following features:
+
+    - Shutting down just this system via database command or the presence of a file.
+    - Shutting down all systems via database command or the presence of a file.
+    - Rebooting just this system via database command or the presence of a file.
+    - Rebooting all systems via database command or the presence of a file.
+    - Updating all systems via database command or the presence of a file.
+
+    .. warning::
+            This is currently broken and sometimes doesn't behave deterministically.
+            Do not use.
+
+    Args:
+        system_id:                  The system (site) id.
+
+    Usage:
+
+        >>> do_sitewide_actions("G4")
+    """
+
+    if config.SHUTDOWN:
+        do_shutdown(system_id)
+
+    elif config.REBOOT:
+        do_reboot(system_id)
+
+    elif config.UPDATE:
+        do_update(system_id)
+
+def do_shutdown(system_id): #FIXME
+    """
+    This function shuts the system down.
+
+    If this is the NAS box, and all sites are shutting down, we wait until we can confirm
+    that they all received the shutdown request.
+
+    .. warning::
+            This is currently broken and sometimes doesn't behave deterministically.
+            Do not use.
+
+    Args:
+        system_id:                  The system (site) id.
+
+    Usage:
+
+        >>> do_shutdown("G4")
+    """
+
+    print("System shutdown sequence initiated.")
+    logger.info("System shutdown sequence initiated.")
+
+    if system_id != "NAS":
+        print("Sequence complete. Process successful. Shutting down now.")
+        logger.info("Sequence complete. Process successful. Shutting down now.")
+        logging.shutdown()
+        subprocess.run(["poweroff"], check=False)
+
+    #The NAS box needs a special script for safe and reliable shutdown.
+    elif not config.SHUTDOWNALL:
+        print("Sequence complete. Process successful. Shutting down now.")
+        logger.info("Sequence complete. Process successful. Shutting down now.")
+        logging.shutdown()
+        subprocess.run(["ash", "/home/admin/shutdown.sh"], check=False)
+
+    #Wait until all the pis have shut down before we shut down the NAS box.
+    elif config.SHUTDOWNALL:
+        #Restart database thread to check.
+        #FIXME We don't wait to make sure the DB connection is alive!
+        config.EXITING = False
+        DatabaseConnection(system_id)
+        config.DBCONNECTION.start_thread()
+
+        print("Waiting for pis shut down...")
+        logger.info("Waiting for pis to shut down...")
+
+        done = []
+
+        while True:
+            for site_id in config.SITE_SETTINGS:
+                if site_id == "NAS" or site_id in done:
+                    continue
+
+                try:
+                    status = logiccoretools.get_status(site_id)
+
+                except RuntimeError:
+                    print("Error: Couldn't get "+site_id+" site status!")
+                    logger.error("Error: Couldn't get "+site_id+" site status!")
+                    continue
+
+                if status is not None:
+                    action = status[2].upper()
+
+                    if action == "SHUTTING DOWN":
+                        print("Shut down: "+site_id)
+                        logger.info("Shut down: "+site_id)
+                        done.append(site_id)
+
+            #When all have shut down (ignoring NAS), break out.
+            if done and len(done) == len(config.SITE_SETTINGS.keys()) - 1:
+                break
+
+            time.sleep(5)
+
+        #All pis have shut down, now shut down the NAS box with the special script.
+        print("Sequence complete. Process successful. Shutting down now.")
+        logger.info("Sequence complete. Process successful. Shutting down now.")
+        logging.shutdown()
+        subprocess.run(["ash", "/home/admin/shutdown.sh"], check=False)
+
+def do_reboot(system_id): #FIXME
+    """
+    This function reboots the system.
+
+    If this is the NAS box, and all sites are rebooting, we wait until we can confirm
+    that they all received the reboot request.
+
+    .. warning::
+            This is currently broken and sometimes doesn't behave deterministically.
+            Do not use.
+
+    Args:
+        system_id:                  The system (site) id.
+
+    Usage:
+
+        >>> do_reboot("G4")
+    """
+
+    print("System reboot sequence initiated.")
+    logger.info("System reboot sequence initiated.")
+
+    if system_id != "NAS":
+        print("Sequence complete. Process successful. Rebooting now.")
+        logger.info("Sequence complete. Process successful. Rebooting now.")
+        logging.shutdown()
+        subprocess.run(["reboot"], check=False)
+
+    #The NAS box needs a special script for safe and reliable rebooting.
+    elif not config.REBOOTALL:
+        print("Sequence complete. Process successful. Rebooting now.")
+        logger.info("Sequence complete. Process successful. Rebooting now.")
+        logging.shutdown()
+        subprocess.run(["ash", "/home/admin/reboot.sh"], check=False)
+
+    #Wait until all the pis have rebooted before we reboot the NAS box.
+    elif config.REBOOTALL:
+        #Restart database thread to check.
+        #FIXME We don't wait to make sure the DB connection is alive!
+        config.EXITING = False
+        DatabaseConnection(system_id)
+        config.DBCONNECTION.start_thread()
+
+        print("Waiting for pis to reboot...")
+        logger.info("Waiting for pis to reboot...")
+
+        done = []
+
+        while True:
+            for site_id in config.SITE_SETTINGS:
+                if site_id == "NAS" or site_id in done:
+                    continue
+
+                try:
+                    status = logiccoretools.get_status(site_id)
+
+                except RuntimeError:
+                    print("Error: Couldn't get "+site_id+" site status!")
+                    logger.error("Error: Couldn't get "+site_id+" site status!")
+                    continue
+
+                if status is not None:
+                    action = status[2].upper()
+
+                    if action == "REBOOTING":
+                        print("Rebooted: "+site_id)
+                        logger.info("Rebooted: "+site_id)
+                        done.append(site_id)
+
+            #When all have rebooted (ignoring NAS), break out.
+            if done and len(done) == len(config.SITE_SETTINGS.keys()) - 1:
+                break
+
+            time.sleep(5)
+
+        #All pis have rebooted, now reboot the NAS box with the special script.
+        print("Sequence complete. Process successful. Rebooting now.")
+        logger.info("Sequence complete. Process successful. Rebooting now.")
+        logging.shutdown()
+        subprocess.run(["ash", "/home/admin/reboot.sh"], check=False)
+
+def do_update(system_id): #FIXME
+    """
+    This function updates the system. This is done by moving the existing river system
+    software to rivercontrolsystem.old, extracting the previously-downloaded
+    update tarball, and then cleaning up by removing the tarball. Finally, the system
+    is rebooted, completing the process with a normal system start-up sequence.
+
+    If this is the NAS box, we always update all sites at the same time, so we wait
+    until we can confirm that they all received the update request. After that, the
+    above sequence is performed on the NAS box, and then the NAS box reboots.
+
+    .. warning::
+            This is currently broken and sometimes doesn't behave deterministically.
+            Do not use.
+
+    Args:
+        system_id:                  The system (site) id.
+
+    Usage:
+
+        >>> do_update("G4")
+    """
+
+    print("System update sequence initiated.")
+    logger.info("System update sequence initiated.")
+
+    if system_id != "NAS":
+        update_files("/home/pi")
+
+        #Reboot.
+        print("Sequence complete. Process successful. Rebooting now.")
+        logger.info("Sequence complete. Process successful. Rebooting now.")
+        logging.shutdown()
+        subprocess.run(["reboot"], check=False)
+
+    else:
+        #Wait until all the pis have downloaded the update.
+        #Restart database thread to check.
+        #FIXME We don't wait to make sure the DB connection is alive!
+        config.EXITING = False
+        DatabaseConnection(system_id)
+        config.DBCONNECTION.start_thread()
+
+        print("Waiting for pis to download the update...")
+        logger.info("Waiting for pis to download the update...")
+
+        done = []
+
+        while True:
+            for site_id in config.SITE_SETTINGS:
+                if site_id == "NAS" or site_id in done:
+                    continue
+
+                try:
+                    status = logiccoretools.get_status(site_id)
+
+                except RuntimeError:
+                    print("Error: Couldn't get "+site_id+" site status!")
+                    logger.error("Error: Couldn't get "+site_id+" site status!")
+                    continue
+
+                if status is not None:
+                    action = status[2].upper()
+
+                    if action == "UPDATING":
+                        print("Updated: "+site_id)
+                        logger.info("Updated: "+site_id)
+                        done.append(site_id)
+
+            #When all have grabbed the file (ignoring NAS), break out.
+            if done and len(done) == len(config.SITE_SETTINGS.keys()) - 1:
+                break
+
+            time.sleep(5)
+
+        print("All pis have updated. Updating now.")
+        logger.info("All pis have updated. Updating now.")
+
+        update_files("/mnt/HD/HD_a2")
+
+        #All pis have updated, now reboot the NAS box with the special script.
+        print("Sequence complete. Process successful. Rebooting now.")
+        logger.info("Sequence complete. Process successful. Rebooting now.")
+        logging.shutdown()
+        subprocess.run(["ash", "/home/admin/reboot.sh"], check=False)
+
+def update_files(instdir): #FIXME
+    """
+    This function moves the files around during a system update.
+
+    .. warning::
+            This is currently broken and sometimes doesn't behave deterministically.
+            Do not use.
+
+    Args:
+        instdir:                  The directory where the river control system is installed.
+
+    Usage:
+
+        >>> update_files("/home/pi")
+    """
+
+    #Move current software to rivercontrolsystem.old.
+    if os.path.exists(instdir+"/rivercontrolsystem.old"):
+        logger.info("Removing old software backup...")
+        shutil.rmtree(instdir+"/rivercontrolsystem.old")
+
+    logger.info("Backing up existing software to rivercontrolsystem.old...")
+    cmd = subprocess.run(["mv", instdir+"/rivercontrolsystem",
+                          instdir+"/rivercontrolsystem.old"],
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
+
+    stdout = cmd.stdout.decode("UTF-8", errors="ignore")
+
+    if cmd.returncode != 0:
+        #FIXME: Take appropriate action here.
+        print("Error! Unable to backup existing software. "
+              + "Error was:\n"+stdout+"\n")
+
+        logger.critical("Error! Unable to backup existing software. "
+                        + "Error was:\n"+stdout+"\n")
+
+    #Extract new software.
+    logger.info("Applying update...")
+    cmd = subprocess.run(["tar", "-xf", "/tmp/rivercontrolsystem.tar.gz", "-C",
+                          instdir],
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
+
+    stdout = cmd.stdout.decode("UTF-8", errors="ignore")
+
+    if cmd.returncode != 0:
+        #FIXME: Take appropriate action here.
+        print("Error! Unable to extract new software. "
+              + "Error was:\n"+stdout+"\n")
+
+        logger.critical("Error! Unable to extract new software. "
+                        + "Error was:\n"+stdout+"\n")
+
+    #Clean up.
+    logger.info("Removing downloaded tarball...")
+    if os.path.exists(instdir+"/rivercontrolsystem.tar.gz"):
+        os.remove(instdir+"/rivercontrolsystem.tar.gz")

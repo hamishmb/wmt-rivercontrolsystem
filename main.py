@@ -36,9 +36,6 @@ device.
 """
 
 import sys
-import os
-import shutil
-import subprocess
 import getopt
 import time
 import datetime
@@ -50,7 +47,6 @@ import config
 from Tools import coretools
 from Tools import monitortools
 from Tools import loggingtools
-from Tools import logiccoretools
 
 from Logic import controllogic
 
@@ -66,7 +62,7 @@ except ImportError:
     else:
         #Import dummy GPIO class to fake hardware access.
         print("WARNING: Running in test mode - hardware access simulated/disabled")
-        from Tools.testingtools import GPIO
+        from Tools.testingtools import GPIO #pylint: disable=ungrouped-imports
 
 def usage():
     """
@@ -174,13 +170,14 @@ def handle_cmdline_options():
 def run_standalone():
     """
     This is the main part of the program.
-    It imports everything required from the Tools package,
-    and sets up the sockets, sets up the sensor objects, and the
-    monitors, and connects to the database.
+    It coordinates setting up the sockets, the device objects, and the
+    monitors, and connecting to the database.
 
     After that, it enters a monitor loop and repeatedly checks for new
-    sensor data, and then calls the control logic function
+    sensor data, updates the database, and calls the control logic function
     to make decisions about what to do based on this data.
+
+    Finally, it coordiates clean shutdown of the river system when requested.
 
     Raises:
         Nothing, hopefully. It's possible that an unhandled exception
@@ -221,6 +218,7 @@ def run_standalone():
 
     #Welcome message.
     logger.info("River Control System Version "+config.VERSION+" ("+config.RELEASEDATE+")")
+    logger.info("System Time: "+str(datetime.datetime.now()))
     logger.info("System startup sequence initiated.")
 
     print("River Control System Version "+config.VERSION+" ("+config.RELEASEDATE+")")
@@ -312,15 +310,15 @@ def run_standalone():
             #coretools.prepare_sitewide_actions()
 
     except KeyboardInterrupt:
-        #Ask the threads to exit.
-        logger.info("Caught keyboard interrupt. Asking threads to exit...")
-        print("Caught keyboard interrupt. Asking threads to exit.")
-        print("This may take a little while, so please be patient...")
+        #Shutdown this site.
+        logger.info("Caught keyboard interrupt. System shutdown sequence initiated...")
+        print("Caught keyboard interrupt. System shutdown sequence initiated...")
 
     #This triggers shutdown of everything else - no explicit call to each thread is needed.
     #The code below simply makes it easier to monitor what is shutting down.
     config.EXITING = True
 
+    #Shutdown the monitors.
     for monitor in monitors:
         monitor.request_exit()
 
@@ -330,7 +328,7 @@ def run_standalone():
     for monitor in monitors:
         monitor.request_exit(wait=True)
 
-    #Always clean up properly.
+    #Shutdown the sockets.
     logger.info("Waiting for sockets to exit...")
     print("Waiting for sockets to exit...")
 
@@ -338,6 +336,7 @@ def run_standalone():
         each_socket.wait_for_handler_to_exit()
         each_socket.reset()
 
+    #Reset the GPIO pins.
     logger.info("Resetting GPIO pins...")
     print("Resetting GPIO pins...")
 
@@ -345,238 +344,20 @@ def run_standalone():
         #Reset GPIO pins.
         GPIO.cleanup()
 
+    elif config.TESTING:
+        logger.info("TEST MODE: GPIO shutdown skipped.")
+        print("TEST MODE: GPIO shutdown skipped.")
+
     #---------- Do shutdown, update and reboot if needed ----------
-    if config.SHUTDOWN:
-        print("Shutting down...")
-        logger.info("Shutting down...")
+    #TODO: Disabled as it isn't behaving reliably, uncomment when working.
+    #If there were any sitewide actions to do, the river control system will have
+    #shut down after the execution of this last function.
+    #coretools.do_sitewide_actions()
 
-        if system_id == "NAS" and not config.SHUTDOWNALL:
-            subprocess.run(["ash", "/home/admin/shutdown.sh"], check=False)
-
-        elif system_id == "NAS" and config.SHUTDOWNALL:
-            #Wait until all the pis have started to shut down.
-            #Restart database thread to check.
-            config.EXITING = False
-            coretools.DatabaseConnection(system_id)
-            config.DBCONNECTION.start_thread()
-
-            print("Waiting for pis to begin shutting down...")
-            logger.info("Waiting for pis to begin shutting down...")
-
-            done = []
-
-            while True:
-                for site_id in config.SITE_SETTINGS:
-                    if site_id == "NAS" or site_id in done:
-                        continue
-
-                    try:
-                        status = logiccoretools.get_status(site_id)
-
-                    except RuntimeError:
-                        print("Error: Couldn't get "+site_id+" site status!")
-                        logger.error("Error: Couldn't get "+site_id+" site status!")
-
-                    else:
-                        if status is not None:
-                            action = status[2]
-
-                            if action.upper() == "SHUTTING DOWN":
-                                print("Done: "+site_id)
-                                logger.info("Done: "+site_id)
-                                done.append(site_id)
-
-                #When all have shut down (ignoring NAS), break out.
-                if done and len(done) == len(config.SITE_SETTINGS.keys()) - 1:
-                    break
-
-                time.sleep(5)
-
-            subprocess.run(["ash", "/home/admin/shutdown.sh"], check=False)
-
-        else:
-            subprocess.run(["poweroff"], check=False)
-
-    elif config.REBOOT:
-        print("Restarting...")
-        logger.info("Restarting...")
-
-        if system_id == "NAS" and not config.REBOOTALL:
-            subprocess.run(["ash", "/home/admin/reboot.sh"], check=False)
-
-        elif system_id == "NAS" and config.REBOOTALL:
-            #Wait until all the pis have started to reboot.
-            #Restart database thread to check.
-            config.EXITING = False
-            coretools.DatabaseConnection(system_id)
-            config.DBCONNECTION.start_thread()
-
-            print("Waiting for pis to begin rebooting...")
-            logger.info("Waiting for pis to begin rebooting...")
-
-            done = []
-
-            while True:
-                for site_id in config.SITE_SETTINGS:
-                    if site_id == "NAS" or site_id in done:
-                        continue
-
-                    try:
-                        status = logiccoretools.get_status(site_id)
-
-                    except RuntimeError:
-                        print("Error: Couldn't get "+site_id+" site status!")
-                        logger.error("Error: Couldn't get "+site_id+" site status!")
-
-                    else:
-                        if status is not None:
-                            action = status[2]
-
-                            if action.upper() == "REBOOTING":
-                                print("Done: "+site_id)
-                                logger.info("Done: "+site_id)
-                                done.append(site_id)
-
-                #When all have rebooted (ignoring NAS), break out.
-                if done and len(done) == len(config.SITE_SETTINGS.keys()) - 1:
-                    break
-
-                time.sleep(5)
-
-            subprocess.run(["ash", "/home/admin/reboot.sh"], check=False)
-
-        else:
-            subprocess.run(["reboot"], check=False)
-
-    elif config.UPDATE:
-        print("Applying update...")
-        logger.info("Applying update...")
-
-        if system_id == "NAS":
-            #Wait until all the pis have downloaded the update.
-            #Restart database thread to check.
-            config.EXITING = False
-            coretools.DatabaseConnection(system_id)
-            config.DBCONNECTION.start_thread()
-
-            print("Waiting for pis to download the update...")
-            logger.info("Waiting for pis to download the update...")
-
-            done = []
-
-            while True:
-                for site_id in config.SITE_SETTINGS:
-                    if site_id == "NAS" or site_id in done:
-                        continue
-
-                    try:
-                        status = logiccoretools.get_status(site_id)
-
-                    except RuntimeError:
-                        print("Error: Couldn't get "+site_id+" site status!")
-                        logger.error("Error: Couldn't get "+site_id+" site status!")
-
-                    else:
-                        if status is not None:
-                            action = status[2]
-
-                            if action.upper() == "UPDATING":
-                                print("Done: "+site_id)
-                                logger.info("Done: "+site_id)
-                                done.append(site_id)
-
-                #When all have grabbed the file (ignoring NAS), break out.
-                if done and len(done) == len(config.SITE_SETTINGS.keys()) - 1:
-                    break
-
-                time.sleep(5)
-
-            #Move files into place.
-            if os.path.exists("/mnt/HD/HD_a2/rivercontrolsystem.old"):
-                logger.info("Removing old software backup...")
-                shutil.rmtree("/mnt/HD/HD_a2/rivercontrolsystem.old")
-
-            logger.info("Backing up existing software to rivercontrolsystem.old...")
-            cmd = subprocess.run(["mv", "/mnt/HD/HD_a2/rivercontrolsystem",
-                                  "/mnt/HD/HD_a2/rivercontrolsystem.old"],
-                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
-
-            stdout = cmd.stdout.decode("UTF-8", errors="ignore")
-
-            if cmd.returncode != 0:
-                print("Error! Unable to backup existing software. "
-                      + "Error was:\n"+stdout+"\n")
-
-                logger.critical("Error! Unable to backup existing software. "
-                                + "Error was:\n"+stdout+"\n")
-
-            logger.info("Extracting new software...")
-            cmd = subprocess.run(["tar", "-xf", "/mnt/HD/HD_a2/rivercontrolsystem.tar.gz", "-C",
-                                  "/mnt/HD/HD_a2"], stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT, check=False)
-
-            stdout = cmd.stdout.decode("UTF-8", errors="ignore")
-
-            if cmd.returncode != 0:
-                print("Error! Unable to extract new software. "
-                      + "Error was:\n"+stdout+"\n")
-
-                logger.critical("Error! Unable to extract new software. "
-                                + "Error was:\n"+stdout+"\n")
-
-            #Clean up.
-            if os.path.exists("/mnt/HD/HD_a2/rivercontrolsystem.tar.gz"):
-                logger.info("Removing software tarball...")
-                os.remove("/mnt/HD/HD_a2/rivercontrolsystem.tar.gz")
-
-            #Reboot.
-            print("Restarting...")
-            logger.info("Restarting...")
-            subprocess.run(["ash", "/home/admin/reboot.sh"], check=False)
-
-        else:
-            #Move files into place.
-            if os.path.exists("/mnt/HD/HD_a2/rivercontrolsystem.old"):
-                logger.info("Removing old software backup...")
-                shutil.rmtree("/mnt/HD/HD_a2/rivercontrolsystem.old")
-
-            logger.info("Backing up existing software to rivercontrolsystem.old...")
-            cmd = subprocess.run(["mv", "/home/pi/rivercontrolsystem",
-                                  "/home/pi/rivercontrolsystem.old"],
-                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
-
-            stdout = cmd.stdout.decode("UTF-8", errors="ignore")
-
-            if cmd.returncode != 0:
-                print("Error! Unable to backup existing software. "
-                      + "Error was:\n"+stdout+"\n")
-
-                logger.critical("Error! Unable to backup existing software. "
-                                + "Error was:\n"+stdout+"\n")
-
-            logger.info("Extracting new software...")
-            cmd = subprocess.run(["tar", "-xf", "/tmp/rivercontrolsystem.tar.gz", "-C",
-                                  "/home/pi"],
-                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
-
-            stdout = cmd.stdout.decode("UTF-8", errors="ignore")
-
-            if cmd.returncode != 0:
-                print("Error! Unable to extract new software. "
-                      + "Error was:\n"+stdout+"\n")
-
-                logger.critical("Error! Unable to extract new software. "
-                                + "Error was:\n"+stdout+"\n")
-
-            #Clean up.
-            if os.path.exists("/mnt/HD/HD_a2/rivercontrolsystem.tar.gz"):
-                logger.info("Removing software tarball...")
-                os.remove("/mnt/HD/HD_a2/rivercontrolsystem.tar.gz")
-
-            #Reboot.
-            print("Restarting...")
-            logger.info("Restarting...")
-            subprocess.run(["reboot"], check=False)
+    #If we reach this statement, we have shut down due to a user interrupt.
+    print("USER INTERRUPT: Sequence complete. Process successful. Shutting down now.")
+    logger.info("USER INTERRUPT: Sequence complete. Process successful. Shutting down now.")
+    logging.shutdown()
 
 def init_logging():
     """
