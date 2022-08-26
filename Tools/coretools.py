@@ -355,6 +355,7 @@ class SyncTime(threading.Thread):
         """The constructor"""
         threading.Thread.__init__(self)
         self.system_id = system_id
+        self.is_running = True
 
         self.start()
 
@@ -367,12 +368,16 @@ class SyncTime(threading.Thread):
             stdout = cmd.stdout.decode("UTF-8", errors="ignore")
 
             if cmd.returncode != 0:
-                logger.error("Unable to sync system time with NAS box. Error was: "+str(stdout))
-                print("Unable to sync system time with NAS box. Error was: "+str(stdout))
+                logger.error("SyncTime: Unable to sync system time with NAS box. "
+                             + "Error was: "+str(stdout))
+
+                print("SyncTime: Unable to sync system time with NAS box.",
+                      "Error was: "+str(stdout))
 
                 #If this isn't Sump Pi, try to sync with Sump Pi instead.
                 if self.system_id != "SUMP":
-                    logger.error("Falling back to Sump Pi...")
+                    print("SyncTime: Falling back to Sump Pi...")
+                    logger.error("SyncTime: Falling back to Sump Pi...")
 
                     cmd = subprocess.run(["sudo", "rdate",
                                           config.SITE_SETTINGS["SUMP"]["IPAddress"]],
@@ -382,26 +387,26 @@ class SyncTime(threading.Thread):
                     stdout = cmd.stdout.decode("UTF-8", errors="ignore")
 
                     if cmd.returncode != 0:
-                        logger.error("Unable to sync system time with Sump Pi. Error was: "
-                                     + str(stdout))
+                        logger.error("SyncTime: Unable to sync system time with Sump Pi. "
+                                     + "Error was: "+str(stdout))
 
-                        print("Unable to sync system time with Sump Pi. Error was: "
-                              + str(stdout))
+                        print("SyncTime: Unable to sync system time with Sump Pi. "
+                              + "Error was: "+str(stdout))
 
-                        logger.error("Retrying time sync in 10 seconds...")
+                        logger.error("SyncTime: Retrying time sync in 10 seconds...")
                         sleep = 10
 
                     else:
-                        logger.error("Retrying time sync in 10 seconds...")
+                        logger.error("SyncTime: Retrying time sync in 10 seconds...")
                         sleep = 10
 
                 else:
-                    logger.error("Retrying time sync in 10 seconds...")
+                    logger.error("SyncTime: Retrying time sync in 10 seconds...")
                     sleep = 10
 
             else:
-                logger.info("System time synchronised, now set to "+str(stdout))
-                print("System time synchronised, now set to "+str(stdout))
+                logger.info("SyncTime: System time synchronised, now set to "+str(stdout))
+                print("SyncTime: System time synchronised, now set to "+str(stdout))
                 sleep = 86400
 
             #Respond to system shutdown quickly.
@@ -410,6 +415,24 @@ class SyncTime(threading.Thread):
             while count < sleep and not config.EXITING:
                 count += 1
                 time.sleep(1)
+
+        #Signal that we have exited.
+        self.is_running = False
+
+    #----- CONTROL METHODS -----
+    def wait_exit(self):
+        """
+        This method is used to wait for the timesync thread to exit.
+
+        This isn't a mandatory function as the timesync thread will shut down
+        automatically when config.EXITING is set to True.
+
+        Usage:
+            >>> <SyncTimeObject>.wait_exit()
+        """
+
+        while self.is_running:
+            time.sleep(0.5)
 
 class MonitorLoad(threading.Thread):
     """
@@ -420,12 +443,13 @@ class MonitorLoad(threading.Thread):
     def __init__(self):
         """The constructor"""
         threading.Thread.__init__(self)
+        self.is_running = True
 
         self.start()
 
     def run(self):
         """The main body of the thread"""
-        #First time around, this returns a meaningless value, so discard it.
+        #The first time around, this returns a meaningless value, so discard it.
         psutil.cpu_percent()
 
         while not config.EXITING:
@@ -456,6 +480,24 @@ class MonitorLoad(threading.Thread):
             while count < sleep and not config.EXITING:
                 count += 1
                 time.sleep(1)
+
+        #Signal that we have exited.
+        self.is_running = False
+
+    #----- CONTROL METHODS -----
+    def wait_exit(self):
+        """
+        This method is used to wait for the monitorload thread to exit.
+
+        This isn't a mandatory function as the monitorload thread will shut down
+        automatically when config.EXITING is set to True.
+
+        Usage:
+            >>> <MonitorLoadObject>.wait_exit()
+        """
+
+        while self.is_running:
+            time.sleep(0.5)
 
 class DatabaseConnection(threading.Thread):
     """
@@ -1490,6 +1532,21 @@ class DatabaseConnection(threading.Thread):
                 + reading.get_value()+"""', '"""+reading.get_status()+"""');"""
 
         self.do_query(query, retries)
+
+    #----- CONTROL METHODS -----
+    def wait_exit(self):
+        """
+        This method is used to wait for the database thread to exit.
+
+        This isn't a mandatory function as the database thread will shut down
+        automatically when config.EXITING is set to True.
+
+        Usage:
+            >>> <DatabaseConnection>.wait_exit()
+        """
+
+        while self.is_running:
+            time.sleep(0.5)
 
 # -------------------- CONTROL LOGIC FUNCTIONS AND CLASSES --------------------
 #NB: Moved to /Logic/

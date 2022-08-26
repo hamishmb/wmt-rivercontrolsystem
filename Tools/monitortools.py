@@ -456,29 +456,22 @@ class BaseMonitorClass(threading.Thread):
         return previous_reading, should_continue
 
     #----- CONTROL METHODS -----
-    def request_exit(self, wait=False):
+    def wait_exit(self):
         """
-        This method is used to ask the monitor thread to exit. It can also wait
-        for the monitor thread to exit before returning if you specify a special
-        argument.
+        This method is used to wait for the monitor thread to exit.
 
-        KWargs:
-            wait (bool):    Whether to wait for the thread to exit before returning.
-                            Default: False.
+        This isn't a mandatory function as the monitor thread will shut down
+        automatically when config.EXITING is set to True.
 
         Usage:
-            >>> <BaseMonitorClassObject>.request_exit() //Don't wait for thread to exit.
-
-            OR:
-
-            >>> <BaseMonitorClassObject>.request_exit() //Wait for thread to exit.
+            >>> <BaseMonitorClassObject>.wait_exit()
         """
 
-        self.reading_interval = 0 #Helps thread to react faster.
+        #Helps thread to react faster.
+        self.reading_interval = 0
 
-        if wait:
-            while self.running:
-                time.sleep(0.5)
+        while self.running:
+            time.sleep(0.5)
 
 # ---------- Universal Monitor ----------
 class Monitor(BaseMonitorClass):

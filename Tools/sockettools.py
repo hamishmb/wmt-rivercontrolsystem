@@ -317,7 +317,7 @@ class Sockets:
 
         return temp
 
-    def wait_for_handler_to_exit(self):
+    def wait_exit(self):
         """
         This method waits for the handler to exit. Useful when e.g. doing clean-up,
         when you want to shut down the socket gracefully.
@@ -328,7 +328,7 @@ class Sockets:
 
         Usage:
 
-            >>> <Sockets-Obj>.wait_for_handler_to_exit()
+            >>> <Sockets-Obj>.wait_exit()
         """
 
 
@@ -340,7 +340,7 @@ class Sockets:
         This method can be used to check whether the handler has exited. Often useful
         when trying to detect and handle errors; the handler thread may exit if it
         encounters an error it can't recover from. Also useful if you, for some
-        reason, don't want to/can't use wait_for_handler_to_exit().
+        reason, don't want to/can't use wait_exit().
 
         Usage:
 
@@ -1061,4 +1061,5 @@ class SocketHandlerThread(threading.Thread):
 
         #Flag that we've exited.
         logger.info("Sockets.Handler(): ("+self.socket.name+"): Exiting as per the request...")
+        self.socket.reset()
         self.socket.handler_exited = True

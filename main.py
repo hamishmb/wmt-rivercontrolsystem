@@ -19,19 +19,18 @@
 #Reason (logging-not-lazy): Harder to understand the logging statements that way.
 
 """
-This is the main part of the control software, and it currently manages
-balancing water between the wendy butts and the sump. Further functionality
-will be added shortly with more control logic functions.
+This is the executable that is run to start the river control system software.
 
-This software runs on all the pis, and the NAS box, and the configuration in
-config.py determines (for the most part) what actions are taken on each different
-device.
+This software runs on all the sites, and the configuration in
+config.py determines what actions are taken on each different
+site.
 
 .. module:: main.py
     :platform: Linux
-    :synopsis: The main part of the control software.
+    :synopsis: The executable that starts the control software.
 
 .. moduleauthor:: Hamish McIntyre-Bhatty <contact@hamishmb.com>
+.. moduleauthor:: Patrick Wigmore <pwbugreports@gmx.com>
 
 """
 
@@ -61,7 +60,6 @@ except ImportError:
 
     else:
         #Import dummy GPIO class to fake hardware access.
-        print("WARNING: Running in test mode - hardware access simulated/disabled")
         from Tools.testingtools import GPIO #pylint: disable=ungrouped-imports
 
 def usage():
@@ -95,7 +93,8 @@ def usage():
 def handle_cmdline_options():
     """
     This function is used to handle the commandline options passed
-    to main.py.
+    to main.py. It also sets config.SYSTEM_ID to the site ID passed
+    over the commandline.
 
     Valid commandline options to main.py:
         See usage function in source code, or run main.py with the -h flag.
@@ -137,6 +136,7 @@ def handle_cmdline_options():
         elif opt in ("-t", "--testing"):
             #Enable testing mode.
             testing = True
+            print("WARNING: Running in testing mode, hardware access simulated/disabled...")
             logger.critical("Running in testing mode, hardware access simulated/disabled...")
 
         elif opt in ["-d", "--debug"]:
@@ -161,21 +161,22 @@ def handle_cmdline_options():
     #Check system ID is valid.
     assert system_id in config.SITE_SETTINGS, "Invalid system ID"
 
-    #Disable test mode if not specified.
-    if not testing:
-        config.TESTING = False
+    config.TESTING = testing
+
+    config.SYSTEM_ID = system_id
 
     return system_id
 
-def run_standalone():
+def run():
     """
     This is the main part of the program.
     It coordinates setting up the sockets, the device objects, and the
     monitors, and connecting to the database.
 
-    After that, it enters a monitor loop and repeatedly checks for new
-    sensor data, updates the database, and calls the control logic function
-    to make decisions about what to do based on this data.
+    After that, it enters a monitor loop and coordinates repeatedly
+    checking for new sensor data, updating the database, and calling
+    the control logic function to make decisions about what to do based
+    on this data.
 
     Finally, it coordiates clean shutdown of the river system when requested.
 
@@ -185,7 +186,7 @@ def run_standalone():
         you call this function like this at the current time:
 
         >>> try:
-        >>>     run_standalone()
+        >>>     run()
         >>>
         >>> except:
         >>>     #Handle the error and put it in the log file for debugging purposes.
@@ -198,10 +199,24 @@ def run_standalone():
 
     #Handle cmdline options.
     system_id = handle_cmdline_options()
-    config.SYSTEM_ID = system_id
 
     #Reconfigure logging for modules imported before we set the logger up.
     config.reconfigure_logging()
+
+    #Welcome message.
+    logger.info("River Control System Version "+config.VERSION+" ("+config.RELEASEDATE+")")
+    logger.info("System Time: "+str(datetime.datetime.now()))
+    logger.info("System startup sequence initiated.")
+
+    print("River Control System Version "+config.VERSION+" ("+config.RELEASEDATE+")")
+    print("System Time:", str(datetime.datetime.now()))
+    print("System startup sequence initiated.")
+
+    #Get the default reading interval for this site.
+    reading_interval = config.SITE_SETTINGS[system_id]["Default Interval"]
+
+    #Make a readings dictionary for temporary storage for the control logic function.
+    readings = {}
 
     #The NAS box needs more time to stabilise before we continue.
     #Wait another minute.
@@ -213,75 +228,15 @@ def run_standalone():
             time.sleep(60)
 
         except KeyboardInterrupt:
-            print("Skipping as requested by user...")
-            logger.info("Skipping as requested by user...")
+            print("NAS box wait skipped as requested by user.")
+            logger.info("NAS box wait skipped as requested by user.")
 
-    #Welcome message.
-    logger.info("River Control System Version "+config.VERSION+" ("+config.RELEASEDATE+")")
-    logger.info("System Time: "+str(datetime.datetime.now()))
-    logger.info("System startup sequence initiated.")
+    #Run setup code.
+    sockets, nas_socket, monitors, devices, dbconn, timesync, loadmonitor = \
+        do_setup(system_id, reading_interval)
 
-    print("River Control System Version "+config.VERSION+" ("+config.RELEASEDATE+")")
-    print("System Time: ", str(datetime.datetime.now()))
-    print("System startup sequence initiated.")
-
-    #If this isn't the NAS box, start synchronising time with the NAS box.
-    if system_id != "NAS":
-        coretools.SyncTime(system_id)
-
-    #Start monitoring system load.
-    coretools.MonitorLoad()
-
-    #Create the socket(s).
-    sockets, local_socket = coretools.setup_sockets(system_id)
-
-    if "SocketName" in config.SITE_SETTINGS[system_id]:
-        print("Will connect to NAS box as soon as connection is available.")
-
-    #Create the probe(s).
-    probes = coretools.setup_devices(system_id)
-
-    #Create the device(s).
-    devices = coretools.setup_devices(system_id, dictionary="Devices")
-
-    #Default reading interval for all probes.
-    reading_interval = config.SITE_SETTINGS[system_id]["Default Interval"]
-
-    logger.info("Connecting to database...")
-    print("Connecting to database...")
-
-    coretools.DatabaseConnection(system_id)
-    config.DBCONNECTION.start_thread()
-
-    if system_id != "NAS":
-        #Wait a little while for the system tick on boot on everything except the NAS box.
-        coretools.wait_for_tick(local_socket)
-
-    time.sleep(5)
-
-    logger.info("Starting to take readings...")
-    print("Starting to take readings. Please stand by...")
-
-    monitors = []
-
-    #Start monitor threads for our local probes.
-    for probe in probes:
-        monitors.append(monitortools.Monitor(probe, reading_interval, system_id))
-
-    #Add monitor for the gate valve if needed.
-    if system_id[0] == "V":
-        for device in devices:
-            monitors.append(monitortools.Monitor(device, reading_interval, system_id))
-
-    #Make a readings dictionary for temporary storage for the control logic function.
-    readings = {}
-
-    #Run logic set-up function, if it exists.
-    if "ControlLogicSetupFunction" in config.SITE_SETTINGS[system_id]:
-        function = getattr(controllogic,
-                           config.SITE_SETTINGS[system_id]["ControlLogicSetupFunction"])
-
-        function()
+    logger.info("Entering main loop...")
+    print("Entering main loop...")
 
     #Enter main loop.
     try:
@@ -302,7 +257,7 @@ def run_standalone():
 
             #Count down the reading interval.
             coretools.wait_for_next_reading_interval(reading_interval, system_id,
-                                                     local_socket, sockets)
+                                                     nas_socket, sockets)
 
             #Check if shutdown, reboot, or update have been requested.
             #NOTE: config.EXITING is shut if so, ending the main loop.
@@ -311,30 +266,165 @@ def run_standalone():
 
     except KeyboardInterrupt:
         #Shutdown this site.
-        logger.info("Caught keyboard interrupt. System shutdown sequence initiated...")
-        print("Caught keyboard interrupt. System shutdown sequence initiated...")
+        logger.info("Caught keyboard interrupt. System teardown sequence initiated...")
+        print("\nCaught keyboard interrupt. System teardown sequence initiated...")
 
-    #This triggers shutdown of everything else - no explicit call to each thread is needed.
-    #The code below simply makes it easier to monitor what is shutting down.
+    do_teardown(devices, monitors, sockets, timesync, loadmonitor, dbconn)
+
+    #---------- Do shutdown, update and reboot if needed ----------
+    #TODO: Disabled as it isn't behaving reliably, uncomment when working.
+    #If there were any sitewide actions to do, the river control system will have
+    #shut down after the execution of this last function.
+    #coretools.do_sitewide_actions()
+
+    #If we reach this statement, we have shut down due to a user interrupt.
+    print("USER INTERRUPT: Sequence complete. Process successful. Software exiting now.")
+    logger.info("USER INTERRUPT: Sequence complete. Process successful. Software exiting now.")
+    logging.shutdown()
+
+def do_setup(system_id, reading_interval):
+    """
+    This function starts synchronising the system time with the NAS box,
+    sets up the sockets, the device objects, the monitors, and connects
+    to the database.
+
+    Args:
+        system_id (String):             The site ID of this pi.
+        reading_interval (int):         The default reading interval of this site.
+
+    Returns:
+        A list with the following members:
+
+        1. list<Socket>.                A list of all the sockets for this site.
+        2. Socket.                      The socket that connects to the NAS box (or False).
+        3. list<BaseMonitorClass>.      A list of all the monitors for this site.
+        4. list<BaseDeviceClass>.       A list of all the devices for this site.
+        5. DatabaseConnection.          The database connection thread.
+        6. SyncTime.                    The time syncing thread.
+        7. MonitorLoad.                 The load monitoring thread.
+
+    Usage:
+        >>> sockets, nas_socket, monitors, devices, dbconn, timesync, loadmonitor = \
+        >>> do_teardown("G6", 30)
+
+    """
+    #If this isn't the NAS box, start synchronising time with the NAS box.
+    if system_id != "NAS":
+        timesync = coretools.SyncTime(system_id)
+
+    #Start monitoring system load.
+    loadmonitor = coretools.MonitorLoad()
+
+    #Create the socket(s).
+    sockets, nas_socket = coretools.setup_sockets(system_id)
+
+    if "SocketName" in config.SITE_SETTINGS[system_id]:
+        logger.info("Will connect to NAS box as soon as connection is available.")
+        print("Will connect to NAS box as soon as connection is available.")
+
+    #Create the probe(s).
+    probes = coretools.setup_devices(system_id)
+
+    #Create the device(s).
+    devices = coretools.setup_devices(system_id, dictionary="Devices")
+
+    logger.info("Connecting to database...")
+    print("Connecting to database...")
+
+    dbconn = coretools.DatabaseConnection(system_id)
+    config.DBCONNECTION.start_thread()
+
+    if system_id != "NAS":
+        #Wait a little while for the system tick on boot on everything except the NAS box.
+        coretools.wait_for_tick(nas_socket)
+
+    #Start monitor threads for our local probes.
+    monitors = []
+
+    for probe in probes:
+        monitors.append(monitortools.Monitor(probe, reading_interval, system_id))
+
+    #Add monitor for the gate valve actuator if this is a gate valve pi.
+    if system_id[0] == "V":
+        for device in devices:
+            monitors.append(monitortools.Monitor(device, reading_interval, system_id))
+
+    #Run control logic set-up function, if it exists.
+    if "ControlLogicSetupFunction" in config.SITE_SETTINGS[system_id]:
+        function = getattr(controllogic,
+                           config.SITE_SETTINGS[system_id]["ControlLogicSetupFunction"])
+
+        function()
+
+    return sockets, nas_socket, monitors, devices, dbconn, timesync, loadmonitor
+
+def do_teardown(devices, monitors, sockets, timesync, loadmonitor, dbconn):
+    """
+    This function tears down the system, performing all tasks needed to get the river
+    control system ready to be shut down cleanly. This includes the following tasks:
+
+    - Setting config.EXITING to True to request all river control system threads to stop.
+    - Waiting for the timesyncing service to stop.
+    - Waiting for the load monitoring service to stop.
+    - Waiting for the database connection to disconnect.
+    - Waiting for all sockets to disconnect.
+    - Waiting for any device management threads to stop.
+    - Waiting for all device monitors to stop.
+    - Cleaning up the GPIO pins (if on a pi).
+
+    Args:
+        devices (list<BaseDeviceClass>):        A list of all the devices for this site.
+        monitors (list<BaseMonitorClass>):      A list of all the monitors for this site.
+        sockets (list<Socket>):                 A list of all the sockets for this site.
+        timesync (SyncTime):                    The time syncing thread.
+        loadmonitor (MonitorLoad):              The load monitoring thread.
+        dbconn (DatabaseConnection):            The database connection thread.
+
+    Usage:
+        >>> do_teardown(list<BaseMonitorClass>, list<Socket>, <SyncTime<, <MonitorLoad>,
+        >>>             <DatabaseConnection>)
+
+    """
+    #This triggers teardown of everything else - no explicit call to each thread is needed.
+    #The rest of the code below simply monitors the progress.
     config.EXITING = True
 
-    #Shutdown the monitors.
-    for monitor in monitors:
-        monitor.request_exit()
+    #Wait for the timesync service to exit.
+    logger.info("Waiting for timesync service to exit...")
+    print("Waiting for timesync service to exit...")
+    timesync.wait_exit()
 
-    logger.info("Waiting for monitor threads to exit...")
-    print("Waiting for monitor threads to exit...")
+    #Wait for load monitor service to exit.
+    logger.info("Waiting for load monitor service to exit...")
+    print("Waiting for load monitor service to exit...")
+    loadmonitor.wait_exit()
 
-    for monitor in monitors:
-        monitor.request_exit(wait=True)
+    #Wait for the database connection to exit.
+    logger.info("Waiting for database connection to exit...")
+    print("Waiting for database connection to exit...")
+    dbconn.wait_exit()
 
-    #Shutdown the sockets.
-    logger.info("Waiting for sockets to exit...")
-    print("Waiting for sockets to exit...")
+    #Wait for the sockets to exit.
+    logger.info("Waiting for socket(s) to exit...")
+    print("Waiting for socket(s) to exit...")
 
     for each_socket in sockets.values():
-        each_socket.wait_for_handler_to_exit()
-        each_socket.reset()
+        each_socket.wait_exit()
+
+    #Wait for any device management threads to exit.
+    logger.info("Waiting for device management thread(s) to exit...")
+    print("Waiting for device management thread(s) to exit...")
+    for device in devices:
+        if device.has_mgmt_thread():
+            print("bob")
+            device.mgmt_thread.wait_exit()
+
+    #Wait for the monitors to exit.
+    logger.info("Waiting for monitor(s) to exit...")
+    print("Waiting for monitor(s) to exit...")
+
+    for monitor in monitors:
+        monitor.wait_exit()
 
     #Reset the GPIO pins.
     logger.info("Resetting GPIO pins...")
@@ -345,19 +435,8 @@ def run_standalone():
         GPIO.cleanup()
 
     elif config.TESTING:
-        logger.info("TEST MODE: GPIO shutdown skipped.")
-        print("TEST MODE: GPIO shutdown skipped.")
-
-    #---------- Do shutdown, update and reboot if needed ----------
-    #TODO: Disabled as it isn't behaving reliably, uncomment when working.
-    #If there were any sitewide actions to do, the river control system will have
-    #shut down after the execution of this last function.
-    #coretools.do_sitewide_actions()
-
-    #If we reach this statement, we have shut down due to a user interrupt.
-    print("USER INTERRUPT: Sequence complete. Process successful. Shutting down now.")
-    logger.info("USER INTERRUPT: Sequence complete. Process successful. Shutting down now.")
-    logging.shutdown()
+        logger.info("TEST MODE: GPIO reset skipped.")
+        print("TEST MODE: GPIO reset skipped.")
 
 def init_logging():
     """
@@ -393,7 +472,7 @@ if __name__ == "__main__":
 
     #Catch any unexpected errors and log them so we know what happened.
     try:
-        run_standalone()
+        run()
 
     except Exception:
         logger.critical("Unexpected error \n\n"+str(traceback.format_exc())

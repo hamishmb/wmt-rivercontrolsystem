@@ -583,7 +583,7 @@ class TestGateValve(unittest.TestCase):
         self.gatevalve.start_thread()
 
         for position in range(0, 100):
-            self.gatevalve.control_thread.position = position
+            self.gatevalve.mgmt_thread.position = position
             self.assertEqual(self.gatevalve.get_reading(), (position, "OK"))
 
     #---------- SETTER TESTS ----------
@@ -594,7 +594,7 @@ class TestGateValve(unittest.TestCase):
 
         for position in range(0, 100):
             self.gatevalve.set_position(position)
-            self.assertEqual(self.gatevalve.control_thread.position, position)
+            self.assertEqual(self.gatevalve.mgmt_thread.position, position)
 
     def test_set_position_2(self):
         """Test that the set_position() method fails with negative values"""
@@ -603,7 +603,7 @@ class TestGateValve(unittest.TestCase):
 
         for i in range(-100, 0):
             self.gatevalve.set_position(i)
-            self.assertEqual(self.gatevalve.control_thread.position, 0)
+            self.assertEqual(self.gatevalve.mgmt_thread.position, 0)
 
     def test_set_position_3(self):
         """Test that the set_position() method fails with values greater than 100"""
@@ -612,7 +612,7 @@ class TestGateValve(unittest.TestCase):
 
         for i in range(101, 500):
             self.gatevalve.set_position(i)
-            self.assertEqual(self.gatevalve.control_thread.position, 100)
+            self.assertEqual(self.gatevalve.mgmt_thread.position, 100)
 
     def test_set_position_4(self):
         """Test that the set_position() method fails with values of the wrong type"""

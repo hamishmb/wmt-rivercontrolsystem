@@ -137,6 +137,7 @@ class ManageHallEffectProbe(threading.Thread):
         #For debugging.
         self.count = 0
 
+        self.is_running = True
         self.start()
 
     def run(self):
@@ -160,6 +161,9 @@ class ManageHallEffectProbe(threading.Thread):
 
             if config.DEBUG:
                 self.count += 1
+
+        #Signal that we have exited.
+        self.is_running = False
 
     def get_compensated_probe_voltages(self):
         """
@@ -290,6 +294,21 @@ class ManageHallEffectProbe(threading.Thread):
 
         return level
 
+    #----- CONTROL METHODS -----
+    def wait_exit(self):
+        """
+        This method is used to wait for the management thread to exit.
+
+        This isn't a mandatory function as the management thread will shut down
+        automatically when config.EXITING is set to True.
+
+        Usage:
+            >>> <ManageHallEffectProbeObject>.wait_exit()
+        """
+
+        while self.is_running:
+            time.sleep(0.5)
+
 class ManageGateValve(threading.Thread):
     """
     This class is used to energise and position the Actuator Motor that drives a Gate Valve
@@ -308,13 +327,12 @@ class ManageGateValve(threading.Thread):
 
     def __init__(self, valve, i2c_address):
         """The constructor, set up some basic threading stuff."""
+        threading.Thread.__init__(self)
         #Store a reference to the GateValve object.
         self.valve = valve
 
         # Create the ADC object using the I2C bus
         self.ads = ADS.ADS1115(I2C, address=i2c_address)
-
-        self._exit = False
 
         #Set the valve closed initially.
         self.percentage = 0
@@ -331,7 +349,7 @@ class ManageGateValve(threading.Thread):
         #Create a lock (or mutex) for the A2D.
         self.ads_lock = threading.RLock()
 
-        threading.Thread.__init__(self)
+        self.is_running = True
 
         self.start()
 
@@ -380,6 +398,7 @@ class ManageGateValve(threading.Thread):
                 GPIO.output(self.valve.reverse_pin, GPIO.HIGH)
 
             else:
+                #FIXME Is this a good way to handle this situation?
                 logger.critical("ManageGateValve: Critical error: valve is not "
                                 + "in any of the three states!")
 
@@ -399,6 +418,9 @@ class ManageGateValve(threading.Thread):
                 break
 
         self.clutch_disengage()
+
+        #Signal that we have exited.
+        self.is_running = False
 
     def calculate_limits(self):
         """
@@ -538,3 +560,18 @@ class ManageGateValve(threading.Thread):
         """
 
         GPIO.output(self.valve.clutch_pin, GPIO.LOW)
+
+    #----- CONTROL METHODS -----
+    def wait_exit(self):
+        """
+        This method is used to wait for the management thread to exit.
+
+        This isn't a mandatory function as the management thread will shut down
+        automatically when config.EXITING is set to True.
+
+        Usage:
+            >>> <ManageGateValveObject>.wait_exit()
+        """
+
+        while self.is_running:
+            time.sleep(0.5)

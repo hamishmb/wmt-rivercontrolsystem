@@ -137,6 +137,7 @@ class BaseDeviceClass:
         self._pin = -1                      #Needs to be set/deleted.
         self._pins = []                     #Needs to be set/deleted.
         self._reverse_pins = []             #Needs to be set/deleted.
+        self.mgmt_thread = None            #Holds a reference to the management thread, if any.
 
     # ---------- INFO GETTER METHODS ----------
     def get_device_id(self):
@@ -193,6 +194,20 @@ class BaseDeviceClass:
             >>> a_name = <Device-Object>.get_name()
         """
         return self._name
+
+    def has_mgmt_thread(self):
+        """
+        This method provides a simple way to check if this device has a management thread.
+
+        Returns:
+            bool. Whether or not the device has a management thread.
+
+        Usage:
+
+            >>> <BaseDeviceClass>.has_mgmt_thread()
+            >>> False
+        """
+        return self.mgmt_thread is not None
 
     # ---------- INFO SETTER METHODS ----------
     def set_pins(self, pins, _input=True):
@@ -646,7 +661,8 @@ class HallEffectProbe(BaseDeviceClass):
     Documentation for the constructor for objects of type HallEffectProbe:
 
     Usage:
-        >>> probe = deviceobjects.HallEffectProbe(<a_time>, <a_tick>, <an_id>, <a_value>, <a_status>)
+        >>> probe = deviceobjects.HallEffectProbe(<a_time>, <a_tick>, <an_id>,
+        >>>                                       <a_value>, <a_status>)
 
     """
 
@@ -665,10 +681,11 @@ class HallEffectProbe(BaseDeviceClass):
         self.depths = None                         #The multidimensional list of 4 rows or depths.
         self.length = None                         #The number of sensors in each stack.
         self.i2c_address = None                    #The i2c address of the probe.
+        self.mgmt_thread = True                   #We do have a management thread.
 
     def start_thread(self):
         """Start the thread to keep polling the probe."""
-        device_mgmt.ManageHallEffectProbe(self, self.i2c_address)
+        self.mgmt_thread = device_mgmt.ManageHallEffectProbe(self, self.i2c_address)
 
     def set_address(self, i2c_address):
         """
@@ -845,8 +862,6 @@ class GateValve(BaseDeviceClass):
         """This is the constructor"""
         BaseDeviceClass.__init__(self, _id, _name)
 
-        self.control_thread = None
-
         self.forward_pin = None #The pin to set the motor direction to backwards (opening gate).
         self.reverse_pin = None #The pin to set the motor direction to backwards (closing gate).
         self.clutch_pin = None #The pin to engage the clutch.
@@ -857,6 +872,7 @@ class GateValve(BaseDeviceClass):
 
         self.ref_voltage = None #Reference voltage.
         self.i2c_address = None #The hardware address for the A2D (ADC)
+        self.mgmt_thread = True                   #We do have a management thread.
 
     def set_pins(self, pins, _input=False):
         """Wrapper for BaseDeviceClass that also sets forward_pin, reverse_pin, and clutch_pin."""
@@ -969,7 +985,7 @@ class GateValve(BaseDeviceClass):
 
     def start_thread(self):
         """Start the thread to manage the thread."""
-        self.control_thread = device_mgmt.ManageGateValve(self, self.i2c_address)
+        self.mgmt_thread = device_mgmt.ManageGateValve(self, self.i2c_address)
 
     def get_pos_tolerance(self):
         """
@@ -1044,7 +1060,7 @@ class GateValve(BaseDeviceClass):
             >>> <GateValve-Object>.get_requested_position()
             >>> 50
         """
-        return self.control_thread.get_requested_position()
+        return self.mgmt_thread.get_requested_position()
 
     # ---------- CONTROL METHODS ----------
     def set_position(self, percentage):
@@ -1071,7 +1087,7 @@ class GateValve(BaseDeviceClass):
         percentage = min(percentage, 100)
         percentage = max(percentage, 0)
 
-        self.control_thread.set_position(percentage)
+        self.mgmt_thread.set_position(percentage)
 
     def get_reading(self):
         """
@@ -1103,4 +1119,4 @@ class GateValve(BaseDeviceClass):
 
         """
 
-        return (self.control_thread.get_current_position(), "OK")
+        return (self.mgmt_thread.get_current_position(), "OK")
