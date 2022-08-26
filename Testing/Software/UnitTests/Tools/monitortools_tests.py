@@ -376,17 +376,13 @@ class TestBaseMonitorClass(unittest.TestCase):
 
     #TODO Test that manage_rotation works when rotation is due.
 
-    def test_request_exit_1(self):
-        """Test that requesting exit without waiting works"""
-        self.basemonitor.request_exit()
-
-    def test_request_exit_2(self):
-        """Test that requesting exit and waiting works"""
+    def test_wait_exit(self):
+        """Test that waiting for the thread to exit works (slow test)"""
         self.basemonitor.running = True
 
         #Schedule the exit flag to be set in 10 seconds.
         threading.Timer(10, self.set_exited_flag).start()
-        self.basemonitor.request_exit(wait=True)
+        self.basemonitor.wait_exit()
 
 class TestMonitor(unittest.TestCase):
     """

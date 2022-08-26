@@ -142,7 +142,6 @@ class TestManageGateValve(unittest.TestCase):
         mgmtclass = device_mgmt.ManageGateValve(valve, 0x48)
 
         #Check that variables were set correctly by the constructor.
-        self.assertFalse(mgmtclass._exit)
         self.assertEqual(mgmtclass.percentage, 0)
 
         #NOTE: The other three variables are changed immediately and are not trivial to determine.

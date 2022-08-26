@@ -545,20 +545,6 @@ class TestSumpPiControlLogic(unittest.TestCase):
 
     @unittest.expectedFailure
     def test_sumppi_logic_exceptional_2(self):
-        """Test this fails when the readings are None."""
-        #Create reading objects.
-        readings = {}
-        readings["SUMP:M0"] = None
-
-        #Prepare fake logiccoretools readings.
-        data.readings["G4:M0"] = [None]
-        data.readings["G4:FS0"] = [None]
-
-        reading_interval = control_logic.sumppi_logic(readings, self.devices,
-                                                      self.monitors, self.reading_interval)
-
-    @unittest.expectedFailure
-    def test_sumppi_logic_exceptional_3(self):
         """Test this fails when the butts float switch reading is a string of nonsense."""
         #Create reading objects.
         readings = {}
@@ -571,7 +557,7 @@ class TestSumpPiControlLogic(unittest.TestCase):
         reading_interval = control_logic.sumppi_logic(readings, self.devices,
                                                       self.monitors, self.reading_interval)
     @unittest.expectedFailure
-    def test_sumppi_logic_exceptional_4(self):
+    def test_sumppi_logic_exceptional_3(self):
         """Test this fails when the level readings are not integers."""
         #Create reading objects.
         readings = {}

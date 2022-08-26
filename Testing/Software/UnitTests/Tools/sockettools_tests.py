@@ -256,17 +256,17 @@ class TestSockets(unittest.TestCase):
             #This resets to False after it has been called.
             self.assertFalse(self.socket.just_reconnected())
 
-    def test_wait_for_handler_to_exit_1(self):
+    def test_wait_exit_1(self):
         """Test #1: Test this works as expected when handler has just exited"""
         self.socket.handler_exited = True
 
-        self.socket.wait_for_handler_to_exit()
+        self.socket.wait_exit()
 
-    def test_wait_for_handler_to_exit_2(self):
+    def test_wait_exit_2(self):
         """Test #2: Test this works as expected when handler takes 10 seconds to exit."""
         #Schedule the exit flag to be set in 10 seconds.
         threading.Timer(10, self.set_exited_flag).start()
-        self.socket.wait_for_handler_to_exit()
+        self.socket.wait_exit()
 
     def test_handler_has_exited_1(self):
         """Test #1: Test this works as expected."""
