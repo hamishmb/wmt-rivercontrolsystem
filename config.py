@@ -318,7 +318,7 @@ SITE_SETTINGS = {
 
         },
 
-    #Settings for the G3 site (client pi behind the Lady Hanham Building).
+    #Settings for the G3 site (pi behind the Lady Hanham Building).
     "G3":
         {
             "Type": "Site",
@@ -472,7 +472,7 @@ SITE_SETTINGS = {
             "SocketID": "SOCK3"
         },
 
-    #Settings for the G4 site (client pi at Wendy Street).
+    #Settings for the G4 site (pi at Wendy Street).
     "G4":
         {
             "Type": "Site",
@@ -551,7 +551,7 @@ SITE_SETTINGS = {
             "SocketID": "SOCK4"
         },
 
-    #Settings for the G6 site (client pi behind the stage).
+    #Settings for the G6 site (pi behind the stage).
     "G6":
         {
             "Type": "Site",

@@ -733,9 +733,9 @@ class Sockets:
             self.out_queue.popleft()
 
         except OSError:
-            #Assume that network is down or client gone. Recreate the socket.
+            #Assume that network is down or peer is gone. Recreate the socket.
             logger.error("Sockets._send_pending_messages(): ("+self.name
-                         + "): Connection closed or client gone. "
+                         + "): Connection closed or peer gone. "
                          + "Error was:\n\n"+str(traceback.format_exc())
                          + "\n\nAttempting to reconnect...")
 
