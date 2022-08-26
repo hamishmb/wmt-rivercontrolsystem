@@ -104,8 +104,8 @@ class BaseMonitorClass(threading.Thread):
         #The time the readings file will expire.
         self.midnight_tonight = None
 
-        #Default reading interval. This will immediately be overridden by the
-        #master pi in practice.
+        #Default reading interval. This will be overridden by the site-wide
+        #interval later.
         self.reading_interval = 0
 
         #The outgoing queue for readings collected by this thread.

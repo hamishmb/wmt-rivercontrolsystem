@@ -278,9 +278,8 @@ class ControlStateMachineABC(metaclass=ABCMeta):
         Args:
             readings (list):                A list of the latest readings for each probe/device.
 
-            devices  (list):                A list of all master pi device objects.
-
-            monitors (list):                A list of all master pi monitor objects.
+            devices  (list):                A list of all local device objects.
+            monitors (list):                A list of all local monitor objects.
 
             sockets (list of Socket):       A list of Socket objects that represent
                                             the data connections between pis. Passed

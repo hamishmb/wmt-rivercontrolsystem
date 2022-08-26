@@ -103,9 +103,9 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
     Args:
         readings (list):                A list of the latest readings for each probe/device.
 
-        devices  (list):                A list of all master pi device objects.
+        devices  (list):                A list of all local device objects.
 
-        monitors (list):                A list of all master pi monitor objects.
+        monitors (list):                A list of all local monitor objects.
 
         reading_interval (int):         The current reading interval, in
                                         seconds.
@@ -672,10 +672,8 @@ def sumppi_water_backup_control_logic(readings, devices, monitors, reading_inter
         readings (list):             A list of the latest readings for
                                      each probe/device.
 
-        devices  (list):             A list of all master pi device
-                                     objects.
-
-        monitors (list):                A list of all master pi monitor objects.
+        devices  (list):             A list of all local device objects.
+        monitors (list):             A list of all local monitor objects.
 
         reading_interval (int):     The current reading interval, in
                                     seconds.

@@ -156,9 +156,7 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
         readings (list):            A list of the latest readings for
                                     each probe/device.
 
-        devices  (list):            A list of all master pi device
-                                    objects.
-
+        devices  (list):            A list of all local device objects.
         reading_interval (int):     The current reading interval, in
                                     seconds.
 
