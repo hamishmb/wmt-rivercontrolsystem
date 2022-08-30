@@ -54,6 +54,16 @@ logger.setLevel(logging.getLogger('River System Control Software').getEffectiveL
 for handler in logging.getLogger('River System Control Software').handlers:
     logger.addHandler(handler)
 
+def reconfigure_logger():
+    """
+    Reconfigures the logging level for this module.
+    """
+
+    logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
+
+    for _handler in logging.getLogger('River System Control Software').handlers:
+        logger.addHandler(_handler)
+
 # ---------- BASE CLASS ----------
 class BaseMonitorClass(threading.Thread):
     """

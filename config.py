@@ -217,12 +217,17 @@ def reconfigure_logging():
     Tools.devicemanagement.reconfigure_logger()
     Tools.deviceobjects.reconfigure_logger()
     Tools.logiccoretools.reconfigure_logger()
+    Tools.monitortools.reconfigure_logger()
+    Tools.sockettools.reconfigure_logger()
+    Tools.statetools.reconfigure_logger()
+
     Logic.controllogic.reconfigure_logger()
-    Logic.valvelogic.reconfigure_logger()
-    Logic.sumppilogic.reconfigure_logger()
     Logic.naslogic.reconfigure_logger()
     Logic.stagepilogic.reconfigure_logger()
+    Logic.sumppilogic.reconfigure_logger()
     Logic.temptopuplogic.reconfigure_logger()
+    Logic.valvelogic.reconfigure_logger()
+    Logic.wbuttspilogic.reconfigure_logger()
 
 SITE_SETTINGS = {
 
