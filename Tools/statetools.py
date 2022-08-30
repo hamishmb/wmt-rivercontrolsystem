@@ -113,7 +113,7 @@ class ControlStateABC(metaclass=ABCMeta):
         Implement as static method in subclasses.
 
         Returns:
-            string: state name
+            str. State name
         """
         raise NotImplementedError
 
@@ -164,7 +164,7 @@ class ControlStateMachineABC(metaclass=ABCMeta):
         Returns a reference to a named state of this machine.
 
         Args:
-            state_name (string): name of state to get
+            state_name (str): name of state to get
         """
         return self.states[state_name]
 
@@ -216,7 +216,7 @@ class ControlStateMachineABC(metaclass=ABCMeta):
         text string than a state object.
 
         Args:
-            state_name (string): the name of the state to make current
+            state_name (str): the name of the state to make current
         """
         try:
             state_change_msg = (self.get_state_machine_name() + ": Transitioning from "
@@ -246,7 +246,7 @@ class ControlStateMachineABC(metaclass=ABCMeta):
         deal with a text string than a state object
 
         Returns:
-            string: the name of the current state
+            str: the name of the current state
         """
         return self.state.get_state_name()
 

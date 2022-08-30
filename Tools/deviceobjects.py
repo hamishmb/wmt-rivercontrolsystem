@@ -102,7 +102,7 @@ class BaseDeviceClass:
                                     helping construct
                                     a subclass.
 
-        _id (string):               The probe's full ID.
+        _id (str):                  The probe's full ID.
                                     Used to identify the
                                     probe. eg "G4:FS0"
 
@@ -146,7 +146,7 @@ class BaseDeviceClass:
         This method returns this devices' device-id eg "FS0".
 
         Returns:
-            string. The devices' ID.
+            str. The device's ID.
 
         Usage:
 
@@ -160,7 +160,7 @@ class BaseDeviceClass:
         This method returns this devices' site id eg "G4".
 
         Returns:
-            string. The device's site id.
+            str. The device's site id.
 
         Usage:
 
@@ -174,7 +174,7 @@ class BaseDeviceClass:
         This method returns this device's full ID eg "G4:FS0".
 
         Returns:
-            string. The probe's full id.
+            str. The probe's full id.
 
         Usage:
 
@@ -188,7 +188,7 @@ class BaseDeviceClass:
         This method returns this device's human-readable name.
 
         Returns:
-            string. The device's name.
+            str. The device's name.
 
         Usage:
 
@@ -375,14 +375,14 @@ class Motor(BaseDeviceClass):
             "OK".
 
         Returns:
-            tuple(bool, string).
+            tuple(bool, str).
 
             bool: The status of the motor.
 
                 - True  -- On.
                 - False -- Off.
 
-            string: Fault checking status.
+            str: Fault checking status.
 
                 - OK -- Everything is fine.
 
@@ -552,14 +552,14 @@ class FloatSwitch(BaseDeviceClass):
             "OK".
 
         Returns:
-            tuple(bool, string).
+            tuple(bool, str).
 
             bool: The status of the switch.
 
                 - True  -- Switch triggered - butts full.
                 - False -- Switch not triggered - butts not full.
 
-            string: Fault checking status.
+            str: Fault checking status.
 
                 - OK -- Everything is fine.
 
@@ -620,12 +620,12 @@ class HallEffectDevice(BaseDeviceClass):
 
         Returns:
 
-            tuple(int, string)
+            tuple(int, str)
 
             int:
                 The RPM of the water wheel.
 
-            string:
+            str:
                 Fault checking status.
 
                 "OK" -- Everything is fine.
@@ -837,12 +837,12 @@ class HallEffectProbe(BaseDeviceClass):
 
         Returns:
 
-            tuple(int, string)
+            tuple(int, str)
 
             int:
                 The level of the float.
 
-            string:
+            str:
                 Fault checking status.
 
                 "OK" -- Everything is fine.
@@ -1103,12 +1103,12 @@ class GateValve(BaseDeviceClass):
 
         Returns:
 
-            tuple(int, string)
+            tuple(int, str)
 
             int:
                 The percentage (0 - 100) position of the valve..
 
-            string:
+            str:
                 Fault checking status.
 
                 "OK" -- Everything is fine.

@@ -73,7 +73,7 @@ class Sockets:
     Documentation for constructor of objects of type Socket:
 
     Args:
-        _type (string):         The type of socket we are constructing.
+        _type (str):            The type of socket we are constructing.
                                 **MUST** be one of "Plug", or "Socket".
 
         site_id (str):          The site ID.
@@ -176,7 +176,7 @@ class Sockets:
             Now needed for both sockets, so we can ping the peer.
 
         Args:
-            server_address (string):        The server address.
+            server_address (str):           The server address.
 
         Usage:
 
@@ -660,7 +660,7 @@ class Sockets:
             IndexError, if there is no data on the queue to read.
 
         Returns:
-            string. The data.
+            str. The data.
 
         Usage:
 

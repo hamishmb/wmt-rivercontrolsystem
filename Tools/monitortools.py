@@ -128,7 +128,7 @@ class BaseMonitorClass(threading.Thread):
         is monitoring.
 
         Returns:
-            string. The site ID.
+            str. The site ID.
 
         Usage:
 
@@ -143,7 +143,7 @@ class BaseMonitorClass(threading.Thread):
         is monitoring.
 
         Returns:
-            string. The probe ID.
+            str. The probe ID.
 
         Usage:
 

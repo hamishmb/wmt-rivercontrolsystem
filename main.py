@@ -115,7 +115,7 @@ def handle_cmdline_options():
         See usage function in source code, or run main.py with the -h flag.
 
     Returns:
-        string site_id.
+        str site_id.
 
             The site id.
 
@@ -309,7 +309,7 @@ def do_setup(site_id, reading_interval):
     to the database.
 
     Args:
-        site_id (String):               The site ID of this pi.
+        site_id (str):                  The site ID of this pi.
         reading_interval (int):         The default reading interval of this site.
 
     Returns:

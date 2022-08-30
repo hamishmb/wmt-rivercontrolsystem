@@ -84,7 +84,7 @@ class Vessel():
         Returns the ID of this Vessel
         
         Returns:
-            string  this Vessel's ID
+            (str)       This Vessel's ID.
         """
         return self._id
 

@@ -88,23 +88,23 @@ class Reading:
                                     construct a subclass. There are no
                                     subclasses of Reading at this time.
 
-        reading_time (String):      The time of the reading. Format as returned
+        reading_time (str):         The time of the reading. Format as returned
                                     from running str(datetime.datetime.now()).
 
         reading_tick (int):         The system tick number at the time the reading
                                     was taken. A positive integer.
 
-        reading_id (String):        The ID for the reading. Format: Two
+        reading_id (str):           The ID for the reading. Format: Two
                                     characters to identify the group, followed
                                     by a colon, followed by two more characters
                                     to identify the probe. Example: "G4:M0".
 
-        reading_value (String):     The value of the reading. Format differs
+        reading_value (str):        The value of the reading. Format differs
                                     depending on probe type at the moment.
                                     Ideally, these would all be values in mm like:
                                     "400mm".
 
-        reading_status (String):    The status of the probe at the time the reading
+        reading_status (str):       The status of the probe at the time the reading
                                     was taken. If there is no fault, this should be
                                     "OK". Otherwise, it should be "FAULT DETECTED: "
                                     followed by some sensor-dependant information
@@ -333,9 +333,11 @@ class Reading:
             Format:
                 >>> TIME,TICK,FULL_ID,VALUE,STATUS
 
+            See Usage below for an example.
+
         Usage:
             >>> reading_1.as_csv()
-            >>> 2018-06-11 11:04:01.635548,101,G4:M0,500,OK
+            >>> "2018-06-11 11:04:01.635548,101,G4:M0,500,OK"
         """
         return (self._time
                 + "," + str(self._tick)
@@ -350,7 +352,7 @@ class SyncTime(threading.Thread):
     need to have been granted to normal users for this to work when not run as root.
 
     Constructor args:
-        site_id (String):             The site ID of this pi.
+        site_id (str):                  The site ID of this pi.
     """
 
     def __init__(self, site_id):
@@ -2534,12 +2536,12 @@ def rcs_print(*args, level="info", end="\n"):
     The text is coloured depending on the severity level.
 
     Named Args:
-        level[="info"] (String).      The severity of the message. Valid values are "debug",
+        level[="info"] (str).         The severity of the message. Valid values are "debug",
                                       "info", "warning", "error", and "critical". We default
                                       to info if the value isn't recognised. "none" is also
                                       accepted to avoid having any severity prefix.
 
-        end[="\n"] (String).          Specifies the character printed at the end of the
+        end[="\n"] (str).             Specifies the character printed at the end of the
                                       message.
 
     Arbitrary arguments are also accepted and are just printed just like when using the
