@@ -42,8 +42,9 @@ import logging
 
 import config
 
-from . import coretools
-from . import logiccoretools
+from Tools import logiccoretools
+from Tools import coretools
+from Tools.coretools import rcs_print as print #pylint: disable=redefined-builtin
 
 #Don't ask for a logger name, so this works with both main.py
 #and the universal monitor.
@@ -289,7 +290,8 @@ class BaseMonitorClass(threading.Thread):
             logger.error("Exception \n\n"+str(traceback.format_exc())
                          + "\n\nwhile running!")
 
-            print("Exception \n\n"+str(traceback.format_exc())+"\n\nwhile running!")
+            print("Exception \n\n"+str(traceback.format_exc())
+                  +"\n\nwhile running!", level="error")
 
             #Make sure the file is closed.
             self.file_handle.close()
@@ -341,7 +343,9 @@ class BaseMonitorClass(threading.Thread):
 
                 except RuntimeError:
                     #Break out after first error rather than trying loads of readings.
-                    print("Error: Couldn't store queued reading, trying again later!")
+                    print("Error: Couldn't store queued reading, trying again later!",
+                          level="error")
+
                     logger.error("Error: Couldn't store queued reading, trying again later!")
                     break
 
@@ -355,7 +359,9 @@ class BaseMonitorClass(threading.Thread):
                 #Queue to send later.
                 self.db_queue.append(reading)
 
-                print("Error: Couldn't store current reading, queueing for later!")
+                print("Error: Couldn't store current reading, queueing for later!",
+                      level="error")
+
                 logger.error("Error: Couldn't store current reading, queueing for later!")
 
         try:
@@ -382,7 +388,7 @@ class BaseMonitorClass(threading.Thread):
                          + "Creating a new one...")
 
             print("Couldn't write to readings file! "
-                  + "Creating a new one...")
+                  + "Creating a new one...", level="error")
 
             write_failed = True
 
@@ -433,7 +439,7 @@ class BaseMonitorClass(threading.Thread):
                          + ": Readings file gone! Creating new one...")
 
             print("Monitor for "+self.site_id+":"+self.probe_id
-                  + ": Readings file gone! Creating new one...")
+                  + ": Readings file gone! Creating new one...", level="error")
 
             self.file_handle.write("WARNING: Previous readings file was "
                                    + "deleted.\n")
@@ -446,7 +452,7 @@ class BaseMonitorClass(threading.Thread):
                          + ": Can't write to readings file! Creating new one...")
 
             print("Monitor for "+self.site_id+":"+self.probe_id
-                  + ": Can't write to readings file! Creating new one...")
+                  + ": Can't write to readings file! Creating new one...", level="error")
 
             self.file_handle.write("WARNING: Couldn't write to previous readings file.\n")
 
@@ -581,7 +587,8 @@ class Monitor(BaseMonitorClass):
             logger.error("Exception \n\n"+str(traceback.format_exc())
                          + "\n\nwhile running!")
 
-            print("Exception \n\n"+str(traceback.format_exc())+"\n\nwhile running!")
+            print("Exception \n\n"+str(traceback.format_exc())
+                  +"\n\nwhile running!", level="error")
 
         logger.debug("Monitor for "+self.site_id+":"+self.probe_id+": Exiting...")
 
@@ -701,7 +708,8 @@ class SocketsMonitor(BaseMonitorClass):
             logger.error("Exception \n\n"+str(traceback.format_exc())
                          + "\n\nwhile running!")
 
-            print("Exception \n\n"+str(traceback.format_exc())+"\n\nwhile running!")
+            print("Exception \n\n"+str(traceback.format_exc())
+                  +"\n\nwhile running!", level="error")
 
         logger.debug("SocketsMonitor for "+self.site_id+":"+self.probe_id+": Exiting...")
 

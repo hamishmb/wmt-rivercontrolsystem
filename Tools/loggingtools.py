@@ -34,6 +34,8 @@ import os
 import logging
 import logging.handlers
 
+from Tools.coretools import rcs_print as print #pylint: disable=redefined-builtin,unused-import
+
 class CustomLoggingHandler(logging.handlers.TimedRotatingFileHandler):
     """
     This is a custom version of logging.handlers.TimedRotatingFileHandler that

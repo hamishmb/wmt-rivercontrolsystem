@@ -40,6 +40,7 @@ sys.path.insert(0, os.path.abspath('..'))
 
 import config
 from Tools import logiccoretools
+from Tools.coretools import rcs_print as print #pylint: disable=redefined-builtin
 
 #Don't ask for a logger name, so this works with all modules.
 logger = logging.getLogger(__name__)
@@ -78,7 +79,7 @@ def valve_logic(devices):
         state = logiccoretools.get_state(config.SITE_ID, valve_id)
 
     except RuntimeError:
-        print("Error: Couldn't get site status!")
+        print("Error: Couldn't get site status!", level="error")
         logger.error("Error: Couldn't get site status!")
 
     else:
@@ -101,7 +102,7 @@ def valve_logic(devices):
                                                  + str(position))
 
                     except RuntimeError:
-                        print("Error: Couldn't log event!")
+                        print("Error: Couldn't log event!", level="error")
                         logger.error("Error: Couldn't log event!")
 
     if position is not None:
@@ -110,7 +111,7 @@ def valve_logic(devices):
                                          "OK", "Position requested: "+str(position))
 
         except RuntimeError:
-            print("Error: Couldn't update site status!")
+            print("Error: Couldn't update site status!", level="error")
             logger.error("Error: Couldn't update site status!")
 
     else:
@@ -119,7 +120,7 @@ def valve_logic(devices):
                                          "OK", "None")
 
         except RuntimeError:
-            print("Error: Couldn't update site status!")
+            print("Error: Couldn't update site status!", level="error")
             logger.error("Error: Couldn't update site status!")
 
     return 15

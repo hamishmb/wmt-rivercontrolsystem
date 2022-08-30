@@ -41,6 +41,7 @@ import os.path
 sys.path.insert(0, os.path.abspath(os.path.split(os.path.dirname(__file__))[0]))
 
 from Tools import logiccoretools
+from Tools.coretools import rcs_print as print #pylint: disable=redefined-builtin
 from Tools.statetools import ControlStateMachineABC, GenericControlState
 
 #Don't ask for a logger name, so this works with both main.py
@@ -207,7 +208,7 @@ class StagePiReadingsParser():
             msg = "Error: Could not get readings for one or more devices on "\
                   "G4 or G6"
 
-            print(msg)
+            print(msg, level="error")
             logger.error(msg)
 
     def _g6sensor_contradiction_error(self):
@@ -222,7 +223,7 @@ class StagePiReadingsParser():
                "G6:M0 (depth) = " + str(self.g6_level) + "mm\n"
                "Check for sensor faults in G6.")
 
-        print(msg)
+        print(msg, level="error")
         logger.error(msg)
 
         try:
@@ -230,7 +231,7 @@ class StagePiReadingsParser():
 
         except RuntimeError:
             msg = "Error while trying to log error event over network."
-            print(msg)
+            print(msg, level="error")
             logger.error(msg)
 
     def g6_full(self):
@@ -352,7 +353,7 @@ class StagePiDeviceController():
 
         except RuntimeError:
             msg = "Error: Error trying to control VALVE12:V12!"
-            print(msg)
+            print(msg, level="error")
             logger.error(msg)
 
         if log_event:
@@ -364,7 +365,7 @@ class StagePiDeviceController():
 
             except RuntimeError:
                 msg = "Error while trying to log event over network."
-                print(msg)
+                print(msg, level="error")
                 logger.error(msg)
 
 # -------------------- Stage Pi control states ---------------------

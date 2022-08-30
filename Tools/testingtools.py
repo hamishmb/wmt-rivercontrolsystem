@@ -29,6 +29,8 @@ The classes in this module override RPi.GPIO and parts of the adafruit_ads1x15.a
 
 """
 
+from Tools.coretools import rcs_print as print #pylint: disable=redefined-builtin,unused-import
+
 ads = 0
 
 class GPIO:

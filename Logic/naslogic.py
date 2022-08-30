@@ -39,6 +39,7 @@ sys.path.insert(0, os.path.abspath('..'))
 
 import config
 from Tools import logiccoretools
+from Tools.coretools import rcs_print as print #pylint: disable=redefined-builtin
 
 #Don't ask for a logger name, so this works with all modules.
 logger = logging.getLogger(__name__)
@@ -76,7 +77,7 @@ def nas_logic():
             config.TICK = logiccoretools.get_latest_tick()
 
         except RuntimeError:
-            print("Error: Couldn't get latest tick!")
+            print("Error: Couldn't get latest tick!", level="error")
             logger.error("Error: Couldn't get latest tick!")
 
         #Log if we managed to get a newer tick.
@@ -89,7 +90,7 @@ def nas_logic():
 
             except RuntimeError:
                 print("Error: Couldn't log event saying that tick was restored to "
-                      + str(config.TICK)+"!")
+                      + str(config.TICK)+"!", level="error")
 
                 logger.error("Error: Couldn't log event saying that tick was restored to "
                              + str(config.TICK)+"!")
@@ -111,7 +112,7 @@ def nas_logic():
                                      severity="WARNING")
 
         except RuntimeError:
-            print("Error: Couldn't log event saying that tick was reset!")
+            print("Error: Couldn't log event saying that tick was reset!", level="error")
             logger.error("Error: Couldn't log event saying that tick was reset!")
 
         config.TICK = 0
@@ -120,7 +121,7 @@ def nas_logic():
         logiccoretools.store_tick(config.TICK)
 
     except RuntimeError:
-        print("Error: Couldn't store current tick!")
+        print("Error: Couldn't store current tick!", level="error")
         logger.error("Error: Couldn't store current tick!")
 
     #---------- Monitor the temperature of the NAS box and the drives ----------
@@ -155,11 +156,11 @@ def nas_logic():
 
         try:
             logiccoretools.update_status("Up, temps: ("+sys_temp+"/"+hdd0_temp+"/"+hdd1_temp
-                                         + "), CPU: "+config.CPU+"%, MEM: "+s+"%",
+                                         + "), CPU: "+config.CPU+"%, MEM: "+config.MEM+"%",
                                          "OK", "None")
 
         except RuntimeError:
-            print("Error: Couldn't update site status!")
+            print("Error: Couldn't update site status!", level="error")
             logger.error("Error: Couldn't update site status!")
 
     else:
@@ -176,7 +177,7 @@ def nas_logic():
                                      severity="WARNING")
 
         except RuntimeError:
-            print("Error: Couldn't update site status or log event!")
+            print("Error: Couldn't update site status or log event!", level="error")
             logger.error("Error: Couldn't update site status or log event!")
 
     #NAS/tick interval is 15 seconds.

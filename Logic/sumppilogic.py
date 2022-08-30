@@ -41,6 +41,7 @@ sys.path.insert(0, os.path.abspath('..'))
 
 import config
 from Tools import logiccoretools
+from Tools.coretools import rcs_print as print #pylint: disable=redefined-builtin
 
 #Don't ask for a logger name, so this works with all modules.
 logger = logging.getLogger(__name__)
@@ -136,7 +137,7 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
         sump_reading = int(readings["SUMP:M0"].get_value().replace("m", ""))
 
     except (AttributeError, KeyError):
-        print("Error: Error trying to get latest SUMP:M0 reading!")
+        print("Error: Error trying to get latest SUMP:M0 reading!", level="error")
         logger.error("Error: Error trying to get latest SUMP:M0 reading!")
 
         #Default to empty instead.
@@ -147,7 +148,7 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
                             .get_value().replace("m", ""))
 
     except (RuntimeError, AttributeError):
-        print("Error: Error trying to get latest G4:M0 reading!")
+        print("Error: Error trying to get latest G4:M0 reading!", level="error")
         logger.error("Error: Error trying to get latest G4:M0 reading!")
 
         #Default to empty instead.
@@ -157,7 +158,7 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
         butts_float_reading = logiccoretools.get_latest_reading("G4", "FS0").get_value()
 
     except (RuntimeError, AttributeError):
-        print("Error: Error trying to get latest G4:FS0 reading!")
+        print("Error: Error trying to get latest G4:FS0 reading!", level="error")
         logger.error("Error: Error trying to get latest G4:FS0 reading!")
 
         #Default to empty instead.
@@ -213,14 +214,15 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
         main_pump_ovr = None
         butts_pump_ovr = None
         print("Error: Couldn't check whether or not a manual override has "
-              "been requested. No override will be applied.")
+              "been requested. No override will be applied.", level="error")
+
         logger.error("Error: Couldn't check whether or not a manual override has "
                      "been requested. No override will be applied.")
 
     if main_pump_ovr is not None:
         if main_pump_ovr in ("ON", "OFF"):
             logger.warning("*** MAIN CIRCULATION PUMP IS IN MANUAL OVERRIDE ***")
-            print("*** MAIN CIRCULATION PUMP IS IN MANUAL OVERRIDE ***")
+            print("*** MAIN CIRCULATION PUMP IS IN MANUAL OVERRIDE ***", level="warning")
             if main_pump_ovr == "ON":
                 msg = "Holding main circulation pump on."
                 logger.info(msg)
@@ -239,13 +241,13 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
                 + main_pump_ovr
                 + "\") is not understood. Not overriding.")
             logger.warning(msg)
-            print(msg)
+            print(msg, level="warning")
             main_pump_ovr = None
 
     if butts_pump_ovr is not None:
         if butts_pump_ovr in ("ON", "OFF"):
             logger.warning("*** BUTTS PUMP IS IN MANUAL OVERRIDE ***")
-            print("*** BUTTS PUMP IS IN MANUAL OVERRIDE ***")
+            print("*** BUTTS PUMP IS IN MANUAL OVERRIDE ***", level="warning")
             if butts_pump_ovr == "ON":
                 msg = "Holding butts pump on."
                 logger.info(msg)
@@ -264,13 +266,13 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
                 + butts_pump_ovr
                 + "\") is not understood. Not overriding.")
             logger.warning(msg)
-            print(msg)
+            print(msg, level="warning")
             butts_pump_ovr = None
 
     if sump_reading >= 600:
         #Level in the sump is getting high.
         logger.warning("Water level in the sump ("+str(sump_reading)+") >= 600 mm!")
-        print("Water level in the sump ("+str(sump_reading)+") >= 600 mm!")
+        print("Water level in the sump ("+str(sump_reading)+") >= 600 mm!", level="warning")
 
         #Make sure the main circulation pump is on.
         if main_pump_ovr is None:
@@ -289,7 +291,7 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
             logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
         except RuntimeError:
-            print("Error: Error trying to control valve V4!")
+            print("Error: Error trying to control valve V4!", level="error")
             logger.error("Error: Error trying to control valve V4!")
 
         if main_pump_ovr is None:
@@ -297,7 +299,8 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
 
         else:
             logger.warning("A manual override is controlling the main circulation pump.")
-            print("A manual override is controlling the main circulation pump.")
+            print("A manual override is controlling the main circulation pump.",
+                  level="warning")
 
         #Pump some water to the butts if they aren't full.
         #If they are full, do nothing and let the sump overflow.
@@ -305,18 +308,18 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
             #Pump to the butts.
             if butts_pump_ovr is None:
                 logger.warning("Pumping water to the butts...")
-                print("Pumping water to the butts...")
+                print("Pumping water to the butts...", level="warning")
                 butts_pump.enable()
 
             else:
                 logger.warning("A manual override is controlling the butts pump.")
-                print("A manual override is controlling the butts pump.")
+                print("A manual override is controlling the butts pump.", level="warning")
 
             logger.warning("Changing reading interval to 30 seconds so we can "
                            +"keep a close eye on what's happening...")
 
             print("Changing reading interval to 30 seconds so we can keep a "
-                  +"close eye on what's happening...")
+                  +"close eye on what's happening...", level="warning")
 
             reading_interval = 30
 
@@ -327,14 +330,14 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
 
             else:
                 logger.warning("A manual override is controlling the butts pump.")
-                print("A manual override is controlling the butts pump.")
+                print("A manual override is controlling the butts pump.", level="warning")
 
             logger.warning("The water butts are full. Allowing the sump to overflow.")
-            print("The water butts are full.")
-            print("Allowing the sump to overflow.")
+            print("The water butts are full.", level="warning")
+            print("Allowing the sump to overflow.", level="warning")
 
             logger.warning("Setting reading interval to 1 minute...")
-            print("Setting reading interval to 1 minute...")
+            print("Setting reading interval to 1 minute...", level="warning")
 
             reading_interval = 60
 
@@ -342,7 +345,9 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
         #Level is okay.
         #We might be pumping right now, or the level might be increasing, but do nothing.
         #Do NOT change the state of the butts pump.
-        logger.info("Water level in the sump ("+str(sump_reading)+") between 500 mm and 600 mm.")
+        logger.info("Water level in the sump ("+str(sump_reading)
+                    +") between 500 mm and 600 mm.")
+
         print("Water level in the sump ("+str(sump_reading)+") between 500 mm and 600 mm.")
 
         #Make sure the main circulation pump is on.
@@ -362,7 +367,7 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
             logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
         except RuntimeError:
-            print("Error: Error trying to control valve V4!")
+            print("Error: Error trying to control valve V4!", level="error")
             logger.error("Error: Error trying to control valve V4!")
 
         if main_pump_ovr is None:
@@ -370,7 +375,8 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
 
         else:
             logger.warning("A manual override is controlling the main circulation pump.")
-            print("A manual override is controlling the main circulation pump.")
+            print("A manual override is controlling the main circulation pump.",
+                  level="warning")
 
         #Stop pumping to the butts if they are full, but don't start pumping at this level.
         #If they are full, do nothing and let the sump overflow.
@@ -379,7 +385,7 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
                            +"keep a close eye on what's happening...")
 
             print("Changing reading interval to 30 seconds so we can keep a "
-                  +"close eye on what's happening...")
+                  +"close eye on what's happening...", level="warning")
 
             reading_interval = 30
 
@@ -388,11 +394,11 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
             butts_pump.disable()
 
             logger.warning("The water butts are full. Allowing the sump to overflow.")
-            print("The water butts are full.")
-            print("Allowing the sump to overflow.")
+            print("The water butts are full.", level="warning")
+            print("Allowing the sump to overflow.", level="warning")
 
             logger.warning("Setting reading interval to 1 minute...")
-            print("Setting reading interval to 1 minute...")
+            print("Setting reading interval to 1 minute...", level="warning")
 
             reading_interval = 60
 
@@ -404,10 +410,11 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
 
         else:
             logger.warning("A manual override is controlling the butts pump.")
-            print("A manual override is controlling the butts pump.")
+            print("A manual override is controlling the butts pump.", level="warning")
 
         logger.info("Water level in the sump ("+str(sump_reading)+") between 400 mm and 500 mm."
                     "Turned the butts pump off, if it was on.")
+
         print("Water level in the sump ("+str(sump_reading)+") between 400 mm and 500 mm."
               "Turned the butts pump off, if it was on.")
 
@@ -428,7 +435,7 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
             logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
         except RuntimeError:
-            print("Error: Error trying to control valve V4!")
+            print("Error: Error trying to control valve V4!", level="error")
             logger.error("Error: Error trying to control valve V4!")
 
         if main_pump_ovr is None:
@@ -436,7 +443,8 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
 
         else:
             logger.warning("A manual override is controlling the main circulation pump.")
-            print("A manual override is controlling the main circulation pump.")
+            print("A manual override is controlling the main circulation pump.",
+                  level="warning")
 
         logger.info("Setting reading interval to 1 minute...")
         print("Setting reading interval to 1 minute...")
@@ -457,7 +465,7 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
 
         else:
             logger.warning("A manual override is controlling the butts pump.")
-            print("A manual override is controlling the butts pump.")
+            print("A manual override is controlling the butts pump.", level="warning")
 
         #Make sure the main circulation pump is on.
         logger.info("Turning the main circulation pump on, if it was off...")
@@ -470,11 +478,14 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
 
         else:
             if main_pump_ovr == "OFF":
-                logger.info("Not turning the main circulation pump on, due to manual override...")
+                logger.info("Not turning the main circulation pump on, due to "
+                            "manual override...")
+
                 print("Not turning the main circulation pump on, due to manual override...")
 
             logger.warning("A manual override is controlling the main circulation pump.")
-            print("A manual override is controlling the main circulation pump.")
+            print("A manual override is controlling the main circulation pump.",
+                  level="warning")
 
         #Always open the gate valve, regardless of buttspi level.
         logger.info("Opening wendy butts gate valve to 25%.")
@@ -484,7 +495,7 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
             logiccoretools.attempt_to_control("VALVE4", "V4", "25%")
 
         except RuntimeError:
-            print("Error: Error trying to control valve V4!")
+            print("Error: Error trying to control valve V4!", level="error")
             logger.error("Error: Error trying to control valve V4!")
 
         logger.info("Setting reading interval to 1 minute...")
@@ -497,9 +508,10 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
         #If the butts pump is on, turn it off.
         if butts_pump_ovr is None:
             butts_pump.disable()
+
         else:
             logger.warning("A manual override is controlling the butts pump.")
-            print("A manual override is controlling the butts pump.")
+            print("A manual override is controlling the butts pump.", level="warning")
 
         logger.info("Water level in the sump ("+str(sump_reading)+") between 200 mm and 300 mm."
                     + "Turned the butts pump off, if it was on.")
@@ -515,31 +527,34 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
                 logiccoretools.attempt_to_control("VALVE4", "V4", "50%")
 
             except RuntimeError:
-                print("Error: Error trying to control valve V4!")
+                print("Error: Error trying to control valve V4!", level="error")
                 logger.error("Error: Error trying to control valve V4!")
 
         else:
             logger.error("Insufficient water in wendy butts...")
-            print("Insufficient water in wendy butts...")
+            print("Insufficient water in wendy butts...", level="error")
 
             try:
                 logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
             except RuntimeError:
-                print("Error: Error trying to control valve V4!")
+                print("Error: Error trying to control valve V4!", level="error")
                 logger.error("Error: Error trying to control valve V4!")
 
             logger.error("*** NOTICE ***: Water level in the sump is between 200 and 300 mm!")
             logger.error("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: "
                          + "Please add water to the system.")
 
-            print("\n\n*** NOTICE ***: Water level in the sump is between 200 and 300 mm!")
-            print("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: Please add water to the system.")
+            print("\n\n*** NOTICE ***: Water level in the sump is between 200 and 300 mm!",
+                  level="error")
+
+            print("*** NOTICE ***: HUMAN INTERVENTION REQUIRED: Please add water to "
+                  "the system.", level="error")
 
         #Make sure the main circulation pump is off.
         if main_pump_ovr is None:
             logger.warning("Disabling the main circulation pump, if it was on...")
-            print("Disabling the main circulation pump, if it was on...")
+            print("Disabling the main circulation pump, if it was on...", level="warning")
             main_pump.disable()
 
         else:
@@ -548,10 +563,11 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
                 print("Not turning the main circulation pump off, due to manual override...")
 
             logger.warning("A manual override is controlling the main circulation pump.")
-            print("A manual override is controlling the main circulation pump.")
+            print("A manual override is controlling the main circulation pump.",
+                  level="warning")
 
         logger.warning("Setting reading interval to 30 seconds for close monitoring...")
-        print("Setting reading interval to 30 seconds for close monitoring...")
+        print("Setting reading interval to 30 seconds for close monitoring...", level="warning")
 
         reading_interval = 30
 
@@ -562,7 +578,7 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
             butts_pump.disable()
         else:
             logger.warning("A manual override is controlling the butts pump.")
-            print("A manual override is controlling the butts pump.")
+            print("A manual override is controlling the butts pump.", level="warning")
 
         if butts_reading >= 300:
             logger.info("Opening wendy butts gate valve to 100%...")
@@ -572,57 +588,64 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
                 logiccoretools.attempt_to_control("VALVE4", "V4", "100%")
 
             except RuntimeError:
-                print("Error: Error trying to control valve V4!")
+                print("Error: Error trying to control valve V4!", level="error")
                 logger.error("Error: Error trying to control valve V4!")
 
         else:
             logger.warning("Insufficient water in wendy butts...")
-            print("Insufficient water in wendy butts...")
+            print("Insufficient water in wendy butts...", level="warning")
 
             try:
                 logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
             except RuntimeError:
-                print("Error: Error trying to control valve V4!")
+                print("Error: Error trying to control valve V4!", level="error")
                 logger.error("Error: Error trying to control valve V4!")
 
             logger.critical("*** CRITICAL ***: Water level in the sump less than 200 mm!")
             logger.critical("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add "
                             + "water to system.")
 
-            print("\n\n*** CRITICAL ***: Water level in the sump less than 200 mm!")
+            print("\n\n*** CRITICAL ***: Water level in the sump less than 200 mm!",
+                  level="critical")
+
             print("*** CRITICAL ***: HUMAN INTERVENTION REQUIRED: Please add water to the "
-                  + "system.")
+                  + "system.", level="critical")
 
             if main_pump_ovr != "ON":
                 logger.critical("*** INFO ***: The pump won't run dry; it has been temporarily "
                                 + "disabled.")
-                print("*** INFO ***: The pump won't run dry; it has been temporarily disabled.")
+
+                print("*** INFO ***: The pump won't run dry; it has been temporarily disabled.",
+                      level="critical")
 
             else:
                 logger.critical("*** CRITICAL ***: RUNNING THE PUMP **DRY** DUE TO MANUAL "
                                 + "OVERRIDE. Damage might occur.")
 
                 print("*** CRITICAL ***: RUNNING THE PUMP **DRY** DUE TO MANUAL OVERRIDE. "
-                      + "Damage might occur.")
+                      + "Damage might occur.", level="critical")
 
         #Make sure the main circulation pump is off.
         if main_pump_ovr is None:
             logger.warning("Disabling the main circulation pump, if it was on...")
-            print("Disabling the main circulation pump, if it was on...")
+            print("Disabling the main circulation pump, if it was on...", level="warning")
             main_pump.disable()
 
         else:
             if main_pump_ovr == "ON":
                 logger.info("Not turning the main circulation pump off, due to manual "
                             + "override...")
+
                 print("Not turning the main circulation pump off, due to manual override...")
 
             logger.warning("A manual override is controlling the main circulation pump.")
-            print("A manual override is controlling the main circulation pump.")
+            print("A manual override is controlling the main circulation pump.",
+                  level="warning")
 
         logger.critical("Setting reading interval to 15 seconds for super close monitoring...")
-        print("Setting reading interval to 15 seconds for super close monitoring...")
+        print("Setting reading interval to 15 seconds for super close monitoring...",
+              level="critical")
 
         reading_interval = 15
 
@@ -635,7 +658,7 @@ def sumppi_logic(readings, devices, monitors, reading_interval):
                                      "OK", "None")
 
     except RuntimeError:
-        print("Error: Couldn't update site status!")
+        print("Error: Couldn't update site status!", level="error")
         logger.error("Error: Couldn't update site status!")
 
     return reading_interval
@@ -694,7 +717,7 @@ def sumppi_water_backup_control_logic(readings, devices, monitors, reading_inter
         sump_reading = int(readings["SUMP:M0"].get_value().replace("m", ""))
 
     except (AttributeError, KeyError):
-        print("Error: Error trying to get latest SUMP:M0 reading!")
+        print("Error: Error trying to get latest SUMP:M0 reading!", level="error")
         logger.error("Error: Error trying to get latest SUMP:M0 reading!")
 
         #Default to empty instead.
@@ -704,7 +727,7 @@ def sumppi_water_backup_control_logic(readings, devices, monitors, reading_inter
         butts_float_reading = logiccoretools.get_latest_reading("G4", "FS0").get_value()
 
     except (RuntimeError, AttributeError):
-        print("Error: Error trying to get latest G4:FS0 reading!")
+        print("Error: Error trying to get latest G4:FS0 reading!", level="error")
         logger.error("Error: Error trying to get latest G4:FS0 reading!")
 
         #Default to empty instead.
@@ -739,7 +762,7 @@ def sumppi_water_backup_control_logic(readings, devices, monitors, reading_inter
         logiccoretools.attempt_to_control("VALVE4", "V4", "0%")
 
     except RuntimeError:
-        print("Error: Error trying to control valve V4!")
+        print("Error: Error trying to control valve V4!", level="error")
         logger.error("Error: Error trying to control valve V4!")
 
     if sump_reading >= 600:
@@ -847,7 +870,7 @@ def sumppi_water_backup_control_logic(readings, devices, monitors, reading_inter
                                      "OK", "None")
 
     except RuntimeError:
-        print("Error: Couldn't update site status!")
+        print("Error: Couldn't update site status!", level="error")
         logger.error("Error: Couldn't update site status!")
 
     return reading_interval

@@ -42,7 +42,8 @@ import logging
 #Import modules.
 import config
 
-from . import devicemanagement as device_mgmt
+from Tools import devicemanagement as device_mgmt
+from Tools.coretools import rcs_print as print #pylint: disable=redefined-builtin,unused-import
 
 #Use logger here too.
 logger = logging.getLogger(__name__)
@@ -66,7 +67,7 @@ except (ImportError, NotImplementedError):
 
     else:
         #Import dummy class.
-        from Tools.testingtools import GPIO
+        from Tools.testingtools import GPIO #pylint: disable=ungrouped-imports
 
 def reconfigure_logger():
     """

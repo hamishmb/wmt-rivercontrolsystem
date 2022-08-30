@@ -41,6 +41,8 @@ import logging
 #Import modules.
 import config
 
+from Tools.coretools import rcs_print as print #pylint: disable=redefined-builtin
+
 #Use logger here too.
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
@@ -67,7 +69,7 @@ except (ImportError, NotImplementedError, ValueError) as error:
     if isinstance(error, ValueError):
         #Occurs when no I2C device is present.
         logger.critical("ADS (I2C) device not found!")
-        print("ADS (I2C) device not found!")
+        print("ADS (I2C) device not found!", level="critical")
 
     if not config.TESTING:
         logger.critical("Unable to import RPi.GPIO or ADS modules! "
@@ -81,9 +83,9 @@ except (ImportError, NotImplementedError, ValueError) as error:
 
     else:
         #Import dummy classes and methods.
-        from Tools.testingtools import GPIO
-        from Tools.testingtools import ADS
-        from Tools.testingtools import AnalogIn
+        from Tools.testingtools import GPIO #pylint: disable=ungrouped-imports
+        from Tools.testingtools import ADS #pylint: disable=ungrouped-imports
+        from Tools.testingtools import AnalogIn #pylint: disable=ungrouped-imports
 
         I2C = None
 
@@ -198,7 +200,8 @@ class ManageHallEffectProbe(threading.Thread):
             logger.error("OSError \n\n"+str(traceback.format_exc())
                          + "\n\nwhile running. Continuing...")
 
-            print("OSError \n\n"+str(traceback.format_exc())+"\n\nwhile running. Continuing...")
+            print("OSError \n\n"+str(traceback.format_exc())
+                  +"\n\nwhile running. Continuing...", level="error")
 
             #The current reading is invalid so flag an error.
             return False, False
@@ -485,7 +488,8 @@ class ManageGateValve(threading.Thread):
             logger.error("OSError \n\n"+str(traceback.format_exc())
                          + "\n\nwhile running. Continuing...")
 
-            print("OSError \n\n"+str(traceback.format_exc())+"\n\nwhile running. Continuing...")
+            print("OSError \n\n"+str(traceback.format_exc())
+                  +"\n\nwhile running. Continuing...", level="error")
 
             #The current reading is invalid so flag an error.
             return -1

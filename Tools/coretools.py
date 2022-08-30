@@ -52,8 +52,10 @@ import psutil
 sys.path.insert(0, os.path.abspath('..'))
 
 import config
-from Tools import sockettools
-from Tools import logiccoretools
+
+#These are injected from main.py to avoid a circular import problem.
+sockettools = None
+logiccoretools = None
 
 #Don't ask for a logger name, so this works with both main.py
 #and the universal monitor.
@@ -372,11 +374,11 @@ class SyncTime(threading.Thread):
                              + "Error was: "+str(stdout))
 
                 print("SyncTime: Unable to sync system time with NAS box.",
-                      "Error was: "+str(stdout))
+                      "Error was: "+str(stdout), level="error")
 
                 #If this isn't Sump Pi, try to sync with Sump Pi instead.
                 if self.site_id != "SUMP":
-                    print("SyncTime: Falling back to Sump Pi...")
+                    print("SyncTime: Falling back to Sump Pi...", level="error")
                     logger.error("SyncTime: Falling back to Sump Pi...")
 
                     cmd = subprocess.run(["sudo", "rdate",
@@ -391,7 +393,7 @@ class SyncTime(threading.Thread):
                                      + "Error was: "+str(stdout))
 
                         print("SyncTime: Unable to sync system time with Sump Pi. "
-                              + "Error was: "+str(stdout))
+                              + "Error was: "+str(stdout), level="error")
 
                         logger.error("SyncTime: Retrying time sync in 10 seconds...")
                         sleep = 10
@@ -592,7 +594,7 @@ class DatabaseConnection(threading.Thread):
 
                 #Avoids duplicating the initialisation commands in the queue.
                 if not self.is_connected:
-                    print("Could not connect to database! Retrying...")
+                    print("Could not connect to database! Retrying...", level="error")
                     logger.error("DatabaseConnection: Could not connect! Retrying...")
 
                     #Set the query result to "Error" to stop excessive hangs when
@@ -625,7 +627,7 @@ class DatabaseConnection(threading.Thread):
 
                 if not self.peer_alive():
                     #We need to reconnect.
-                    print("Database connection lost! Reconnecting...")
+                    print("Database connection lost! Reconnecting...", level="error")
                     logger.error("DatabaseConnection: Connection lost! Reconnecting...")
 
                     #Drop the queries so we can try again or move on without deadlocking.
@@ -642,7 +644,7 @@ class DatabaseConnection(threading.Thread):
                 #way of setting a reasonable timeout.
                 if not self.peer_alive():
                     #We need to reconnect.
-                    print("Database connection lost! Reconnecting...")
+                    print("Database connection lost! Reconnecting...", level="error")
                     logger.error("DatabaseConnection: Connection lost! Reconnecting...")
 
                     #Drop the queries so we can try again or move on without deadlocking.
@@ -691,7 +693,7 @@ class DatabaseConnection(threading.Thread):
 
                 except mysql._exceptions.Error as error:
                     print("DatabaseConnection: Error executing query "+query+"! "
-                          + "Error was: "+str(error))
+                          + "Error was: "+str(error), level="error")
 
                     logger.error("DatabaseConnection: Error executing query "+query+"! "
                                  + "Error was: "+str(error))
@@ -1654,7 +1656,9 @@ def setup_devices(site_id, dictionary="Probes"):
 
             #If this is sump pi and the circulation pump, turn it on.
             if site_id == "SUMP" and device_id == "SUMP:P1":
-                print("Enabling circulation pump to avoid overflow while waiting for NAS box...")
+                print("Enabling circulation pump to avoid overflow while waiting "
+                      + "for NAS box...")
+
                 device.enable()
 
             else:
@@ -1728,7 +1732,7 @@ def wait_for_tick(local_socket):
 
     else:
         logger.error("Could not get tick within 180 seconds!")
-        print("Could not get tick within 180 seconds!")
+        print("Could not get tick within 180 seconds!", level="error")
 
 # -------------------- MAIN LOOP FUNCTIONS --------------------
 def get_local_readings(monitors, readings):
@@ -1752,7 +1756,7 @@ def get_local_readings(monitors, readings):
                          + " is not running!")
 
             print("Monitor for "+monitor.get_site_id()+":"+monitor.get_probe_id()
-                  + " is not running!")
+                  + " is not running!", level="error")
 
             logiccoretools.log_event("Monitor for "+monitor.get_site_id()+":"
                                      + monitor.get_probe_id()+" is not running!",
@@ -1800,7 +1804,7 @@ def get_and_handle_new_reading(monitor, _type):
         if reading == last_reading:
             #Write a . to each file.
             logger.info(".")
-            print(".", end='') #Disable newline when printing this message.
+            print(".", level="none", end='') #Disable newline when printing this message.
 
         else:
             #Write any new readings to the file and to stdout.
@@ -1903,7 +1907,7 @@ def prepare_sitewide_actions(site_id): #FIXME
         state = None
         request = None
 
-        print("Error: Couldn't check for requested site actions!")
+        print("Error: Couldn't check for requested site actions!", level="error")
         logger.error("Error: Couldn't check for requested site actions!")
 
     else:
@@ -2006,18 +2010,18 @@ def prepare_shutdown(site_id): #FIXME
 
     except RuntimeError:
         #FIXME: Take appropriate action here.
-        print("Error: Couldn't update site status or event log!")
+        print("Error: Couldn't update site status or event log!", level="error")
         logger.error("Error: Couldn't update site status or event log!")
 
     if site_id == "NAS" and config.SHUTDOWNALL:
-        for site_id in config.SITE_SETTINGS:
+        for _site_id in config.SITE_SETTINGS:
             try:
-                logiccoretools.attempt_to_control(site_id, site_id, "Shutdown")
+                logiccoretools.attempt_to_control(_site_id, _site_id, "Shutdown")
 
             except RuntimeError:
                 #FIXME: Take appropriate action here.
-                print("Error: Couldn't request poweroff for "+site_id+"!")
-                logger.error("Error: Couldn't request poweroff for "+site_id+"!")
+                print("Error: Couldn't request poweroff for "+_site_id+"!", level="error")
+                logger.error("Error: Couldn't request poweroff for "+_site_id+"!")
 
 def prepare_reboot(site_id): #FIXME
     """
@@ -2044,18 +2048,18 @@ def prepare_reboot(site_id): #FIXME
 
     except RuntimeError:
         #FIXME: Take appropriate action here.
-        print("Error: Couldn't update site status or event log!")
+        print("Error: Couldn't update site status or event log!", level="error")
         logger.error("Error: Couldn't update site status or event log!")
 
     if site_id == "NAS" and config.REBOOTALL:
-        for site_id in config.SITE_SETTINGS:
+        for _site_id in config.SITE_SETTINGS:
             try:
-                logiccoretools.attempt_to_control(site_id, site_id, "Reboot")
+                logiccoretools.attempt_to_control(_site_id, _site_id, "Reboot")
 
             except RuntimeError:
                 #FIXME: Take appropriate action here.
-                print("Error: Couldn't request reboot for "+site_id+"!")
-                logger.error("Error: Couldn't request reboot for "+site_id+"!")
+                print("Error: Couldn't request reboot for "+_site_id+"!", level="error")
+                logger.error("Error: Couldn't request reboot for "+_site_id+"!")
 
 def nas_prepare_update(): #FIXME
     """
@@ -2091,7 +2095,7 @@ def nas_prepare_update(): #FIXME
     if cmd.returncode != 0:
         #FIXME: Take appropriate action here.
         print("Error! Unable to host software update on webserver. "
-              + "Error was:\n"+stdout+"\n")
+              + "Error was:\n"+stdout+"\n", level="critical")
 
         logger.critical("Error! Unable to host software update on webserver. "
                         + "Error was:\n"+stdout+"\n")
@@ -2104,7 +2108,7 @@ def nas_prepare_update(): #FIXME
 
     except RuntimeError:
         #FIXME: Take appropriate action here.
-        print("Error: Couldn't update site status or event log!")
+        print("Error: Couldn't update site status or event log!", level="error")
         logger.error("Error: Couldn't update site status or event log!")
 
     for site_id in config.SITE_SETTINGS:
@@ -2113,7 +2117,7 @@ def nas_prepare_update(): #FIXME
 
         except RuntimeError:
             #FIXME: Take appropriate action here.
-            print("Error: Couldn't request update for "+site_id+"!")
+            print("Error: Couldn't request update for "+site_id+"!", level="error")
             logger.error("Error: Couldn't request update for "+site_id+"!")
 
 def pi_prepare_update(): #FIXME
@@ -2148,7 +2152,7 @@ def pi_prepare_update(): #FIXME
     if cmd.returncode != 0:
         #FIXME: Take appropriate action here.
         print("Error! Unable to download software update. "
-              + "Error was:\n"+stdout+"\n")
+              + "Error was:\n"+stdout+"\n", level="critical")
 
         logger.critical("Error! Unable to download software update. "
                         + "Error was:\n"+stdout+"\n")
@@ -2161,7 +2165,7 @@ def pi_prepare_update(): #FIXME
 
     except RuntimeError:
         #FIXME: Take appropriate action here.
-        print("Error: Couldn't update site status or event log!")
+        print("Error: Couldn't update site status or event log!", level="error")
         logger.error("Error: Couldn't update site status or event log!")
 
 # -------------------- SITEWIDE UPDATER REALISATION FUNCTIONS --------------------
@@ -2245,25 +2249,25 @@ def do_shutdown(site_id): #FIXME
         done = []
 
         while True:
-            for site_id in config.SITE_SETTINGS:
-                if site_id == "NAS" or site_id in done:
+            for _site_id in config.SITE_SETTINGS:
+                if _site_id == "NAS" or _site_id in done:
                     continue
 
                 try:
-                    status = logiccoretools.get_status(site_id)
+                    status = logiccoretools.get_status(_site_id)
 
                 except RuntimeError:
-                    print("Error: Couldn't get "+site_id+" site status!")
-                    logger.error("Error: Couldn't get "+site_id+" site status!")
+                    print("Error: Couldn't get "+_site_id+" site status!", level="error")
+                    logger.error("Error: Couldn't get "+_site_id+" site status!")
                     continue
 
                 if status is not None:
                     action = status[2].upper()
 
                     if action == "SHUTTING DOWN":
-                        print("Shut down: "+site_id)
-                        logger.info("Shut down: "+site_id)
-                        done.append(site_id)
+                        print("Shut down: "+_site_id)
+                        logger.info("Shut down: "+_site_id)
+                        done.append(_site_id)
 
             #When all have shut down (ignoring NAS), break out.
             if done and len(done) == len(config.SITE_SETTINGS.keys()) - 1:
@@ -2326,25 +2330,25 @@ def do_reboot(site_id): #FIXME
         done = []
 
         while True:
-            for site_id in config.SITE_SETTINGS:
-                if site_id == "NAS" or site_id in done:
+            for _site_id in config.SITE_SETTINGS:
+                if _site_id == "NAS" or _site_id in done:
                     continue
 
                 try:
-                    status = logiccoretools.get_status(site_id)
+                    status = logiccoretools.get_status(_site_id)
 
                 except RuntimeError:
-                    print("Error: Couldn't get "+site_id+" site status!")
-                    logger.error("Error: Couldn't get "+site_id+" site status!")
+                    print("Error: Couldn't get "+_site_id+" site status!", level="error")
+                    logger.error("Error: Couldn't get "+_site_id+" site status!")
                     continue
 
                 if status is not None:
                     action = status[2].upper()
 
                     if action == "REBOOTING":
-                        print("Rebooted: "+site_id)
-                        logger.info("Rebooted: "+site_id)
-                        done.append(site_id)
+                        print("Rebooted: "+_site_id)
+                        logger.info("Rebooted: "+_site_id)
+                        done.append(_site_id)
 
             #When all have rebooted (ignoring NAS), break out.
             if done and len(done) == len(config.SITE_SETTINGS.keys()) - 1:
@@ -2407,25 +2411,25 @@ def do_update(site_id): #FIXME
         done = []
 
         while True:
-            for site_id in config.SITE_SETTINGS:
-                if site_id == "NAS" or site_id in done:
+            for _site_id in config.SITE_SETTINGS:
+                if _site_id == "NAS" or _site_id in done:
                     continue
 
                 try:
-                    status = logiccoretools.get_status(site_id)
+                    status = logiccoretools.get_status(_site_id)
 
                 except RuntimeError:
-                    print("Error: Couldn't get "+site_id+" site status!")
-                    logger.error("Error: Couldn't get "+site_id+" site status!")
+                    print("Error: Couldn't get "+_site_id+" site status!", level="error")
+                    logger.error("Error: Couldn't get "+_site_id+" site status!")
                     continue
 
                 if status is not None:
                     action = status[2].upper()
 
                     if action == "UPDATING":
-                        print("Updated: "+site_id)
-                        logger.info("Updated: "+site_id)
-                        done.append(site_id)
+                        print("Updated: "+_site_id)
+                        logger.info("Updated: "+_site_id)
+                        done.append(_site_id)
 
             #When all have grabbed the file (ignoring NAS), break out.
             if done and len(done) == len(config.SITE_SETTINGS.keys()) - 1:
@@ -2475,7 +2479,7 @@ def update_files(instdir): #FIXME
     if cmd.returncode != 0:
         #FIXME: Take appropriate action here.
         print("Error! Unable to backup existing software. "
-              + "Error was:\n"+stdout+"\n")
+              + "Error was:\n"+stdout+"\n", level="critical")
 
         logger.critical("Error! Unable to backup existing software. "
                         + "Error was:\n"+stdout+"\n")
@@ -2491,7 +2495,7 @@ def update_files(instdir): #FIXME
     if cmd.returncode != 0:
         #FIXME: Take appropriate action here.
         print("Error! Unable to extract new software. "
-              + "Error was:\n"+stdout+"\n")
+              + "Error was:\n"+stdout+"\n", level="critical")
 
         logger.critical("Error! Unable to extract new software. "
                         + "Error was:\n"+stdout+"\n")
@@ -2500,3 +2504,90 @@ def update_files(instdir): #FIXME
     logger.info("Removing downloaded tarball...")
     if os.path.exists(instdir+"/rivercontrolsystem.tar.gz"):
         os.remove(instdir+"/rivercontrolsystem.tar.gz")
+
+# -------------------- MISCELLANEOUS FUNCTIONS --------------------
+#ANSI colours to use in the terminal.
+BLACK = "\033[0;30m"
+RED = "\033[0;31m"
+GREEN = "\033[0;32m"
+YELLOW = "\033[0;33m"
+BLUE = "\033[0;34m"
+MAGENTA = "\033[0;35m"
+CYAN = "\033[0;36m"
+WHITE = "\033[0;37m"
+BRIGHT_BLACK = "\033[0;90m"
+BRIGHT_RED = "\033[0;91m"
+BRIGHT_GREEN = "\033[0;92m"
+BRIGHT_YELLOW = "\033[0;93m"
+BRIGHT_BLUE = "\033[0;94m"
+BRIGHT_MAGENTA = "\033[0;95m"
+BRIGHT_CYAN = "\033[0;96m"
+BRIGHT_WHITE = "\033[0;97m"
+DEFAULT = "\033[00m"
+
+def rcs_print(*args, level="info", end="\n"):
+    """
+    This function provides a way to print messages to the console with severity
+    information. This is also used so we can silence commandline output upon
+    request when running the CLI, and when running the unit tests.
+
+    The text is coloured depending on the severity level.
+
+    Named Args:
+        level[="info"] (String).      The severity of the message. Valid values are "debug",
+                                      "info", "warning", "error", and "critical". We default
+                                      to info if the value isn't recognised. "none" is also
+                                      accepted to avoid having any severity prefix.
+
+        end[="\n"] (String).          Specifies the character printed at the end of the
+                                      message.
+
+    Arbitrary arguments are also accepted and are just printed just like when using the
+    default Python print() function.
+    """
+
+    level = level.lower()
+
+    if level == "debug":
+        prefix = "D: "
+
+    elif level == "info":
+        prefix = BRIGHT_GREEN+"I: "
+
+    elif level == "warning":
+        prefix = BRIGHT_BLUE+"W: "
+
+    elif level == "error":
+        prefix = BRIGHT_YELLOW+"!ERROR: "
+
+    elif level == "critical":
+        prefix = BRIGHT_RED+"!!!CRITICAL: "
+
+    elif level == "none":
+        prefix = BRIGHT_GREEN
+
+    #Default to INFO if we don't know.
+    else:
+        builtin_print(BRIGHT_BLUE+"WARNING: Unknown message severity: "+level)
+        logger.warning("Unknown message severity: "+level)
+        prefix = GREEN+"I: "
+
+    #Sanitize args
+    safe_args = []
+    count = 0
+
+    for arg in args:
+        #Handle messages that start with a newline properly.
+        if count == 0 and isinstance(arg, str) and arg.startswith("\n"):
+            prefix = "\n"+prefix
+            arg = ' '.join(arg.split("\n")[1:])
+
+        safe_args.append(str(arg))
+
+    args = safe_args
+
+    builtin_print(prefix+' '.join(args)+DEFAULT, end=end)
+
+#Override print() with rcs_print.
+builtin_print = print
+print = rcs_print #pylint: disable=redefined-builtin

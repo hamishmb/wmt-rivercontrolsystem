@@ -43,6 +43,7 @@ sys.path.insert(0, os.path.abspath('..'))
 
 import config
 from Tools import logiccoretools
+from Tools.coretools import rcs_print as print #pylint: disable=redefined-builtin
 
 #Import logic modules.
 from . import valvelogic
@@ -104,7 +105,7 @@ def generic_control_logic(readings, devices, monitors, reading_interval):
                                      "OK", "None")
 
     except RuntimeError:
-        print("Error: Couldn't update site status!")
+        print("Couldn't update site status!", level="error")
         logger.error("Error: Couldn't update site status!")
 
     return 15
@@ -285,7 +286,7 @@ def stagepi_control_logic(readings, devices, monitors, reading_interval):
                                      "None")
 
     except RuntimeError:
-        print("Error: Couldn't update site status!")
+        print("Error: Couldn't update site status!", level="error")
         logger.error("Error: Couldn't update site status!")
 
     try:
@@ -352,7 +353,7 @@ def temptopup_control_logic(readings, devices, monitors, reading_interval):
 
         if temptopuplogic.solenoid is None:
             msg = "CRITICAL ERROR: Could not find solenoid valve device."
-            print(msg)
+            print(msg, level="critical")
             logger.critical(msg)
             software_status = "Error: No solenoid. In "
 
@@ -387,7 +388,7 @@ def temptopup_control_logic(readings, devices, monitors, reading_interval):
                                      "None")
 
     except RuntimeError:
-        print("Error: Couldn't update site status!")
+        print("Error: Couldn't update site status!", level="error")
         logger.error("Error: Couldn't update site status!")
 
     if temptopuplogic.solenoid is not None:
@@ -400,7 +401,7 @@ def temptopup_control_logic(readings, devices, monitors, reading_interval):
                 msg  = ("CRITICAL ERROR: Temporary Top Up Pi logic has not "
                         "been initialised. Check whether the setup function "
                         "has been run.")
-                print(msg)
+                print(msg, level="critical")
                 logger.critical(msg)
 
             else:

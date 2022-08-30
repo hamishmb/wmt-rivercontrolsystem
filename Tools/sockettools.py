@@ -56,6 +56,8 @@ import _pickle
 
 import config
 
+from Tools.coretools import rcs_print as print #pylint: disable=redefined-builtin
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
 
@@ -414,7 +416,7 @@ class Sockets:
 
             if self.verbose:
                 print("Connection Failed, peer down ("+self.name+"). "
-                      + "Retrying in 10 seconds...")
+                      + "Retrying in 10 seconds...", level="warning")
 
             return False
 
@@ -464,7 +466,7 @@ class Sockets:
 
             if self.verbose:
                 print("Connection Refused ("+self.name+"): "+str(err)
-                      + ". Retrying in 10 seconds...")
+                      + ". Retrying in 10 seconds...", level="error")
 
             #Make the handler exit.
             logger.debug("Sockets._create_and_connect(): ("+self.name
@@ -486,7 +488,7 @@ class Sockets:
 
             if self.verbose:
                 print("Connection Timed Out ("+self.name+"): "+str(err)
-                      + ". Retrying in 10 seconds...")
+                      + ". Retrying in 10 seconds...", level="error")
 
             #Make the handler exit.
             logger.debug("Sockets._create_and_connect(): ("+self.name
@@ -509,7 +511,7 @@ class Sockets:
 
             if self.verbose:
                 print("Connection Timed Out ("+self.name+"): "+str(err)
-                      + ". Retrying in 10 seconds...")
+                      + ". Retrying in 10 seconds...", level="error")
 
             #Make the handler exit.
             logger.debug("Sockets._create_and_connect(): ("+self.name
@@ -869,7 +871,8 @@ class Sockets:
             logger.error("Socket._read_pending_messages(): ("+self.name
                          + "): Error was\n\n"+str(traceback.format_exc())+"...")
 
-            print("Error reading messages ("+self.name+"): ", traceback.format_exc())
+            print("Error reading messages ("+self.name+"): ",
+                  traceback.format_exc(), level="error")
             return -1
 
     def _process_obj(self, obj):
@@ -892,7 +895,7 @@ class Sockets:
             logger.error("Sockets._process_obj(): ("+self.name
                          + "): Error unpickling data from socket: "+str(obj))
 
-            print("Unpickling error ("+self.name+"): "+str(obj))
+            print("Unpickling error ("+self.name+"): "+str(obj), level="error")
             return
 
         if isinstance(msg, str):
@@ -992,7 +995,7 @@ class SocketHandlerThread(threading.Thread):
         if not config.EXITING:
             #We have connected.
             logger.debug("Sockets.Handler(): ("+self.socket.name+"): Done! Entering main loop.")
-            print("Connected to peer ("+self.socket.name+").")
+            print("Connected to peer ("+self.socket.name+").", level="debug")
 
         #---------------- Manage the connection, sending and receiving data ---------------
         #Keep sending and receiving messages until we're asked to exit.
@@ -1024,7 +1027,7 @@ class SocketHandlerThread(threading.Thread):
 
                 if self.socket.verbose:
                     print("Lost connection to peer ("+self.socket.name
-                          + "). Reconnecting...")
+                          + "). Reconnecting...", level="error")
 
                 #Wait for the socket to reconnect, unless the user ends the program
                 #(this allows us to exit cleanly if the peer is gone).
@@ -1055,7 +1058,7 @@ class SocketHandlerThread(threading.Thread):
                         last_ping_good = True
 
                         if self.socket.verbose:
-                            print("Reconnected to peer ("+self.socket.name+").")
+                            print("Reconnected to peer ("+self.socket.name+").", level="debug")
 
                         break
 

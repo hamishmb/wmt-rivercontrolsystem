@@ -34,6 +34,8 @@ for other control logic too.
 import logging
 from abc import ABCMeta, abstractmethod
 
+from Tools.coretools import rcs_print as print #pylint: disable=redefined-builtin
+
 #Don't ask for a logger name, so this works with both main.py
 #and the universal monitor.
 logger = logging.getLogger(__name__)
@@ -395,7 +397,7 @@ class GenericControlState(ControlStateABC):
 
         except self.LogEventError:
             msg = "Error while trying to log event over network."
-            print(msg)
+            print(msg, level="error")
             logger.error(msg)
 
     def setup_state(self):
@@ -418,7 +420,7 @@ class GenericControlState(ControlStateABC):
         except self.StateTransitionError:
             msg = ("Could not parse sensor readings. Control logic is "
                    "stalled.")
-            print(msg)
+            print(msg, level="error")
             logger.error(msg)
 
             #If state transition failed, we can still refresh device

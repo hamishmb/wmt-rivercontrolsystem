@@ -85,6 +85,7 @@ import datetime
 sys.path.insert(0, os.path.abspath(os.path.split(os.path.dirname(__file__))[0]))
 
 from Tools import logiccoretools
+from Tools.coretools import rcs_print as print #pylint: disable=redefined-builtin
 from Tools.statetools import ControlStateMachineABC, GenericControlState
 
 #Don't ask for a logger name, so this works with both main.py
@@ -232,7 +233,7 @@ class TempTopUpReadingsParser():
             msg = "Error: Could not get readings for one or more devices on "\
                   "butts group G1 (which is within site G3)."
 
-            print(msg)
+            print(msg, level="error")
             logger.error(msg)
 
     def _g1sensor_contradiction_error(self):
@@ -247,7 +248,7 @@ class TempTopUpReadingsParser():
                "G3:M0 (depth) = " + str(self.g1_level) + "mm\n"
                "Check for sensor faults in G1.")
 
-        print(msg)
+        print(msg, level="error")
         logger.error(msg)
 
         try:
@@ -255,7 +256,7 @@ class TempTopUpReadingsParser():
 
         except RuntimeError:
             msg = "Error while trying to log error event over network."
-            print(msg)
+            print(msg, level="error")
             logger.error(msg)
 
     def g1_needs_top_up(self):
@@ -423,7 +424,7 @@ class TempTopUpDeviceController():
 
         except (AttributeError, RuntimeError):
             msg = "Error: Error trying to control G3:S0!"
-            print(msg)
+            print(msg, level="error")
             logger.error(msg)
 
         if log_event:
@@ -435,7 +436,7 @@ class TempTopUpDeviceController():
 
             except RuntimeError:
                 msg = "Error while trying to log event over network."
-                print(msg)
+                print(msg, level="error")
                 logger.error(msg)
 
 # -------------------- Temp Top Up control states ---------------------
@@ -539,7 +540,7 @@ class TTUToppingUpState(GenericControlState):
             msg = ("Could not parse sensor readings. "
                    "Falling back to TTUIdleState as failsafe.")
 
-            print(msg)
+            print(msg, level="error")
             logger.error(msg)
             self.csm.set_state_by(TTUIdleState, self)
 

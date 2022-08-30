@@ -41,6 +41,7 @@ sys.path.insert(0, os.path.abspath('..'))
 
 import config
 from Tools import logiccoretools
+from Tools.coretools import rcs_print as print #pylint: disable=redefined-builtin
 
 #Don't ask for a logger name, so this works with all modules.
 logger = logging.getLogger(__name__)
@@ -108,7 +109,7 @@ def wbuttspi_logic(readings, devices, monitors, reading_interval):
             logiccoretools.attempt_to_control("VALVE6", "V6", "100%")
 
         except RuntimeError:
-            print("Error: Error trying to control valve V6!")
+            print("Error: Error trying to control valve V6!", level="error")
             logger.error("Error: Error trying to control valve V6!")
 
         logger.info("Turning off the backup pump if it was on...")
@@ -121,7 +122,7 @@ def wbuttspi_logic(readings, devices, monitors, reading_interval):
                                      "OK", "None")
 
     except RuntimeError:
-        print("Error: Couldn't update site status!")
+        print("Error: Couldn't update site status!", level="error")
         logger.error("Error: Couldn't update site status!")
 
     return 15
@@ -180,7 +181,7 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
         sbutts_float_reading = logiccoretools.get_latest_reading("G6", "FS0").get_value()
 
     except (RuntimeError, AttributeError):
-        print("Error: Error trying to get latest G6:FS0 reading!")
+        print("Error: Error trying to get latest G6:FS0 reading!", level="error")
         logger.error("Error: Error trying to get latest G6:FS0 reading!")
 
         #Default to full instead.
@@ -190,7 +191,7 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
         lhbutts1_float_reading = logiccoretools.get_latest_reading("G3", "FS0").get_value()
 
     except (RuntimeError, AttributeError):
-        print("Error: Error trying to get latest G3:FS0 reading!")
+        print("Error: Error trying to get latest G3:FS0 reading!", level="error")
         logger.error("Error: Error trying to get latest G3:FS0 reading!")
 
         #Default to full instead.
@@ -200,7 +201,7 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
         lhbutts2_float_reading = logiccoretools.get_latest_reading("G3", "FS1").get_value()
 
     except (RuntimeError, AttributeError):
-        print("Error: Error trying to get latest G3:FS1 reading!")
+        print("Error: Error trying to get latest G3:FS1 reading!", level="error")
         logger.error("Error: Error trying to get latest G3:FS1 reading!")
 
         #Default to full instead.
@@ -210,7 +211,7 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
         lhbutts3_float_reading = logiccoretools.get_latest_reading("G3", "FS2").get_value()
 
     except (RuntimeError, AttributeError):
-        print("Error: Error trying to get latest G3:FS2 reading!")
+        print("Error: Error trying to get latest G3:FS2 reading!", level="error")
         logger.error("Error: Error trying to get latest G3:FS2 reading!")
 
         #Default to full instead.
@@ -243,7 +244,7 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
         logiccoretools.attempt_to_control("VALVE6", "V6", "0%")
 
     except RuntimeError:
-        print("Error: Error trying to control valve V6!")
+        print("Error: Error trying to control valve V6!", level="error")
         logger.error("Error: Error trying to control valve V6!")
 
     #Setup the reading_interval based on the upstream capacity.
@@ -298,7 +299,7 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
                 logiccoretools.attempt_to_control("VALVE12", "V12", "100%")
 
             except RuntimeError:
-                print("Error: Error trying to control valve V12!")
+                print("Error: Error trying to control valve V12!", level="error")
                 logger.error("Error: Error trying to control valve V12!")
 
             #Pump to the stage butts.
@@ -316,7 +317,7 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
                 logiccoretools.attempt_to_control("VALVE12", "V12", "0%")
 
             except RuntimeError:
-                print("Error: Error trying to control valve V12!")
+                print("Error: Error trying to control valve V12!", level="error")
                 logger.error("Error: Error trying to control valve V12!")
 
             logger.info("Night Mode: Stop pumping water to the stage butts...")
@@ -334,7 +335,7 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
                 logiccoretools.attempt_to_control("VALVE1", "V1", "100%")
 
             except RuntimeError:
-                print("Error: Error trying to control valve V1!")
+                print("Error: Error trying to control valve V1!", level="error")
                 logger.error("Error: Error trying to control valve V1!")
 
             logger.info("Night Mode: Pumping water to butts group G1 of the lady "
@@ -353,7 +354,7 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
                 logiccoretools.attempt_to_control("VALVE1", "V1", "0%")
 
             except RuntimeError:
-                print("Error: Error trying to control valve V1!")
+                print("Error: Error trying to control valve V1!", level="error")
                 logger.error("Error: Error trying to control valve V1!")
 
             logger.info("Night Mode: Stop pumping water to G1 butts...")
@@ -371,7 +372,7 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
                 logiccoretools.attempt_to_control("VALVE2", "V2", "100%")
 
             except RuntimeError:
-                print("Error: Error trying to control valve V2!")
+                print("Error: Error trying to control valve V2!", level="error")
                 logger.error("Error: Error trying to control valve V2!")
 
             logger.info("Night Mode: Pumping water to butts group G2 of the lady "
@@ -390,7 +391,7 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
                 logiccoretools.attempt_to_control("VALVE2", "V2", "0%")
 
             except RuntimeError:
-                print("Error: Error trying to control valve V2!")
+                print("Error: Error trying to control valve V2!", level="error")
                 logger.error("Error: Error trying to control valve V2!")
 
             logger.info("Night Mode: Stop pumping water to G2 butts...")
@@ -408,11 +409,12 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
                 logiccoretools.attempt_to_control("VALVE3", "V3", "100%")
 
             except RuntimeError:
-                print("Error: Error trying to control valve V3!")
+                print("Error: Error trying to control valve V3!", level="error")
                 logger.error("Error: Error trying to control valve V3!")
 
             logger.info("Night Mode: Pumping water to butts group G3 of the lady "
                         + "hanham butts...")
+
             print("Night Mode: Pumping water to butts group G3 of the lady hanham butts...")
 
             backup_pump.enable()
@@ -426,7 +428,7 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
                 logiccoretools.attempt_to_control("VALVE3", "V3", "0%")
 
             except RuntimeError:
-                print("Error: Error trying to control valve V3!")
+                print("Error: Error trying to control valve V3!", level="error")
                 logger.error("Error: Error trying to control valve V3!")
 
             logger.info("Night Mode: Stop pumping water to G3 butts...")
@@ -453,7 +455,7 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
                 logiccoretools.attempt_to_control("VALVE12", "V12", "100%")
 
             except RuntimeError:
-                print("Error: Error trying to control valve V12!")
+                print("Error: Error trying to control valve V12!", level="error")
                 logger.error("Error: Error trying to control valve V12!")
 
             #Pump to the stage butts.
@@ -471,7 +473,7 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
                 logiccoretools.attempt_to_control("VALVE12", "V12", "0%")
 
             except RuntimeError:
-                print("Error: Error trying to control valve V12!")
+                print("Error: Error trying to control valve V12!", level="error")
                 logger.error("Error: Error trying to control valve V12!")
 
             logger.info("Night Mode: Stop pumping water to the stage butts...")
@@ -489,7 +491,7 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
                 logiccoretools.attempt_to_control("VALVE1", "V1", "100%")
 
             except RuntimeError:
-                print("Error: Error trying to control valve V1!")
+                print("Error: Error trying to control valve V1!", level="error")
                 logger.error("Error: Error trying to control valve V1!")
 
             logger.info("Night Mode: Pumping water to butts group G1 of the lady "
@@ -508,7 +510,7 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
                 logiccoretools.attempt_to_control("VALVE1", "V1", "0%")
 
             except RuntimeError:
-                print("Error: Error trying to control valve V1!")
+                print("Error: Error trying to control valve V1!", level="error")
                 logger.error("Error: Error trying to control valve V1!")
 
             logger.info("Night Mode: Stop pumping water to G1 butts...")
@@ -526,7 +528,7 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
                 logiccoretools.attempt_to_control("VALVE2", "V2", "100%")
 
             except RuntimeError:
-                print("Error: Error trying to control valve V2!")
+                print("Error: Error trying to control valve V2!", level="error")
                 logger.error("Error: Error trying to control valve V2!")
 
             logger.info("Night Mode: Pumping water to butts group G2 of the lady "
@@ -545,7 +547,7 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
                 logiccoretools.attempt_to_control("VALVE2", "V2", "0%")
 
             except RuntimeError:
-                print("Error: Error trying to control valve V2!")
+                print("Error: Error trying to control valve V2!", level="error")
                 logger.error("Error: Error trying to control valve V2!")
 
             logger.info("Night Mode: Stop pumping water to G2 butts...")
@@ -563,7 +565,7 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
                 logiccoretools.attempt_to_control("VALVE3", "V3", "100%")
 
             except RuntimeError:
-                print("Error: Error trying to control valve V3!")
+                print("Error: Error trying to control valve V3!", level="error")
                 logger.error("Error: Error trying to control valve V3!")
 
             logger.info("Night Mode: Pumping water to butts group G3 of the lady "
@@ -582,7 +584,7 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
                 logiccoretools.attempt_to_control("VALVE3", "V3", "0%")
 
             except RuntimeError:
-                print("Error: Error trying to control valve V3!")
+                print("Error: Error trying to control valve V3!", level="error")
                 logger.error("Error: Error trying to control valve V3!")
 
             logger.info("Night Mode: Stop pumping water to G3 butts...")
@@ -609,7 +611,7 @@ def wbuttspi_water_backup_logic(readings, devices, monitors, reading_interval):
                                      "OK", "None")
 
     except RuntimeError:
-        print("Error: Couldn't update site status!")
+        print("Error: Couldn't update site status!", level="error")
         logger.error("Error: Couldn't update site status!")
 
     return reading_interval

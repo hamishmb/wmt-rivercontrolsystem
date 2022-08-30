@@ -44,6 +44,9 @@ import traceback
 import config
 
 from Tools import coretools
+from Tools.coretools import rcs_print as print #pylint: disable=redefined-builtin
+from Tools import logiccoretools
+from Tools import sockettools
 from Tools import monitortools
 from Tools import loggingtools
 
@@ -58,7 +61,10 @@ except ImportError:
     if __name__ == "__main__" and "NAS" not in sys.argv \
         and ("-t" not in sys.argv and "--testing" not in sys.argv):
 
-        sys.exit("Unable to import RPi.GPIO! Did you mean to use testing mode? Exiting...")
+        print("Unable to import RPi.GPIO! Did you mean to use testing mode? Exiting...",
+              level="critical")
+
+        sys.exit()
 
     else:
         #Import dummy GPIO class to fake hardware access.
@@ -92,6 +98,13 @@ def usage():
     print("Version: "+config.VERSION+" ("+config.RELEASEDATE+")")
     print("Copyright (C) Wimborne Model Town 2017-2022")
 
+def inject_coretools_deps():
+    """
+    This function is used to inject dependencies into coretoolsto fix circular import issues.
+    """
+    coretools.sockettools = sockettools
+    coretools.logiccoretools = logiccoretools
+
 def handle_cmdline_options():
     """
     This function is used to handle the commandline options passed
@@ -124,7 +137,7 @@ def handle_cmdline_options():
     except getopt.GetoptError as err:
         #Invalid option. Show the help message and then exit.
         #Show the error.
-        print(str(err))
+        print(str(err), level="error")
         usage()
         sys.exit(2)
 
@@ -138,7 +151,9 @@ def handle_cmdline_options():
         elif opt in ("-t", "--testing"):
             #Enable testing mode.
             testing = True
-            print("WARNING: Running in testing mode, hardware access simulated/disabled...")
+            print("Running in testing mode, hardware access simulated/disabled...",
+                  level="critical")
+
             logger.critical("Running in testing mode, hardware access simulated/disabled...")
 
         elif opt in ["-d", "--debug"]:
@@ -172,7 +187,7 @@ def handle_cmdline_options():
 def run():
     """
     This is the main part of the program.
-    It coordinates setting up the sockets, the device objects, and the
+    It coordinates setting up coretools, the sockets, the device objects, and the
     monitors, and connecting to the database.
 
     After that, it enters a monitor loop and coordinates repeatedly
@@ -199,11 +214,14 @@ def run():
         As above.
     """
 
-    #Handle cmdline options.
-    site_id = handle_cmdline_options()
-
     #Reconfigure logging for modules imported before we set the logger up.
     config.reconfigure_logging()
+
+    #Inject dependencies for coretools.
+    inject_coretools_deps()
+
+    #Handle cmdline options.
+    site_id = handle_cmdline_options()
 
     #Welcome message.
     logger.info("River Control System Version "+config.VERSION+" ("+config.RELEASEDATE+")")
@@ -418,7 +436,6 @@ def do_teardown(devices, monitors, sockets, timesync, loadmonitor, dbconn):
     print("Waiting for device management thread(s) to exit...")
     for device in devices:
         if device.has_mgmt_thread():
-            print("bob")
             device.mgmt_thread.wait_exit()
 
     #Wait for the monitors to exit.
@@ -480,4 +497,5 @@ if __name__ == "__main__":
         logger.critical("Unexpected error \n\n"+str(traceback.format_exc())
                         +"\n\nwhile running. Exiting...")
 
-        print("Unexpected error \n\n"+str(traceback.format_exc())+"\n\nwhile running. Exiting...")
+        print("Unexpected error \n\n"+str(traceback.format_exc())
+              + "\n\nwhile running. Exiting...", level="critical")

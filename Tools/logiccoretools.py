@@ -34,6 +34,8 @@ import logging
 
 import config
 
+from Tools.coretools import rcs_print as print #pylint: disable=redefined-builtin, unused-import
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
 
@@ -74,7 +76,8 @@ def get_latest_reading(site_id, sensor_id, retries=3):
 
     Usage example:
         >>> get_latest_reading("G4", "M0")
-        >>> 'Reading at time 2020-09-30 12:01:12.227565, and tick 0, from probe: G4:M0, with value: 350, and status: OK'
+        >>> 'Reading at time 2020-09-30 12:01:12.227565, and tick 0, from probe: G4:M0, \
+        >>> with value: 350, and status: OK'
 
     """
 
@@ -103,7 +106,8 @@ def get_n_latest_readings(site_id, sensor_id, number, retries=3):
 
     Usage example:
         >>> get_latest_reading("G4", "M0")
-        >>> 'Reading at time 2020-09-30 12:01:12.227565, and tick 0, from probe: G4:M0, with value: 350, and status: OK'
+        >>> 'Reading at time 2020-09-30 12:01:12.227565, and tick 0, from probe: G4:M0, \
+        >>> with value: 350, and status: OK'
 
     """
 
