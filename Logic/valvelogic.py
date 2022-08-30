@@ -68,14 +68,14 @@ def valve_logic(devices):
     """
 
     #Get the sensor name for this valve.
-    for valve in config.SITE_SETTINGS[config.SYSTEM_ID]["Devices"]:
+    for valve in config.SITE_SETTINGS[config.SITE_ID]["Devices"]:
         valve_id = valve.split(":")[1]
 
     position = None
 
     #Check if there's a request for a new valve position.
     try:
-        state = logiccoretools.get_state(config.SYSTEM_ID, valve_id)
+        state = logiccoretools.get_state(config.SITE_ID, valve_id)
 
     except RuntimeError:
         print("Error: Couldn't get site status!")
@@ -97,7 +97,7 @@ def valve_logic(devices):
                     print("New valve position: "+str(position))
 
                     try:
-                        logiccoretools.log_event(config.SYSTEM_ID+": New valve position: "
+                        logiccoretools.log_event(config.SITE_ID+": New valve position: "
                                                  + str(position))
 
                     except RuntimeError:

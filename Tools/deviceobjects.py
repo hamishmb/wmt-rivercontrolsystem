@@ -154,16 +154,16 @@ class BaseDeviceClass:
 
         return self._id.split(":")[1]
 
-    def get_system_id(self):
+    def get_site_id(self):
         """
-        This method returns this devices' system-id eg "G4".
+        This method returns this devices' site id eg "G4".
 
         Returns:
-            string. The prob's system id.
+            string. The device's site id.
 
         Usage:
 
-            >>> a_name = <Device-Object>.get_system_id()
+            >>> a_name = <Device-Object>.get_site_id()
         """
 
         return self._id.split(":")[0]

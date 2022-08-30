@@ -74,7 +74,7 @@ class Sockets:
         _type (string):         The type of socket we are constructing.
                                 **MUST** be one of "Plug", or "Socket".
 
-        system_id (str):        The system ID.
+        site_id (str):          The site ID.
 
     Kwargs:
         name (string):          The human-readable name of the socket.
@@ -97,15 +97,15 @@ class Sockets:
     #pylint: disable=too-many-public-methods
     #We need all of these public methods too.
 
-    def __init__(self, _type, system_id, name="Unknown"):
+    def __init__(self, _type, site_id, name="Unknown"):
         """The constructor, as documented above."""
         #Throw ValueError if _type is invalid.
         if _type not in ("Plug", "Socket"):
             raise ValueError("_type must be either 'Plug' or 'Socket'")
 
-        #Throw ValueError if system_id is invalid.
-        if not isinstance(system_id, str) or system_id not in config.SITE_SETTINGS:
-            raise ValueError("Invalid system ID")
+        #Throw ValueError if site_id is invalid.
+        if not isinstance(site_id, str) or site_id not in config.SITE_SETTINGS:
+            raise ValueError("Invalid site ID")
 
         #Throw ValueError if name is invalid.
         if not isinstance(name, str):
@@ -116,7 +116,7 @@ class Sockets:
         self.server_address = ""
         self.type = _type
         self.name = name
-        self.system_id = system_id
+        self.site_id = site_id
         self.underlying_socket = None
         self.server_socket = None
         self.handler_thread = None
@@ -896,13 +896,13 @@ class Sockets:
             return
 
         if isinstance(msg, str):
-            potential_sysid = msg.split(" ")[0].replace("*", "")
+            potential_siteid = msg.split(" ")[0].replace("*", "")
 
         else:
-            potential_sysid = None
+            potential_siteid = None
 
         #Append to the appropriate queue.
-        if potential_sysid != self.system_id and potential_sysid in config.SITE_SETTINGS:
+        if potential_siteid != self.site_id and potential_siteid in config.SITE_SETTINGS:
             #Needs to be sent to another device.
             logger.debug("Sockets._process_obj(): ("+self.name
                          + "): Pushing message to forward queue...")

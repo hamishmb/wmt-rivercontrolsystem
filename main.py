@@ -77,7 +77,7 @@ def usage():
     print("\nUsage: main.py [OPTION]\n\n")
     print("Options:\n")
     print("       -h, --help:                   Show this help message")
-    print("       -i <string>, --id=<string>    Specifiies the system ID eg \"G4\". If")
+    print("       -i <string>, --id=<string>    Specifiies the site ID eg \"G4\". If")
     print("                                     settings for this site aren't found in")
     print("                                     config.py an exception will be thrown.")
     print("                                     Mandatory.\n")
@@ -95,26 +95,26 @@ def usage():
 def handle_cmdline_options():
     """
     This function is used to handle the commandline options passed
-    to main.py. It also sets config.SYSTEM_ID to the site ID passed
+    to main.py. It also sets config.SITE_ID to the site ID passed
     over the commandline.
 
     Valid commandline options to main.py:
         See usage function in source code, or run main.py with the -h flag.
 
     Returns:
-        string system_id.
+        string site_id.
 
-            The system id.
+            The site id.
 
     Raises:
         AssertionError, if there are unhandled options.
 
     Usage:
 
-    >>> system_id = handle_cmdline_options()
+    >>> site_id = handle_cmdline_options()
     """
 
-    system_id = None
+    site_id = None
 
     #Check all cmdline options are valid.
     try:
@@ -133,7 +133,7 @@ def handle_cmdline_options():
 
     for opt, arg in opts:
         if opt in ["-i", "--id"]:
-            system_id = arg
+            site_id = arg
 
         elif opt in ("-t", "--testing"):
             #Enable testing mode.
@@ -157,17 +157,17 @@ def handle_cmdline_options():
         else:
             assert False, "unhandled option"
 
-    #Check system ID was specified.
-    assert system_id is not None, "You must specify the system ID"
+    #Check site ID was specified.
+    assert site_id is not None, "You must specify the site ID"
 
-    #Check system ID is valid.
-    assert system_id in config.SITE_SETTINGS, "Invalid system ID"
+    #Check site ID is valid.
+    assert site_id in config.SITE_SETTINGS, "Invalid site ID"
 
     config.TESTING = testing
 
-    config.SYSTEM_ID = system_id
+    config.SITE_ID = site_id
 
-    return system_id
+    return site_id
 
 def run():
     """
@@ -200,7 +200,7 @@ def run():
     """
 
     #Handle cmdline options.
-    system_id = handle_cmdline_options()
+    site_id = handle_cmdline_options()
 
     #Reconfigure logging for modules imported before we set the logger up.
     config.reconfigure_logging()
@@ -215,14 +215,14 @@ def run():
     print("System startup sequence initiated.")
 
     #Get the default reading interval for this site.
-    reading_interval = config.SITE_SETTINGS[system_id]["Default Interval"]
+    reading_interval = config.SITE_SETTINGS[site_id]["Default Interval"]
 
     #Make a readings dictionary for temporary storage for the control logic function.
     readings = {}
 
     #The NAS box needs more time to stabilise before we continue.
     #Wait another minute.
-    if system_id == "NAS":
+    if site_id == "NAS":
         print("Waiting 1 minute for NAS box to finish booting up (Press CTRL-C to skip)...")
         logger.info("Waiting 1 minute for NAS box to finish booting up (Press CTRL-C to skip)...")
 
@@ -235,7 +235,7 @@ def run():
 
     #Run setup code.
     sockets, nas_socket, monitors, devices, dbconn, timesync, loadmonitor = \
-        do_setup(system_id, reading_interval)
+        do_setup(site_id, reading_interval)
 
     logger.info("Entering main loop...")
     print("Entering main loop...")
@@ -251,14 +251,14 @@ def run():
             coretools.get_local_readings(monitors, readings)
 
             #Run the control logic for this site.
-            if "ControlLogicFunction" in config.SITE_SETTINGS[system_id]:
+            if "ControlLogicFunction" in config.SITE_SETTINGS[site_id]:
                 function = getattr(controllogic,
-                                   config.SITE_SETTINGS[system_id]["ControlLogicFunction"])
+                                   config.SITE_SETTINGS[site_id]["ControlLogicFunction"])
 
                 reading_interval = function(readings, devices, monitors, reading_interval)
 
             #Count down the reading interval.
-            coretools.wait_for_next_reading_interval(reading_interval, system_id,
+            coretools.wait_for_next_reading_interval(reading_interval, site_id,
                                                      nas_socket, sockets)
 
             #Check if shutdown, reboot, or update have been requested.
@@ -284,14 +284,14 @@ def run():
     logger.info("USER INTERRUPT: Sequence complete. Process successful. Software exiting now.")
     logging.shutdown()
 
-def do_setup(system_id, reading_interval):
+def do_setup(site_id, reading_interval):
     """
     This function starts synchronising the system time with the NAS box,
     sets up the sockets, the device objects, the monitors, and connects
     to the database.
 
     Args:
-        system_id (String):             The site ID of this pi.
+        site_id (String):               The site ID of this pi.
         reading_interval (int):         The default reading interval of this site.
 
     Returns:
@@ -311,32 +311,32 @@ def do_setup(system_id, reading_interval):
 
     """
     #If this isn't the NAS box, start synchronising time with the NAS box.
-    if system_id != "NAS":
-        timesync = coretools.SyncTime(system_id)
+    if site_id != "NAS":
+        timesync = coretools.SyncTime(site_id)
 
     #Start monitoring system load.
     loadmonitor = coretools.MonitorLoad()
 
     #Create the socket(s).
-    sockets, nas_socket = coretools.setup_sockets(system_id)
+    sockets, nas_socket = coretools.setup_sockets(site_id)
 
-    if "SocketName" in config.SITE_SETTINGS[system_id]:
+    if "SocketName" in config.SITE_SETTINGS[site_id]:
         logger.info("Will connect to NAS box as soon as connection is available.")
         print("Will connect to NAS box as soon as connection is available.")
 
     #Create the probe(s).
-    probes = coretools.setup_devices(system_id)
+    probes = coretools.setup_devices(site_id)
 
     #Create the device(s).
-    devices = coretools.setup_devices(system_id, dictionary="Devices")
+    devices = coretools.setup_devices(site_id, dictionary="Devices")
 
     logger.info("Connecting to database...")
     print("Connecting to database...")
 
-    dbconn = coretools.DatabaseConnection(system_id)
+    dbconn = coretools.DatabaseConnection(site_id)
     config.DBCONNECTION.start_thread()
 
-    if system_id != "NAS":
+    if site_id != "NAS":
         #Wait a little while for the system tick on boot on everything except the NAS box.
         coretools.wait_for_tick(nas_socket)
 
@@ -344,17 +344,17 @@ def do_setup(system_id, reading_interval):
     monitors = []
 
     for probe in probes:
-        monitors.append(monitortools.Monitor(probe, reading_interval, system_id))
+        monitors.append(monitortools.Monitor(probe, reading_interval, site_id))
 
     #Add monitor for the gate valve actuator if this is a gate valve pi.
-    if system_id[0] == "V":
+    if site_id[0] == "V":
         for device in devices:
-            monitors.append(monitortools.Monitor(device, reading_interval, system_id))
+            monitors.append(monitortools.Monitor(device, reading_interval, site_id))
 
     #Run control logic set-up function, if it exists.
-    if "ControlLogicSetupFunction" in config.SITE_SETTINGS[system_id]:
+    if "ControlLogicSetupFunction" in config.SITE_SETTINGS[site_id]:
         function = getattr(controllogic,
-                           config.SITE_SETTINGS[system_id]["ControlLogicSetupFunction"])
+                           config.SITE_SETTINGS[site_id]["ControlLogicSetupFunction"])
 
         function()
 

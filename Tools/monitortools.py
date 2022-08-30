@@ -67,35 +67,35 @@ class BaseMonitorClass(threading.Thread):
     derived from.
 
     Args:
-        system_id (str):            The ID of the pi/system
+        site_id (str):              The ID of the pi/system
                                     this monitor is running on eg G4.
 
         probe_id (str):             The ID of the probe we're looking for.
 
     Usage:
-        >>> monitor = BaseMonitorClass(<system_id>, <probe_id>)
+        >>> monitor = BaseMonitorClass(<site_id>, <probe_id>)
 
         .. note::
                 This won't do anything helpful by itself;
                 you need to derive from it.
     """
 
-    def __init__(self, system_id, probe_id):
+    def __init__(self, site_id, probe_id):
         """Constructor as documented above"""
         threading.Thread.__init__(self)
         #Check IDs are sane.
-        for _id in (system_id, probe_id):
+        for _id in (site_id, probe_id):
             if ":" in _id \
                 or _id == "":
 
                 raise ValueError("Invalid ID: "+_id)
 
-        self.system_id = system_id
+        self.site_id = site_id
         self.probe_id = probe_id
 
         #The file name the readings file will have (plus the time it was
         #created)
-        self.file_name = "readings/"+self.system_id+":"+self.probe_id
+        self.file_name = "readings/"+self.site_id+":"+self.probe_id
         self.current_file_name = None
 
         #A reference to the file handle of the open readings file.
@@ -121,20 +121,20 @@ class BaseMonitorClass(threading.Thread):
         self.running = False
 
     #---------- GETTERS ----------
-    def get_system_id(self):
+    def get_site_id(self):
         """
-        This method returns the system ID of the probe this monitor
+        This method returns the site ID of the device/probe this monitor
         is monitoring.
 
         Returns:
-            string. The system ID.
+            string. The site ID.
 
         Usage:
 
-            >>> <BaseMonitorClassObject>.get_system_id()
+            >>> <BaseMonitorClassObject>.get_site_id()
             >>> "G4"
         """
-        return self.system_id
+        return self.site_id
 
     def get_probe_id(self):
         """
@@ -157,7 +157,7 @@ class BaseMonitorClass(threading.Thread):
         if there are multiple readings they are read in the correct
         order), and deletes it from the queue.
 
-        The reading ID is a combination of the system ID and the
+        The reading ID is a combination of the site ID and the
         sensor ID.
 
         Throws:
@@ -258,7 +258,7 @@ class BaseMonitorClass(threading.Thread):
         The file will be opened in append mode, and
         a CSV header and start time will be written.
 
-        The name for the file will be readings/<system_id>:<probe_name>.csv
+        The name for the file will be readings/<site_id>:<probe_name>.csv
 
         For example: readings/G4:M0.csv
 
@@ -361,14 +361,14 @@ class BaseMonitorClass(threading.Thread):
         try:
             if reading == previous_reading:
                 #Write a . to the file.
-                logger.debug("Monitor for "+self.system_id+":"+self.probe_id
+                logger.debug("Monitor for "+self.site_id+":"+self.probe_id
                              + ": New reading, same value as last time.")
 
                 self.file_handle.write(".")
 
             else:
                 #Write it to the readings file.
-                logger.debug("Monitor for "+self.system_id+":"+self.probe_id
+                logger.debug("Monitor for "+self.site_id+":"+self.probe_id
                              + ": New reading, new value: "+reading.get_value())
 
                 self.file_handle.write("\n"+reading.as_csv())
@@ -429,10 +429,10 @@ class BaseMonitorClass(threading.Thread):
             previous_reading = None
 
         if not readings_file_exists:
-            logger.error("Monitor for "+self.system_id+":"+self.probe_id
+            logger.error("Monitor for "+self.site_id+":"+self.probe_id
                          + ": Readings file gone! Creating new one...")
 
-            print("Monitor for "+self.system_id+":"+self.probe_id
+            print("Monitor for "+self.site_id+":"+self.probe_id
                   + ": Readings file gone! Creating new one...")
 
             self.file_handle.write("WARNING: Previous readings file was "
@@ -442,10 +442,10 @@ class BaseMonitorClass(threading.Thread):
             should_continue = True
 
         elif write_failed:
-            logger.error("Monitor for "+self.system_id+":"+self.probe_id
+            logger.error("Monitor for "+self.site_id+":"+self.probe_id
                          + ": Can't write to readings file! Creating new one...")
 
-            print("Monitor for "+self.system_id+":"+self.probe_id
+            print("Monitor for "+self.site_id+":"+self.probe_id
                   + ": Can't write to readings file! Creating new one...")
 
             self.file_handle.write("WARNING: Couldn't write to previous readings file.\n")
@@ -489,7 +489,7 @@ class Monitor(BaseMonitorClass):
                                     interval for the
                                     monitor to use.
 
-        system_id (str):            As defined in BaseMonitorClass'
+        site_id (str):              As defined in BaseMonitorClass'
                                     constructor.
 
     Invokes:
@@ -500,8 +500,8 @@ class Monitor(BaseMonitorClass):
         >>> monitor = Monitor(<aProbeObject>, <aReadingInterval>, <anID>)
     """
 
-    def __init__(self, probe, reading_interval, system_id):
-        BaseMonitorClass.__init__(self, system_id, probe.get_device_id())
+    def __init__(self, probe, reading_interval, site_id):
+        BaseMonitorClass.__init__(self, site_id, probe.get_device_id())
 
         self.probe = probe
         self.reading_interval = reading_interval
@@ -583,7 +583,7 @@ class Monitor(BaseMonitorClass):
 
             print("Exception \n\n"+str(traceback.format_exc())+"\n\nwhile running!")
 
-        logger.debug("Monitor for "+self.system_id+":"+self.probe_id+": Exiting...")
+        logger.debug("Monitor for "+self.site_id+":"+self.probe_id+": Exiting...")
 
         self.file_handle.close()
         self.running = False
@@ -604,7 +604,7 @@ class SocketsMonitor(BaseMonitorClass):
     Args:
         socket (Sockets):           The socket to read readings from.
 
-        system_id (str):            As defined in BaseMonitorClass'
+        site_id (str):              As defined in BaseMonitorClass'
                                     constructor.
 
         probe_id (str):             As defined in BaseMonitorClass'
@@ -618,8 +618,8 @@ class SocketsMonitor(BaseMonitorClass):
         >>> monitor = Monitor(<aProbeObject>, <anInteger>, <aReadingInterval>, <anID>)
     """
 
-    def __init__(self, socket, system_id, probe_id):
-        BaseMonitorClass.__init__(self, system_id, probe_id)
+    def __init__(self, socket, site_id, probe_id):
+        BaseMonitorClass.__init__(self, site_id, probe_id)
 
         self.socket = socket
         self.probe_id = probe_id
@@ -703,7 +703,7 @@ class SocketsMonitor(BaseMonitorClass):
 
             print("Exception \n\n"+str(traceback.format_exc())+"\n\nwhile running!")
 
-        logger.debug("SocketsMonitor for "+self.system_id+":"+self.probe_id+": Exiting...")
+        logger.debug("SocketsMonitor for "+self.site_id+":"+self.probe_id+": Exiting...")
 
         self.file_handle.close()
         self.running = False

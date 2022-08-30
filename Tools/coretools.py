@@ -348,13 +348,13 @@ class SyncTime(threading.Thread):
     need to have been granted to normal users for this to work when not run as root.
 
     Constructor args:
-        system_id (String):             The system ID of this pi.
+        site_id (String):             The site ID of this pi.
     """
 
-    def __init__(self, system_id):
+    def __init__(self, site_id):
         """The constructor"""
         threading.Thread.__init__(self)
-        self.system_id = system_id
+        self.site_id = site_id
         self.is_running = True
 
         self.start()
@@ -375,7 +375,7 @@ class SyncTime(threading.Thread):
                       "Error was: "+str(stdout))
 
                 #If this isn't Sump Pi, try to sync with Sump Pi instead.
-                if self.system_id != "SUMP":
+                if self.site_id != "SUMP":
                     print("SyncTime: Falling back to Sump Pi...")
                     logger.error("SyncTime: Falling back to Sump Pi...")
 
@@ -1453,7 +1453,7 @@ class DatabaseConnection(threading.Thread):
             >>> tick = get_latest_tick()
         """
 
-        if config.SYSTEM_ID != "NAS":
+        if config.SITE_ID != "NAS":
             return None
 
         query = """SELECT * FROM `SystemTick` ORDER BY `ID` DESC """ \
@@ -1493,7 +1493,7 @@ class DatabaseConnection(threading.Thread):
             >>>
         """
 
-        if config.SYSTEM_ID != "NAS":
+        if config.SITE_ID != "NAS":
             return
 
         if not isinstance(tick, int):
@@ -1552,12 +1552,12 @@ class DatabaseConnection(threading.Thread):
 #NB: Moved to /Logic/
 
 # -------------------- STARTUP FUNCTIONS --------------------
-def setup_sockets(system_id):
+def setup_sockets(site_id):
     """
     This function is used to set up the sockets for each site.
 
     Args:
-        system_id (str):              The system that we're setting up for.
+        site_id (str):              The system that we're setting up for.
 
     Returns:
         If this is not the NAS box:
@@ -1576,7 +1576,7 @@ def setup_sockets(system_id):
     local_socket = None
     sockets = {}
 
-    if config.SITE_SETTINGS[system_id]["HostingSockets"]:
+    if config.SITE_SETTINGS[site_id]["HostingSockets"]:
         #We are a server, and we are hosting sockets.
         #Use info ation from the other sites to figure out what sockets to create.
         for site in config.SITE_SETTINGS:
@@ -1586,7 +1586,7 @@ def setup_sockets(system_id):
             if "SocketName" not in site_settings:
                 continue
 
-            socket = sockettools.Sockets("Socket", system_id, site_settings["SocketName"])
+            socket = sockettools.Sockets("Socket", site_id, site_settings["SocketName"])
             socket.set_portnumber(site_settings["ServerPort"])
             socket.set_server_address(site_settings["IPAddress"])
             sockets[site_settings["SocketID"]] = socket
@@ -1594,16 +1594,16 @@ def setup_sockets(system_id):
             socket.start_handler()
 
     #If a server is defined for this pi, connect to it.
-    if "SocketName" in config.SITE_SETTINGS[system_id]:
+    if "SocketName" in config.SITE_SETTINGS[site_id]:
         #Connect to the server.
-        socket = sockettools.Sockets("Plug", system_id,
-                                      config.SITE_SETTINGS[system_id]["ServerName"])
+        socket = sockettools.Sockets("Plug", site_id,
+                                      config.SITE_SETTINGS[site_id]["ServerName"])
 
-        socket.set_portnumber(config.SITE_SETTINGS[system_id]["ServerPort"])
-        socket.set_server_address(config.SITE_SETTINGS[system_id]["ServerAddress"])
+        socket.set_portnumber(config.SITE_SETTINGS[site_id]["ServerPort"])
+        socket.set_server_address(config.SITE_SETTINGS[site_id]["ServerAddress"])
         socket.start_handler()
 
-        sockets[config.SITE_SETTINGS[system_id]["SocketID"]] = socket
+        sockets[config.SITE_SETTINGS[site_id]["SocketID"]] = socket
 
         local_socket = socket
 
@@ -1611,12 +1611,12 @@ def setup_sockets(system_id):
 
     return sockets, local_socket
 
-def setup_devices(system_id, dictionary="Probes"):
+def setup_devices(site_id, dictionary="Probes"):
     """
     This function is used to set up the device objects for each site.
 
     Args:
-        system_id (str):              The system that we're setting up for.
+        site_id (str):                The system that we're setting up for.
 
     KWargs:
         dictionary (str):             The dictionary in config.py to set up for.
@@ -1631,8 +1631,8 @@ def setup_devices(system_id, dictionary="Probes"):
     """
     devices = []
 
-    for device_id in config.SITE_SETTINGS[system_id][dictionary]:
-        device_settings = config.SITE_SETTINGS[system_id][dictionary][device_id]
+    for device_id in config.SITE_SETTINGS[site_id][dictionary]:
+        device_settings = config.SITE_SETTINGS[site_id][dictionary][device_id]
 
         device_name = device_settings["Name"]
         _type = device_settings["Type"]
@@ -1653,7 +1653,7 @@ def setup_devices(system_id, dictionary="Probes"):
             device.set_pins(device_settings["Pins"], _input=False)
 
             #If this is sump pi and the circulation pump, turn it on.
-            if system_id == "SUMP" and device_id == "SUMP:P1":
+            if site_id == "SUMP" and device_id == "SUMP:P1":
                 print("Enabling circulation pump to avoid overflow while waiting for NAS box...")
                 device.enable()
 
@@ -1748,13 +1748,13 @@ def get_local_readings(monitors, readings):
     for monitor in monitors:
         #Skip over any monitors that have stopped.
         if not monitor.is_running():
-            logger.error("Monitor for "+monitor.get_system_id()+":"+monitor.get_probe_id()
+            logger.error("Monitor for "+monitor.get_site_id()+":"+monitor.get_probe_id()
                          + " is not running!")
 
-            print("Monitor for "+monitor.get_system_id()+":"+monitor.get_probe_id()
+            print("Monitor for "+monitor.get_site_id()+":"+monitor.get_probe_id()
                   + " is not running!")
 
-            logiccoretools.log_event("Monitor for "+monitor.get_system_id()+":"
+            logiccoretools.log_event("Monitor for "+monitor.get_site_id()+":"
                                      + monitor.get_probe_id()+" is not running!",
                                      severity="ERROR")
 
@@ -1813,14 +1813,14 @@ def get_and_handle_new_reading(monitor, _type):
 
     return reading
 
-def wait_for_next_reading_interval(reading_interval, system_id, local_socket, sockets):
+def wait_for_next_reading_interval(reading_interval, site_id, local_socket, sockets):
     """
     This function keeps watching for new messages coming from other sites while
     we count down the reading interval.
 
     Args:
         reading_interval:           The reading interval.
-        system_id:                  The system (site) id.
+        site_id:                    The site id.
         local_socket:               The local socket. Special None value if on NAS box.
         sockets:                    The list of all sockets connected to this site.
 
@@ -1837,7 +1837,7 @@ def wait_for_next_reading_interval(reading_interval, system_id, local_socket, so
         #This way, if our reading interval changes,
         #the code will respond to the change immediately.
         #Check if we have a new reading interval.
-        if not asked_for_tick and (reading_interval - count) < 10 and system_id != "NAS":
+        if not asked_for_tick and (reading_interval - count) < 10 and site_id != "NAS":
             #Get the latest system tick if we're in the last 10 seconds of the interval.
             asked_for_tick = True
             local_socket.write("Tick?")
@@ -1850,14 +1850,14 @@ def wait_for_next_reading_interval(reading_interval, system_id, local_socket, so
                     continue
 
                 #-------------------- SYSTEM TICK HANDLING --------------------
-                if data == "Tick?" and system_id == "NAS":
+                if data == "Tick?" and site_id == "NAS":
                     #NAS box only: reply with the current system tick when asked.
                     _socket.write("Tick: "+str(config.TICK))
 
                     print("Received request for current system tick")
                     logger.info("Received request for current system tick")
 
-                elif "Tick:" in data and system_id != "NAS":
+                elif "Tick:" in data and site_id != "NAS":
                     #Everything except NAS box: store tick sent from the NAS box.
                     config.TICK = int(data.split(" ")[1])
 
@@ -1874,7 +1874,7 @@ def wait_for_next_reading_interval(reading_interval, system_id, local_socket, so
 #FIXME: These are currently broken. Do not use them.
 #TODO: Could also do with some deduplication of code that checks the db, if I continue
 #      with that approach.
-def prepare_sitewide_actions(system_id): #FIXME
+def prepare_sitewide_actions(site_id): #FIXME
     """
     This function coordinates the following features:
 
@@ -1889,7 +1889,7 @@ def prepare_sitewide_actions(system_id): #FIXME
             Do not use.
 
     Args:
-        system_id:                  The system (site) id.
+        site_id:                  The site id.
 
     Usage:
 
@@ -1897,7 +1897,7 @@ def prepare_sitewide_actions(system_id): #FIXME
     """
     #Check the database and for the presence of local files.
     try:
-        state = logiccoretools.get_state(config.SYSTEM_ID, config.SYSTEM_ID)
+        state = logiccoretools.get_state(config.SITE_ID, config.SITE_ID)
 
     except RuntimeError:
         state = None
@@ -1931,12 +1931,12 @@ def prepare_sitewide_actions(system_id): #FIXME
 
     #Prepare for any sitewide actions.
     if config.SHUTDOWN:
-        prepare_shutdown(system_id)
+        prepare_shutdown(site_id)
 
     elif config.REBOOT:
-        prepare_reboot(system_id)
+        prepare_reboot(site_id)
 
-    elif config.UPDATE and system_id == "NAS":
+    elif config.UPDATE and site_id == "NAS":
         nas_prepare_update()
 
     elif config.UPDATE:
@@ -1981,7 +1981,7 @@ def prepare_sitewide_actions(system_id): #FIXME
     if at_least_one_action:
         config.EXITING = True
 
-def prepare_shutdown(system_id): #FIXME
+def prepare_shutdown(site_id): #FIXME
     """
     This function prepares the system to shut down, and makes it known in the database
     that this is going to happen.
@@ -1994,7 +1994,7 @@ def prepare_shutdown(system_id): #FIXME
             Do not use.
 
     Args:
-        system_id:                  The system (site) id.
+        site_id:                  The site id.
 
     Usage:
 
@@ -2009,7 +2009,7 @@ def prepare_shutdown(system_id): #FIXME
         print("Error: Couldn't update site status or event log!")
         logger.error("Error: Couldn't update site status or event log!")
 
-    if system_id == "NAS" and config.SHUTDOWNALL:
+    if site_id == "NAS" and config.SHUTDOWNALL:
         for site_id in config.SITE_SETTINGS:
             try:
                 logiccoretools.attempt_to_control(site_id, site_id, "Shutdown")
@@ -2019,7 +2019,7 @@ def prepare_shutdown(system_id): #FIXME
                 print("Error: Couldn't request poweroff for "+site_id+"!")
                 logger.error("Error: Couldn't request poweroff for "+site_id+"!")
 
-def prepare_reboot(system_id): #FIXME
+def prepare_reboot(site_id): #FIXME
     """
     This function prepares the system to reboot, and makes it known in the database
     that this is going to happen.
@@ -2032,7 +2032,7 @@ def prepare_reboot(system_id): #FIXME
             Do not use.
 
     Args:
-        system_id:                  The system (site) id.
+        site_id:                  The site id.
 
     Usage:
 
@@ -2047,7 +2047,7 @@ def prepare_reboot(system_id): #FIXME
         print("Error: Couldn't update site status or event log!")
         logger.error("Error: Couldn't update site status or event log!")
 
-    if system_id == "NAS" and config.REBOOTALL:
+    if site_id == "NAS" and config.REBOOTALL:
         for site_id in config.SITE_SETTINGS:
             try:
                 logiccoretools.attempt_to_control(site_id, site_id, "Reboot")
@@ -2072,15 +2072,12 @@ def nas_prepare_update(): #FIXME
             This is currently broken and sometimes doesn't behave deterministically.
             Do not use.
 
-    Args:
-        system_id:                  The system (site) id.
-
     Usage:
 
         >>> nas_prepare_update("G4")
     """
 
-    if config.SYSTEM_ID != "NAS":
+    if config.SITE_ID != "NAS":
         return
 
     logger.info("Making new software available to all pis using webserver...")
@@ -2133,14 +2130,11 @@ def pi_prepare_update(): #FIXME
             This is currently broken and sometimes doesn't behave deterministically.
             Do not use.
 
-    Args:
-        system_id:                  The system (site) id.
-
     Usage:
 
         >>> pi_prepare_update("G4")
     """
-    if config.SYSTEM_ID == "NAS":
+    if config.SITE_ID == "NAS":
         return
 
     #Download the update from the NAS box.
@@ -2171,7 +2165,7 @@ def pi_prepare_update(): #FIXME
         logger.error("Error: Couldn't update site status or event log!")
 
 # -------------------- SITEWIDE UPDATER REALISATION FUNCTIONS --------------------
-def do_sitewide_actions(system_id): #FIXME
+def do_sitewide_actions(site_id): #FIXME
     """
     This function coordinates the following features:
 
@@ -2186,7 +2180,7 @@ def do_sitewide_actions(system_id): #FIXME
             Do not use.
 
     Args:
-        system_id:                  The system (site) id.
+        site_id:                  The site id.
 
     Usage:
 
@@ -2194,15 +2188,15 @@ def do_sitewide_actions(system_id): #FIXME
     """
 
     if config.SHUTDOWN:
-        do_shutdown(system_id)
+        do_shutdown(site_id)
 
     elif config.REBOOT:
-        do_reboot(system_id)
+        do_reboot(site_id)
 
     elif config.UPDATE:
-        do_update(system_id)
+        do_update(site_id)
 
-def do_shutdown(system_id): #FIXME
+def do_shutdown(site_id): #FIXME
     """
     This function shuts the system down.
 
@@ -2214,7 +2208,7 @@ def do_shutdown(system_id): #FIXME
             Do not use.
 
     Args:
-        system_id:                  The system (site) id.
+        site_id:                  The site id.
 
     Usage:
 
@@ -2224,7 +2218,7 @@ def do_shutdown(system_id): #FIXME
     print("System shutdown sequence initiated.")
     logger.info("System shutdown sequence initiated.")
 
-    if system_id != "NAS":
+    if site_id != "NAS":
         print("Sequence complete. Process successful. Shutting down now.")
         logger.info("Sequence complete. Process successful. Shutting down now.")
         logging.shutdown()
@@ -2242,7 +2236,7 @@ def do_shutdown(system_id): #FIXME
         #Restart database thread to check.
         #FIXME We don't wait to make sure the DB connection is alive!
         config.EXITING = False
-        DatabaseConnection(system_id)
+        DatabaseConnection(site_id)
         config.DBCONNECTION.start_thread()
 
         print("Waiting for pis shut down...")
@@ -2283,7 +2277,7 @@ def do_shutdown(system_id): #FIXME
         logging.shutdown()
         subprocess.run(["ash", "/home/admin/shutdown.sh"], check=False)
 
-def do_reboot(system_id): #FIXME
+def do_reboot(site_id): #FIXME
     """
     This function reboots the system.
 
@@ -2295,7 +2289,7 @@ def do_reboot(system_id): #FIXME
             Do not use.
 
     Args:
-        system_id:                  The system (site) id.
+        site_id:                  The site id.
 
     Usage:
 
@@ -2305,7 +2299,7 @@ def do_reboot(system_id): #FIXME
     print("System reboot sequence initiated.")
     logger.info("System reboot sequence initiated.")
 
-    if system_id != "NAS":
+    if site_id != "NAS":
         print("Sequence complete. Process successful. Rebooting now.")
         logger.info("Sequence complete. Process successful. Rebooting now.")
         logging.shutdown()
@@ -2323,7 +2317,7 @@ def do_reboot(system_id): #FIXME
         #Restart database thread to check.
         #FIXME We don't wait to make sure the DB connection is alive!
         config.EXITING = False
-        DatabaseConnection(system_id)
+        DatabaseConnection(site_id)
         config.DBCONNECTION.start_thread()
 
         print("Waiting for pis to reboot...")
@@ -2364,7 +2358,7 @@ def do_reboot(system_id): #FIXME
         logging.shutdown()
         subprocess.run(["ash", "/home/admin/reboot.sh"], check=False)
 
-def do_update(system_id): #FIXME
+def do_update(site_id): #FIXME
     """
     This function updates the system. This is done by moving the existing river system
     software to rivercontrolsystem.old, extracting the previously-downloaded
@@ -2380,7 +2374,7 @@ def do_update(system_id): #FIXME
             Do not use.
 
     Args:
-        system_id:                  The system (site) id.
+        site_id:                  The site id.
 
     Usage:
 
@@ -2390,7 +2384,7 @@ def do_update(system_id): #FIXME
     print("System update sequence initiated.")
     logger.info("System update sequence initiated.")
 
-    if system_id != "NAS":
+    if site_id != "NAS":
         update_files("/home/pi")
 
         #Reboot.
@@ -2404,7 +2398,7 @@ def do_update(system_id): #FIXME
         #Restart database thread to check.
         #FIXME We don't wait to make sure the DB connection is alive!
         config.EXITING = False
-        DatabaseConnection(system_id)
+        DatabaseConnection(site_id)
         config.DBCONNECTION.start_thread()
 
         print("Waiting for pis to download the update...")

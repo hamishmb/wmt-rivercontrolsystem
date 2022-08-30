@@ -91,9 +91,9 @@ class TestBaseDeviceClass(unittest.TestCase):
         """Test that get_device_id() works as expected."""
         self.assertEqual(self.basedevice.get_device_id(), "M0")
 
-    def test_get_system_id_1(self):
-        """Test that get_system_id() works as expected."""
-        self.assertEqual(self.basedevice.get_system_id(), "SUMP")
+    def test_get_site_id_1(self):
+        """Test that get_site_id() works as expected."""
+        self.assertEqual(self.basedevice.get_site_id(), "SUMP")
 
     def test_get_id_1(self):
         """Test that get_id() works as expected."""

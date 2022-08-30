@@ -153,8 +153,8 @@ RELEASEDATE = "10/8/2022"
 WATERBACKUPSTART = 16                 # Start time (hours UTC)
 WATERBACKUPEND = 7                    # End time (hours UTC)
 
-#System ID of this Pi.
-SYSTEM_ID = None
+#Site ID of this Pi.
+SITE_ID = None
 
 #CPU LOAD and MEMORY USAGE of this system.
 CPU = None

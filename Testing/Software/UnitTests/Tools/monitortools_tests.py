@@ -65,22 +65,22 @@ class TestBaseMonitorClass(unittest.TestCase):
     def test_constructor_1(self):
         """Test that the constructor works when passed valid arguments"""
         for dataset in data.TEST_BASEMONITOR_DATA:
-            system_id = dataset[0]
+            site_id = dataset[0]
             device_id = dataset[1]
 
-            new_basemonitor = monitor_tools.BaseMonitorClass(system_id, device_id)
+            new_basemonitor = monitor_tools.BaseMonitorClass(site_id, device_id)
 
-            self.assertEqual(new_basemonitor.get_system_id(), system_id)
+            self.assertEqual(new_basemonitor.get_site_id(), site_id)
             self.assertEqual(new_basemonitor.get_probe_id(), device_id)
 
     def test_constructor_2(self):
         """Test that the constructor fails when passed invalid arguments"""
         for dataset in data.TEST_BASEMONITOR_BAD_DATA:
-            system_id = dataset[0]
+            site_id = dataset[0]
             device_id = dataset[1]
 
             try:
-                new_basemonitor = monitor_tools.BaseMonitorClass(system_id, device_id)
+                new_basemonitor = monitor_tools.BaseMonitorClass(site_id, device_id)
 
             except ValueError:
                 #This is expected.
