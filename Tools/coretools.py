@@ -985,7 +985,7 @@ class DatabaseConnection(threading.Thread):
             site_id (str).            The site we want the reading from.
             sensor_id (str).          The sensor we want the reading for.
 
-        KWargs:
+        Named args:
             retries[=3] (int).        The number of times to retry before giving up
                                       and raising an error.
 
@@ -1023,7 +1023,7 @@ class DatabaseConnection(threading.Thread):
             sensor_id.          The sensor we want the reading for.
             number.             The number of readings.
 
-        KWargs:
+        Named args:
             retries[=3] (int).        The number of times to retry before giving up
                                       and raising an error.
 
@@ -1094,7 +1094,7 @@ class DatabaseConnection(threading.Thread):
             site_id.            The site that holds the device we're interested in.
             sensor_id.          The sensor we want to know about.
 
-        KWargs:
+        Named args:
             retries[=3] (int).        The number of times to retry before giving up
                                       and raising an error.
 
@@ -1151,7 +1151,7 @@ class DatabaseConnection(threading.Thread):
         Args:
             site_id.            The site that we're interested in.
 
-        KWargs:
+        Named args:
             retries[=3] (int).        The number of times to retry before giving up
                                       and raising an error.
 
@@ -1207,7 +1207,7 @@ class DatabaseConnection(threading.Thread):
             sensor_id.          The sensor we want to know about.
             request (str).      What state we want the device to be in.
 
-        KWargs:
+        Named args:
             retries[=3] (int).        The number of times to retry before giving up
                                       and raising an error.
 
@@ -1284,7 +1284,7 @@ class DatabaseConnection(threading.Thread):
             site_id.            The site that holds the device we're interested in.
             sensor_id.          The sensor we want to know about.
 
-        KWargs:
+        Named args:
             retries[=3] (int).        The number of times to retry before giving up
                                       and raising an error.
 
@@ -1337,7 +1337,7 @@ class DatabaseConnection(threading.Thread):
         Args:
             event (str).                The event to log.
 
-        Kwargs:
+        Named args:
             severity[="INFO"] (str).    The severity of the event.
                                         "DEBUG", "INFO", "WARNING", "ERROR", or "CRITICAL".
 
@@ -1383,7 +1383,7 @@ class DatabaseConnection(threading.Thread):
             sw_status (str).            The current status of the software on this pi.
             current_action (str).       The software's current action(s).
 
-        Kwargs:
+        Named args:
             retries[=3] (int).          The number of times to retry before giving up
                                         and raising an error.
 
@@ -1441,7 +1441,7 @@ class DatabaseConnection(threading.Thread):
                 on NAS box startup. This is a do-nothing method on all
                 devices except the NAS box.
 
-        Kwargs:
+        Named args:
             retries[=3] (int).          The number of times to retry before giving up
                                         and raising an error.
 
@@ -1483,7 +1483,7 @@ class DatabaseConnection(threading.Thread):
         Args:
             tick (int). The system tick to store.
 
-        Kwargs:
+        Named args:
             retries[=3] (int).          The number of times to retry before giving up
                                         and raising an error.
 
@@ -1513,7 +1513,7 @@ class DatabaseConnection(threading.Thread):
         Args:
             reading (Reading). The reading to store.
 
-        Kwargs:
+        Named args:
             retries[=3] (int).          The number of times to retry before giving up
                                         and raising an error.
 
@@ -1620,7 +1620,7 @@ def setup_devices(site_id, dictionary="Probes"):
     Args:
         site_id (str):                The system that we're setting up for.
 
-    KWargs:
+    Named args:
         dictionary (str):             The dictionary in config.py to set up for.
                                       If not specified, default is "Probes".
 

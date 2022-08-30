@@ -226,7 +226,7 @@ class BaseDeviceClass:
             pins (int or tuple(int)):        The BCM pin(s) you want to specify to be used
                                              with this probe.
 
-        KWargs:
+        Named args:
             _input (bool):                   True if the pins are inputs, False if they are
                                              outputs. Default is True if not specified.
 
@@ -328,7 +328,7 @@ class Motor(BaseDeviceClass):
             pwm_available (bool):       Specify if PWM is available or not.
                                         True = yes, False = no.
 
-        KWargs:
+        Named args:
             pwm_pin (int):              Specify the PWM pin. Default = -1.
                                         If you're enabling PWM, you need to
                                         set this.

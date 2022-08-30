@@ -60,7 +60,7 @@ def get_latest_reading(site_id, sensor_id, retries=3):
         site_id (str).            The site we want the reading from.
         sensor_id (str).          The sensor we want the reading for.
 
-    KWargs:
+    Named args:
         retries[=3] (int).        The number of times to retry before giving up
                                   and raising an error.
 
@@ -94,7 +94,7 @@ def get_n_latest_readings(site_id, sensor_id, number, retries=3):
         sensor_id.          The sensor we want the reading for.
         number.             The number of readings.
 
-    KWargs:
+    Named args:
         retries[=3] (int).        The number of times to retry before giving up
                                   and raising an error.
 
@@ -123,7 +123,7 @@ def get_state(site_id, sensor_id, retries=3):
         site_id.            The site that holds the device we're interested in.
         sensor_id.          The sensor we want to know about.
 
-    KWargs:
+    Named args:
         retries[=3] (int).        The number of times to retry before giving up
                                   and raising an error.
 
@@ -154,7 +154,7 @@ def get_status(site_id, retries=3):
     Args:
         site_id.            The site that we're interested in.
 
-    KWargs:
+    Named args:
         retries[=3] (int).        The number of times to retry before giving up
                                   and raising an error.
 
@@ -191,7 +191,7 @@ def attempt_to_control(site_id, sensor_id, request, retries=3):
         sensor_id.          The sensor we want to know about.
         request (str).      What state we want the device to be in.
 
-    KWargs:
+    Named args:
         retries[=3] (int).        The number of times to retry before giving up
                                   and raising an error.
 
@@ -222,7 +222,7 @@ def release_control(site_id, sensor_id, retries=3):
         site_id.            The site that holds the device we're interested in.
         sensor_id.          The sensor we want to know about.
 
-    KWargs:
+    Named args:
         retries[=3] (int).        The number of times to retry before giving up
                                   and raising an error.
 
@@ -246,7 +246,7 @@ def log_event(event, severity="INFO", retries=3):
     Args:
         event (str).                The event to log.
 
-    Kwargs:
+    Named args:
         severity[="INFO"] (str).    The severity of the event.
                                     "DEBUG", "INFO", "WARNING", "ERROR", or "CRITICAL".
 
@@ -283,7 +283,7 @@ def update_status(pi_status, sw_status, current_action, retries=3):
         sw_status (str).            The current status of the software on this pi.
         current_action (str).       The software's current action(s).
 
-    Kwargs:
+    Named args:
         retries[=3] (int).          The number of times to retry before giving up
                                     and raising an error.
 
@@ -307,7 +307,7 @@ def get_latest_tick(retries=3):
             get the ticks over the socket - this is a much less
             efficient way to deliver system ticks.
 
-    Kwargs:
+    Named args:
         retries[=3] (int).          The number of times to retry before giving up
                                     and raising an error.
 
@@ -334,7 +334,7 @@ def store_tick(tick, retries=3):
     Args:
         tick (int). The system tick to store.
 
-    Kwargs:
+    Named args:
         retries[=3] (int).          The number of times to retry before giving up
                                     and raising an error.
 
@@ -355,7 +355,7 @@ def store_reading(reading, retries=3):
     Args:
         reading (Reading). The reading to store.
 
-    Kwargs:
+    Named args:
         retries[=3] (int).          The number of times to retry before giving up
                                     and raising an error.
 

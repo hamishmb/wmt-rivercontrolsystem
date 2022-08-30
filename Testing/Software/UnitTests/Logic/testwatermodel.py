@@ -1327,7 +1327,7 @@ class WaterModel():
             site_id (str).            The site we want the reading from.
             sensor_id (str).          The sensor we want the reading for.
 
-        KWargs:
+        Named args:
             retries[=3] (int).        Ignored by this implementation.
 
         Returns:
@@ -1449,7 +1449,7 @@ class WaterModel():
             sensor_id.       The sensor we want to know about.
             request (str).   What state we want the device to be in.
 
-        KWargs:
+        Named args:
             retries[=3] (int).  Has no effect in this implementation.
 
         Returns:
@@ -1484,7 +1484,7 @@ class WaterModel():
             site_id.         The site that holds the device we're interested in.
             sensor_id.       The sensor we want to know about.
 
-        KWargs:
+        Named args:
             retries[=3] (int).  Has no effect in this implementation.
         """
         d = self._validateDevice(site_id, sensor_id,

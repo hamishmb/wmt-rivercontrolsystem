@@ -78,8 +78,8 @@ class Sockets:
 
         site_id (str):          The site ID.
 
-    Kwargs:
-        name (string):          The human-readable name of the socket.
+    Named args:
+        name (str):             The human-readable name of the socket.
                                 Optional.
 
     Usage:
