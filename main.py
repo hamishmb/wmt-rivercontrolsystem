@@ -414,9 +414,9 @@ def do_teardown(devices, monitors, timesync, loadmonitor):
     print("Waiting for timesync service to exit...")
     timesync.wait_exit()
 
-    #Wait for load monitor service to exit.
-    logger.info("Waiting for load monitor service to exit...")
-    print("Waiting for load monitor service to exit...")
+    #Wait for load monitoring service to exit.
+    logger.info("Waiting for load monitoring service to exit...")
+    print("Waiting for load monitoring service to exit...")
     loadmonitor.wait_exit()
 
     #Wait for the database connection to exit.
