@@ -311,7 +311,8 @@ class Reading:
 
         Usage:
             >>> print(reading_1)
-            >>> Reading at time 2018, and tick 101, from probe: G4:M0, with value: 500, and status: FAULT DETECTED
+            >>> Reading at time 2018, and tick 101, from probe: G4:M0, with value: 500, \
+            >>> and status: FAULT DETECTED
         """
 
         return ("Reading at time " + self._time
@@ -535,9 +536,7 @@ def setup_sockets(site_id):
     if config.SITE_SETTINGS[site_id]["HostingSockets"]:
         #We are a server, and we are hosting sockets.
         #Use info ation from the other sites to figure out what sockets to create.
-        for site in config.SITE_SETTINGS:
-            site_settings = config.SITE_SETTINGS[site]
-
+        for site_settings in config.SITE_SETTINGS.values():
             #If no server is defined for this site, skip it.
             if "SocketName" not in site_settings:
                 continue
@@ -891,16 +890,6 @@ def prepare_sitewide_actions(site_id): #FIXME
     if config.SHUTDOWN:
         prepare_shutdown(site_id)
 
-    elif config.REBOOT:
-        prepare_reboot(site_id)
-
-    elif config.UPDATE and site_id == "NAS":
-        nas_prepare_update()
-
-    elif config.UPDATE:
-        pi_prepare_update()
-
-    if config.SHUTDOWN:
         try:
             os.remove("/tmp/.shutdown")
 
@@ -914,6 +903,8 @@ def prepare_sitewide_actions(site_id): #FIXME
             pass
 
     elif config.REBOOT:
+        prepare_reboot(site_id)
+
         try:
             os.remove("/tmp/.reboot")
 
@@ -927,13 +918,19 @@ def prepare_sitewide_actions(site_id): #FIXME
             pass
 
     elif config.UPDATE:
+        if site_id == "NAS":
+            nas_prepare_update()
+
+        else:
+            pi_prepare_update()
+
         try:
             os.remove("/tmp/.update")
 
         except (OSError, IOError):
             pass
 
-    #Signal the software to shut down if we are performing at least one site-wide action.
+    #Signal the software to tear down if we are performing at least one site-wide action.
     #NOTE: Actually shutting down/rebooting/applying the update is done later after most of
     #      the framework has shut down.
     if at_least_one_action:
