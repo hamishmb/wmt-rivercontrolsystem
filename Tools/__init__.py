@@ -23,13 +23,21 @@ modules in here:
 coretools.py
 ============
 
-This module contins classes and functions used in varies parts of the rest of the
-framework. Currently this includes control logic, but this is likely to move soon.
+This module contains classes and functions used in various parts of the rest of the
+framework.
+
+Contains Classes:
+
+- Reading - to represent readings from all probes/devices.
+
+dbtools.py
+==========
+
+This module contains database-related functionality.
 
 Contains Classes:
 
 - DatabaseConnection - to communicate with the database on the NAS box.
-- Reading - to represent readings from all probes.
 
 loggingtools.py
 ===============

@@ -188,7 +188,7 @@ if not "TESTING" in globals():
     else:
         TESTING = True
 
-#Used to signal software shutdown to all the threads.
+#Used to signal software teardown to all the threads.
 EXITING = False
 
 #Signals whether we are in debug mode.
@@ -214,6 +214,7 @@ def reconfigure_logging():
     """
 
     Tools.coretools.reconfigure_logger()
+    Tools.dbtools.reconfigure_logger()
     Tools.devicemanagement.reconfigure_logger()
     Tools.deviceobjects.reconfigure_logger()
     Tools.logiccoretools.reconfigure_logger()

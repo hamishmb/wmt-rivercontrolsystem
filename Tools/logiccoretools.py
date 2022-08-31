@@ -21,7 +21,7 @@
 """
 This is the logiccoretools module, which contains interfacing code to enable
 the control logic to use the database without being coupled directly to the
-coretools.DatabaseConnection class.
+dbtools.DatabaseConnection class.
 
 .. module:: logiccoretools.py
     :platform: Linux

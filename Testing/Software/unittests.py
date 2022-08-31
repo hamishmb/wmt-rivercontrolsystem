@@ -54,35 +54,38 @@ def usage():
     print("       -h, --help:                   Show this help message")
     print("       -D, --debug                   Enable debug mode")
     print("       -a, --all:                    Run all the tests. The default.")
-    print("       -c, --coretools:              Run only the tests for the")
+    print("       -c, --coretools:              Run the tests for the")
     print("                                     coretools module.\n")
-    print("       -l, --logic:                  Run only the tests for the")
+    print("       --dbtools:                    Run the tests for the")
+    print("                                     dbtools module.\n")
+    print("       --deviceobjects:              Run the tests for the")
+    print("                                     deviceobjects module.\n")
+    print("       --devicemanagement:           Run the tests for the")
+    print("                                     devicemanagement module.\n")
+    print("       --loggingtools:               Run the tests for the")
+    print("                                     loggingtools module.\n")
+    print("       --testingtools:               Run the tests for the")
+    print("                                     testingtools module.\n")
+    print("       --monitortools:               Run the tests for the")
+    print("                                     monitortools module.\n")
+    print("       --sockettools:                Run the tests for the")
+    print("                                     sockettools module.\n")
+    print("       -l, --logic:                  Run the tests for the")
     print("                                     controllogic (integration)")
     print("                                     module.\n")
-    print("       --valvelogic:                   Run only the tests for the")
+    print("       --valvelogic:                 Run the tests for the")
     print("                                     valvelogic module.\n")
-    print("       --naslogic:                   Run only the tests for the")
+    print("       --naslogic:                   Run the tests for the")
     print("                                     naslogic module.\n")
-    print("       --sumppilogic:                Run only the tests for the")
+    print("       --sumppilogic:                Run the tests for the")
     print("                                     sumppilogic module.\n")
-    print("       --wbuttspilogic:              Run only the tests for the")
+    print("       --wbuttspilogic:              Run the tests for the")
     print("                                     wbuttspilogic module.\n")
-    print("       --stagepilogic:               Run only the tests for the")
+    print("       --stagepilogic:               Run the tests for the")
     print("                                     stagepilogic module.\n")
-    print("       --temptopuplogic:             Run only the tests for the")
+    print("       --temptopuplogic:             Run the tests for the")
     print("                                     temptopuplogic module.\n")
-    print("       --deviceobjects:              Run only the tests for the")
-    print("                                     deviceobjects module.\n")
-    print("       --devicemanagement:           Run only the tests for the")
-    print("                                     devicemanagement module.\n")
-    print("       --loggingtools:               Run only the tests for the")
-    print("                                     loggingtools module.\n")
-    print("       --testingtools:               Run only the tests for the")
-    print("                                     testingtools module.\n")
-    print("       --monitortools:               Run only the tests for the")
-    print("                                     monitortools module.\n")
-    print("       --sockettools:                Run only the tests for the")
-    print("                                     sockettools module.\n")
+
     print("unittests.py is released under the GNU GPL Version 3")
     print("Version: "+config.VERSION+" ("+config.RELEASEDATE+")")
     print("Copyright (C) Wimborne Model Town 2017-2022")
@@ -92,12 +95,11 @@ if __name__ == "__main__":
     try:
         OPTIONS, ARGUMENTS = getopt.getopt(sys.argv[1:], "hDacl",
                                            ["help", "debug", "all", "coretools",
-                                            "logic", "valvelogic", "naslogic",
+                                            "dbtools", "deviceobjects", "devicemanagement",
+                                            "loggingtools", "testingtools", "monitortools",
+                                            "sockettools", "logic", "valvelogic", "naslogic",
                                             "sumppilogic", "wbuttspilogic",
-                                            "stagepilogic", "temptopuplogic",
-                                            "deviceobjects", "devicemanagement",
-                                            "loggingtools", "testingtools",
-                                            "monitortools", "sockettools"])
+                                            "stagepilogic", "temptopuplogic"])
 
     except getopt.GetoptError as err:
         #Invalid option. Show the help message and then exit.
@@ -116,13 +118,7 @@ if __name__ == "__main__":
 
     #Import test modules here so the logging level is right - debug mode will work.
     from UnitTests.Tools import coretools_tests
-    from UnitTests.Logic import controllogic_tests
-    from UnitTests.Logic import valvelogic_tests
-    from UnitTests.Logic import naslogic_tests
-    from UnitTests.Logic import sumppilogic_tests
-    from UnitTests.Logic import wbuttspilogic_tests
-    from UnitTests.Logic import stagepilogic_tests
-    from UnitTests.Logic import temptopuplogic_tests
+    from UnitTests.Tools import dbtools_tests
     from UnitTests.Tools import deviceobjects_tests
     from UnitTests.Tools import devicemanagement_tests
     from UnitTests.Tools import loggingtools_tests
@@ -130,66 +126,76 @@ if __name__ == "__main__":
     from UnitTests.Tools import monitortools_tests
     from UnitTests.Tools import sockettools_tests
 
+    from UnitTests.Logic import controllogic_tests
+    from UnitTests.Logic import valvelogic_tests
+    from UnitTests.Logic import naslogic_tests
+    from UnitTests.Logic import sumppilogic_tests
+    from UnitTests.Logic import wbuttspilogic_tests
+    from UnitTests.Logic import stagepilogic_tests
+    from UnitTests.Logic import temptopuplogic_tests
+
     #Set up which tests to run based on options given.
-    TEST_SUITES = [coretools_tests, controllogic_tests,
-                   valvelogic_tests, naslogic_tests,
-                   sumppilogic_tests, wbuttspilogic_tests,
-                   stagepilogic_tests, temptopuplogic_tests,
-                   deviceobjects_tests, devicemanagement_tests,
-                   loggingtools_tests, testingtools_tests,
-                   monitortools_tests, sockettools_tests]
+    TEST_SUITES = []
 
+    #Make sure that at least one option is specified.
+    if not OPTIONS:
+        #Show the help message and then exit.
+        print("Error: you must specify at least one option")
+        usage()
+        sys.exit(2)  
+      
     for o, a in OPTIONS:
-        if o in ["-a", "--all"]:
-            TEST_SUITES = [coretools_tests, controllogic_tests,
-                           valvelogic_tests, naslogic_tests,
-                           sumppilogic_tests, wbuttspilogic_tests,
-                           stagepilogic_tests, temptopuplogic_tests,
-                           deviceobjects_tests, devicemanagement_tests,
-                           loggingtools_tests, testingtools_tests,
-                           monitortools_tests, sockettools_tests]
+        if o in ("-a", "--all"):
+            TEST_SUITES = [coretools_tests, deviceobjects_tests, devicemanagement_tests,
+                           loggingtools_tests, testingtools_tests, monitortools_tests,
+                           sockettools_tests, controllogic_tests, valvelogic_tests,
+                           naslogic_tests, sumppilogic_tests, wbuttspilogic_tests,
+                           stagepilogic_tests, temptopuplogic_tests]
 
-        elif o in ["-c", "--coretools"]:
-            TEST_SUITES = [coretools_tests]
+        elif o in ("-c", "--coretools"):
+            TEST_SUITES.append(coretools_tests)
 
-        elif o in ("-l", "--logic"):
-            TEST_SUITES = [controllogic_tests]
-
-        elif o in ("--valvelogic"):
-            TEST_SUITES = [valvelogic_tests]
-
-        elif o in ("--naslogic"):
-            TEST_SUITES = [naslogic_tests]
-
-        elif o in ("--wbuttspilogic"):
-            TEST_SUITES = [wbuttspilogic_tests]
-
-        elif o in ("--sumppilogic"):
-            TEST_SUITES = [sumppilogic_tests]
-
-        elif o in ("--stagepilogic"):
-            TEST_SUITES = [stagepilogic_tests]
-
-        elif o in ("--temptopuplogic"):
-            TEST_SUITES = [temptopuplogic_tests]
+        elif o in ("--dbtools"):
+            TEST_SUITES.append(dbtools_tests)
 
         elif o in ("--deviceobjects"):
-            TEST_SUITES = [deviceobjects_tests]
+            TEST_SUITES.append(deviceobjects_tests)
 
         elif o in ("--devicemanagement"):
-            TEST_SUITES = [devicemanagement_tests]
+            TEST_SUITES.append(devicemanagement_tests)
 
         elif o in ("--loggingtools"):
-            TEST_SUITES = [loggingtools_tests]
+            TEST_SUITES.append(loggingtools_tests)
 
         elif o in ("--testingtools"):
-            TEST_SUITES = [testingtools_tests]
+            TEST_SUITES.append(testingtools_tests)
 
         elif o in ("--monitortools"):
-            TEST_SUITES = [monitortools_tests]
+            TEST_SUITES.append(monitortools_tests)
 
         elif o in ("--sockettools"):
-            TEST_SUITES = [sockettools_tests]
+            TEST_SUITES.append(sockettools_tests)
+
+        elif o in ("-l", "--logic"):
+            TEST_SUITES.append(controllogic_tests)
+
+        elif o in ("--valvelogic"):
+            TEST_SUITES.append(valvelogic_tests)
+
+        elif o in ("--naslogic"):
+            TEST_SUITES.append(naslogic_tests)
+
+        elif o in ("--wbuttspilogic"):
+            TEST_SUITES.append(wbuttspilogic_tests)
+
+        elif o in ("--sumppilogic"):
+            TEST_SUITES.append(sumppilogic_tests)
+
+        elif o in ("--stagepilogic"):
+            TEST_SUITES.append(stagepilogic_tests)
+
+        elif o in ("--temptopuplogic"):
+            TEST_SUITES.append(temptopuplogic_tests)
 
         elif o in ("-h", "--help"):
             usage()

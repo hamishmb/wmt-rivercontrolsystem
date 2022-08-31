@@ -28,7 +28,7 @@ pyunit:
     - python3 ./unittests.py -a
 
 sphinx:
-  stage: Doc Generation
+  stage: Software Documentation Generation
   script:
     - cd docs
     - make html

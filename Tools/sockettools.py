@@ -1075,4 +1075,4 @@ class SocketHandlerThread(threading.Thread):
         if not config.EXITING:
             #We have connected.
             logger.debug("SocketHandlerThread(): ("+self.socket.name+"): Done! Entering main loop.")
-        print("Connected to peer ("+self.socket.name+").", level="debug")
+            print("Connected to peer ("+self.socket.name+").", level="debug")

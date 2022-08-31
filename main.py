@@ -45,6 +45,7 @@ import config
 
 from Tools import coretools
 from Tools.coretools import rcs_print as print #pylint: disable=redefined-builtin
+from Tools import dbtools
 from Tools import logiccoretools
 from Tools import sockettools
 from Tools import monitortools
@@ -103,6 +104,7 @@ def inject_coretools_deps():
     This function is used to inject dependencies into coretoolsto fix circular import issues.
     """
     coretools.sockettools = sockettools
+    coretools.dbtools = dbtools
     coretools.logiccoretools = logiccoretools
 
 def handle_cmdline_options():
@@ -252,7 +254,7 @@ def run():
             logger.info("NAS box wait skipped as requested by user.")
 
     #Run setup code.
-    sockets, nas_socket, monitors, devices, dbconn, timesync, loadmonitor = \
+    sockets, nas_socket, monitors, devices, timesync, loadmonitor = \
         do_setup(site_id, reading_interval)
 
     logger.info("Entering main loop...")
@@ -289,7 +291,7 @@ def run():
         logger.info("Caught keyboard interrupt. System teardown sequence initiated...")
         print("\nCaught keyboard interrupt. System teardown sequence initiated...")
 
-    do_teardown(devices, monitors, sockets, timesync, loadmonitor, dbconn)
+    do_teardown(devices, monitors, sockets, timesync, loadmonitor)
 
     #---------- Do shutdown, update and reboot if needed ----------
     #TODO: Disabled as it isn't behaving reliably, uncomment when working.
@@ -319,12 +321,11 @@ def do_setup(site_id, reading_interval):
         2. Socket.                      The socket that connects to the NAS box (or False).
         3. list<BaseMonitorClass>.      A list of all the monitors for this site.
         4. list<BaseDeviceClass>.       A list of all the devices for this site.
-        5. DatabaseConnection.          The database connection thread.
-        6. SyncTime.                    The time syncing thread.
-        7. MonitorLoad.                 The load monitoring thread.
+        5. SyncTime.                    The time syncing thread.
+        6. MonitorLoad.                 The load monitoring thread.
 
     Usage:
-        >>> sockets, nas_socket, monitors, devices, dbconn, timesync, loadmonitor = \
+        >>> sockets, nas_socket, monitors, devices, timesync, loadmonitor = \
         >>> do_teardown("G6", 30)
 
     """
@@ -351,7 +352,7 @@ def do_setup(site_id, reading_interval):
     logger.info("Connecting to database...")
     print("Connecting to database...")
 
-    dbconn = coretools.DatabaseConnection(site_id)
+    dbtools.DatabaseConnection(site_id)
     config.DBCONNECTION.start_thread()
 
     if site_id != "NAS":
@@ -376,9 +377,9 @@ def do_setup(site_id, reading_interval):
 
         function()
 
-    return sockets, nas_socket, monitors, devices, dbconn, timesync, loadmonitor
+    return sockets, nas_socket, monitors, devices, timesync, loadmonitor
 
-def do_teardown(devices, monitors, sockets, timesync, loadmonitor, dbconn):
+def do_teardown(devices, monitors, sockets, timesync, loadmonitor):
     """
     This function tears down the system, performing all tasks needed to get the river
     control system ready to be shut down cleanly. This includes the following tasks:
@@ -398,11 +399,9 @@ def do_teardown(devices, monitors, sockets, timesync, loadmonitor, dbconn):
         sockets (list<Socket>):                 A list of all the sockets for this site.
         timesync (SyncTime):                    The time syncing thread.
         loadmonitor (MonitorLoad):              The load monitoring thread.
-        dbconn (DatabaseConnection):            The database connection thread.
 
     Usage:
-        >>> do_teardown(list<BaseMonitorClass>, list<Socket>, <SyncTime<, <MonitorLoad>,
-        >>>             <DatabaseConnection>)
+        >>> do_teardown(list<BaseMonitorClass>, list<Socket>, <SyncTime<, <MonitorLoad>)
 
     """
     #This triggers teardown of everything else - no explicit call to each thread is needed.
@@ -422,7 +421,7 @@ def do_teardown(devices, monitors, sockets, timesync, loadmonitor, dbconn):
     #Wait for the database connection to exit.
     logger.info("Waiting for database connection to exit...")
     print("Waiting for database connection to exit...")
-    dbconn.wait_exit()
+    config.DBCONNECTION.wait_exit()
 
     #Wait for the sockets to exit.
     logger.info("Waiting for socket(s) to exit...")
