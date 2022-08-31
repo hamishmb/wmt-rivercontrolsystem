@@ -516,20 +516,19 @@ def setup_sockets(site_id):
 
     Returns:
         If this is not the NAS box:
-            tuple(A list of the sockets that were set up, the local socket for this site).
+            Socket.     The nas socket for this site.
 
         If this is the NAS box:
-            tuple(A list of the sockets that were set up, None).
+            None.
 
     Usage:
-        >>> sockets, local_socket = setup_sockets("G4")
+        >>> nas_socket = setup_sockets("G4")
 
     """
     #Create all sockets.
     logger.info("Creating sockets...")
 
-    local_socket = None
-    sockets = {}
+    nas_socket = None
 
     if config.SITE_SETTINGS[site_id]["HostingSockets"]:
         #We are a server, and we are hosting sockets.
@@ -542,7 +541,6 @@ def setup_sockets(site_id):
             socket = sockettools.Sockets("Socket", site_id, site_settings["SocketName"])
             socket.set_portnumber(site_settings["ServerPort"])
             socket.set_server_address(site_settings["IPAddress"])
-            sockets[site_settings["SocketID"]] = socket
 
             socket.start_handler()
 
@@ -556,13 +554,11 @@ def setup_sockets(site_id):
         socket.set_server_address(config.SITE_SETTINGS[site_id]["ServerAddress"])
         socket.start_handler()
 
-        sockets[config.SITE_SETTINGS[site_id]["SocketID"]] = socket
-
-        local_socket = socket
+        nas_socket = socket
 
     logger.debug("Done!")
 
-    return sockets, local_socket
+    return nas_socket
 
 def setup_devices(site_id, dictionary="Probes"):
     """
@@ -635,13 +631,13 @@ def setup_devices(site_id, dictionary="Probes"):
 
     return devices
 
-def wait_for_tick(local_socket):
+def wait_for_tick(nas_socket):
     """
     This function is used to wait for the system tick on boot. This is used on all systems
     except the NAS box (which supplies the tick).
 
     Args:
-        local_socket (Socket):          The socket that connects to the NAS box.
+        nas_socket (Socket):          The socket that connects to the NAS box.
 
     Usage:
         >>> wait_for_tick(<Socket>)
@@ -655,10 +651,10 @@ def wait_for_tick(local_socket):
 
     try:
         while config.TICK == 0 and count < 18:
-            local_socket.write("Tick?")
+            nas_socket.write("Tick?")
 
-            if local_socket.has_data():
-                data = local_socket.read()
+            if nas_socket.has_data():
+                data = nas_socket.read()
 
                 if "Tick:" in data:
                     #Store tick sent from the NAS box.
@@ -667,7 +663,7 @@ def wait_for_tick(local_socket):
                     print("New tick: "+data.split(" ")[1])
                     logger.info("New tick: "+data.split(" ")[1])
 
-                local_socket.pop()
+                nas_socket.pop()
 
             time.sleep(10)
 
@@ -768,7 +764,7 @@ def get_and_handle_new_reading(monitor, _type):
 
     return reading
 
-def wait_for_next_reading_interval(reading_interval, site_id, local_socket, sockets):
+def wait_for_next_reading_interval(reading_interval, site_id, nas_socket):
     """
     This function keeps watching for new messages coming from other sites while
     we count down the reading interval.
@@ -776,12 +772,11 @@ def wait_for_next_reading_interval(reading_interval, site_id, local_socket, sock
     Args:
         reading_interval:           The reading interval.
         site_id:                    The site id.
-        local_socket:               The local socket. Special None value if on NAS box.
-        sockets:                    The list of all sockets connected to this site.
+        nas_socket:                 The nas socket. Special None value if on NAS box.
 
     Usage:
 
-        >>> wait_for_next_reading_interval(30, "SUMP", <Socket>, list<Socket>)
+        >>> wait_for_next_reading_interval(30, "SUMP", <Socket>)
     """
     #Keep watching for new messages from the socket while we count down the
     #reading interval.
@@ -795,9 +790,9 @@ def wait_for_next_reading_interval(reading_interval, site_id, local_socket, sock
         if not asked_for_tick and (reading_interval - count) < 10 and site_id != "NAS":
             #Get the latest system tick if we're in the last 10 seconds of the interval.
             asked_for_tick = True
-            local_socket.write("Tick?")
+            nas_socket.write("Tick?")
 
-        for _socket in sockets.values():
+        for _socket in config.SOCKETSLIST:
             if _socket.has_data():
                 data = _socket.read()
 

@@ -255,8 +255,7 @@ def run():
             logger.info("NAS box wait skipped as requested by user.")
 
     #Run setup code.
-    sockets, nas_socket, monitors, devices, timesync, loadmonitor = \
-        do_setup(site_id, reading_interval)
+    nas_socket, monitors, devices, timesync, loadmonitor = do_setup(site_id, reading_interval)
 
     logger.info("Entering main loop...")
     print("Entering main loop...")
@@ -280,7 +279,7 @@ def run():
 
             #Count down the reading interval.
             coretools.wait_for_next_reading_interval(reading_interval, site_id,
-                                                     nas_socket, sockets)
+                                                     nas_socket)
 
             #Check if shutdown, reboot, or update have been requested.
             #NOTE: config.EXITING is shut if so, ending the main loop.
@@ -292,7 +291,7 @@ def run():
         logger.info("Caught keyboard interrupt. System teardown sequence initiated...")
         print("\nCaught keyboard interrupt. System teardown sequence initiated...")
 
-    do_teardown(devices, monitors, sockets, timesync, loadmonitor)
+    do_teardown(devices, monitors, timesync, loadmonitor)
 
     #---------- Do shutdown, update and reboot if needed ----------
     #TODO: Disabled as it isn't behaving reliably, uncomment when working.
@@ -318,16 +317,14 @@ def do_setup(site_id, reading_interval):
     Returns:
         A list with the following members:
 
-        1. list<Socket>.                A list of all the sockets for this site.
-        2. Socket.                      The socket that connects to the NAS box (or False).
-        3. list<BaseMonitorClass>.      A list of all the monitors for this site.
-        4. list<BaseDeviceClass>.       A list of all the devices for this site.
-        5. SyncTime.                    The time syncing thread.
-        6. MonitorLoad.                 The load monitoring thread.
+        1. Socket.                      The socket that connects to the NAS box (or False).
+        2. list<BaseMonitorClass>.      A list of all the monitors for this site.
+        3. list<BaseDeviceClass>.       A list of all the devices for this site.
+        4. SyncTime.                    The time syncing thread.
+        5. MonitorLoad.                 The load monitoring thread.
 
     Usage:
-        >>> sockets, nas_socket, monitors, devices, timesync, loadmonitor = \
-        >>> do_teardown("G6", 30)
+        >>> nas_socket, monitors, devices, timesync, loadmonitor = do_teardown("G6", 30)
 
     """
     #If this isn't the NAS box, start synchronising time with the NAS box.
@@ -338,8 +335,11 @@ def do_setup(site_id, reading_interval):
     loadmonitor = coretools.MonitorLoad()
 
     #Create the socket(s).
-    sockets, nas_socket = coretools.setup_sockets(site_id)
+    nas_socket = coretools.setup_sockets(site_id)
 
+    #If this pi has a remote socket, log that we're going to start trying to connect now.
+    #(As of August 2022, this is every system except the NAS box, and this socket always
+    #connects to the NAS box).
     if "SocketName" in config.SITE_SETTINGS[site_id]:
         logger.info("Will connect to NAS box as soon as connection is available.")
         print("Will connect to NAS box as soon as connection is available.")
@@ -378,9 +378,9 @@ def do_setup(site_id, reading_interval):
 
         function()
 
-    return sockets, nas_socket, monitors, devices, timesync, loadmonitor
+    return nas_socket, monitors, devices, timesync, loadmonitor
 
-def do_teardown(devices, monitors, sockets, timesync, loadmonitor):
+def do_teardown(devices, monitors, timesync, loadmonitor):
     """
     This function tears down the system, performing all tasks needed to get the river
     control system ready to be torn down cleanly. This includes the following tasks:
@@ -397,12 +397,12 @@ def do_teardown(devices, monitors, sockets, timesync, loadmonitor):
     Args:
         devices (list<BaseDeviceClass>):        A list of all the devices for this site.
         monitors (list<BaseMonitorClass>):      A list of all the monitors for this site.
-        sockets (list<Socket>):                 A list of all the sockets for this site.
         timesync (SyncTime):                    The time syncing thread.
         loadmonitor (MonitorLoad):              The load monitoring thread.
 
     Usage:
-        >>> do_teardown(list<BaseMonitorClass>, list<Socket>, <SyncTime<, <MonitorLoad>)
+        >>> do_teardown(list<BaseDeviceClass>, list<BaseMonitorClass>,
+        >>>             <SyncTime<, <MonitorLoad>)
 
     """
     #This triggers teardown of everything else - no explicit call to each thread is needed.
@@ -428,7 +428,7 @@ def do_teardown(devices, monitors, sockets, timesync, loadmonitor):
     logger.info("Waiting for socket(s) to exit...")
     print("Waiting for socket(s) to exit...")
 
-    for each_socket in sockets.values():
+    for each_socket in config.SOCKETSLIST:
         each_socket.wait_exit()
 
     #Wait for any device management threads to exit.
