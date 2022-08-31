@@ -431,7 +431,7 @@ class TestMonitor(unittest.TestCase):
             time.sleep(1)
 
         #Monitor thread has exited.
-        #Check shutdown code worked.
+        #Check teardown code worked.
         self.assertFalse(monitor.running)
 
 class TestSocketsMonitor(unittest.TestCase):
@@ -475,5 +475,5 @@ class TestSocketsMonitor(unittest.TestCase):
             time.sleep(1)
 
         #Monitor thread has exited.
-        #Check shutdown code worked.
+        #Check teardown code worked.
         self.assertFalse(monitor.running)

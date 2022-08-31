@@ -197,7 +197,8 @@ def run():
     the control logic function to make decisions about what to do based
     on this data.
 
-    Finally, it coordiates clean shutdown of the river system when requested.
+    Finally, it coordinates clean teardown of the river system software,
+    and execution of any site-wide actions, when requested.
 
     Raises:
         Nothing, hopefully. It's possible that an unhandled exception
@@ -287,7 +288,7 @@ def run():
             #coretools.prepare_sitewide_actions()
 
     except KeyboardInterrupt:
-        #Shutdown this site.
+        #Teardown this site.
         logger.info("Caught keyboard interrupt. System teardown sequence initiated...")
         print("\nCaught keyboard interrupt. System teardown sequence initiated...")
 
@@ -296,10 +297,10 @@ def run():
     #---------- Do shutdown, update and reboot if needed ----------
     #TODO: Disabled as it isn't behaving reliably, uncomment when working.
     #If there were any sitewide actions to do, the river control system will have
-    #shut down after the execution of this last function.
+    #finish tear down after the execution of this last function.
     #coretools.do_sitewide_actions()
 
-    #If we reach this statement, we have shut down due to a user interrupt.
+    #If we reach this statement, we have torn down the system due to a user interrupt.
     print("USER INTERRUPT: Sequence complete. Process successful. Software exiting now.")
     logger.info("USER INTERRUPT: Sequence complete. Process successful. Software exiting now.")
     logging.shutdown()
@@ -382,7 +383,7 @@ def do_setup(site_id, reading_interval):
 def do_teardown(devices, monitors, sockets, timesync, loadmonitor):
     """
     This function tears down the system, performing all tasks needed to get the river
-    control system ready to be shut down cleanly. This includes the following tasks:
+    control system ready to be torn down cleanly. This includes the following tasks:
 
     - Setting config.EXITING to True to request all river control system threads to stop.
     - Waiting for the timesyncing service to stop.

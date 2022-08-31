@@ -302,7 +302,7 @@ class ManageHallEffectProbe(threading.Thread):
         """
         This method is used to wait for the management thread to exit.
 
-        This isn't a mandatory function as the management thread will shut down
+        This isn't a mandatory function as the management thread will tear down
         automatically when config.EXITING is set to True.
 
         Usage:
@@ -570,7 +570,7 @@ class ManageGateValve(threading.Thread):
         """
         This method is used to wait for the management thread to exit.
 
-        This isn't a mandatory function as the management thread will shut down
+        This isn't a mandatory function as the management thread will tear down
         automatically when config.EXITING is set to True.
 
         Usage:

@@ -1109,7 +1109,7 @@ class DatabaseConnection(threading.Thread):
         """
         This method is used to wait for the database thread to exit.
 
-        This isn't a mandatory function as the database thread will shut down
+        This isn't a mandatory function as the database thread will tear down
         automatically when config.EXITING is set to True.
 
         Usage:

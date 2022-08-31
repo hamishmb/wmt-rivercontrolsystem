@@ -410,7 +410,7 @@ class SyncTime(threading.Thread):
                 print("SyncTime: System time synchronised, now set to "+str(stdout))
                 sleep = 86400
 
-            #Respond to system shutdown quickly.
+            #Respond to system teardown quickly.
             count = 0
 
             while count < sleep and not config.EXITING:
@@ -425,7 +425,7 @@ class SyncTime(threading.Thread):
         """
         This method is used to wait for the timesync thread to exit.
 
-        This isn't a mandatory function as the timesync thread will shut down
+        This isn't a mandatory function as the timesync thread will tear down
         automatically when config.EXITING is set to True.
 
         Usage:
@@ -474,7 +474,7 @@ class MonitorLoad(threading.Thread):
                 config.CPU = cpu_percent
                 config.MEM = used_memory_pct
 
-            #Respond to system shutdown quickly.
+            #Respond to system teardown quickly.
             sleep = 30
             count = 0
 
@@ -490,7 +490,7 @@ class MonitorLoad(threading.Thread):
         """
         This method is used to wait for the monitorload thread to exit.
 
-        This isn't a mandatory function as the monitorload thread will shut down
+        This isn't a mandatory function as the monitorload thread will tear down
         automatically when config.EXITING is set to True.
 
         Usage:

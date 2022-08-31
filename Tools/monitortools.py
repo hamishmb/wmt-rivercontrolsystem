@@ -474,7 +474,7 @@ class BaseMonitorClass(threading.Thread):
         """
         This method is used to wait for the monitor thread to exit.
 
-        This isn't a mandatory function as the monitor thread will shut down
+        This isn't a mandatory function as the monitor thread will tear down
         automatically when config.EXITING is set to True.
 
         Usage:

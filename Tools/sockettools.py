@@ -315,7 +315,7 @@ class Sockets:
     def wait_exit(self):
         """
         This method waits for the handler to exit. Useful when e.g. doing clean-up,
-        when you want to shut down the socket gracefully.
+        when you want to tear down the socket gracefully.
 
         .. warning::
             Make sure you have asked the handler to exit first, or you might end up
