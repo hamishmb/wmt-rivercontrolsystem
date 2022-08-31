@@ -932,7 +932,7 @@ def prepare_sitewide_actions(site_id): #FIXME
 
     #Signal the software to tear down if we are performing at least one site-wide action.
     #NOTE: Actually shutting down/rebooting/applying the update is done later after most of
-    #      the framework has shut down.
+    #      the framework has been torn down.
     if at_least_one_action:
         config.EXITING = True
 

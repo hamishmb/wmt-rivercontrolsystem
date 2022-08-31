@@ -9,7 +9,7 @@ default:
 stages:
     - Static Analysis
     - Tests
-    - Doc Generation
+    - Software Documentation Generation
 
 pylint:
   stage: Static Analysis
