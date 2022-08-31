@@ -174,7 +174,7 @@ class Reading:
         the group ID, and then the sensor ID.
 
         Usage:
-            >>> <Reading-Object>.get_id()
+            >>> get_id()
             >>> "G4:FS0"
         """
 
@@ -185,7 +185,7 @@ class Reading:
         This method returns the **group** ID for this reading.
 
         Usage:
-            >>> <Reading-Object>.get_group_id()
+            >>> get_group_id()
             >>> "G4"
         """
 
@@ -196,7 +196,7 @@ class Reading:
         This method returns the **sensor** ID for this reading.
 
         Usage:
-            >>> <Reading-Object>.get_sensor_id()
+            >>> get_sensor_id()
             >>> "M0"
         """
 
@@ -207,7 +207,7 @@ class Reading:
         This method returns the tick when this reading was taken.
 
         Usage:
-            >>> <Reading-Object>.get_tick()
+            >>> get_tick()
             >>> 101
         """
 
@@ -218,7 +218,7 @@ class Reading:
         This method returns the time when this reading was taken.
 
         Usage:
-            >>> <Reading-Object>.get_time()
+            >>> get_time()
             >>> "2018-04-11 21:51:36.821528"
         """
 
@@ -229,7 +229,7 @@ class Reading:
         This method returns the value for this reading.
 
         Usage:
-            >>> <Reading-Object>.get_value()
+            >>> get_value()
             >>> "600mm"
         """
 
@@ -240,12 +240,12 @@ class Reading:
         This method returns the status for this reading.
 
         Usage:
-            >>> <Reading-Object>.get_status()
+            >>> get_status()
             >>> "OK"                        //No faults.
 
             OR:
 
-            >>> <Reading-Object>.get_status()
+            >>> get_status()
             >>> "FAULT DETECTED: <detail>"  //Fault(s) detected.
         """
 
@@ -737,7 +737,7 @@ def get_and_handle_new_reading(monitor, _type):
 
     Usage:
 
-        >>> get_and_handle_new_reading(<BaseMonitorClass-Obj>, "test")
+        >>> get_and_handle_new_reading(<BaseMonitorClass>, "test")
     """
 
     reading = None

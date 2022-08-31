@@ -143,28 +143,30 @@ class BaseDeviceClass:
     # ---------- INFO GETTER METHODS ----------
     def get_device_id(self):
         """
-        This method returns this devices' device-id eg "FS0".
+        This method returns this device's device-id eg "FS0".
 
         Returns:
             str. The device's ID.
 
         Usage:
 
-            >>> a_name = <Device-Object>.get_device_id()
+            >>> get_device_id()
+            >>> "FS1"
         """
 
         return self._id.split(":")[1]
 
     def get_site_id(self):
         """
-        This method returns this devices' site id eg "G4".
+        This method returns this device's site id eg "G4".
 
         Returns:
             str. The device's site id.
 
         Usage:
 
-            >>> a_name = <Device-Object>.get_site_id()
+            >>> get_site_id()
+            >>> "G3"
         """
 
         return self._id.split(":")[0]
@@ -178,7 +180,7 @@ class BaseDeviceClass:
 
         Usage:
 
-            >>> an_id = <Device-Object>.get_id()
+            >>> an_id = get_id()
         """
 
         return self._id
@@ -192,7 +194,7 @@ class BaseDeviceClass:
 
         Usage:
 
-            >>> a_name = <Device-Object>.get_name()
+            >>> a_name = get_name()
         """
         return self._name
 
@@ -231,23 +233,23 @@ class BaseDeviceClass:
                                              outputs. Default is True if not specified.
 
         Usage:
-            >>> <Device-Object>.set_pins(15)                            //For single input on
-                                                                        BCM pin 15.
+            >>> set_pins(15)                            //For single input on
+                                                        BCM pin 15.
 
             OR
 
-            >>> <Device-Object>.set_pins(15, _input=False)              //For single output
-                                                                        on BCM pin 15.
+            >>> set_pins(15, _input=False)              //For single output
+                                                        on BCM pin 15.
 
             OR
 
-            >>> <Device-Object>.set_pins(<tuple<int>>)                  //For multiple inputs
-                                                                        on all listed BCM pins.
+            >>> set_pins(<tuple<int>>)                  //For multiple inputs
+                                                        on all listed BCM pins.
 
             OR
 
-            >>> <Device-Object>.set_pins(<tuple<int>>, _input=False)    //For multiple outputs
-                                                                        on all listed BCM pins.
+            >>> set_pins(<tuple<int>>, _input=False)    //For multiple outputs
+                                                        on all listed BCM pins.
         """
 
         #Put the int in a list so this works, if there is only one pin.
@@ -335,11 +337,11 @@ class Motor(BaseDeviceClass):
 
         Usage:
 
-            >>> <Motor-Object>.set_pwm_available(True, 26)
+            >>> set_pwm_available(True, 26)
 
             OR
 
-            >>> <Motor-Object>.set_pwm_available(False)
+            >>> set_pwm_available(False)
         """
 
         #Check that pwm_available is valid.
@@ -387,7 +389,7 @@ class Motor(BaseDeviceClass):
                 - OK -- Everything is fine.
 
         Usage:
-            >>> <Motor-Object>.get_reading()
+            >>> get_reading()
             >>> (False, OK)
         """
 
@@ -402,7 +404,8 @@ class Motor(BaseDeviceClass):
 
         Usage:
 
-            >>> is_pwm_supported = <Motor-Object>.pwm_supported()
+            >>> pwm_supported()
+            >>> False
         """
 
         return self._supports_pwm
@@ -421,7 +424,7 @@ class Motor(BaseDeviceClass):
 
         Usage:
 
-            >>> <Motor-Object>.enable()
+            >>> enable()
             >>> True
         """
 
@@ -451,7 +454,7 @@ class Motor(BaseDeviceClass):
 
         Usage:
 
-            >>> <Motor-Object>.disable()
+            >>> disable()
             >>> True
         """
 
@@ -514,11 +517,11 @@ class FloatSwitch(BaseDeviceClass):
 
         Usage:
 
-            >>> <FloatSwitch-Object>.set_active_state(True)     //Active high.
+            >>> set_active_state(True)     //Active high.
 
             OR
 
-            >>> <FloatSwitch-Object>.set_active_state(False)    //Active low.
+            >>> set_active_state(False)    //Active low.
         """
 
         #Check the state is valid.
@@ -533,7 +536,7 @@ class FloatSwitch(BaseDeviceClass):
         This method returns the active state of the switch. True = active high, False = active low.
 
         Usage:
-            >>> <FloatSwitch-Object>.get_active_state()
+            >>> get_active_state()
             >>> True
         """
 
@@ -564,7 +567,7 @@ class FloatSwitch(BaseDeviceClass):
                 - OK -- Everything is fine.
 
         Usage:
-            >>> <FloatSwitch-Object>.get_reading()
+            >>> get_reading()
             >>> (False, OK)
         """
 
@@ -632,7 +635,7 @@ class HallEffectDevice(BaseDeviceClass):
 
         Usage:
 
-            >>> <HallEffectDevice-Object>.get_reading()
+            >>> get_reading()
             >>> (50, "OK")
 
         """
@@ -697,7 +700,7 @@ class HallEffectProbe(BaseDeviceClass):
             i2c_address (int):          The hardware address this probe will use.
 
         Usage:
-            >>> <Device-Object>.set_address(<int>)
+            >>> set_address(<int>)
         """
 
         self.i2c_address = i2c_address
@@ -712,7 +715,7 @@ class HallEffectProbe(BaseDeviceClass):
             low_limits (list(float)):          The low limits to be used with this probe.
 
         Usage:
-            >>> <Device-Object>.set_limits(<list(float)>, <list(float)>)
+            >>> set_limits(<list(float)>, <list(float)>)
 
         """
 
@@ -754,7 +757,7 @@ class HallEffectProbe(BaseDeviceClass):
                                             to be used with this probe.
 
         Usage:
-            >>> <Device-Object>.set_limits(<list<list(int)>>)
+            >>> set_limits(<list<list(int)>>)
 
         """
 
@@ -806,7 +809,7 @@ class HallEffectProbe(BaseDeviceClass):
             tuple(None, None), if not set.
 
         Usage:
-            >>> <FloatSwitch-Object>.get_limits()
+            >>> get_limits()
         """
 
         return self.high_limits, self.low_limits
@@ -819,7 +822,7 @@ class HallEffectProbe(BaseDeviceClass):
             list(list(int)). The depths.
 
         Usage:
-            >>> <HallEffectProbe-Object>.get_depths()
+            >>> get_depths()
         """
 
         return self.depths
@@ -849,7 +852,7 @@ class HallEffectProbe(BaseDeviceClass):
 
         Usage:
 
-            >>> <HallEffectProbe-Object>.get_reading()
+            >>> get_reading()
             >>> (500, "OK")
 
         """
@@ -898,7 +901,7 @@ class GateValve(BaseDeviceClass):
             pos_tolerance (int). Must be between 1 and 10.
 
         Usage:
-            >>> <GateValve-Object>.set_pos_tolerance(5)
+            >>> set_pos_tolerance(5)
         """
         if not isinstance(pos_tolerance, int) or \
             isinstance(pos_tolerance, bool) or \
@@ -919,7 +922,7 @@ class GateValve(BaseDeviceClass):
 
         Usage:
 
-            >>> <GateValve-Object>.set_max_open(95)
+            >>> set_max_open(95)
         """
         if not isinstance(max_open, int) or \
             max_open < 90 or \
@@ -939,7 +942,7 @@ class GateValve(BaseDeviceClass):
 
         Usage:
 
-            >>> <GateValve-Object>.set_min_open(5)
+            >>> set_min_open(5)
         """
         if not isinstance(min_open, int) or \
             min_open < 1 or \
@@ -958,7 +961,7 @@ class GateValve(BaseDeviceClass):
 
         Usage:
 
-            >>> <GateValve-Object>.set_ref_voltage(3.3)
+            >>> set_ref_voltage(3.3)
         """
         if not isinstance(ref_voltage, (int, float)) or \
             ref_voltage < 2 or \
@@ -977,7 +980,7 @@ class GateValve(BaseDeviceClass):
 
         Usage:
 
-            >>> <GateValve-Object>.set_i2c_address(0x48)
+            >>> set_i2c_address(0x48)
         """
         if not isinstance(i2c_address, int):
             raise ValueError("Invalid value for i2c_address: "+str(i2c_address))
@@ -998,7 +1001,7 @@ class GateValve(BaseDeviceClass):
 
         Usage:
 
-            >>> <GateValve-Object>.get_pos_tolerance()
+            >>> get_pos_tolerance()
             >>> 5
         """
         return self.pos_tolerance
@@ -1013,7 +1016,7 @@ class GateValve(BaseDeviceClass):
 
         Usage:
 
-            >>> <GateValve-Object>.get_max_open()
+            >>> get_max_open()
             >>> 95
         """
         return self.max_open
@@ -1028,7 +1031,7 @@ class GateValve(BaseDeviceClass):
 
         Usage:
 
-            >>> <GateValve-Object>.get_ref_voltage()
+            >>> get_ref_voltage()
             >>> 5
         """
         return self.min_open
@@ -1043,7 +1046,7 @@ class GateValve(BaseDeviceClass):
 
         Usage:
 
-            >>> <GateValve-Object>.get_ref_voltage()
+            >>> get_ref_voltage()
             >>> 3.3
         """
         return self.ref_voltage
@@ -1058,7 +1061,7 @@ class GateValve(BaseDeviceClass):
 
         Usage:
 
-            >>> <GateValve-Object>.get_requested_position()
+            >>> get_requested_position()
             >>> 50
         """
         return self.mgmt_thread.get_requested_position()
@@ -1076,7 +1079,7 @@ class GateValve(BaseDeviceClass):
 
         Usage:
 
-            >>> <GateValve-Object>.set_position(100)
+            >>> set_position(100)
 
         """
         if isinstance(percentage, bool) \
@@ -1115,7 +1118,7 @@ class GateValve(BaseDeviceClass):
 
         Usage:
 
-            >>> <GateValve-Object>.get_reading()
+            >>> get_reading()
             >>> (60, "OK")
 
         """

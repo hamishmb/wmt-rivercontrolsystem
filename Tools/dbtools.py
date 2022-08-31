@@ -290,7 +290,7 @@ class DatabaseConnection(threading.Thread):
 
         self.is_running = False
 
-    #-------------------- PRIVATE SETUP METHODS -------------------
+    #-------------------- CONVENIENCE METHODS -------------------
     def peer_alive(self):
         """
         Used to ping peer once at other end of the connection to check if it is still up.
@@ -302,7 +302,7 @@ class DatabaseConnection(threading.Thread):
                             False = peer is offline
 
         Usage:
-            >>> <DatabaseConnection-Obj>.peer_alive()
+            >>> peer_alive()
             >>> True
         """
         try:
@@ -321,6 +321,7 @@ class DatabaseConnection(threading.Thread):
 
             return False
 
+    #-------------------- PRIVATE SETUP METHODS -------------------
     def _connect(self, user, passwd, host, port):
         """
         PRIVATE, implementation detail.
@@ -1090,7 +1091,7 @@ class DatabaseConnection(threading.Thread):
             RuntimeError, if the query failed too many times.
 
         Usage:
-            >>> store_reading(<Reading-Obj>)
+            >>> store_reading(<Reading>)
             >>>
         """
 

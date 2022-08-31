@@ -109,10 +109,12 @@ class ManageHallEffectProbe(threading.Thread):
     Documentation for the constructor for objects of type ManageHallEffectProbe:
 
     Args:
-        probe (BaseDeviceClass-Object).     The hall effect probe to manage.
+        probe (HallEffectProbe).     The hall effect probe to manage.
+        i2c_address (int).           The i2c_address of the ADC. Most easily expressed
+                                     in hexadecimal.
 
     Usage:
-        Use the constructor for this class the same way as for BaseDeviceClass.
+        >>> probe = ManageHallEffectProbe(<HallEffectProbe>, 0x48)
 
     """
 
@@ -320,12 +322,12 @@ class ManageGateValve(threading.Thread):
     Documentation for the constructor for objects of type ManageGateValve:
 
     Args:
-        valve (GateValve-Object).         The valve to manage.
+        valve (GateValve).                The valve to manage.
         i2c_address (int).                The i2c_address of the ADC. Most easily expressed
                                           in hexadecimal.
 
     Usage:
-        >>> mgmt_thread = ManageGateValve(<valve-object>, 0x48)
+        >>> mgmt_thread = ManageGateValve(<GateValve>, 0x48)
     """
 
     def __init__(self, valve, i2c_address):

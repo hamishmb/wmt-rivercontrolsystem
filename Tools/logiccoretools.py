@@ -363,7 +363,7 @@ def store_reading(reading, retries=3):
         RuntimeError, if the query failed too many times.
 
     Usage:
-        >>> store_reading(<Reading-Obj>)
+        >>> store_reading(<Reading>)
         >>>
     """
 

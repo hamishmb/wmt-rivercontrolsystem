@@ -168,7 +168,7 @@ class Sockets:
 
         Usage:
 
-            >>> <Sockets-Obj>.set_portnumber(30000)
+            >>> set_portnumber(30000)
         """
 
         #Check the port number is valid.
@@ -196,7 +196,7 @@ class Sockets:
 
         Usage:
 
-            >>> <Sockets-Obj>.set_server_address("192.168.0.2")"""
+            >>> set_server_address("192.168.0.2")"""
 
         #Check the IP address is valid (basic check).
         if not isinstance(server_address, str) or \
@@ -232,7 +232,7 @@ class Sockets:
 
         Usage:
 
-            >>> <Sockets-Obj>.reset()"""
+            >>> reset()"""
 
         logger.info("Sockets.reset(): ("+self.name+"): Resetting socket...")
 
@@ -283,7 +283,7 @@ class Sockets:
 
         Usage:
 
-            >>> <Sockets-Obj>.is_ready()
+            >>> is_ready()
             >>> False
         """
 
@@ -302,7 +302,7 @@ class Sockets:
 
         Usage:
 
-            >>> <Sockets-Obj>.just_reconnected()
+            >>> just_reconnected()
             >>> True
         """
 
@@ -323,7 +323,7 @@ class Sockets:
 
         Usage:
 
-            >>> <Sockets-Obj>.wait_exit()
+            >>> wait_exit()
         """
 
 
@@ -339,7 +339,7 @@ class Sockets:
 
         Usage:
 
-            >>> <Sockets-Obj>.handler_has_exited()
+            >>> handler_has_exited()
             >>> False
         """
 
@@ -358,7 +358,7 @@ class Sockets:
 
         Usage:
 
-            >>> <Sockets-Obj>.start_handler()
+            >>> start_handler()
         """
 
         #Setup.
@@ -391,7 +391,7 @@ class Sockets:
                             False = peer is offline
 
         Usage:
-            >>> <Sockets-Obj>.peer_alive()
+            >>> peer_alive()
             >>> True
         """
         try:
@@ -424,7 +424,7 @@ class Sockets:
 
         Usage:
 
-            >>> <Sockets-Obj>.create_and_connect()
+            >>> create_and_connect()
         """
 
         #Handle any errors while connecting.
@@ -521,7 +521,7 @@ class Sockets:
 
         Usage:
 
-            >>> <Sockets-Obj>._create_plug()
+            >>> _create_plug()
         """
 
         logger.info("Sockets._create_plug(): ("+self.name+"): Creating the plug...")
@@ -540,7 +540,7 @@ class Sockets:
 
         Usage:
 
-            >>> <Sockets-Obj>._connect_plug()
+            >>> _connect_plug()
         """
 
         logger.info("Sockets._connect_plug(): ("+self.name
@@ -560,7 +560,7 @@ class Sockets:
 
         Usage:
 
-            >>> <Sockets-Obj>._create_socket()
+            >>> _create_socket()
         """
 
         logger.info("Sockets._create_socket(): ("+self.name+"): Creating the socket...")
@@ -584,7 +584,7 @@ class Sockets:
 
         Usage:
 
-            >>> <Sockets-Obj>._connect_socket()
+            >>> _connect_socket()
         """
 
         logger.info("Sockets._connect_socket(): ("+self.name
@@ -609,7 +609,7 @@ class Sockets:
 
         Usage:
 
-            >>> <Sockets-Obj>.write(<some_data_in_any_format>)
+            >>> write(<some_data_in_any_format>)
         """
 
         #Don't fill up with queue with duplicate tick requests - causes extra load.
@@ -636,7 +636,7 @@ class Sockets:
 
         Usage:
 
-            >>> <Sockets-Obj>.has_data()
+            >>> has_data()
             >>> True
         """
 
@@ -656,7 +656,7 @@ class Sockets:
 
         Usage:
 
-            >>> <Sockets-Obj>.read()
+            >>> read()
             >>> "Some Data"
         """
 
@@ -670,7 +670,7 @@ class Sockets:
 
         Usage:
 
-            >>> <Sockets-Obj.pop()
+            >>> pop()
         """
 
         #Clear the oldest element of the queue if there's anything in it.
@@ -694,7 +694,7 @@ class Sockets:
 
         Usage:
 
-            >>> <Sockets-Obj>.send_pending_messages()
+            >>> send_pending_messages()
             >>> True
         """
 
@@ -754,7 +754,7 @@ class Sockets:
 
         Usage:
 
-            >>> <Sockets-Obj>.forward_messages()
+            >>> forward_messages()
             >>> True
         """
 
@@ -808,7 +808,7 @@ class Sockets:
 
         Usage:
 
-            >>> <Sockets-Obj>.read_pending_messages()
+            >>> read_pending_messages()
             >>> 0
         """
 
@@ -938,7 +938,7 @@ class SocketHandlerThread(threading.Thread):
                                our socket.
 
     Usage:
-        >>> my_socket_handler = SocketHandlerThread(<aSockets-Obj>)
+        >>> my_socket_handler = SocketHandlerThread(<Sockets>)
 
     """
 
