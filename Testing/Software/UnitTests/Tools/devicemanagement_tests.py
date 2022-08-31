@@ -27,7 +27,7 @@ import os
 sys.path.insert(0, os.path.abspath('../../../')) #Need to be able to import the Tools module from here.
 
 import Tools
-import Tools.deviceobjects as device_objects
+from Tools import deviceobjects
 import Tools.devicemanagement as device_mgmt
 
 #Import test data and functions.
@@ -35,7 +35,7 @@ from . import devicemanagement_test_data as data
 
 #Disable automatically starting the thread in the ManageHallEffectProbe class, so we can test it.
 
-#Set up device_objects to use dummy GPIO, ADS, and AnalogIn classes.
+#Set up deviceobjects to use dummy GPIO, ADS, and AnalogIn classes.
 device_mgmt.GPIO = data.GPIO
 device_mgmt.ads = None
 device_mgmt.ADS = data.ADS
@@ -50,7 +50,7 @@ class TestManageHallEffectProbe(unittest.TestCase):
     """This class tests the features of the ManageHallEffectProbe class in Tools/devicemanagement.py"""
 
     def setUp(self):
-        self.probe = device_objects.HallEffectProbe("G4:M0", "Test")
+        self.probe = deviceobjects.HallEffectProbe("G4:M0", "Test")
         self.mgmtclass = device_mgmt.ManageHallEffectProbe(self.probe, 0x48)
 
     def tearDown(self):
@@ -62,7 +62,7 @@ class TestManageHallEffectProbe(unittest.TestCase):
 
     def test_constructor_1(self):
         """Test the constructor works as expected"""
-        probe = device_objects.HallEffectProbe("G4:M0", "Test")
+        probe = deviceobjects.HallEffectProbe("G4:M0", "Test")
         mgmtclass = device_mgmt.ManageHallEffectProbe(probe, 0x48)
 
         self.assertEqual(mgmtclass.probe, probe)
@@ -110,7 +110,7 @@ class TestManageGateValve(unittest.TestCase):
     """This class tests the features of the ManageGateValve class in Tools/devicemanagement.py"""
 
     def setUp(self):
-        self.valve = device_objects.GateValve("VALVE4:V4", "Test")
+        self.valve = deviceobjects.GateValve("VALVE4:V4", "Test")
 
         self.valve.set_pins((2, 3, 4))
         self.valve.set_pos_tolerance(5)
@@ -130,7 +130,7 @@ class TestManageGateValve(unittest.TestCase):
 
     def test_constructor_1(self):
         """Test that the constructor works as expected"""
-        valve = device_objects.GateValve("VALVE4:V4", "Test")
+        valve = deviceobjects.GateValve("VALVE4:V4", "Test")
 
         valve.set_pins((2, 3, 4))
         valve.set_pos_tolerance(5)

@@ -33,7 +33,7 @@ sys.path.insert(0, os.path.abspath('../../../')) #Need to be able to import the 
 
 import config
 import Tools
-import Tools.sockettools as socket_tools
+from Tools import sockettools
 
 #Import test data and functions.
 from . import sockettools_test_data as data
@@ -46,7 +46,7 @@ class TestSockets(unittest.TestCase):
         self.orig_site_settings = config.SITE_SETTINGS.copy()
         config.SITE_SETTINGS.update(data.TEST_SITES)
 
-        self.socket = socket_tools.Sockets("Plug", "ST0", "ST0 Socket")
+        self.socket = sockettools.Sockets("Plug", "ST0", "ST0 Socket")
 
     def tearDown(self):
         del self.socket
@@ -64,7 +64,7 @@ class TestSockets(unittest.TestCase):
     def test_constructor_1(self):
         """Test #1: Test that the constructor works when no name is specified"""
         for _type in ("Plug", "Socket"):
-            socket = socket_tools.Sockets(_type, "ST0")
+            socket = sockettools.Sockets(_type, "ST0")
 
             self.assertEqual(socket.port_number, -1)
             self.assertEqual(socket.server_address, "")
@@ -83,7 +83,7 @@ class TestSockets(unittest.TestCase):
     def test_constructor_2(self):
         """Test #2: Test that the constructor works when a name is specified"""
         for _type in ("Plug", "Socket"):
-            socket = socket_tools.Sockets(_type, "ST0", "Test Socket")
+            socket = sockettools.Sockets(_type, "ST0", "Test Socket")
 
             self.assertEqual(socket.port_number, -1)
             self.assertEqual(socket.server_address, "")
@@ -103,7 +103,7 @@ class TestSockets(unittest.TestCase):
         """Test #3: Test that the constructor fails when _type is not 'Plug' or 'Socket'"""
         for _type in ("plug", "socket", "test", "notatype", None, 1, True):
             try:
-                socket = socket_tools.Sockets(_type, "ST0", "Test Socket")
+                socket = sockettools.Sockets(_type, "ST0", "Test Socket")
 
             except ValueError:
                 #Expected.
@@ -117,7 +117,7 @@ class TestSockets(unittest.TestCase):
         """Test #4: Test that the constructor fails when name is not a string"""
         for _name in (None, 1, True, 6.7, (), [], {}):
             try:
-                socket = socket_tools.Sockets("Socket", "ST0", _name)
+                socket = sockettools.Sockets("Socket", "ST0", _name)
 
             except ValueError:
                 #Expected.
@@ -131,7 +131,7 @@ class TestSockets(unittest.TestCase):
         """Test #5: Test that the constructor fails when ID is invalid"""
         for sysid in ("NOTANID", "T78", None, 1, True, 6.7, (), [], {}):
             try:
-                socket = socket_tools.Sockets("Socket", sysid, "test")
+                socket = sockettools.Sockets("Socket", sysid, "test")
 
             except ValueError:
                 #Expected.
@@ -254,8 +254,8 @@ class TestSockets(unittest.TestCase):
 
     def test_start_handler_1(self):
         """Test #1: Test that this works as expected when type is valid."""
-        real_handler_class = socket_tools.SocketHandlerThread
-        socket_tools.SocketHandlerThread = data.fake_handler_thread
+        real_handler_class = sockettools.SocketHandlerThread
+        sockettools.SocketHandlerThread = data.fake_handler_thread
 
         self.socket.start_handler()
 
@@ -268,12 +268,12 @@ class TestSockets(unittest.TestCase):
         #than actually starting a thread.
         self.assertFalse(self.socket.handler_thread)
 
-        socket_tools.SocketHandlerThread = real_handler_class
+        sockettools.SocketHandlerThread = real_handler_class
 
     def test_start_handler_2(self):
         """Test #1: Test that this fails when type is invalid."""
-        real_handler_class = socket_tools.SocketHandlerThread
-        socket_tools.SocketHandlerThread = data.fake_handler_thread
+        real_handler_class = sockettools.SocketHandlerThread
+        sockettools.SocketHandlerThread = data.fake_handler_thread
 
         for _type in ("plug", "socket", "test", "notatype", None, 1, True):
             self.socket.type = _type
@@ -289,7 +289,7 @@ class TestSockets(unittest.TestCase):
                 #These must fail!
                 self.assertTrue(False, "ValueError expected for data: "+_type)
 
-        socket_tools.SocketHandlerThread = real_handler_class
+        sockettools.SocketHandlerThread = real_handler_class
 
     #---------- Tests for connection functions ----------
     def test__create_plug_1(self):
@@ -327,7 +327,7 @@ class TestSockets(unittest.TestCase):
         self.socket._create_socket()
 
         #Create a plug to connect to it.
-        self.plug = socket_tools.Sockets("Plug", "ST1", "Test Socket")
+        self.plug = sockettools.Sockets("Plug", "ST1", "Test Socket")
 
         self.plug._create_plug()
 
@@ -477,7 +477,7 @@ class TestSockets(unittest.TestCase):
         self.socket.type = "Socket"
         self.socket.port_number = 30000
 
-        self.plug = socket_tools.Sockets("Plug", "ST1")
+        self.plug = sockettools.Sockets("Plug", "ST1")
         self.plug.server_address = "127.0.0.1"
         self.plug.port_number = 30000
 
@@ -601,27 +601,27 @@ class TestSockets(unittest.TestCase):
 
     def test_read_pending_messages_1(self):
         """Test #1: Test this works correctly when the connection was closed by the peer."""
-        socket_tools.select = data.select_ready
+        sockettools.select = data.select_ready
         self.socket.underlying_socket = data.fake_socket_peer_gone
 
         self.assertEqual(-1, self.socket.read_pending_messages())
 
         self.socket.underlying_socket = None
-        socket_tools.select = select
+        sockettools.select = select
 
     def test_read_pending_messages_2(self):
         """Test #2: Test this works correctly when the socket is not ready for reading."""
-        socket_tools.select = data.select_not_ready
+        sockettools.select = data.select_not_ready
         self.socket.underlying_socket = data.fake_socket_peer_gone
 
         self.assertEqual(0, self.socket.read_pending_messages())
 
         self.socket.underlying_socket = None
-        socket_tools.select = select
+        sockettools.select = select
 
     def test_read_pending_messages_3(self):
         """Test #3: Test this works correctly when there is data to read."""
-        socket_tools.select = data.select_ready_once
+        sockettools.select = data.select_ready_once
         self.socket.underlying_socket = data.fake_socket_with_data
 
         self.assertEqual(0, self.socket.read_pending_messages())
@@ -631,17 +631,17 @@ class TestSockets(unittest.TestCase):
 
         self.socket.underlying_socket = None
         data.select_ready_once.reset()
-        socket_tools.select = select
+        sockettools.select = select
 
     def test_read_pending_messages_4(self):
         """Test #4: Test this works correctly when there is an unhandled error."""
-        socket_tools.select = data.select_ready
+        sockettools.select = data.select_ready
         self.socket.underlying_socket = data.fake_socket_unhandled_error
 
         self.assertEqual(-1, self.socket.read_pending_messages())
 
         self.socket.underlying_socket = None
-        socket_tools.select = select
+        sockettools.select = select
 
     def test_forward_messages_1(self):
         """Test #1: Test this works as expected when there are no pending messages to forward."""
@@ -653,7 +653,7 @@ class TestSockets(unittest.TestCase):
         self.socket.server_address = "127.0.0.1"
         self.socket.port_number = 30000
 
-        self.plug = socket_tools.Sockets("Plug", "ST1")
+        self.plug = sockettools.Sockets("Plug", "ST1")
         self.plug.server_address = "127.0.0.1"
         self.plug.port_number = 30000
 
@@ -719,7 +719,7 @@ class TestSockets(unittest.TestCase):
         self.socket.server_address = "127.0.0.1"
         self.socket.port_number = 30000
 
-        self.plug = socket_tools.Sockets("Plug", "ST1")
+        self.plug = sockettools.Sockets("Plug", "ST1")
         self.plug.server_address = "127.0.0.1"
         self.plug.port_number = 30000
 
@@ -781,7 +781,7 @@ class TestSockets(unittest.TestCase):
         self.socket.server_address = "127.0.0.1"
         self.socket.port_number = 30000
 
-        self.plug = socket_tools.Sockets("Plug", "ST1", "ST1 Socket")
+        self.plug = sockettools.Sockets("Plug", "ST1", "ST1 Socket")
         self.plug.server_address = "127.0.0.1"
         self.plug.port_number = 30000
 

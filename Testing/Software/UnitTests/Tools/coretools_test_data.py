@@ -21,9 +21,7 @@ import os
 #Import other modules.
 sys.path.insert(0, os.path.abspath('../../../')) #Need to be able to import the Tools module from here.
 
-#This is needed for access to BaseDeviceClass, which our dummy classes extend from.
 import Tools
-import Tools.deviceobjects as device_objects
 
 class Dummy:
     """A dummy class that does nothing, just used for testing"""

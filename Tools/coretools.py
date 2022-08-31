@@ -111,7 +111,7 @@ class Reading:
     Usage:
         The constructor for this class takes four arguments as specified above.
 
-        >>> my_reading = core_tools.Reading(<a_time>, <a_tick>, <an_id>, <a_value>, <a_status>)
+        >>> my_reading = coretools.Reading(<a_time>, <a_tick>, <an_id>, <a_value>, <a_status>)
 
     .. note::
         Equality methods have been implemented for this class so you can do things like:

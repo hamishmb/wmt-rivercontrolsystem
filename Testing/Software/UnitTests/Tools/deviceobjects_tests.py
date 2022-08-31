@@ -27,22 +27,22 @@ import os
 sys.path.insert(0, os.path.abspath('../../../')) #Need to be able to import the Tools module from here.
 
 import Tools
-import Tools.deviceobjects as device_objects
+from Tools import deviceobjects
 
 #Import test data and functions.
 from . import deviceobjects_test_data as data
 
-#Set up device_objects to use dummy GPIO.
-device_objects.GPIO = data.GPIO
+#Set up deviceobjects to use dummy GPIO.
+deviceobjects.GPIO = data.GPIO
 
 #Prevent any management threads from being started - use dummy ones instead.
-device_objects.device_mgmt = data
+deviceobjects.device_mgmt = data
 
 class TestBaseDeviceClass(unittest.TestCase):
     """This test class tests the features of the BaseDeviceClass class in Tools/deviceobjects.py"""
 
     def setUp(self):
-        self.basedevice = device_objects.BaseDeviceClass("SUMP:M0", "Test")
+        self.basedevice = deviceobjects.BaseDeviceClass("SUMP:M0", "Test")
 
     def tearDown(self):
         del self.basedevice
@@ -53,7 +53,7 @@ class TestBaseDeviceClass(unittest.TestCase):
         for dataset in data.TEST_BASEDEVICECLASS_NONAME_DATA:
             _id = dataset[0]
 
-            basedevice = device_objects.BaseDeviceClass(_id)
+            basedevice = deviceobjects.BaseDeviceClass(_id)
 
             self.assertEqual(basedevice.get_id(), _id)
             self.assertEqual(basedevice.get_name(), "<unspecified>")
@@ -64,7 +64,7 @@ class TestBaseDeviceClass(unittest.TestCase):
             _id = dataset[0]
             _name = dataset[1]
 
-            basedevice = device_objects.BaseDeviceClass(_id, _name)
+            basedevice = deviceobjects.BaseDeviceClass(_id, _name)
 
             self.assertEqual(basedevice.get_id(), _id)
             self.assertEqual(basedevice.get_name(), _name)
@@ -76,7 +76,7 @@ class TestBaseDeviceClass(unittest.TestCase):
             _name = dataset[1]
 
             try:
-                basedevice = device_objects.BaseDeviceClass(_id, _name)
+                basedevice = deviceobjects.BaseDeviceClass(_id, _name)
 
             except ValueError:
                 #This is required for the test to pass.
@@ -159,7 +159,7 @@ class TestMotor(unittest.TestCase):
     """
 
     def setUp(self):
-        self.motor = device_objects.Motor("SUMP:P0", "Test")
+        self.motor = deviceobjects.Motor("SUMP:P0", "Test")
 
     def tearDown(self):
         del self.motor
@@ -168,7 +168,7 @@ class TestMotor(unittest.TestCase):
     #Note: All arguments are validated in BaseDeviceClass, so no complex tests here.
     def test_constructor_1(self):
         """Test the constructor works as expected."""
-        motor = device_objects.Motor("SUMP:P1", "Test Motor")
+        motor = deviceobjects.Motor("SUMP:P1", "Test Motor")
 
         self.assertFalse(motor._state)
         self.assertFalse(motor._supports_pwm)
@@ -271,7 +271,7 @@ class TestFloatSwitch(unittest.TestCase):
     """
 
     def setUp(self):
-        self.floatswitch = device_objects.FloatSwitch("G4:FS0", "Test")
+        self.floatswitch = deviceobjects.FloatSwitch("G4:FS0", "Test")
 
     def tearDown(self):
         del self.floatswitch
@@ -280,7 +280,7 @@ class TestFloatSwitch(unittest.TestCase):
     #Note: All arguments are validated in BaseDeviceClass, so no complex tests here.
     def test_constructor_1(self):
         """Test the constructor works as expected"""
-        floatswitch = device_objects.FloatSwitch("G6:FS1", "Testing")
+        floatswitch = deviceobjects.FloatSwitch("G6:FS1", "Testing")
 
         self.assertTrue(self.floatswitch._active_state)
 
@@ -334,7 +334,7 @@ class TestHallEffectDevice(unittest.TestCase):
     """
 
     def setUp(self):
-        self.halleffectdevice = device_objects.HallEffectDevice("SUMP:W0", "Water Wheel")
+        self.halleffectdevice = deviceobjects.HallEffectDevice("SUMP:W0", "Water Wheel")
 
     def tearDown(self):
         del self.halleffectdevice
@@ -343,7 +343,7 @@ class TestHallEffectDevice(unittest.TestCase):
     #Note: All arguments are validated in BaseDeviceClass, so no complex tests here.
     def test_constructor_1(self):
         """Test that the constructor works as expected"""
-        halleffectdevice = device_objects.HallEffectDevice("G6:W1", "Test")
+        halleffectdevice = deviceobjects.HallEffectDevice("G6:W1", "Test")
 
         self.assertEqual(halleffectdevice._num_detections, 0)
 
@@ -376,7 +376,7 @@ class TestHallEffectProbe(unittest.TestCase):
     """
 
     def setUp(self):
-        self.halleffectprobe = device_objects.HallEffectProbe("G4:M1", "Testing")
+        self.halleffectprobe = deviceobjects.HallEffectProbe("G4:M1", "Testing")
 
     def tearDown(self):
         del self.halleffectprobe
@@ -385,7 +385,7 @@ class TestHallEffectProbe(unittest.TestCase):
     #Note: All arguments are validated in BaseDeviceClass, so no complex tests here.
     def test_constructor_1(self):
         """Test the constructor works properly"""
-        halleffectprobe = device_objects.HallEffectProbe("SUMP:M0", "Test")
+        halleffectprobe = deviceobjects.HallEffectProbe("SUMP:M0", "Test")
 
         self.assertEqual(halleffectprobe._current_reading, 0)
         self.assertEqual(halleffectprobe.high_limits, None)
@@ -490,7 +490,7 @@ class TestGateValve(unittest.TestCase):
     def setUp(self):
         #Don't specify the other arguments because they're only used in the
         #ManageGateValve class.
-        self.gatevalve = device_objects.GateValve("VALVE4:V4", "Test")
+        self.gatevalve = deviceobjects.GateValve("VALVE4:V4", "Test")
 
         self.gatevalve.set_pins((2, 3, 4))
         self.gatevalve.set_pos_tolerance(5)
@@ -518,7 +518,7 @@ class TestGateValve(unittest.TestCase):
             min_open = dataset[5]
             ref_voltage = dataset[6]
 
-            gatevalve = device_objects.GateValve(_id, _name)
+            gatevalve = deviceobjects.GateValve(_id, _name)
             gatevalve.set_pins(pins)
             gatevalve.set_pos_tolerance(pos_tolerance)
             gatevalve.set_max_open(max_open)
@@ -545,7 +545,7 @@ class TestGateValve(unittest.TestCase):
             ref_voltage = dataset[6]
 
             try:
-                gatevalve = device_objects.GateValve(_id, _name)
+                gatevalve = deviceobjects.GateValve(_id, _name)
                 gatevalve.set_pins(pins)
                 gatevalve.set_pos_tolerance(pos_tolerance)
                 gatevalve.set_max_open(max_open)

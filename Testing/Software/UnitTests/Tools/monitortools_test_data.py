@@ -23,17 +23,17 @@ sys.path.insert(0, os.path.abspath('../../../')) #Need to be able to import the 
 
 #This is needed for access to BaseDeviceClass, which our dummy classes extend from.
 import Tools
-import Tools.deviceobjects as device_objects
+from Tools import deviceobjects
 
 class Dummy:
     """A dummy class that does nothing, just used for testing"""
     def __init__(self): pass
 
-class Motor(device_objects.BaseDeviceClass):
+class Motor(deviceobjects.BaseDeviceClass):
     """A fake do-nothing Motor class, just used for testing"""
     def __init__(self, _id, _name):
         #Call the base class constructor.
-        device_objects.BaseDeviceClass.__init__(self, _id, _name)
+        deviceobjects.BaseDeviceClass.__init__(self, _id, _name)
 
         #Set some semi-private variables.
         self._state = False                  #Motor is initialised to be off.

@@ -131,16 +131,16 @@ def run_standalone():
 
     #Do required imports.
     import config
-    import Tools.sockettools as socket_tools
+    from Tools import sockettools
 
     config.SITE_SETTINGS.update(TEST_SITES)
 
-    socket_tools.logger = logger
+    sockettools.logger = logger
 
     print("Testing. Please stand by...")
 
     #Create the sockets object.
-    socket = socket_tools.Sockets("Plug", "ST0")
+    socket = sockettools.Sockets("Plug", "ST0")
 
     #Set the object up.
     socket.set_portnumber(port)

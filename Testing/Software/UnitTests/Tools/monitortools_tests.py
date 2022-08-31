@@ -32,10 +32,10 @@ import subprocess
 sys.path.insert(0, os.path.abspath('../../../')) #Need to be able to import the Tools module from here.
 
 import Tools
-import Tools.monitortools as monitor_tools
-import Tools.coretools as core_tools
-import Tools.logiccoretools as logiccoretools
-import Tools.deviceobjects as device_objects
+from Tools import monitortools
+from Tools import coretools
+from Tools import logiccoretools
+from Tools import deviceobjects
 
 #Import test data and functions.
 from . import monitortools_test_data as data
@@ -43,9 +43,9 @@ from . import monitortools_test_data as data
 class TestBaseMonitorClass(unittest.TestCase):
     """This test class tests the features of the BaseMonitorClass class in Tools/monitortools.py"""
     def setUp(self):
-        self.basemonitor = monitor_tools.BaseMonitorClass("SUMP", "M0")
+        self.basemonitor = monitortools.BaseMonitorClass("SUMP", "M0")
 
-        self.reading = core_tools.Reading(str(datetime.datetime.now()), 0,
+        self.reading = coretools.Reading(str(datetime.datetime.now()), 0,
                                      "G4:M0", "400mm", "OK")
 
         self.basemonitor.queue.append(self.reading)
@@ -68,7 +68,7 @@ class TestBaseMonitorClass(unittest.TestCase):
             site_id = dataset[0]
             device_id = dataset[1]
 
-            new_basemonitor = monitor_tools.BaseMonitorClass(site_id, device_id)
+            new_basemonitor = monitortools.BaseMonitorClass(site_id, device_id)
 
             self.assertEqual(new_basemonitor.get_site_id(), site_id)
             self.assertEqual(new_basemonitor.get_probe_id(), device_id)
@@ -80,7 +80,7 @@ class TestBaseMonitorClass(unittest.TestCase):
             device_id = dataset[1]
 
             try:
-                new_basemonitor = monitor_tools.BaseMonitorClass(site_id, device_id)
+                new_basemonitor = monitortools.BaseMonitorClass(site_id, device_id)
 
             except ValueError:
                 #This is expected.
@@ -209,7 +209,7 @@ class TestBaseMonitorClass(unittest.TestCase):
             os.mkdir("readings")
 
             #Replace the open function with a special one for this test.
-            monitor_tools.open = data.badopen
+            monitortools.open = data.badopen
 
             self.basemonitor.create_file_handle()
             self.basemonitor.file_handle.close()
@@ -224,7 +224,7 @@ class TestBaseMonitorClass(unittest.TestCase):
             except:
                 pass
 
-            monitor_tools.open = open
+            monitortools.open = open
 
             try:
                 shutil.rmtree("readings")
@@ -239,8 +239,8 @@ class TestBaseMonitorClass(unittest.TestCase):
 
     def test_handle_reading_1(self):
         """Test that handle_reading() works as expected when the reading differs to the previous reading, and there are no issues writing to the file"""
-        reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
-        previous_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "775mm", "OK")
+        reading = coretools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
+        previous_reading = coretools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "775mm", "OK")
 
         #Create a fake file handle.
         self.basemonitor.file_handle = data.goodopen("test", "r")
@@ -252,8 +252,8 @@ class TestBaseMonitorClass(unittest.TestCase):
 
     def test_handle_reading_2(self):
         """Test that handle_reading() works as expected when the reading equals the previous reading, and there are no issues writing to the file"""
-        reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
-        previous_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
+        reading = coretools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
+        previous_reading = coretools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
 
         #Create a fake file handle.
         self.basemonitor.file_handle = data.goodopen("test", "r")
@@ -266,8 +266,8 @@ class TestBaseMonitorClass(unittest.TestCase):
 
     def test_handle_reading_3(self):
         """Test that handle_reading() works as expected when there are issues writing to the file"""
-        reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
-        previous_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
+        reading = coretools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
+        previous_reading = coretools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
 
         #Create a fake file handle.
         self.basemonitor.file_handle = data.badopen("test", "r")
@@ -280,7 +280,7 @@ class TestBaseMonitorClass(unittest.TestCase):
 
     def test_manage_rotation_1(self):
         """Test that manage_rotation() works as expected when rotation is not due and all is fine"""
-        previous_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
+        previous_reading = coretools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
 
         #Just a hack to make sure that the file is reported to exist.
         self.basemonitor.current_file_name = "unittests.py"
@@ -304,7 +304,7 @@ class TestBaseMonitorClass(unittest.TestCase):
 
     def test_manage_rotation_2(self):
         """Test that manage_rotation() works as expected when rotation is not due and the readings file is missing"""
-        previous_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
+        previous_reading = coretools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
 
         #----- BEGIN HACKY STUFF TO MAKE THE TEST WORK -----
         #Just a hack to make sure that the file is reported not to exist.
@@ -340,7 +340,7 @@ class TestBaseMonitorClass(unittest.TestCase):
 
     def test_manage_rotation_3(self):
         """Test that manage_rotation() works as expected when rotation is not due and we failed to write to the readings file"""
-        previous_reading = core_tools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
+        previous_reading = coretools.Reading(str(datetime.datetime.now()), 0, "SUMP:M0", "800mm", "OK")
 
         #----- BEGIN HACKY STUFF TO MAKE THE TEST WORK -----
         #Just a hack to make sure that the file is reported not to exist.
@@ -393,10 +393,10 @@ class TestMonitor(unittest.TestCase):
     def setUp(self):
         os.chdir("UnitTests")
 
-        self.halleffectprobe = device_objects.HallEffectProbe("SUMP:M0", "Test")
+        self.halleffectprobe = deviceobjects.HallEffectProbe("SUMP:M0", "Test")
 
         #Make sure it won't exit immediately.
-        monitor_tools.config.EXITING = False
+        monitortools.config.EXITING = False
 
         self.orig_store_reading = logiccoretools.store_reading
         logiccoretools.store_reading = data.fake_store_reading
@@ -415,7 +415,7 @@ class TestMonitor(unittest.TestCase):
 
     def test_1(self):
         """Test that the class initialises and exits correctly (slow test)"""
-        monitor = monitor_tools.Monitor(self.halleffectprobe, 5, "SUMP")
+        monitor = monitortools.Monitor(self.halleffectprobe, 5, "SUMP")
 
         #Check that the constructor worked.
         self.assertEqual(monitor.probe, self.halleffectprobe)
@@ -425,7 +425,7 @@ class TestMonitor(unittest.TestCase):
         time.sleep(25)
 
         #Stop the monitor thread.
-        monitor_tools.config.EXITING = True
+        monitortools.config.EXITING = True
 
         while monitor.is_running():
             time.sleep(1)
@@ -446,7 +446,7 @@ class TestSocketsMonitor(unittest.TestCase):
         self.socket = data.Sockets()
 
         #Make sure it won't exit immediately.
-        monitor_tools.config.EXITING = False
+        monitortools.config.EXITING = False
 
     def tearDown(self):
         del self.socket
@@ -460,7 +460,7 @@ class TestSocketsMonitor(unittest.TestCase):
 
     def test_1(self):
         """Test that the class initialises and exits correctly (slow test)"""
-        monitor = monitor_tools.SocketsMonitor(self.socket, "SUMP", "M0")
+        monitor = monitortools.SocketsMonitor(self.socket, "SUMP", "M0")
 
         #Check that the constructor worked.
         self.assertEqual(monitor.socket, self.socket)
@@ -469,7 +469,7 @@ class TestSocketsMonitor(unittest.TestCase):
         time.sleep(25)
 
         #Stop the monitor thread.
-        monitor_tools.config.EXITING = True
+        monitortools.config.EXITING = True
 
         while monitor.is_running():
             time.sleep(1)
