@@ -73,7 +73,6 @@ class TestSockets(unittest.TestCase):
             self.assertEqual(socket.underlying_socket, None)
             self.assertEqual(socket.server_socket, None)
             self.assertEqual(socket.handler_thread, None)
-            self.assertTrue(socket.verbose)
             self.assertFalse(socket.ready_to_send)
             self.assertFalse(socket.reconnected)
             self.assertFalse(socket.internal_request_exit)
@@ -93,7 +92,6 @@ class TestSockets(unittest.TestCase):
             self.assertEqual(socket.underlying_socket, None)
             self.assertEqual(socket.server_socket, None)
             self.assertEqual(socket.handler_thread, None)
-            self.assertTrue(socket.verbose)
             self.assertFalse(socket.ready_to_send)
             self.assertFalse(socket.reconnected)
             self.assertFalse(socket.internal_request_exit)
@@ -192,26 +190,6 @@ class TestSockets(unittest.TestCase):
             else:
                 #All of these must fail!
                 self.assertTrue(False, "ValueError expected for data: "+str(ip))
-
-    def test_set_console_output_1(self):
-        """Test #1: Test that this works when given boolean values."""
-        for _bool in (True, False):
-            self.socket.set_console_output(_bool)
-            self.assertEqual(self.socket.verbose, _bool)
-
-    def test_set_console_output_2(self):
-        """Test #2: Test that this fails when given invalid values."""
-        for value in (None, 5, 4.5, [], (), {}, "True"):
-            try:
-                self.socket.set_console_output(value)
-
-            except ValueError:
-                #Expected.
-                pass
-
-            else:
-                #All of these must fail!
-                self.assertTrue(False, "ValueError expected for data: "+str(value))
 
     def test_reset_1(self):
         """Test #1: Test that this works as expected."""

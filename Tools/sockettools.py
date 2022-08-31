@@ -134,7 +134,6 @@ class Sockets:
         self.handler_thread = None
 
         #Variables for tracking status of the handler, and the socket.
-        self.verbose = True
         self.ready_to_send = False
         self.reconnected = False
         self.internal_request_exit = False
@@ -212,29 +211,6 @@ class Sockets:
                      + "): "+server_address+"...")
 
         self.server_address = socket.gethostbyname(server_address)
-
-    def set_console_output(self, state):
-        """
-        This method can enable/disable messages to console (used in server).
-
-        Args:
-            state (bool):
-
-                - True - enabled.
-                - False - disabled.
-
-        Usage:
-
-            >>> <Sockets-Obj>.set_console_output(False)
-        """
-
-        if not isinstance(state, bool):
-            raise ValueError("state must be of type bool")
-
-        logger.debug("Sockets.set_console_output(): ("+self.name
-                     + "): Setting self.verbose to "+str(state)+"...")
-
-        self.verbose = state
 
     def reset(self):
         """
@@ -424,9 +400,8 @@ class Sockets:
             #Non-zero exit status.
             logger.warning("Sockets.peer_alive(): ("+self.name+"): Peer is down!")
 
-            if self.verbose:
-                print("Connection Failed, peer down ("+self.name+"). "
-                      + "Retrying in 10 seconds...", level="warning")
+            print("Connection Failed, peer down ("+self.name+"). "
+                  + "Retrying in 10 seconds...", level="warning")
 
             return False
 
@@ -474,9 +449,8 @@ class Sockets:
             logger.error("Sockets._create_and_connect(): ("+self.name
                          + "): Retrying in 10 seconds...")
 
-            if self.verbose:
-                print("Connection Refused ("+self.name+"): "+str(err)
-                      + ". Retrying in 10 seconds...", level="error")
+            print("Connection Refused ("+self.name+"): "+str(err)
+                  + ". Retrying in 10 seconds...", level="error")
 
             #Make the handler exit.
             logger.debug("Sockets._create_and_connect(): ("+self.name
@@ -496,9 +470,8 @@ class Sockets:
             logger.error("Sockets._create_and_connect(): ("+self.name
                          + "): Retrying in 10 seconds...")
 
-            if self.verbose:
-                print("Connection Timed Out ("+self.name+"): "+str(err)
-                      + ". Retrying in 10 seconds...", level="error")
+            print("Connection Timed Out ("+self.name+"): "+str(err)
+                  + ". Retrying in 10 seconds...", level="error")
 
             #Make the handler exit.
             logger.debug("Sockets._create_and_connect(): ("+self.name
@@ -519,9 +492,8 @@ class Sockets:
             logger.error("Sockets._create_and_connect(): ("+self.name
                          + "): Retrying in 10 seconds...")
 
-            if self.verbose:
-                print("Connection Timed Out ("+self.name+"): "+str(err)
-                      + ". Retrying in 10 seconds...", level="error")
+            print("Connection Timed Out ("+self.name+"): "+str(err)
+                  + ". Retrying in 10 seconds...", level="error")
 
             #Make the handler exit.
             logger.debug("Sockets._create_and_connect(): ("+self.name
@@ -1010,9 +982,8 @@ class SocketHandlerThread(threading.Thread):
                 logger.error("SocketHandlerThread(): ("+self.socket.name
                              + "): Lost connection to peer. Attempting to reconnect...")
 
-                if self.socket.verbose:
-                    print("Lost connection to peer ("+self.socket.name
-                          + "). Attempting to reconnect...", level="error")
+                print("Lost connection to peer ("+self.socket.name
+                      + "). Attempting to reconnect...", level="error")
 
                 #Reset the socket. Also resets the status trackers.
                 logger.error("SocketHandlerThread(): ("+self.socket.name
@@ -1030,8 +1001,7 @@ class SocketHandlerThread(threading.Thread):
                 logger.debug("SocketHandlerThread(): ("+self.socket.name
                              + "): Reconnected to peer, re-entering main loop...")
 
-                if self.socket.verbose:
-                    print("Reconnected to peer ("+self.socket.name+").", level="debug")
+                print("Reconnected to peer ("+self.socket.name+").", level="debug")
 
                 #Reset status variables and make it known that the socket lost the
                 #connection and then reconnected at least once.
