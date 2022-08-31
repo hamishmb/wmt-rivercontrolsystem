@@ -962,7 +962,7 @@ class SocketHandlerThread(threading.Thread):
         """
         This is the body of the thread.
 
-        It handles setup of sockets, sending/receiving data, and maintenance
+        It organises setup of sockets, sending/receiving data, and maintenance
         (reconnections).
 
         .. warning::
@@ -972,7 +972,7 @@ class SocketHandlerThread(threading.Thread):
 
         .. warning::
             Doing the above could cause any number of strange and unstable
-            situations to occcur. Running self.start() is the only way (with the
+            situations to occur. Running self.start() is the only way (with the
             threading library) to start a new thread.
         """
 
@@ -980,32 +980,7 @@ class SocketHandlerThread(threading.Thread):
         read_result = -1
 
         #-------------------- Setup the socket --------------------
-        #Setup the socket.
-        logger.debug("Sockets.Handler(): ("+self.socket.name
-                     + "): Calling self.socket._create_and_connect to set the socket up...")
-
-        while not config.EXITING:
-            self.socket.internal_request_exit = True
-
-            if self.socket.peer_alive():
-                self.socket._create_and_connect()
-
-            #If we have connected without error, break out of this loop and enter the main loop.
-            if not self.socket.internal_request_exit:
-                break
-
-            #Otherwise destroy and recreate the socket until we connect.
-            #Reset the socket. Also resets the status trackers.
-            logger.debug("Sockets.Handler(): ("+self.socket.name+"): Resetting socket...")
-            self.socket.reset()
-
-            #Wait for 10 seconds in between attempts.
-            time.sleep(10)
-
-        if not config.EXITING:
-            #We have connected.
-            logger.debug("Sockets.Handler(): ("+self.socket.name+"): Done! Entering main loop.")
-            print("Connected to peer ("+self.socket.name+").", level="debug")
+        self.do_setup()
 
         #---------------- Manage the connection, sending and receiving data ---------------
         #Keep sending and receiving messages until we're asked to exit.
@@ -1032,47 +1007,83 @@ class SocketHandlerThread(threading.Thread):
                 last_ping_good = self.socket.peer_alive()
 
             if read_result == -1 or write_result is False or not last_ping_good:
-                logger.error("Sockets.Handler(): ("+self.socket.name
-                             + "): Lost connection. Attempting to reconnect...")
+                logger.error("SocketHandlerThread(): ("+self.socket.name
+                             + "): Lost connection to peer. Attempting to reconnect...")
 
                 if self.socket.verbose:
                     print("Lost connection to peer ("+self.socket.name
-                          + "). Reconnecting...", level="error")
+                          + "). Attempting to reconnect...", level="error")
+
+                #Reset the socket. Also resets the status trackers.
+                logger.error("SocketHandlerThread(): ("+self.socket.name
+                             +"): Resetting socket...")
+
+                self.socket.reset()
+
+                logger.debug("SocketHandlerThread(): ("+self.socket.name
+                             + "): Recreating and reconnecting the socket...")
 
                 #Wait for the socket to reconnect, unless the user ends the program
                 #(this allows us to exit cleanly if the peer is gone).
-                while not config.EXITING:
-                    #Reset the socket. Also resets the status trackers.
-                    logger.error("Sockets.Handler(): ("+self.socket.name
-                                 + "): Resetting socket...")
+                self.do_setup()
 
-                    self.socket.reset()
+                logger.debug("SocketHandlerThread(): ("+self.socket.name
+                             + "): Reconnected to peer, re-entering main loop...")
 
-                    #Wait for 10 seconds in between attempts.
-                    time.sleep(10)
+                if self.socket.verbose:
+                    print("Reconnected to peer ("+self.socket.name+").", level="debug")
 
-                    self.socket.internal_request_exit = True
-
-                    logger.debug("Sockets.Handler(): ("+self.socket.name
-                                 + "): Recreating and reconnecting the socket...")
-
-                    if self.socket.peer_alive():
-                        self.socket._create_and_connect()
-
-                    #If reconnection was successful, set flag and return to normal operation.
-                    if not self.socket.internal_request_exit:
-                        logger.debug("Sockets.Handler(): ("+self.socket.name
-                                     + "): Success! Re-entering main loop...")
-
-                        self.socket.reconnected = True
-                        last_ping_good = True
-
-                        if self.socket.verbose:
-                            print("Reconnected to peer ("+self.socket.name+").", level="debug")
-
-                        break
+                #Reset status variables and make it known that the socket lost the
+                #connection and then reconnected at least once.
+                self.socket.reconnected = True
+                last_ping_good = True
+                iters_count = 0
 
         #Flag that we've exited.
-        logger.info("Sockets.Handler(): ("+self.socket.name+"): Exiting as per the request...")
+        logger.info("SocketHandlerThread(): ("+self.socket.name
+                    +"): Exiting as per the request...")
+
         self.socket.reset()
         self.socket.handler_exited = True
+
+    def do_setup(self):
+        """
+        This method is resposible for setting up and connecting the socket. It will
+        return only when either the connection is ready, or when the software is
+        shutting down.
+
+        .. warning::
+            Only call me from within run() as part of the management thread. Do
+            **NOT** call me from anywhere else.
+
+        .. warning::
+            Doing the above could cause any number of strange and unstable
+            situations to occur.
+        """
+
+        #Setup the socket.
+        logger.debug("SocketHandlerThread(): ("+self.socket.name
+                     + "): Calling self.socket._create_and_connect to set the socket up...")
+
+        while not config.EXITING:
+            self.socket.internal_request_exit = True
+
+            if self.socket.peer_alive():
+                self.socket._create_and_connect()
+
+            #If we have connected without error, break out of this loop and enter the main loop.
+            if not self.socket.internal_request_exit:
+                break
+
+            #Otherwise destroy and recreate the socket until we connect.
+            #Reset the socket. Also resets the status trackers.
+            logger.debug("SocketHandlerThread(): ("+self.socket.name+"): Resetting socket...")
+            self.socket.reset()
+
+            #Wait for 10 seconds in between attempts.
+            time.sleep(10)
+
+        if not config.EXITING:
+            #We have connected.
+            logger.debug("SocketHandlerThread(): ("+self.socket.name+"): Done! Entering main loop.")
+        print("Connected to peer ("+self.socket.name+").", level="debug")

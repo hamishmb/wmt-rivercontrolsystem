@@ -543,7 +543,7 @@ class Monitor(BaseMonitorClass):
 
             .. warning::
                 Doing the above could cause any number of strange and unstable
-                situations to occcur. Running self.start() is the only way (with the
+                situations to occur. Running self.start() is the only way (with the
                 threading library) to start a new thread.
 
             >>> self.start()
@@ -660,7 +660,7 @@ class SocketsMonitor(BaseMonitorClass):
 
             .. warning::
                 Doing the above could cause any number of strange and unstable
-                situations to occcur. Running self.start() is the only way (with the
+                situations to occur. Running self.start() is the only way (with the
                 threading library) to start a new thread.
 
             >>> self.start()
