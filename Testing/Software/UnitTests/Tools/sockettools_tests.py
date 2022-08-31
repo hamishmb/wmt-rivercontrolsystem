@@ -395,7 +395,7 @@ class TestSockets(unittest.TestCase):
 
             del self.socket.port_number
 
-    def test__create_and_connect_1(self):
+    def test_create_and_connect_1(self):
         """Test #1: Test that this method handles connection refused errors correctly."""
         #Try to connect to a socket that doesn't exist.
         self.socket.type = "Plug"
@@ -404,7 +404,7 @@ class TestSockets(unittest.TestCase):
         self.socket.port_number = 30000
 
         try:
-            self.socket._create_and_connect()
+            self.socket.create_and_connect()
 
             self.assertTrue(self.socket.internal_request_exit)
 
@@ -420,7 +420,7 @@ class TestSockets(unittest.TestCase):
             del self.socket.port_number
             del self.socket.server_address
 
-    def test__create_and_connect_2(self):
+    def test_create_and_connect_2(self):
         """Test #2: Test that this method handles timeout errors correctly."""
         #Wait for a client that doesn't exist.
         self.socket.type = "Socket"
@@ -428,7 +428,7 @@ class TestSockets(unittest.TestCase):
         self.socket.port_number = 30000
 
         try:
-            self.socket._create_and_connect()
+            self.socket.create_and_connect()
 
             self.assertTrue(self.socket.internal_request_exit)
 
@@ -443,7 +443,7 @@ class TestSockets(unittest.TestCase):
             del self.socket.type
             del self.socket.server_address
 
-    def test__create_and_connect_3(self):
+    def test_create_and_connect_3(self):
         """Test #3: Test that this method handles OSError correctly."""
         #Connection function is replaced to cause an OSError.
         orig_create_socket = self.socket._create_socket
@@ -454,7 +454,7 @@ class TestSockets(unittest.TestCase):
         self.socket.port_number = 30000
 
         try:
-            self.socket._create_and_connect()
+            self.socket.create_and_connect()
 
             self.assertTrue(self.socket.internal_request_exit)
 
@@ -471,7 +471,7 @@ class TestSockets(unittest.TestCase):
 
             self.socket._create_socket = orig_create_socket
 
-    def test__create_and_connect_4(self):
+    def test_create_and_connect_4(self):
         """Test #4: Test that this method works as expected when everything connects."""
         #NOTE: There are potential race conditions here, but it should do for the sake of this test.
         self.socket.type = "Socket"
@@ -483,8 +483,8 @@ class TestSockets(unittest.TestCase):
 
         try:
             #This needs to be concurrent to work.
-            threading.Timer(1, self.socket._create_and_connect).start()
-            threading.Timer(5, self.plug._create_and_connect).start()
+            threading.Timer(1, self.socket.create_and_connect).start()
+            threading.Timer(5, self.plug.create_and_connect).start()
 
             time.sleep(15)
 
@@ -551,35 +551,35 @@ class TestSockets(unittest.TestCase):
         #An extra pop when there's nothing there should also not throw an exception.
         self.socket.pop()
 
-    def test__send_pending_messages_1(self):
+    def test_send_pending_messages_1(self):
         """Test #1: Test this works as expected when there are no pending messages to send."""
         self.socket.underlying_socket = data.fake_socket
 
-        self.assertTrue(self.socket._send_pending_messages())
+        self.assertTrue(self.socket.send_pending_messages())
 
         self.socket.underlying_socket = None
 
-    def test__send_pending_messages_2(self):
+    def test_send_pending_messages_2(self):
         """Test #2: Test this handles pickling errors correctly."""
         self.socket.underlying_socket = data.fake_socket_error_pickling
 
         self.socket.write("test")
 
-        self.assertTrue(self.socket._send_pending_messages())
+        self.assertTrue(self.socket.send_pending_messages())
 
         self.socket.underlying_socket = None
 
-    def test__send_pending_messages_3(self):
+    def test_send_pending_messages_3(self):
         """Test #3: This this handles OSError correctly."""
         self.socket.underlying_socket = data.fake_socket_oserror
 
         self.socket.write("test")
 
-        self.assertFalse(self.socket._send_pending_messages())
+        self.assertFalse(self.socket.send_pending_messages())
 
         self.socket.underlying_socket = None
 
-    def test__send_pending_messages_4(self):
+    def test_send_pending_messages_4(self):
         """Test #4: Test this sends data when it is present."""
         data.unpickled_data = []
 
@@ -591,7 +591,7 @@ class TestSockets(unittest.TestCase):
             self.socket.write(_data)
 
         #One call should send all the messages.
-        self.assertTrue(self.socket._send_pending_messages())
+        self.assertTrue(self.socket.send_pending_messages())
 
         self.assertEqual(datalist, tuple(data.unpickled_data))
         
@@ -599,32 +599,32 @@ class TestSockets(unittest.TestCase):
 
         data.unpickled_data = []
 
-    def test__read_pending_messages_1(self):
+    def test_read_pending_messages_1(self):
         """Test #1: Test this works correctly when the connection was closed by the peer."""
         socket_tools.select = data.select_ready
         self.socket.underlying_socket = data.fake_socket_peer_gone
 
-        self.assertEqual(-1, self.socket._read_pending_messages())
+        self.assertEqual(-1, self.socket.read_pending_messages())
 
         self.socket.underlying_socket = None
         socket_tools.select = select
 
-    def test__read_pending_messages_2(self):
+    def test_read_pending_messages_2(self):
         """Test #2: Test this works correctly when the socket is not ready for reading."""
         socket_tools.select = data.select_not_ready
         self.socket.underlying_socket = data.fake_socket_peer_gone
 
-        self.assertEqual(0, self.socket._read_pending_messages())
+        self.assertEqual(0, self.socket.read_pending_messages())
 
         self.socket.underlying_socket = None
         socket_tools.select = select
 
-    def test__read_pending_messages_3(self):
+    def test_read_pending_messages_3(self):
         """Test #3: Test this works correctly when there is data to read."""
         socket_tools.select = data.select_ready_once
         self.socket.underlying_socket = data.fake_socket_with_data
 
-        self.assertEqual(0, self.socket._read_pending_messages())
+        self.assertEqual(0, self.socket.read_pending_messages())
 
         self.assertEqual(tuple(self.socket.in_queue),
                          (0, 6.7, None, True, False, (), [], {}, "test"))
@@ -633,21 +633,21 @@ class TestSockets(unittest.TestCase):
         data.select_ready_once.reset()
         socket_tools.select = select
 
-    def test__read_pending_messages_4(self):
+    def test_read_pending_messages_4(self):
         """Test #4: Test this works correctly when there is an unhandled error."""
         socket_tools.select = data.select_ready
         self.socket.underlying_socket = data.fake_socket_unhandled_error
 
-        self.assertEqual(-1, self.socket._read_pending_messages())
+        self.assertEqual(-1, self.socket.read_pending_messages())
 
         self.socket.underlying_socket = None
         socket_tools.select = select
 
-    def test__forward_messages_1(self):
+    def test_forward_messages_1(self):
         """Test #1: Test this works as expected when there are no pending messages to forward."""
-        self.assertTrue(self.socket._forward_messages())
+        self.assertTrue(self.socket.forward_messages())
 
-    def test__forward_messages_2(self):
+    def test_forward_messages_2(self):
         """Test #2: Test this runs without error when a message cannot be forwarded (slow test)."""
         self.socket.type = "Socket"
         self.socket.server_address = "127.0.0.1"
@@ -659,8 +659,8 @@ class TestSockets(unittest.TestCase):
 
         try:
             #This needs to be concurrent to work.
-            threading.Timer(1, self.socket._create_and_connect).start()
-            threading.Timer(5, self.plug._create_and_connect).start()
+            threading.Timer(1, self.socket.create_and_connect).start()
+            threading.Timer(5, self.plug.create_and_connect).start()
 
             time.sleep(15)
 
@@ -671,13 +671,13 @@ class TestSockets(unittest.TestCase):
             #Write the message to be forwarded.
             #ID to forward to should not be available (test will fail if it is).
             self.socket.write("*G4* test")
-            self.assertTrue(self.socket._send_pending_messages())
+            self.assertTrue(self.socket.send_pending_messages())
 
             time.sleep(5)
 
             #Receive the message at the other socket.
-            self.assertEqual(self.plug._read_pending_messages(), 0)
-            self.assertTrue(self.plug._forward_messages())
+            self.assertEqual(self.plug.read_pending_messages(), 0)
+            self.assertTrue(self.plug.forward_messages())
 
             time.sleep(5)
 
@@ -711,9 +711,9 @@ class TestSockets(unittest.TestCase):
 
         self.socket.write("*NOTANID* test")
 
-        self.assertTrue(self.socket._forward_messages())
+        self.assertTrue(self.socket.forward_messages())
 
-    def test__forward_messages_3(self):
+    def test_forward_messages_3(self):
         """Test #3: Test this works when there is no need to forward a message (slow test)."""
         self.socket.type = "Socket"
         self.socket.server_address = "127.0.0.1"
@@ -725,8 +725,8 @@ class TestSockets(unittest.TestCase):
 
         try:
             #This needs to be concurrent to work.
-            threading.Timer(1, self.socket._create_and_connect).start()
-            threading.Timer(5, self.plug._create_and_connect).start()
+            threading.Timer(1, self.socket.create_and_connect).start()
+            threading.Timer(5, self.plug.create_and_connect).start()
 
             time.sleep(15)
 
@@ -737,13 +737,13 @@ class TestSockets(unittest.TestCase):
             #Write the message to be forwarded.
             #ID to forward to is the same as the ID of the receiving socket - no need to forward it.
             self.socket.write("*ST1* test")
-            self.assertTrue(self.socket._send_pending_messages())
+            self.assertTrue(self.socket.send_pending_messages())
 
             time.sleep(5)
 
             #Receive the message at the other socket.
-            self.assertEqual(self.plug._read_pending_messages(), 0)
-            self.assertTrue(self.plug._forward_messages())
+            self.assertEqual(self.plug.read_pending_messages(), 0)
+            self.assertTrue(self.plug.forward_messages())
 
             time.sleep(5)
 
@@ -775,7 +775,7 @@ class TestSockets(unittest.TestCase):
             del self.plug.server_address
             del self.plug.port_number
 
-    def test__forward_messages_4(self):
+    def test_forward_messages_4(self):
         """Test #4: Test this forwards a message when it should (slow test)."""
         self.socket.type = "Socket"
         self.socket.server_address = "127.0.0.1"
@@ -787,8 +787,8 @@ class TestSockets(unittest.TestCase):
 
         try:
             #This needs to be concurrent to work.
-            threading.Timer(1, self.socket._create_and_connect).start()
-            threading.Timer(5, self.plug._create_and_connect).start()
+            threading.Timer(1, self.socket.create_and_connect).start()
+            threading.Timer(5, self.plug.create_and_connect).start()
 
             time.sleep(15)
 
@@ -799,19 +799,19 @@ class TestSockets(unittest.TestCase):
             #Write the message to be forwarded.
             #ID to forward to is the same as the ID of the sending socket - should return to sender.
             self.socket.write("*ST0* test")
-            self.assertTrue(self.socket._send_pending_messages())
+            self.assertTrue(self.socket.send_pending_messages())
 
             time.sleep(5)
 
             #Receive and forward the message at the other socket.
-            self.assertEqual(self.plug._read_pending_messages(), 0)
-            self.assertTrue(self.plug._forward_messages())
-            self.assertTrue(self.plug._send_pending_messages())
+            self.assertEqual(self.plug.read_pending_messages(), 0)
+            self.assertTrue(self.plug.forward_messages())
+            self.assertTrue(self.plug.send_pending_messages())
 
             time.sleep(5)
 
             #Receiver at the initial end again.
-            self.assertEqual(self.socket._read_pending_messages(), 0)
+            self.assertEqual(self.socket.read_pending_messages(), 0)
 
             time.sleep(5)
 
