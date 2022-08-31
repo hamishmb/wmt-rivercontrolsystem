@@ -830,7 +830,7 @@ class HallEffectProbe(BaseDeviceClass):
         This method returns the rate at which the float is bobbing
         about.
 
-        .. note::universal_monitor
+        .. note::
 
             Currently no fault checking is performed, so the string part of the return value
             is always "OK".

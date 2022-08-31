@@ -36,8 +36,6 @@ from abc import ABCMeta, abstractmethod
 
 from Tools.coretools import rcs_print as print #pylint: disable=redefined-builtin
 
-#Don't ask for a logger name, so this works with both main.py
-#and the universal monitor.
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
 

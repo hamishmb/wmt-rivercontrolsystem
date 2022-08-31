@@ -55,8 +55,6 @@ sockettools = None #pylint: disable=invalid-name
 dbtools = None #pylint: disable=invalid-name
 logiccoretools = None #pylint: disable=invalid-name
 
-#Don't ask for a logger name, so this works with both main.py
-#and the universal monitor.
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
 

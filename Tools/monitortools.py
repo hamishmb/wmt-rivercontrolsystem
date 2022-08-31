@@ -46,8 +46,6 @@ from Tools import logiccoretools
 from Tools import coretools
 from Tools.coretools import rcs_print as print #pylint: disable=redefined-builtin
 
-#Don't ask for a logger name, so this works with both main.py
-#and the universal monitor.
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.getLogger('River System Control Software').getEffectiveLevel())
 
@@ -489,7 +487,7 @@ class BaseMonitorClass(threading.Thread):
         while self.running:
             time.sleep(0.5)
 
-# ---------- Universal Monitor ----------
+# ---------- Universal Monitor for all probe types ----------
 class Monitor(BaseMonitorClass):
     """
     This is the universal monitor thread that is used to monitor all probe
@@ -605,7 +603,7 @@ class Monitor(BaseMonitorClass):
         self.file_handle.close()
         self.running = False
 
-# ---------- Universal Sockets Monitor ----------
+# ---------- Universal Sockets Monitor for all probe types over Sockets ----------
 class SocketsMonitor(BaseMonitorClass):
     """
     This is the universal sockets monitor thread that is used to monitor all
